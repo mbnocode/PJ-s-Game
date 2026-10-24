@@ -139,6 +139,51 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .bigstars b { color: var(--gold); font-weight: 400; }
 .scoreline { font-family: var(--body); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
 
+.field { display: flex; flex-direction: column; gap: 6px; text-align: left; font-family: var(--display); font-size: 20px; width: min(340px, 100%); }
+.field small { font-family: var(--body); font-size: 14px; color: var(--muted); }
+.field input {
+  font-family: var(--body); font-size: 20px; font-weight: 700; color: var(--ink); background: var(--panel-2);
+  border: 2px solid var(--line); border-radius: 4px; padding: 10px 12px; width: 100%; -webkit-user-select: text; user-select: text;
+}
+.field input:focus { outline: 3px solid var(--gold); outline-offset: 1px; border-color: var(--moss); }
+.field input.code { text-transform: uppercase; letter-spacing: 0.08em; }
+.err { color: #ffb4a8; background: rgba(226, 87, 76, .15); border: 2px solid rgba(226, 87, 76, .5); border-radius: 4px; padding: 8px 12px; }
+.chip { font-family: var(--body); font-weight: 700; font-size: 14px; background: var(--leaf); color: #1b1006; padding: 4px 10px; border-radius: 3px; letter-spacing: .06em; }
+.lookup { align-items: flex-end; }
+
+.friends {
+  position: absolute; z-index: 4; top: 8px; right: 8px; width: 220px; background: rgba(20, 32, 25, .9);
+  border: 2px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 14px;
+}
+.friends .fh { display: flex; align-items: center; gap: 8px; }
+.friends .fh b { font-family: var(--body); letter-spacing: .06em; color: var(--leaf); }
+.friends .fh span { flex: 1; color: var(--muted); font-size: 12px; }
+.friends .fh button { font-family: var(--body); font-size: 12px; padding: 2px 8px; box-shadow: none; }
+.friends ol { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.friends li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; }
+.friends li .n { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friends li .w { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.friends li .hb { height: 8px; background: #3a3f46; border: 1px solid #0b130e; border-radius: 2px; overflow: hidden; }
+.friends li .hb i { display: block; height: 100%; background: var(--moss); }
+.friends li .hp { font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+.friends li.me .n { color: var(--gold); }
+.friends li.lost .hb i { background: var(--danger); }
+.friends li.won .w { color: var(--gold); }
+.friends li.empty { display: block; color: var(--muted); }
+.friends .fe { margin-top: 6px; color: #ffb4a8; font-size: 12px; }
+
+.board { width: min(620px, 100%); overflow-x: auto; }
+.board table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; text-align: left; }
+.board th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; padding: 6px 8px; border-bottom: 2px solid var(--line); }
+.board td { padding: 8px; border-bottom: 1px solid var(--line); }
+.board td.r { color: var(--muted); width: 2em; }
+.board td.nm { font-weight: 700; }
+.board td.sc { font-weight: 700; color: var(--gold); }
+.board .bt { font-family: var(--display); font-size: 20px; margin-bottom: 8px; text-align: left; }
+.mini-board { width: 100%; text-align: left; }
+.mini-board ol { margin: 6px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.mini-board li span { color: var(--muted); }
+
 @media (max-width: 560px) {
   .stat { font-size: 17px; }
   .hbar { width: 64px; }
@@ -170,6 +215,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
+    <div class="row"><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
     <button class="link" id="b-levels-back">Back to save slots</button>
   </section>
 
@@ -187,8 +233,45 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
         <button id="tut-no" aria-pressed="true">No<small>I know how to play</small></button>
       </div>
     </div>
+    <div>
+      <h3 style="margin-bottom:10px">Who's playing?</h3>
+      <div class="choices" id="mode-choices">
+        <button id="mode-solo" aria-pressed="true">Just me<small>Play on your own</small></button>
+        <button id="mode-challenge" aria-pressed="false">Make a challenge<small>Get a code for friends</small></button>
+      </div>
+      <div class="choices" id="len-choices" style="margin-top:10px" hidden>
+        <button id="len-1" aria-pressed="false">1 hour</button>
+        <button id="len-24" aria-pressed="true">1 day</button>
+        <button id="len-168" aria-pressed="false">1 week</button>
+      </div>
+    </div>
+    <label class="field" for="nick">Your nickname<small id="nick-hint">Optional. Add one to get on the leaderboard.</small><input id="nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ"></label>
+    <p class="err" id="setup-err" hidden></p>
     <button class="go big" id="b-start">Start</button>
     <button class="link" id="b-setup-back">Back to levels</button>
+  </section>
+
+  <!-- Join a challenge -->
+  <section class="screen menu" id="s-join" hidden>
+    <h2>Join a friend's challenge</h2>
+    <p class="muted">Type the code your friend got when they made the challenge. You'll play the same level on the same difficulty and see how everyone is doing.</p>
+    <label class="field" for="join-code">Challenge code<input id="join-code" class="code" maxlength="12" autocomplete="off" spellcheck="false" placeholder="LEAF-42"></label>
+    <label class="field" for="join-nick">Your nickname<input id="join-nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ"></label>
+    <p class="err" id="join-err" hidden></p>
+    <button class="go big" id="b-join-go">Join</button>
+    <button class="link" id="b-join-back">Back to levels</button>
+  </section>
+
+  <!-- Leaderboards -->
+  <section class="screen menu" id="s-boards" hidden>
+    <h2>Leaderboards</h2>
+    <div class="choices" id="board-tabs"></div>
+    <div class="board" id="board-list"></div>
+    <div class="row lookup">
+      <label class="field" for="board-code">See a challenge<input id="board-code" class="code" maxlength="12" autocomplete="off" spellcheck="false" placeholder="LEAF-42"></label>
+      <button id="b-board-code">Show</button>
+    </div>
+    <button class="link" id="b-boards-back">Back to levels</button>
   </section>
 
   <!-- Game -->
@@ -197,6 +280,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="stat" title="Base Health"><span class="lbl">Base</span><div class="hbar" id="hbar"><i id="hfill"></i></div><span id="hnum">100</span></div>
       <div class="stat" title="Maple Leaves"><span class="lbl">Leaves</span><span class="leafnum" id="lnum">0</span></div>
       <div class="stat"><span class="lbl">Wave</span><span id="wnum">0/15</span></div>
+      <span class="chip" id="code-chip" hidden></span>
       <div class="spacer"></div>
       <button class="go" id="b-wave">Start Wave</button>
       <button id="b-speed" title="Game speed">1×</button>
@@ -206,6 +290,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div id="stage">
       <canvas id="board" width="640" height="384"></canvas>
       <div class="panel" id="tpanel" hidden></div>
+      <div class="friends" id="friends" hidden></div>
       <div class="banner" id="banner" hidden><p id="banner-text"></p><button id="banner-ok">Got it</button></div>
       <div class="overlay" id="overlay" hidden><div class="box" id="overlay-box"></div></div>
     </div>
@@ -403,8 +488,89 @@ let slotIndex = 0;
 const slot = () => slots[slotIndex];
 try { const m = localStorage.getItem("pjs-game-sound"); if (m === "off") Sound.on = false; } catch (e) {}
 
+/* ---------- online: challenges, friends and leaderboards (Supabase) ---------- */
+const ONLINE = {
+  url: "https://ywdoujoatyifwlxacnjx.supabase.co",
+  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZG91am9hdHlpZndseGFjbmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODE5MDUsImV4cCI6MjEwODQ1NzkwNX0.q3MouplTtwsrMC8wGcvwZuw20Pie-UJYMiqOR0JMF8U",
+};
+async function sb(path, opts = {}) {
+  const r = await fetch(ONLINE.url + "/rest/v1/" + path, {
+    method: opts.method || "GET",
+    headers: { apikey: ONLINE.key, Authorization: "Bearer " + ONLINE.key, "Content-Type": "application/json" },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const text = await r.text(); let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) {}
+  if (!r.ok) throw new Error((data && data.message) || "Couldn't reach the leaderboard");
+  return data;
+}
+const rpc = (fn, args) => sb("rpc/" + fn, { method: "POST", body: args });
+const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function savedNick() { try { return localStorage.getItem("pjs-game-nick") || ""; } catch (e) { return ""; } }
+function rememberNick(n) { try { localStorage.setItem("pjs-game-nick", n); } catch (e) {} }
+function showErr(id, msg) { $(id).textContent = msg; $(id).hidden = false; }
+function timeLeft(d) {
+  const ms = d - Date.now(); if (ms <= 0) return "Ended";
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+  return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h left` : h ? `${h}h ${m}m left` : `${m}m left`;
+}
+function currentScore() { return Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes); }
+
+async function onlineStart(g) {
+  const o = g.online; if (!o) return;
+  $("code-chip").hidden = !o.code; if (o.code) $("code-chip").textContent = "Challenge " + o.code;
+  $("friends").hidden = !o.code;
+  if (o.made) tip(`Your challenge code is <b>${esc(o.code)}</b>. Tell your friends to tap "Join a friend's challenge" and type it in.`, undefined, "Challenge");
+  if (o.code) renderFriends();
+  try {
+    const rows = await rpc("join_game", { p_code: o.code, p_nickname: o.nick, p_level: g.level, p_difficulty: g.diffKey });
+    if (G !== g) return;
+    o.id = rows[0].id; o.secret = rows[0].secret;
+    if (o.code) { const ch = await sb(`challenges?code=eq.${encodeURIComponent(o.code)}&select=ends_at`); if (ch[0]) o.endsAt = new Date(ch[0].ends_at); }
+    sendProgress(true);
+  } catch (e) { o.err = true; o.errMsg = e.message; }
+  if (o.code) pollFriends(g);
+}
+function sendProgress(force, status = "playing", stars = 0, score) {
+  const o = G && G.online; if (!o || !o.id) return;
+  const now = performance.now();
+  if (!force && now - o.last < 2000) { o.dirty = true; return; }
+  o.last = now; o.dirty = false;
+  rpc("update_progress", { p_id: o.id, p_secret: o.secret, p_wave: G.wave, p_health: Math.round(G.health), p_status: status, p_score: score ?? currentScore(), p_stars: stars }).catch(() => {});
+}
+async function pollFriends(g) {
+  const o = g.online;
+  while (G === g) {
+    try {
+      if (o.dirty && !g.over) sendProgress(true);
+      o.others = await sb(`players?challenge_code=eq.${encodeURIComponent(o.code)}&select=id,nickname,wave,health,status,score&order=score.desc&limit=30`);
+      if (o.id) o.err = false;
+    } catch (e) { o.err = true; }
+    if (G !== g) return;
+    renderFriends();
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+}
+function friendRows(o) {
+  return (o.others || []).map((p) => {
+    const me = p.id === o.id;
+    if (me && G && G.online === o && !G.over) p = { ...p, wave: G.wave, health: Math.round(G.health) };
+    const h = Math.max(0, Math.min(1, p.health / SETTINGS.baseHealth));
+    const st = p.status === "won" ? "Won!" : p.status === "lost" ? "Factory won" : `Wave ${p.wave}/${SETTINGS.waves.length}`;
+    return `<li class="${me ? "me " : ""}${p.status}"><span class="n">${esc(p.nickname)}${me ? " (you)" : ""}</span><span class="w">${st}</span><span class="hb" title="Base Health"><i style="width:${h * 100}%"></i></span><span class="hp">${p.health} health</span></li>`;
+  }).join("");
+}
+function renderFriends() {
+  const o = G && G.online, box = $("friends"); if (!o || !o.code) return;
+  const rows = friendRows(o);
+  box.innerHTML = `<div class="fh"><b>${esc(o.code)}</b><span>${o.endsAt ? timeLeft(o.endsAt) : ""}</span><button id="f-toggle" aria-expanded="${!o.collapsed}">${o.collapsed ? "Show" : "Hide"}</button></div>` +
+    (o.collapsed ? "" : `<ol>${rows || "<li class='empty'>Waiting for players…</li>"}</ol>`) +
+    (o.err ? `<div class="fe">${o.errMsg === "That challenge is over" ? "This challenge is over, so this game won't count." : "Can't reach the other players right now. Your game still works."}</div>` : "");
+  $("f-toggle").onclick = () => { o.collapsed = !o.collapsed; renderFriends(); };
+}
+
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-boards", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -478,7 +644,7 @@ function renderLevels() {
   });
 }
 
-const setup = { level: "meadow", diff: "normal", tutorial: false };
+const setup = { level: "meadow", diff: "normal", tutorial: false, mode: "solo", hours: 24 };
 function renderSetup() {
   $("setup-title").textContent = SETTINGS.levels[setup.level].name;
   const box = $("diff-choices"); box.innerHTML = "";
@@ -492,10 +658,82 @@ function renderSetup() {
   });
   $("tut-yes").setAttribute("aria-pressed", String(setup.tutorial));
   $("tut-no").setAttribute("aria-pressed", String(!setup.tutorial));
+  $("mode-solo").setAttribute("aria-pressed", String(setup.mode === "solo"));
+  $("mode-challenge").setAttribute("aria-pressed", String(setup.mode === "challenge"));
+  $("len-choices").hidden = setup.mode !== "challenge";
+  [1, 24, 168].forEach((h) => $("len-" + h).setAttribute("aria-pressed", String(setup.hours === h)));
+  $("nick-hint").textContent = setup.mode === "challenge" ? "So your friends know who you are." : "Optional. Add one to get on the leaderboard.";
+  if (!$("nick").value) $("nick").value = savedNick();
+  $("setup-err").hidden = true;
 }
+$("mode-solo").onclick = () => { setup.mode = "solo"; renderSetup(); };
+$("mode-challenge").onclick = () => { setup.mode = "challenge"; renderSetup(); };
+[1, 24, 168].forEach((h) => ($("len-" + h).onclick = () => { setup.hours = h; renderSetup(); }));
 $("tut-yes").onclick = () => { setup.tutorial = true; renderSetup(); };
 $("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
-$("b-start").onclick = () => startGame(setup.level, setup.diff, setup.tutorial);
+$("b-start").onclick = async () => {
+  const nick = $("nick").value.trim(); rememberNick(nick);
+  $("setup-err").hidden = true;
+  if (setup.mode !== "challenge") { startGame(setup.level, setup.diff, setup.tutorial, nick ? { code: null, nick } : null); return; }
+  if (!nick) { showErr("setup-err", "Type a nickname so your friends know who you are."); return; }
+  const b = $("b-start"); b.disabled = true; b.textContent = "Making your code…";
+  try {
+    const code = await rpc("create_challenge", { p_level: setup.level, p_difficulty: setup.diff, p_hours: setup.hours });
+    startGame(setup.level, setup.diff, setup.tutorial, { code, nick, made: true });
+  } catch (e) { showErr("setup-err", "Couldn't make a challenge right now. Check the internet and try again."); }
+  b.disabled = false; b.textContent = "Start";
+};
+
+/* join a challenge */
+$("b-join").onclick = () => { if (!$("join-nick").value) $("join-nick").value = savedNick(); $("join-err").hidden = true; show("s-join"); $("join-code").focus(); };
+$("b-join-back").onclick = () => { renderLevels(); show("s-levels"); };
+$("b-join-go").onclick = async () => {
+  const code = $("join-code").value.trim().toUpperCase(), nick = $("join-nick").value.trim();
+  $("join-err").hidden = true;
+  if (!code) return showErr("join-err", "Type the challenge code your friend gave you.");
+  if (!nick) return showErr("join-err", "Type a nickname so your friends know who you are.");
+  rememberNick(nick);
+  const b = $("b-join-go"); b.disabled = true;
+  try {
+    const rows = await sb(`challenges?code=eq.${encodeURIComponent(code)}&select=*`);
+    if (!rows.length) showErr("join-err", `There's no challenge called ${code}. Check the code with your friend.`);
+    else if (new Date(rows[0].ends_at) < new Date()) showErr("join-err", `The ${code} challenge is already over.`);
+    else startGame(rows[0].level, rows[0].difficulty, false, { code: rows[0].code, nick });
+  } catch (e) { showErr("join-err", "Couldn't reach the challenge right now. Check the internet and try again."); }
+  b.disabled = false;
+};
+$("join-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-join-go").click(); });
+
+/* leaderboards */
+let boardLevel = "meadow";
+$("b-boards").onclick = () => { renderBoards(); show("s-boards"); };
+$("b-boards-back").onclick = () => { renderLevels(); show("s-levels"); };
+$("b-board-code").onclick = () => { const c = $("board-code").value.trim().toUpperCase(); if (c) renderBoards(c); };
+function resultText(p) {
+  if (p.status === "won") return starText(p.stars);
+  if (p.status === "lost") return `Lost on wave ${p.wave}`;
+  return `Playing wave ${p.wave}`;
+}
+async function renderBoards(code) {
+  const tabs = $("board-tabs"); tabs.innerHTML = "";
+  LEVEL_ORDER.forEach((L) => {
+    const b = document.createElement("button"); b.id = "board-" + L; b.textContent = SETTINGS.levels[L].name;
+    b.setAttribute("aria-pressed", String(!code && boardLevel === L));
+    b.onclick = () => { boardLevel = L; renderBoards(); };
+    tabs.appendChild(b);
+  });
+  const list = $("board-list"); list.innerHTML = "<p class='muted'>Loading…</p>";
+  try {
+    const rows = code
+      ? await sb(`players?challenge_code=eq.${encodeURIComponent(code)}&select=nickname,difficulty,score,stars,wave,status&order=score.desc&limit=50`)
+      : await sb(`players?level=eq.${boardLevel}&status=in.(won,lost)&select=nickname,difficulty,score,stars,wave,status&order=score.desc&limit=10`);
+    const title = code ? `Challenge ${esc(code)}` : `Top 10 · ${SETTINGS.levels[boardLevel].name}`;
+    list.innerHTML = `<div class="bt">${title}</div>` + (rows.length
+      ? `<table><thead><tr><th>#</th><th>Player</th><th>Score</th><th>Difficulty</th><th>Result</th></tr></thead><tbody>${rows.map((p, i) =>
+          `<tr><td class="r">${i + 1}</td><td class="nm">${esc(p.nickname)}</td><td class="sc">${p.score.toLocaleString()}</td><td>${esc((SETTINGS.difficulties[p.difficulty] || {}).name || p.difficulty)}</td><td>${resultText(p)}</td></tr>`).join("")}</tbody></table>`
+      : `<p class="muted">${code ? "No one has played this challenge yet, or the code is wrong." : "No scores yet. Play this level with a nickname to be the first!"}</p>`);
+  } catch (e) { list.innerHTML = "<p class='err'>Can't load the leaderboard right now. Check the internet and try again.</p>"; }
+}
 
 /* ---------- map ---------- */
 function buildMap(L) {
@@ -676,7 +914,7 @@ const board = $("board"), ctx = board.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 let G = null;
 
-function startGame(L, d, tutorial) {
+function startGame(L, d, tutorial, online) {
   const diff = SETTINGS.difficulties[d];
   G = {
     level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
@@ -685,6 +923,7 @@ function startGame(L, d, tutorial) {
     towers: [], robots: [], shots: [], fx: [], particles: [],
     paused: false, speed: 1, pick: null, sel: null, hover: null, over: false,
     shake: 0, time: 0, seenHider: false, seenBoss: false, factoryCount: 0, flashTiles: [],
+    online: online ? { ...online, id: null, secret: null, others: [], last: 0, dirty: false, err: false, collapsed: false } : null,
   };
   G.ground = document.createElement("canvas"); G.ground.width = 640; G.ground.height = 384;
   redrawGround();
@@ -692,6 +931,8 @@ function startGame(L, d, tutorial) {
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
   if (tutorial) tip("Tap a tower at the bottom, then tap the grass next to the path to place it. Try the Fire Dragon first.", 0);
+  $("code-chip").hidden = true; $("friends").hidden = true;
+  onlineStart(G);
 }
 function redrawGround() {
   const fc = Math.round((1 - G.health / SETTINGS.baseHealth) * SETTINGS.factorySquares);
@@ -879,6 +1120,7 @@ function startWave() {
   else if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
   else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
   if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
+  sendProgress(true);
   updateHud();
 }
 function spawn(q) {
@@ -908,7 +1150,7 @@ function endWave() {
   }
   floatText(320, 40, `Wave ${G.wave} cleared! +${bonus} leaves`, "#ffd34d", 2.2);
   if (G.tutorial && (G.wave === 1 || G.wave === 5)) tutorialEvent("end" + G.wave);
-  if (G.wave >= SETTINGS.waves.length) finish(true);
+  if (G.wave >= SETTINGS.waves.length) finish(true); else sendProgress(true);
   updateHud();
 }
 
@@ -938,7 +1180,7 @@ function reachBase(r) {
   G.shake = 0.3; Sound.play("hit");
   floatText(G.map.base.x * T + 32, G.map.base.y * T - 8, "-" + dmg, "#ff6a5a");
   redrawGround(); updateHud();
-  if (G.health <= 0) finish(false);
+  if (G.health <= 0) finish(false); else { sendProgress(false); renderFriends(); }
 }
 function findTarget(t, s) {
   const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
@@ -1157,6 +1399,8 @@ function finish(won) {
   const stars = won ? (H >= 0.9 ? 3 : H >= 0.5 ? 2 : 1) : 0;
   let best = false;
   if (!won) { G.takeover = { t: 0, from: G.factoryCount, n: G.factoryCount, done: false }; Sound.play("horn"); }
+  sendProgress(true, won ? "won" : "lost", stars, score);
+  const on = G.online;
   if (won) {
     const s = slot(); s.best[G.level] = s.best[G.level] || {};
     const prev = s.best[G.level][G.diffKey];
@@ -1175,15 +1419,24 @@ function finish(won) {
          <div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>
          <div class="scoreline">Score ${score.toLocaleString()}${best ? " · New best!" : ""}</div>
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left</p>
-         <div class="row">${nextL ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button><button id="o-menu">Levels</button></div>`
+         ${boardBits(on)}
+         <div class="row">${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`
       : `<h2>The Factory took over</h2>
          <p class="muted">The robots got through on Wave ${G.wave} of ${SETTINGS.waves.length}.</p>
          <div class="scoreline">Score ${score.toLocaleString()}</div>
-         <div class="row"><button class="go" id="o-again">Try again</button><button id="o-menu">Levels</button></div>`);
-    $("o-again").onclick = () => startGame(G.level, G.diffKey, false);
+         ${boardBits(on)}
+         <div class="row"><button class="go" id="o-again">Try again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`);
+    $("o-again").onclick = () => startGame(G.level, G.diffKey, false, on ? { code: on.code, nick: on.nick } : null);
+    if ($("o-boards")) $("o-boards").onclick = () => { const c = on && on.code; G = null; renderBoards(c || undefined); show("s-boards"); };
     $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
     if ($("o-next")) $("o-next").onclick = () => { setup.level = nextL; G = null; renderSetup(); show("s-setup"); };
   }, won ? 700 : 3400);
+}
+function boardBits(on) {
+  if (!on) return `<p class="muted">Add a nickname before you start to get on the leaderboard.</p>`;
+  if (!on.code) return on.id ? `<p class="muted">Your score is on the ${SETTINGS.levels[G.level].name} leaderboard as ${esc(on.nick)}.</p>` : "";
+  const rows = friendRows(on);
+  return rows ? `<div class="mini-board"><b>Challenge ${esc(on.code)} so far</b><ol>${(on.others || []).map((p) => `<li>${esc(p.nickname)} <span>· ${p.score.toLocaleString()} · ${resultText(p)}</span></li>`).join("")}</ol></div>` : "";
 }
 // When the Base runs out of health, the Factory spreads over every last square, right up to the tree.
 function tickTakeover(dt) {

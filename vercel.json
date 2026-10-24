@@ -1,4 +1,5 @@
 {
   "cleanUrls": true,
-  "rewrites": [{ "source": "/", "destination": "/pjs-game" }]
+  "rewrites": [{ "source": "/", "destination": "/pjs-game" }],
+  "crons": [{ "path": "/api/keepalive", "schedule": "17 15 * * *" }]
 }
