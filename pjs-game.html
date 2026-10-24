@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>PJ's Game</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +31,9 @@
   color-scheme: dark;
 }
 html, body { height: 100%; }
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
   background: var(--ground);
@@ -202,6 +211,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
+</head>
+<body>
 <div id="app">
   <!-- Title -->
   <section class="screen menu" id="s-title">
@@ -1596,5 +1607,10 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+// iPad: stop pinch-zoom, which gets in the way of tapping towers. (Double-tap zoom is stopped by touch-action in the CSS.)
+["gesturestart", "gesturechange", "gestureend"].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 window.__pj = { get G() { return G; }, startGame, startWave, update, SETTINGS };
 </script>
+</body>
+</html>
