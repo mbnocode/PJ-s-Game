@@ -117,6 +117,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .panel .row { justify-content: flex-start; gap: 8px; }
 .panel button { font-family: var(--body); font-weight: 700; font-size: 16px; padding: 8px 12px; letter-spacing: 0.01em; }
 .panel .stars { font-family: var(--body); font-weight: 700; font-size: 14px; letter-spacing: 1px; }
+.panel .picked { color: var(--moss); }
+.panel .pick { display: flex; flex-direction: column; gap: 6px; }
+.panel .pick button { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.panel .pick button small { font-weight: 400; font-size: 13px; color: #3a1c06; }
 .panel .x { position: absolute; top: 4px; right: 4px; padding: 2px 8px; box-shadow: none; }
 
 .banner {
@@ -1000,6 +1004,23 @@ function updateHud() {
 function towerStats(t) {
   const s = SETTINGS.towers[t.kind], L = t.level;
   const onFactory = isFactory(t.x, t.y);
+  if (s.upgradeChoices) {
+    // Towers with upgrade choices get only what was picked, no automatic boosts.
+    const out = { ...s, range: s.range || 0, damage: s.damage, attacksPerSecond: s.attacksPerSecond, vision: !!s.vision, splash: 0, onFactory };
+    (t.picks || []).forEach((ci, lvl) => {
+      const c = (s.upgradeChoices[lvl] || [])[ci]; if (!c) return;
+      if (c.damageTimes) out.damage *= c.damageTimes;
+      if (c.rangePlus) out.range += c.rangePlus;
+      if (c.speedTimes) out.attacksPerSecond *= c.speedTimes;
+      if (c.slowPlus) out.slowBy = Math.min(0.9, (out.slowBy || 0) + c.slowPlus);
+      if (c.slowSecondsPlus) out.slowSeconds = (out.slowSeconds || 0) + c.slowSecondsPlus;
+      if (c.splash) out.splash += c.splash;
+      if (c.burnPlus) out.burnDamagePerSecond = (out.burnDamagePerSecond || 0) + c.burnPlus;
+      if (c.vision) out.vision = true;
+    });
+    if (onFactory) out.damage = Math.max(1, out.damage - SETTINGS.factoryWeakness);
+    return out;
+  }
   const out = { ...s, range: (s.range || 0) + SETTINGS.upgradeRange * L };
   if (s.damage) {
     out.damage = s.damage * (1 + SETTINGS.upgradeDamage * L);
@@ -1025,12 +1046,20 @@ function openPanel(t) {
   if (s.healPerWave) lines.push(`Heals ${s.healPerWave} Base Health after each wave`);
   if (s.vision) lines.push("Can see Hiders");
   if (s.onFactory) lines.push(`On Factory: ${SETTINGS.factoryWeakness} less damage`);
+  const spec = SETTINGS.towers[t.kind];
+  const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
+  const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
+  if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
+  if (s.slowBy && spec.upgradeChoices) lines.push(`Slows robots ${Math.round(s.slowBy * 100)}% for ${s.slowSeconds.toFixed(1)}s`);
   p.innerHTML = `<button class="x" id="p-close" aria-label="Close">×</button>
     <span class="k">${s.name}</span>
     <span class="stars">${"■".repeat(t.level + 1)}${"□".repeat(3 - t.level)} Upgrade ${t.level}/3</span>
+    ${picked.length ? `<span class="s picked">${picked.map((c) => "✓ " + c.name).join("<br>")}</span>` : ""}
     <span class="s">${lines.join("<br>")}</span>
+    ${choices ? `<span class="s">Pick an upgrade · ${price} leaves</span><div class="pick">${choices.map((c, i) =>
+      `<button class="go" id="p-pick-${i}" ${G.leaves < price ? "disabled" : ""}><b>${c.name}</b><small>${c.about}</small></button>`).join("")}</div>` : ""}
     <div class="row">
-      <button class="go" id="p-up" ${price === null || G.leaves < price ? "disabled" : ""}>${price === null ? "Max" : "Upgrade " + price}</button>
+      ${choices ? "" : `<button class="go" id="p-up" ${price === null || G.leaves < price ? "disabled" : ""}>${price === null ? "Max" : "Upgrade " + price}</button>`}
       <button id="p-sell">Sell +${Math.floor(t.spent * SETTINGS.sellBack)}</button>
     </div>`;
   p.hidden = false;
@@ -1041,11 +1070,14 @@ function openPanel(t) {
   top = Math.max(0, Math.min(sr.height - p.offsetHeight - 4, top));
   p.style.left = left + "px"; p.style.top = top + "px";
   $("p-close").onclick = () => { p.hidden = true; G.sel = null; };
-  $("p-up").onclick = () => {
+  const doUpgrade = (ci) => {
     const pr = upgradePrice(t); if (pr === null || G.leaves < pr) return;
+    if (ci !== undefined) t.picks = [...(t.picks || []), ci];
     G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade");
     burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); openPanel(t);
   };
+  if ($("p-up")) $("p-up").onclick = () => doUpgrade();
+  (choices || []).forEach((c, i) => ($("p-pick-" + i).onclick = () => doUpgrade(i)));
   $("p-sell").onclick = () => {
     G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t);
     Sound.play("sell"); p.hidden = true; G.sel = null; updateHud();
@@ -1209,6 +1241,15 @@ function fire(t, s, target) {
 function landShot(sh) {
   const r = sh.target, s = sh.s;
   if (r.dead) return;
+  if (s.splash) {
+    const c = posAt(G.map, r.d), R = s.splash * T;
+    for (const o of G.robots) {
+      if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
+      const q = posAt(G.map, o.d);
+      if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; } }
+    }
+    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3 });
+  }
   hurt(r, s.damage, s.vision);
   if (r.dead) return;
   if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
@@ -1368,6 +1409,7 @@ function draw() {
     else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
   }
   for (const f of G.fx) {
+    if (f.kind === "splash") { x.strokeStyle = `rgba(120,200,255,${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") { x.strokeStyle = `rgba(80,180,60,${f.t / 0.22})`; x.lineWidth = 3; x.beginPath(); x.moveTo(f.x1, f.y1); x.quadraticCurveTo((f.x1 + f.x2) / 2, Math.min(f.y1, f.y2) - 20, f.x2, f.y2); x.stroke(); }
   }
   // particles

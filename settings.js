@@ -36,7 +36,18 @@ const SETTINGS = {
     fire:   { name: "Fire Dragon", cost: 60,  range: 2.3, damage: 9,  attacksPerSecond: 2.4, burnDamagePerSecond: 5, burnSeconds: 2,
               about: "Shoots fireballs that keep burning." },
     water:  { name: "Water Frog",  cost: 55,  range: 2.5, damage: 5,  attacksPerSecond: 2, slowBy: 0.45, slowSeconds: 1.6,
-              about: "Rusts Robots so they slow down." },
+              about: "Rusts Robots so they slow down.",
+              // Each upgrade lets you pick ONE of these. You can add more choices, or give other towers choices too.
+              // What a choice can do: damageTimes (2 = double damage), rangePlus (extra squares), speedTimes (1.5 = 50% faster),
+              // slowPlus (slows robots this much more), slowSecondsPlus, splash (also hits robots within this many squares), vision (can hit Hiders)
+              upgradeChoices: [
+                [ { name: "Double Damage", about: "Hits twice as hard.", damageTimes: 2 },
+                  { name: "Long Tongue",   about: "Reaches 1 more square.", rangePlus: 1 } ],
+                [ { name: "Fast Spit",     about: "Attacks 50% faster.", speedTimes: 1.5 },
+                  { name: "Deep Freeze",   about: "Slows robots way more, for longer.", slowPlus: 0.25, slowSecondsPlus: 1 } ],
+                [ { name: "Big Splash",    about: "Also soaks robots within 1 square.", splash: 1 },
+                  { name: "Rust Vision",   about: "Can see Hiders and hits 50% harder.", vision: true, damageTimes: 1.5 } ],
+              ] },
     plant:  { name: "Tree Giant",  cost: 75,  range: 1.9, damage: 12, attacksPerSecond: 1.4, holdSeconds: 0.7,
               about: "Vines grab Robots and hold them still." },
     air:    { name: "Owl",         cost: 85,  range: 3.7, damage: 5,  attacksPerSecond: 1.6, pushBack: 0.7, vision: true,
