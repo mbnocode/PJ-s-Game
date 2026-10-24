@@ -154,6 +154,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .err { color: #ffb4a8; background: rgba(226, 87, 76, .15); border: 2px solid rgba(226, 87, 76, .5); border-radius: 4px; padding: 8px 12px; }
 .chip { font-family: var(--body); font-weight: 700; font-size: 14px; background: var(--leaf); color: #1b1006; padding: 4px 10px; border-radius: 3px; letter-spacing: .06em; }
 .lookup { align-items: flex-end; }
+.bigcode { font-family: var(--body); font-weight: 700; font-size: clamp(48px, 10vw, 84px); letter-spacing: .08em; color: var(--gold); line-height: 1; -webkit-user-select: text; user-select: text; }
+.lobby-box { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px 18px; width: min(360px, 100%); text-align: left; }
+.lobby-box ol { margin: 8px 0 0; padding-left: 24px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; font-weight: 700; }
+.lobby-box li span { color: var(--muted); font-weight: 400; font-size: 14px; }
+.lobby-box li.me { color: var(--gold); }
+.countdown { font-family: var(--display); font-size: 120px; line-height: 1; color: var(--gold); text-shadow: 0 5px 0 var(--leaf-dark); }
 
 .friends {
   position: absolute; z-index: 4; top: 8px; right: 8px; width: 220px; background: rgba(20, 32, 25, .9);
@@ -241,7 +247,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <h3 style="margin-bottom:10px">Who's playing?</h3>
       <div class="choices" id="mode-choices">
         <button id="mode-solo" aria-pressed="true">Just me<small>Play on your own</small></button>
-        <button id="mode-challenge" aria-pressed="false">Make a challenge<small>Get a code for friends</small></button>
+        <button id="mode-challenge" aria-pressed="false">Host a challenge<small>Get a code for friends</small></button>
       </div>
       <div class="choices" id="len-choices" style="margin-top:10px" hidden>
         <button id="len-1" aria-pressed="false">1 hour</button>
@@ -258,12 +264,29 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- Join a challenge -->
   <section class="screen menu" id="s-join" hidden>
     <h2>Join a friend's challenge</h2>
-    <p class="muted">Type the code your friend got when they made the challenge. You'll play the same level on the same difficulty and see how everyone is doing.</p>
+    <p class="muted">Type the code your friend got when they hosted the challenge. You'll wait in the lobby until they press Start, then everyone plays the same level on the same difficulty.</p>
     <label class="field" for="join-code">Challenge code<input id="join-code" class="code" maxlength="12" autocomplete="off" spellcheck="false" placeholder="LEAF-42"></label>
     <label class="field" for="join-nick">Your nickname<input id="join-nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ"></label>
     <p class="err" id="join-err" hidden></p>
     <button class="go big" id="b-join-go">Join</button>
     <button class="link" id="b-join-back">Back to levels</button>
+  </section>
+
+  <!-- Challenge lobby -->
+  <section class="screen menu" id="s-lobby" hidden>
+    <span class="tag">Challenge code</span>
+    <div class="bigcode" id="lobby-code">LEAF-42</div>
+    <p class="muted" id="lobby-info"></p>
+    <p id="lobby-help">Tell your friends to tap "Join a friend's challenge" and type this code.</p>
+    <div class="lobby-box">
+      <h3>Players</h3>
+      <ol id="lobby-players"></ol>
+    </div>
+    <p class="err" id="lobby-err" hidden>Can't reach the challenge right now. Still trying…</p>
+    <button class="go big" id="b-lobby-start" hidden>Start the game</button>
+    <p class="muted" id="lobby-wait" hidden></p>
+    <div class="countdown" id="countdown" hidden></div>
+    <button class="link" id="b-lobby-leave">Leave the challenge</button>
   </section>
 
   <!-- Leaderboards -->
@@ -524,13 +547,14 @@ async function onlineStart(g) {
   const o = g.online; if (!o) return;
   $("code-chip").hidden = !o.code; if (o.code) $("code-chip").textContent = "Challenge " + o.code;
   $("friends").hidden = !o.code;
-  if (o.made) tip(`Your challenge code is <b>${esc(o.code)}</b>. Tell your friends to tap "Join a friend's challenge" and type it in.`, undefined, "Challenge");
   if (o.code) renderFriends();
   try {
-    const rows = await rpc("join_game", { p_code: o.code, p_nickname: o.nick, p_level: g.level, p_difficulty: g.diffKey });
-    if (G !== g) return;
-    o.id = rows[0].id; o.secret = rows[0].secret;
-    if (o.code) { const ch = await sb(`challenges?code=eq.${encodeURIComponent(o.code)}&select=ends_at`); if (ch[0]) o.endsAt = new Date(ch[0].ends_at); }
+    if (!o.id) {
+      const rows = await rpc("join_game", { p_code: o.code, p_nickname: o.nick, p_level: g.level, p_difficulty: g.diffKey });
+      if (G !== g) return;
+      o.id = rows[0].id; o.secret = rows[0].secret;
+    }
+    if (o.code && !o.endsAt) { const ch = await sb(`challenges?code=eq.${encodeURIComponent(o.code)}&select=ends_at`); if (ch[0]) o.endsAt = new Date(ch[0].ends_at); }
     sendProgress(true);
   } catch (e) { o.err = true; o.errMsg = e.message; }
   if (o.code) pollFriends(g);
@@ -574,7 +598,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-boards", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -682,9 +706,11 @@ $("b-start").onclick = async () => {
   if (!nick) { showErr("setup-err", "Type a nickname so your friends know who you are."); return; }
   const b = $("b-start"); b.disabled = true; b.textContent = "Making your code…";
   try {
-    const code = await rpc("create_challenge", { p_level: setup.level, p_difficulty: setup.diff, p_hours: setup.hours });
-    startGame(setup.level, setup.diff, setup.tutorial, { code, nick, made: true });
-  } catch (e) { showErr("setup-err", "Couldn't make a challenge right now. Check the internet and try again."); }
+    const host = (await rpc("host_challenge", { p_level: setup.level, p_difficulty: setup.diff, p_hours: setup.hours }))[0];
+    const me = (await rpc("join_game", { p_code: host.challenge_code, p_nickname: nick, p_level: setup.level, p_difficulty: setup.diff }))[0];
+    enterLobby({ code: host.challenge_code, hostSecret: host.secret, level: setup.level, diff: setup.diff, nick, id: me.id, secret: me.secret,
+                 endsAt: new Date(Date.now() + setup.hours * 3600000), tutorial: setup.tutorial });
+  } catch (e) { showErr("setup-err", "Couldn't host a challenge right now. Check the internet and try again."); }
   b.disabled = false; b.textContent = "Start";
 };
 
@@ -699,14 +725,69 @@ $("b-join-go").onclick = async () => {
   rememberNick(nick);
   const b = $("b-join-go"); b.disabled = true;
   try {
-    const rows = await sb(`challenges?code=eq.${encodeURIComponent(code)}&select=*`);
-    if (!rows.length) showErr("join-err", `There's no challenge called ${code}. Check the code with your friend.`);
-    else if (new Date(rows[0].ends_at) < new Date()) showErr("join-err", `The ${code} challenge is already over.`);
-    else startGame(rows[0].level, rows[0].difficulty, false, { code: rows[0].code, nick });
+    const rows = await sb(`challenges?code=eq.${encodeURIComponent(code)}&select=code,level,difficulty,ends_at,started_at`);
+    const ch = rows[0];
+    if (!ch) showErr("join-err", `There's no challenge called ${code}. Check the code with your friend.`);
+    else if (new Date(ch.ends_at) < new Date()) showErr("join-err", `The ${code} challenge is already over.`);
+    else {
+      const me = (await rpc("join_game", { p_code: ch.code, p_nickname: nick, p_level: ch.level, p_difficulty: ch.difficulty }))[0];
+      const lb = { code: ch.code, level: ch.level, diff: ch.difficulty, nick, id: me.id, secret: me.secret, endsAt: new Date(ch.ends_at) };
+      if (ch.started_at) startGame(lb.level, lb.diff, false, lb); else enterLobby(lb);
+    }
   } catch (e) { showErr("join-err", "Couldn't reach the challenge right now. Check the internet and try again."); }
   b.disabled = false;
 };
 $("join-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-join-go").click(); });
+
+/* challenge lobby */
+let lobby = null;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function enterLobby(lb) { lobby = lb; lb.players = []; $("countdown").hidden = true; $("lobby-err").hidden = true; show("s-lobby"); renderLobby(); pollLobby(lb); }
+function renderLobby() {
+  const lb = lobby; if (!lb) return;
+  $("lobby-code").textContent = lb.code;
+  $("lobby-info").textContent = `${SETTINGS.levels[lb.level].name} · ${SETTINGS.difficulties[lb.diff].name} · ${timeLeft(lb.endsAt)}`;
+  const host = lb.players[0];
+  $("lobby-players").innerHTML = lb.players.map((p, i) => `<li class="${p.id === lb.id ? "me" : ""}">${esc(p.nickname)} <span>${[i === 0 ? "host" : "", p.id === lb.id ? "you" : ""].filter(Boolean).join(", ")}</span></li>`).join("") || "<li><span>Getting the lobby ready…</span></li>";
+  const isHost = !!lb.hostSecret, counting = !$("countdown").hidden;
+  $("b-lobby-start").hidden = !isHost || counting;
+  $("b-lobby-start").textContent = lb.players.length > 1 ? `Start with ${lb.players.length} players` : "Start the game";
+  $("lobby-help").hidden = counting;
+  $("lobby-wait").hidden = isHost || counting;
+  $("lobby-wait").textContent = `Waiting for ${host ? host.nickname : "the host"} to start the game…`;
+}
+async function pollLobby(lb) {
+  while (lobby === lb && !lb.go) {
+    try {
+      const [ps, ch] = await Promise.all([
+        sb(`players?challenge_code=eq.${encodeURIComponent(lb.code)}&select=id,nickname,created_at&order=created_at.asc&limit=30`),
+        sb(`challenges?code=eq.${encodeURIComponent(lb.code)}&select=started_at`),
+      ]);
+      lb.players = ps; $("lobby-err").hidden = true;
+      if (ch[0] && ch[0].started_at) { countdown(lb); return; }
+    } catch (e) { $("lobby-err").hidden = false; }
+    if (lobby !== lb) return;
+    renderLobby();
+    await sleep(1500);
+  }
+}
+async function countdown(lb) {
+  if (lb.go) return; lb.go = true;
+  const c = $("countdown"); c.hidden = false; renderLobby();
+  for (const n of ["3", "2", "1"]) { c.textContent = n; Sound.play("place"); await sleep(800); if (lobby !== lb) return; }
+  c.textContent = "Go!"; Sound.play("wave"); await sleep(400);
+  if (lobby !== lb) return;
+  lobby = null;
+  startGame(lb.level, lb.diff, !!lb.tutorial, { code: lb.code, nick: lb.nick, id: lb.id, secret: lb.secret, endsAt: lb.endsAt });
+}
+$("b-lobby-start").onclick = async () => {
+  const lb = lobby; if (!lb) return;
+  const b = $("b-lobby-start"); b.disabled = true;
+  try { await rpc("start_challenge", { p_code: lb.code, p_secret: lb.hostSecret }); countdown(lb); }
+  catch (e) { $("lobby-err").hidden = false; }
+  b.disabled = false;
+};
+$("b-lobby-leave").onclick = () => { lobby = null; renderLevels(); show("s-levels"); };
 
 /* leaderboards */
 let boardLevel = "meadow";
@@ -927,7 +1008,7 @@ function startGame(L, d, tutorial, online) {
     towers: [], robots: [], shots: [], fx: [], particles: [],
     paused: false, speed: 1, pick: null, sel: null, hover: null, over: false,
     shake: 0, time: 0, seenHider: false, seenBoss: false, factoryCount: 0, flashTiles: [],
-    online: online ? { ...online, id: null, secret: null, others: [], last: 0, dirty: false, err: false, collapsed: false } : null,
+    online: online ? { ...online, id: online.id || null, secret: online.secret || null, others: [], last: 0, dirty: false, err: false, collapsed: false } : null,
   };
   G.ground = document.createElement("canvas"); G.ground.width = 640; G.ground.height = 384;
   redrawGround();
