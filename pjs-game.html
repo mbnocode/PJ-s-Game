@@ -1,0 +1,1224 @@
+<title>PJ's Game</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one screen at a time. In a game, a top bar (Base, Leaves, Wave, controls), the map in the middle, the tower shelf at the bottom.
+   Look: a forest at dusk, deliberately one dark world. Maple orange is the only loud color. */
+:root {
+  --ground: #132019;
+  --panel: #1c2d23;
+  --panel-2: #26392d;
+  --line: #36503f;
+  --ink: #eef3e6;
+  --muted: #a3b59c;
+  --leaf: #ec7a2c;
+  --leaf-dark: #a94f14;
+  --moss: #7cc46a;
+  --moss-dark: #3f7c35;
+  --steel: #8b929c;
+  --danger: #e2574c;
+  --gold: #ffd34d;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#app { height: 100%; display: flex; flex-direction: column; max-width: 1200px; margin: 0 auto; }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.screen.menu { align-items: center; justify-content: center; gap: 22px; overflow-y: auto; padding-block: 20px; text-align: center; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
+h1 { font-size: clamp(44px, 9vw, 88px); line-height: 0.95; color: var(--ink); text-shadow: 0 4px 0 var(--moss-dark); }
+h2 { font-size: clamp(26px, 4.5vw, 38px); }
+h3 { font-size: 22px; }
+.tag { font-family: var(--display); font-size: clamp(18px, 3vw, 24px); color: var(--leaf); letter-spacing: 0.04em; }
+.muted { color: var(--muted); }
+p { margin: 0; max-width: 60ch; line-height: 1.45; }
+
+button {
+  font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--ink);
+  background: var(--panel-2); border: 2px solid var(--line); border-radius: 4px;
+  padding: 10px 18px; cursor: pointer; box-shadow: 0 3px 0 #0b130e;
+  transition: transform .06s, background .12s;
+}
+button:hover { background: #2f4637; }
+button:active { transform: translateY(2px); box-shadow: 0 1px 0 #0b130e; }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.go { background: var(--leaf); border-color: var(--leaf-dark); color: #1b1006; box-shadow: 0 3px 0 var(--leaf-dark); }
+button.go:hover { background: #f58b42; }
+button.big { font-size: 26px; padding: 14px 34px; }
+button.link { background: none; border: none; box-shadow: none; color: var(--muted); font-family: var(--body); font-weight: 400; font-size: 15px; text-decoration: underline; padding: 6px; }
+
+.lineup { display: flex; align-items: flex-end; gap: clamp(4px, 2vw, 16px); }
+.lineup canvas { width: clamp(44px, 9vw, 72px); height: auto; image-rendering: pixelated; }
+.lineup .vs { font-family: var(--display); color: var(--muted); font-size: 22px; padding: 0 8px 14px; }
+
+.cards { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; width: 100%; max-width: 760px; }
+.card {
+  flex: 1 1 200px; max-width: 340px; text-align: left; display: flex; flex-direction: column; gap: 8px;
+  background: var(--panel); border: 2px solid var(--line); padding: 16px; border-radius: 6px; font-family: var(--body); font-weight: 400;
+}
+.card:hover { border-color: var(--moss); background: var(--panel); }
+.card .k { font-family: var(--display); font-size: 22px; }
+.card .s { color: var(--muted); font-size: 15px; }
+.card canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; }
+.card.locked { opacity: .5; }
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.erase { align-self: flex-start; }
+
+.choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
+.choices button small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.choices button[aria-pressed="true"] small { color: var(--ink); }
+.row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* ----- game screen ----- */
+#game { gap: 8px; padding-block: 8px; }
+.hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.stat { display: flex; align-items: center; gap: 8px; font-family: var(--body); font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat .lbl { font-family: var(--body); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.hbar { width: 92px; height: 12px; background: #3a3f46; border: 2px solid #0b130e; border-radius: 2px; overflow: hidden; }
+.hbar i { display: block; height: 100%; background: var(--moss); transition: width .25s; }
+.hbar.low i { background: var(--danger); }
+.leafnum.bump { animation: bump .25s; }
+@keyframes bump { 50% { transform: scale(1.25); color: var(--gold); } }
+.hud .spacer { flex: 1; }
+.hud button { font-size: 16px; padding: 8px 12px; }
+#stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#board { image-rendering: pixelated; display: block; border: 3px solid #0b130e; border-radius: 4px; touch-action: none; cursor: pointer; }
+.shelf { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.tbtn { flex: 1 0 auto; min-width: 104px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; text-align: left; font-size: 15px; }
+.tbtn canvas { width: 36px; height: 36px; image-rendering: pixelated; flex: none; }
+.tbtn .c { display: block; font-family: var(--body); font-weight: 700; font-size: 13px; color: var(--leaf); }
+.tbtn[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
+.tbtn.poor .c { color: var(--danger); }
+
+.panel {
+  position: absolute; z-index: 5; background: var(--panel); border: 2px solid var(--moss); border-radius: 6px;
+  padding: 12px; display: flex; flex-direction: column; gap: 8px; width: 250px; box-shadow: 0 6px 0 rgba(0,0,0,.35);
+}
+.panel .k { font-family: var(--display); font-size: 20px; }
+.panel .s { font-size: 14px; color: var(--muted); line-height: 1.35; }
+.panel .row { justify-content: flex-start; gap: 8px; }
+.panel button { font-family: var(--body); font-weight: 700; font-size: 16px; padding: 8px 12px; letter-spacing: 0.01em; }
+.panel .stars { font-family: var(--body); font-weight: 700; font-size: 14px; letter-spacing: 1px; }
+.panel .x { position: absolute; top: 4px; right: 4px; padding: 2px 8px; box-shadow: none; }
+
+.banner {
+  position: absolute; z-index: 6; top: 10px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 20px));
+  background: #f5ecd2; color: #23180c; border: 3px solid #0b130e; border-radius: 6px; padding: 12px 14px;
+  display: flex; gap: 12px; align-items: center; box-shadow: 0 5px 0 rgba(0,0,0,.4);
+}
+.banner p { flex: 1; font-size: 16px; }
+.banner .who { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #8a4a12; display: block; }
+.banner button { font-size: 15px; padding: 7px 12px; flex: none; }
+
+.overlay {
+  position: absolute; inset: 0; z-index: 8; background: rgba(8, 14, 10, .78); display: flex; align-items: center; justify-content: center;
+}
+.overlay .box {
+  background: var(--panel); border: 3px solid var(--line); border-radius: 8px; padding: 22px 24px; text-align: center;
+  display: flex; flex-direction: column; gap: 14px; align-items: center; width: 440px; max-width: calc(100% - 24px);
+}
+.bigstars { font-size: 46px; letter-spacing: 6px; color: #4a5249; line-height: 1; }
+.bigstars b { color: var(--gold); font-weight: 400; }
+.scoreline { font-family: var(--body); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 560px) {
+  .stat { font-size: 17px; }
+  .hbar { width: 64px; }
+  .tbtn { min-width: 92px; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="app">
+  <!-- Title -->
+  <section class="screen menu" id="s-title">
+    <div class="lineup" id="lineup"></div>
+    <div>
+      <h1>PJ's Game</h1>
+      <div class="tag">Nature vs. Robots</div>
+    </div>
+    <p class="muted">The robots want to turn your meadow into a factory. Build animal towers along the path and stop them before they reach your treehouse.</p>
+    <button class="go big" id="b-play">Play</button>
+  </section>
+
+  <!-- Save slots -->
+  <section class="screen menu" id="s-slots" hidden>
+    <h2>Pick a save slot</h2>
+    <div class="cards" id="slot-cards"></div>
+    <button class="link" id="b-slots-back">Back</button>
+  </section>
+
+  <!-- Levels -->
+  <section class="screen menu" id="s-levels" hidden>
+    <h2>Pick a level</h2>
+    <div class="cards" id="level-cards"></div>
+    <button class="link" id="b-levels-back">Back to save slots</button>
+  </section>
+
+  <!-- Setup -->
+  <section class="screen menu" id="s-setup" hidden>
+    <h2 id="setup-title">The Meadow</h2>
+    <div>
+      <h3 style="margin-bottom:10px">Difficulty</h3>
+      <div class="choices" id="diff-choices"></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Turn on the tutorial?</h3>
+      <div class="choices" id="tut-choices">
+        <button id="tut-yes" aria-pressed="false">Yes<small>Tips for the first 5 waves</small></button>
+        <button id="tut-no" aria-pressed="true">No<small>I know how to play</small></button>
+      </div>
+    </div>
+    <button class="go big" id="b-start">Start</button>
+    <button class="link" id="b-setup-back">Back to levels</button>
+  </section>
+
+  <!-- Game -->
+  <section class="screen" id="game" hidden>
+    <div class="hud">
+      <div class="stat" title="Base Health"><span class="lbl">Base</span><div class="hbar" id="hbar"><i id="hfill"></i></div><span id="hnum">100</span></div>
+      <div class="stat" title="Maple Leaves"><span class="lbl">Leaves</span><span class="leafnum" id="lnum">0</span></div>
+      <div class="stat"><span class="lbl">Wave</span><span id="wnum">0/15</span></div>
+      <div class="spacer"></div>
+      <button class="go" id="b-wave">Start Wave</button>
+      <button id="b-speed" title="Game speed">1×</button>
+      <button id="b-pause">Pause</button>
+      <button id="b-sound" title="Sound">Sound on</button>
+    </div>
+    <div id="stage">
+      <canvas id="board" width="640" height="384"></canvas>
+      <div class="panel" id="tpanel" hidden></div>
+      <div class="banner" id="banner" hidden><p id="banner-text"></p><button id="banner-ok">Got it</button></div>
+      <div class="overlay" id="overlay" hidden><div class="box" id="overlay-box"></div></div>
+    </div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+</div>
+
+<script src="settings.js"></script>
+<script>
+
+const COLS = 20, ROWS = 12, T = 32;
+const LEVEL_ORDER = ["meadow", "forest"];
+const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
+const TOWER_ORDER = ["fire", "water", "plant", "air", "wizard", "healer"];
+const $ = (id) => document.getElementById(id);
+
+/* ---------- pixel art ---------- */
+const PAL = {
+  k: "#16191d", y: "#f2c230", Y: "#c98e12", w: "#ffffff", r: "#e0443a", R: "#9e2a22", g: "#7a8089", G: "#4a5059",
+  o: "#ff8c1a", b: "#3d8fe0", B: "#1f5fa8", c: "#8fd3ff", n: "#7a4a24", N: "#4e2d14", l: "#5fbf4a", L: "#2f7d32",
+  p: "#9a5fd6", h: "#8fd45f", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8",
+};
+const ART = {
+  clanker: ["................","........r.......",".......k........","........k.......","...kkkkkkkkkk...","..kyyyyyyyyyyk..","..kyYkkkyyyyyk..","..kyYkwkyyeyyk..","..kyYkkkyyyyyk..","..kyyyyyYYyyyk..","..kyyGyyyyyGyk..","..kkkkkkkkkkkk..","..GG.GG..GG.GG..",".kggkggkkggkggk.",".kGGkGGkkGGkGGk.","..kk.kk..kk.kk.."],
+  scout:   ["................","................","................","................",".......kk.......","......kcck......",".....kssssk.....","....kssbbssk....","....kscwwcsk....","....kssssssk....",".....kssssk.....","......kGGk......",".....kG..Gk.....","....kG....Gk....","...kk......kk...","................"],
+  walker:  ["................",".....kkkkkk.....","....kssssssk....","....ksrsrssk....","....kssssssk....",".....kkGGkk.....","...kkggggggkk...","..kgkggggggkgk..","..kgkgGooGgkgk..","..kk.gggggg.kk..",".....kggggk.....",".....kgkkgk.....",".....kgk.kgk....","....kGGk.kGGk...","....kkkk.kkkk...","................"],
+  tank:    ["................","................","................",".....kkkkkk.....","....kGGGGGGk....","....kGrGGrGkkkkk","....kGGGGGGsssss","..kkkkkkkkkkkkk.",".kggggggggggggk.",".kgGgGgGgGgGggk.",".kggggggggggggk.",".kkkkkkkkkkkkkk.",".kGkGkGkGkGkGkk.","..kkkkkkkkkkkk..","................","................"],
+  hider:   ["................","................","......kkkk......",".....kPPPPk.....","....kPPPPPPk....","....kkkkkkkk....","....kPcPPcPk....","....kPPPPPPk....",".....kPPPPk.....","....kPppppPk....","...kPkppppkPk...","...kk.kppk.kk...","......kPPk......",".....kP..Pk.....",".....kk..kk.....","................"],
+  boss:    ["..kk......kk....","..kGk....kGk....","..kGk....kGk....",".kkkkkkkkkkkkk..",".kgggggggggggk..",".kgrrgggggrrgk..",".kgrrgggggrrgk..",".kgggkkkkkgggk..",".kggkwkwkwkggk..",".kgggkkkkkgggk..","kkoGoGoGoGoGokk.","ksk.kgggggk.ksk.","kk..kgggggk..kk.","...kkkkkkkkk....","..kGkGkGkGkGk...","...kkkkkkkkk...."],
+  fire:    ["................","..........k.k...",".........kRkRk..","kk.......krrrrk.","kRk.....krrwkrrk","kRRk....krrrrrrk","kRrRk....krrrrkk","kRrrRk..krrfkk..",".kRkRRkkrrrk....","..k.kRrrrrrrk...","....krrrffffrk..","...krrrkffffrk..","..krk.krrrrrk...",".kok..kRkkRk....","..k...kk..kk....","................"],
+  water:   ["................","................","................","....kk....kk....","...kwwk..kwwk...","...kwkk..kkwk...","..kbbbbbbbbbbk..",".kbbbbbbbbbbbbk.",".kbccccccccccbk.",".kbbkkkkkkkkbbk.","..kbbbbbbbbbbk..","..kbBbbbbbbBbk..",".kbBBkbbbbkBBbk.",".kkkk.kkkk.kkkk.","................","................"],
+  plant:   ["......kkkk......","....kkllllkk....","...kllLlllLlk...","..kllllllLlllk..","..klLllllllllk..","...kkknnnnkkk...","....knwnnwnk....","..kkknnnnnnkkk..",".klk.knnnnk.klk.",".kl..knNNnk..lk.",".kk..knnnnk..kk.",".....knnnnk.....","....knnkknnk....","...klnk..knlk...","...kkkk..kkkk...","................"],
+  air:     ["................","...kk......kk...","...kmk....kmk...","...kmmkkkkmmk...","..kmmmmmmmmmmk..","..kmeekmmkeemk..","..kmeykmmkyemk..","..kmeekookeemk..","..kmmmmkkmmmmk..",".kmmeeeeeeeemmk.",".kmeeeeeeeeeemk.",".kmmeeeeeeeemmk.","..kmmeeeeeemmk..","...kkmmmmmmkk...","....kokk.kok....","................"],
+  wizard:  [".......kk.......","......kLLk......",".....kLLyLk.....","....kLLLLLLk....","...kkkkkkkkkk...",".....keeeek..kc.",".....kekekk..kck",".....keeeek..kn.","....kxxxxxxk.kn.","...kLxxxxxxLkkn.","...kLLxxxxLLLkn.","...kLLLLLLLLk.n.","..kLLLLyLLLLLkn.","..kLLLLLLLLLLkn.","..kkkkkkkkkkkk..","................"],
+  healer:  ["..f..f....f..f..","..ff.f....f.ff..","...fff....fff...","....f.kkkk.f....",".....kmmmmk.....","....kmmkmmmk....","....kmmmmmmk....",".....kmmmmk.....","......kmmk......",".....kmmmmkkkkk.","....kmmeemmmmmmk","....kmmmmmmmmmk.",".....kmmmmmmmk..",".....kmk..kmk...",".....kmk..kmk...",".....kk....kk..."],
+  base:    [".....kkkkkk.....","...kkllllllkk...","..klllLlllLllk..",".kllLllllllllLk.",".klllllllLllllk.","..kkknnnnnnkkk..","...knmmmmmmnk...","...knmkkkkmnk...","...knmkeekmnk...","...knmkeekmnk...","...knnnnnnnnk...","......knnk......","......knnk......",".....knnnnk.....","....knnnnnnk....","....kkkkkkkk...."],
+  gate:    ["..kk........kk..","..kGk......kGk..","..kGk......kGk..",".kkkkkkkkkkkkkk.",".kggggggggggggk.",".kgkkkkkkkkkkgk.",".kgkGGGGGGGGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGGGGGGGGkgk.",".kgkkkkkkkkkkgk.",".kggoggggggoggk.",".kkkkkkkkkkkkkk.","................"],
+  tree:    ["......kkkk......","....kkllllkk....","...klllLllllk...","..kllLlllllLlk..","..klllllLlllLk..",".kllLlllllllllk.",".klllllLlllLllk.",".kLlllllllllLlk.","..kLLlllLlllLk..","...kLLLLLLLLk...","....kkknnkkk....","......knnk......","......knnk......",".....knnnnk.....","....kkkkkkkk....","................"],
+  mushroom: ["................","................","................","...kkkkk........","..krrwrrk.......",".krwrrrwrk......",".krrrrrrrk......",".kkkkkkkkk.kkk..","...keek...krwrk.","...keek..krrrrrk","...keek..kkkkkkk","...keek....kek..","..keeeek...kek..","..kkkkkk..kkkkk.","................","................"],
+  tallgrass: ["................","................","................","................","......h.........","..h...Lh....h...","..Lh.hLL...Lh...","...LLhLL..hLL.h.",".h.LhLLh.hLhLLh.",".LhLLhLLhLhLhLL.",".LLhLLLhLLLhLLL.","..LLLLLLLLLLLL..","................","................","................","................"],
+  leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
+};
+function makeSprite(rows, flip) {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 16;
+  const x = c.getContext("2d");
+  rows.forEach((row, y) => {
+    for (let i = 0; i < 16; i++) {
+      const ch = row[i]; if (!ch || ch === ".") continue;
+      x.fillStyle = PAL[ch] || "#f0f"; x.fillRect(flip ? 15 - i : i, y, 1, 1);
+    }
+  });
+  return c;
+}
+const SPR = {}, SPRF = {};
+for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
+
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function makeTile(kind) {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d");
+  const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
+  if (kind === "grass") {
+    x.fillStyle = "#4f9a3a"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 26; n++) px(rnd() < 0.5 ? "#5fb046" : "#44873a", rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.25) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px(rnd() < 0.5 ? "#ffe066" : "#ff9fbf", i, j); px("#fff6c9", i, j - 1); }
+  } else if (kind === "path") {
+    x.fillStyle = "#b88a55"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 18; n++) px(rnd() < 0.5 ? "#a37647" : "#c99a64", rnd() * 16 | 0, rnd() * 16 | 0);
+  } else {
+    x.fillStyle = "#5d636d"; x.fillRect(0, 0, 16, 16);
+    x.fillStyle = "#454a52"; x.fillRect(0, 0, 16, 1); x.fillRect(0, 0, 1, 16);
+    x.fillStyle = "#3a3e45"; x.fillRect(0, 6, 16, 3);
+    x.fillStyle = "#7b828c"; x.fillRect(0, 6, 16, 1);
+    for (const [i, j] of [[3, 3], [12, 3], [3, 12], [12, 12]]) px("#2b2f35", i, j);
+    if (rnd() < 0.35) { x.fillStyle = "#2b2f35"; x.fillRect(9, 10, 4, 4); px("#e07a1f", 10, 11); }
+    if (rnd() < 0.3) { x.fillStyle = "#3a3e45"; x.fillRect(4, 1, 2, 5); }
+  }
+  return c;
+}
+// The robots' factory: 2 x 2 squares, drawn at 32 x 32 pixels. doorRow 1 = door in the bottom half.
+function makeFactory(doorRow) {
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d");
+  const r = (col, i, j, w, h) => { x.fillStyle = col; x.fillRect(i, j, w, h); };
+  // smokestacks
+  for (const sx of [4, 11, 18]) {
+    r("#16191d", sx - 1, 0, 6, 14);
+    r("#7a3b2e", sx, 1, 4, 13);
+    r("#9a4d3c", sx, 1, 1, 13);
+    r("#16191d", sx - 1, 4, 6, 2); r("#ffb347", sx, 4, 2, 2); r("#16191d", sx + 2, 4, 2, 2);
+  }
+  // sawtooth roof
+  r("#16191d", 1, 12, 30, 3);
+  for (let i = 0; i < 4; i++) { const ox = 2 + i * 7; for (let k = 0; k < 6; k++) r(k < 1 ? "#16191d" : "#454a52", ox + k, 11 - Math.floor(k / 2), 1, 2 + Math.floor(k / 2)); r("#8fd3ff", ox + 5, 10, 1, 2); }
+  // main building
+  r("#16191d", 1, 13, 30, 19);
+  r("#5d636d", 2, 14, 28, 17);
+  r("#7b828c", 2, 14, 28, 1);
+  r("#4a5059", 2, 22, 28, 1);
+  // lit windows
+  for (const wx of [4, 9, 14]) { r("#16191d", wx - 1, 16, 5, 5); r("#ff9a3c", wx, 17, 3, 3); r("#ffd36b", wx, 17, 1, 1); }
+  // rivets
+  for (const [i, j] of [[3, 25], [10, 25], [17, 25], [3, 29], [10, 29], [17, 29]]) r("#2b2f35", i, j, 1, 1);
+  // big door on the right, where the robots come out
+  const dy = doorRow === 1 ? 17 : 14;
+  r("#16191d", 21, dy, 11, 32 - dy - 1);
+  for (let i = 0; i < 11; i++) r(i % 2 ? "#16191d" : "#f2c230", 21 + i, dy, 1, 2);
+  r("#0c0e10", 23, dy + 3, 9, 32 - dy - 5);
+  r("#e0443a", 26, dy + 5, 2, 1);
+  r("#16191d", 0, 31, 32, 1);
+  return c;
+}
+const GRASS = Array.from({ length: 8 }, () => makeTile("grass"));
+const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
+const STEEL = Array.from({ length: 6 }, () => makeTile("factory"));
+
+/* ---------- sound ---------- */
+const Sound = {
+  ctx: null, on: true, master: null, last: {},
+  init() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.master = this.ctx.createGain(); this.master.gain.value = this.on ? 0.6 : 0; this.master.connect(this.ctx.destination);
+      this.noiseBuf = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      this.music();
+    } catch (e) { this.ctx = null; }
+  },
+  setOn(v) { this.on = v; if (this.master) this.master.gain.value = v ? 0.6 : 0; },
+  ok(key, gap) { if (!this.ctx) return false; const t = performance.now(); if (this.last[key] && t - this.last[key] < gap) return false; this.last[key] = t; return true; },
+  tone(f, dur, type = "square", vol = 0.15, f2, delay = 0) {
+    const c = this.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.02);
+  },
+  noise(dur, vol, ftype, f1, f2) {
+    const c = this.ctx, t = c.currentTime, s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noiseBuf; fl.type = ftype; fl.frequency.setValueAtTime(f1, t); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    s.connect(fl); fl.connect(g); g.connect(this.master); s.start(t); s.stop(t + dur + 0.02);
+  },
+  play(name) {
+    if (!this.ctx) return;
+    switch (name) {
+      case "pop": if (this.ok(name, 60)) { this.noise(0.09, 0.35, "bandpass", 1900); this.tone(620, 0.12, "square", 0.08, 180); } break;
+      case "swish": if (this.ok(name, 90)) this.noise(0.18, 0.08, "highpass", 1800, 6000); break;
+      case "fire": if (this.ok(name, 140)) this.noise(0.22, 0.12, "lowpass", 900, 250); break;
+      case "water": if (this.ok(name, 140)) this.noise(0.14, 0.09, "bandpass", 3200, 1400); break;
+      case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
+      case "air": if (this.ok(name, 160)) this.tone(520, 0.28, "sine", 0.08, 280); break;
+      case "place": this.tone(520, 0.08, "square", 0.1, 780); break;
+      case "upgrade": [523, 659, 784].forEach((f, i) => this.tone(f, 0.12, "square", 0.08, null, i * 0.07)); break;
+      case "sell": this.tone(700, 0.1, "triangle", 0.12, 350); break;
+      case "hit": this.tone(150, 0.3, "square", 0.16, 55); this.noise(0.2, 0.2, "lowpass", 500); break;
+      case "heal": [660, 880, 1046].forEach((f, i) => this.tone(f, 0.18, "sine", 0.1, null, i * 0.08)); break;
+      case "horn": this.tone(98, 0.9, "sawtooth", 0.12); this.tone(147, 0.9, "sawtooth", 0.08, null, 0.15); break;
+      case "wave": this.tone(392, 0.12, "square", 0.08); this.tone(523, 0.16, "square", 0.08, null, 0.1); break;
+      case "win": [523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.25, "square", 0.09, null, i * 0.12)); break;
+      case "lose": [392, 330, 262, 196].forEach((f, i) => this.tone(f, 0.3, "triangle", 0.12, null, i * 0.18)); break;
+      case "nope": this.tone(160, 0.1, "square", 0.06); break;
+    }
+  },
+  music() {
+    const notes = [262, 294, 330, 392, 440, 523, 587, 659];
+    const bass = [131, 98, 110, 87];
+    let step = 0, i = 3;
+    const beat = 0.42;
+    let next = this.ctx.currentTime + 0.2;
+    const sched = () => {
+      if (!this.ctx) return;
+      while (next < this.ctx.currentTime + 0.6) {
+        const t = next - this.ctx.currentTime;
+        if (step % 8 === 0) this.tone(bass[(step / 8 | 0) % 4], beat * 7.5, "triangle", 0.035, null, t);
+        if (Math.random() < 0.7) {
+          i = Math.max(0, Math.min(notes.length - 1, i + [-2, -1, 1, 2, 0][Math.random() * 5 | 0]));
+          this.tone(notes[i], beat * 0.9, "triangle", 0.022, null, t);
+        }
+        step++; next += beat;
+      }
+    };
+    setInterval(sched, 150);
+  },
+};
+
+/* ---------- saves (kept in this browser) ---------- */
+const SAVE_KEY = "pjs-game-slots-v1";
+function loadSlots() {
+  try { const v = JSON.parse(localStorage.getItem(SAVE_KEY)); if (Array.isArray(v) && v.length === 3) return v; } catch (e) {}
+  return [null, null, null];
+}
+function saveSlots(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) {} }
+let slots = loadSlots();
+let slotIndex = 0;
+const slot = () => slots[slotIndex];
+try { const m = localStorage.getItem("pjs-game-sound"); if (m === "off") Sound.on = false; } catch (e) {}
+
+/* ---------- screens ---------- */
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "game"];
+function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
+
+function spriteCanvas(name, size = 16) {
+  const c = document.createElement("canvas"); c.width = size; c.height = size;
+  const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR[name], 0, 0, size, size); return c;
+}
+["plant", "air", "fire", "water"].forEach((n) => $("lineup").appendChild(spriteCanvas(n)));
+const vs = document.createElement("span"); vs.className = "vs"; vs.textContent = "vs"; $("lineup").appendChild(vs);
+$("lineup").appendChild(spriteCanvas("clanker"));
+
+$("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); };
+$("b-slots-back").onclick = () => show("s-title");
+$("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); };
+$("b-setup-back").onclick = () => { renderLevels(); show("s-levels"); };
+
+const starText = (n) => "★".repeat(n) + "☆".repeat(3 - n);
+function slotSummary(s) {
+  let stars = 0;
+  for (const L in s.best) for (const d in s.best[L]) stars += s.best[L][d].stars;
+  const beaten = LEVEL_ORDER.filter((L) => s.best[L] && Object.keys(s.best[L]).length).length;
+  return { stars, beaten };
+}
+let eraseArmed = -1;
+function renderSlots() {
+  const box = $("slot-cards"); box.innerHTML = "";
+  slots.forEach((s, i) => {
+    const b = document.createElement("button"); b.className = "card"; b.id = "slot-" + i;
+    if (!s) {
+      b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="s">Empty. Tap to start a new game.</span>`;
+    } else {
+      const sum = slotSummary(s);
+      b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="stars">★ ${sum.stars} stars</span><span class="s">${sum.beaten} of ${LEVEL_ORDER.length} levels beaten</span>`;
+    }
+    b.onclick = () => {
+      slotIndex = i;
+      if (!slots[i]) { slots[i] = { created: Date.now(), best: {} }; saveSlots(slots); }
+      renderLevels(); show("s-levels");
+    };
+    const wrap = document.createElement("div"); wrap.style.cssText = "display:flex;flex-direction:column;gap:6px;flex:1 1 200px;max-width:340px";
+    wrap.appendChild(b); b.style.maxWidth = "none";
+    if (s) {
+      const e = document.createElement("button"); e.className = "link erase"; e.id = "erase-" + i;
+      e.textContent = eraseArmed === i ? "Tap again to erase Slot " + (i + 1) : "Erase";
+      e.onclick = () => {
+        if (eraseArmed === i) { slots[i] = null; saveSlots(slots); eraseArmed = -1; } else eraseArmed = i;
+        renderSlots();
+      };
+      wrap.appendChild(e);
+    }
+    box.appendChild(wrap);
+  });
+}
+
+function unlocked(L) {
+  const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
+  const prev = slot().best[LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);
+}
+function renderLevels() {
+  const box = $("level-cards"); box.innerHTML = "";
+  LEVEL_ORDER.forEach((L) => {
+    const lv = SETTINGS.levels[L], open = unlocked(L), best = slot().best[L] || {};
+    const b = document.createElement("button"); b.className = "card" + (open ? "" : " locked"); b.id = "level-" + L;
+    const mini = document.createElement("canvas"); mini.width = 320; mini.height = 192;
+    drawMini(mini, L);
+    const starsLine = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
+    b.appendChild(mini);
+    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
+    b.disabled = !open;
+    b.onclick = () => { setup.level = L; renderSetup(); show("s-setup"); };
+    box.appendChild(b);
+  });
+}
+
+const setup = { level: "meadow", diff: "normal", tutorial: false };
+function renderSetup() {
+  $("setup-title").textContent = SETTINGS.levels[setup.level].name;
+  const box = $("diff-choices"); box.innerHTML = "";
+  const blurb = { easy: "Slower robots. Your Base heals a little.", normal: "The way PJ plays it.", hard: "Faster, tougher, more glowing robots.", nightmare: "Good luck. Score ×3." };
+  DIFF_ORDER.forEach((d) => {
+    const b = document.createElement("button"); b.id = "diff-" + d;
+    b.setAttribute("aria-pressed", String(setup.diff === d));
+    b.innerHTML = `${SETTINGS.difficulties[d].name}<small>${blurb[d]}</small>`;
+    b.onclick = () => { setup.diff = d; renderSetup(); };
+    box.appendChild(b);
+  });
+  $("tut-yes").setAttribute("aria-pressed", String(setup.tutorial));
+  $("tut-no").setAttribute("aria-pressed", String(!setup.tutorial));
+}
+$("tut-yes").onclick = () => { setup.tutorial = true; renderSetup(); };
+$("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
+$("b-start").onclick = () => startGame(setup.level, setup.diff, setup.tutorial);
+
+/* ---------- map ---------- */
+function buildMap(L) {
+  const wp = SETTINGS.levels[L].path;
+  const cells = Array.from({ length: ROWS }, () => Array(COLS).fill("grass"));
+  for (let i = 0; i < wp.length - 1; i++) {
+    let [x, y] = wp[i]; const [x2, y2] = wp[i + 1];
+    const dx = Math.sign(x2 - x), dy = Math.sign(y2 - y);
+    cells[y][x] = "path";
+    while (x !== x2 || y !== y2) { x += dx; y += dy; cells[y][x] = "path"; }
+  }
+  const [gx, gy] = wp[0], [bx, by] = wp[wp.length - 1];
+  const gTop = gy > 0 ? gy - 1 : gy;
+  for (let j = gTop; j < gTop + 2; j++) for (let i = 0; i < 2; i++) cells[j][i] = "gate";
+  const bTop = by > 0 ? by - 1 : by, bLeft = bx > 0 ? bx - 1 : bx;
+  for (let j = bTop; j < bTop + 2; j++) for (let i = bLeft; i < bLeft + 2; i++) cells[j][i] = "base";
+  const pts = [[gx - 1, gy], ...wp].map(([x, y]) => ({ x: (x + 0.5) * T, y: (y + 0.5) * T }));
+  const segs = []; let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) { const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y); segs.push({ a: pts[i], b: pts[i + 1], start: total, len }); total += len; }
+  // Factory spreads from the Robots' side: the grass squares closest to the gate go first.
+  const grass = [];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass") grass.push({ x, y, k: x * 10 + Math.abs(y - gy) * 0.9 + ((x * 7 + y * 13) % 5) * 0.3 });
+  grass.sort((a, b) => a.k - b.k);
+  const factoryOrder = grass.slice(0, SETTINGS.factorySquares);
+  const tree = makeGrandTree();
+  const scenery = {}, lv = SETTINGS.levels[L];
+  for (const [list, kind] of [[lv.trees, "tree"], [lv.mushrooms, "mushroom"], [lv.tallGrass, "tallgrass"]])
+    for (const [sx, sy] of list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
+  const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
+  return { cells, segs, total, factoryOrder, gate: { x: 0, y: gTop, img: makeFactory(gy - gTop) }, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery };
+}
+function posAt(map, d) {
+  d = Math.max(0, Math.min(map.total, d));
+  for (const s of map.segs) if (d <= s.start + s.len) { const f = (d - s.start) / s.len; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
+  const s = map.segs[map.segs.length - 1]; return { x: s.b.x, y: s.b.y, dx: 1 };
+}
+function paintGround(x, map, factoryCount) {
+  x.imageSmoothingEnabled = false;
+  const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
+  for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
+    const kind = map.cells[y][i], v = map.look[y][i];
+    let img = GRASS[v % GRASS.length];
+    if (fset.has(i + "," + y)) img = STEEL[v % STEEL.length];
+    x.drawImage(img, i * T, y * T, T, T);
+  }
+  map.pathImg = map.pathImg || makePathLayer(map);
+  x.drawImage(map.pathImg, 0, 0, 640, 384);
+  for (const key in map.scenery) {
+    const [sx, sy] = key.split(",").map(Number);
+    if (fset.has(key)) { x.globalAlpha = 0.55; x.filter = "grayscale(1)"; }
+    x.drawImage(SPR[map.scenery[key]], sx * T, sy * T, T, T);
+    x.globalAlpha = 1; x.filter = "none";
+  }
+  drawFactory(x, map);
+  drawBase(x, map, false);
+}
+// The dirt path, drawn as one bumpy, curvy strip instead of square tiles.
+function makePathLayer(map) {
+  const W = 320, H = 192, mask = new Uint8Array(W * H);
+  let sd = map.total | 0;
+  const R = () => (sd = (sd * 16807 + 11) % 2147483647) / 2147483647;
+  const a = R() * 6, b = R() * 6, c = R() * 6;
+  const wob = (d) => Math.sin(d * 0.09 + a) * 0.5 + Math.sin(d * 0.23 + b) * 0.35 + Math.sin(d * 0.61 + c) * 0.15;
+  const disc = (cx, cy, r, v) => {
+    const rr = r * r, n = Math.ceil(r);
+    for (let dy = -n; dy <= n; dy++) for (let dx = -n; dx <= n; dx++) {
+      const px = Math.round(cx + dx), py = Math.round(cy + dy);
+      if (px < 0 || py < 0 || px >= W || py >= H || dx * dx + dy * dy > rr) continue;
+      const i = py * W + px; if (mask[i] < v) mask[i] = v;
+    }
+  };
+  const ruts = [];
+  for (let d = 0; d <= map.total; d += 1.5) {
+    const p = posAt(map, d), cx = p.x / 2, cy = p.y / 2, r = 6.4 + 1.3 * wob(d / 2);
+    disc(cx, cy, r + 1.3, 1); disc(cx, cy, r, 2);
+    const q = posAt(map, d + 2), tx = (q.x - p.x), ty = (q.y - p.y), tl = Math.hypot(tx, ty) || 1;
+    ruts.push([cx - ty / tl * 2.5, cy + tx / tl * 2.5], [cx + ty / tl * 2.5, cy - tx / tl * 2.5]);
+  }
+  // little grassy bites along the edges
+  for (let k = 0; k < 40; k++) {
+    const d = R() * map.total, p = posAt(map, d), ang = R() * Math.PI * 2;
+    const bx = Math.round(p.x / 2 + Math.cos(ang) * 6.5), by = Math.round(p.y / 2 + Math.sin(ang) * 6.5);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (R() < 0.7) { const i = (by + dy) * W + bx + dx; if (i >= 0 && i < mask.length && mask[i] === 2) mask[i] = 3; }
+  }
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
+  const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const C = { rim: hex("#3b7a2e"), dirt: hex("#b88a55"), dark: hex("#a37647"), light: hex("#c99a64"), edge: hex("#9c7246"), stone: hex("#8f8a80"), rut: hex("#a2774a"), tuft: hex("#4f9a3a"), tuft2: hex("#5fb046") };
+  const put = (i, col) => { D[i * 4] = col[0]; D[i * 4 + 1] = col[1]; D[i * 4 + 2] = col[2]; D[i * 4 + 3] = 255; };
+  for (let i = 0; i < mask.length; i++) {
+    const m = mask[i]; if (!m) continue;
+    if (m === 1) { if (R() < 0.85) put(i, C.rim); continue; }
+    if (m === 3) { put(i, R() < 0.5 ? C.tuft : C.tuft2); continue; }
+    const nearEdge = mask[i - 1] === 1 || mask[i + 1] === 1 || mask[i - W] === 1 || mask[i + W] === 1;
+    const r = R();
+    put(i, nearEdge ? C.edge : r < 0.12 ? C.dark : r < 0.24 ? C.light : C.dirt);
+  }
+  for (const [rx, ry] of ruts) { const i = Math.round(ry) * W + Math.round(rx); if (mask[i] === 2 && R() < 0.35) put(i, C.rut); }
+  for (let k = 0; k < 26; k++) {
+    const p = posAt(map, R() * map.total), sx = Math.round(p.x / 2 + (R() - 0.5) * 8), sy = Math.round(p.y / 2 + (R() - 0.5) * 8);
+    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1]]) { const i = (sy + dy) * W + sx + dx; if (mask[i] === 2 && (dx + dy === 0 || R() < 0.6)) put(i, C.stone); }
+  }
+  x.putImageData(img, 0, 0);
+  return cv;
+}
+// The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
+function makeGrandTree() {
+  const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d");
+  const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
+  let sd = 99; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  // trunk and roots
+  const halfW = (j) => j < 33 ? 5 + Math.max(0, (24 - j)) * 0.15 : 5 + (j - 33) * 1.25;
+  for (let j = 18; j < H; j++) {
+    const w = Math.round(halfW(j));
+    for (let i = 20 - w; i <= 20 + w; i++) {
+      const edge = i === 20 - w || i === 20 + w || j === H - 1;
+      const bark = (i * 3 + j) % 7 === 0 || (i + j * 2) % 11 === 0;
+      px(edge ? "#16191d" : bark ? "#4e2d14" : i < 18 ? "#a8743e" : "#7a4a24", i, j);
+    }
+  }
+  // branches reaching into the leaves
+  for (const [sx, sy, dx] of [[16, 22, -1], [24, 22, 1], [18, 19, -1], [22, 19, 1]]) for (let k = 0; k < 6; k++) { px("#16191d", sx + dx * k, sy - k); px("#7a4a24", sx + dx * k, sy - k + 1); }
+  // canopy: a cluster of round leafy blobs, lit from the top-left
+  const blobs = [[20, 11, 11], [9, 15, 8], [31, 15, 8], [13, 6, 7], [27, 6, 7], [20, 17, 9], [5, 21, 4], [35, 21, 4], [20, 3, 6]];
+  const inC = (i, j) => blobs.some(([cx, cy, r]) => (i - cx) ** 2 + (j - cy) ** 2 <= r * r);
+  for (let j = 0; j < 28; j++) for (let i = 0; i < W; i++) {
+    if (!inC(i, j)) continue;
+    const edge = !inC(i - 1, j) || !inC(i + 1, j) || !inC(i, j - 1) || !inC(i, j + 1);
+    if (edge) { px("#16191d", i, j); continue; }
+    const v = (i - 20) * 0.25 + (j - 12) * 0.6 + (R() - 0.5) * 4;
+    px(v < -6 ? "#8fd45f" : v < -1 ? "#5fb046" : v < 5 ? "#3c8a33" : "#24602a", i, j);
+  }
+  // blossoms
+  for (let n = 0; n < 22; n++) { const i = 3 + (R() * 34 | 0), j = 2 + (R() * 22 | 0); if (inC(i - 1, j) && inC(i + 1, j) && inC(i, j - 1) && inC(i, j + 1)) { px("#ff9fbf", i, j); if (R() < 0.4) px("#fff1f6", i, j - 1); } }
+  // hanging vines and lanterns
+  for (const [vx, len] of [[7, 5], [12, 7], [29, 6], [33, 4]]) { let top = 27; while (top > 0 && !inC(vx, top)) top--; for (let k = 1; k <= len; k++) px(k % 2 ? "#2f7d32" : "#4fa83f", vx, top + k); }
+  for (const lx of [10, 30]) { let top = 27; while (top > 0 && !inC(lx, top)) top--; px("#16191d", lx, top + 1); px("#16191d", lx, top + 2); x.fillStyle = "#16191d"; x.fillRect(lx - 1, top + 3, 3, 4); px("#ffb347", lx, top + 4); px("#ffd36b", lx, top + 5); }
+  // round window and front door
+  x.fillStyle = "#16191d"; x.fillRect(22, 25, 5, 5); x.fillStyle = "#ffd36b"; x.fillRect(23, 26, 3, 3); px("#ffb347", 25, 28);
+  x.fillStyle = "#16191d"; x.fillRect(16, 34, 7, 10); x.fillRect(17, 33, 5, 1);
+  x.fillStyle = "#5b3418"; x.fillRect(17, 35, 5, 9); x.fillRect(18, 34, 3, 1);
+  x.fillStyle = "#3a2010"; x.fillRect(19, 35, 1, 9);
+  px("#ffd36b", 21, 39);
+  // little mushrooms at the roots
+  for (const [mx, my] of [[8, 41], [32, 40]]) { x.fillStyle = "#16191d"; x.fillRect(mx - 1, my - 1, 4, 3); px("#e0443a", mx, my); px("#ffffff", mx + 1, my); px("#e0443a", mx + 2, my - 0); px("#f4e2c0", mx + 1, my + 1); }
+  return c;
+}
+function grayCopy(src) {
+  const c = document.createElement("canvas"); c.width = src.width; c.height = src.height;
+  const x = c.getContext("2d"); x.drawImage(src, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height);
+  for (let i = 0; i < d.data.length; i += 4) { const g = (d.data[i] * 0.3 + d.data[i + 1] * 0.59 + d.data[i + 2] * 0.11) * 0.8; d.data[i] = d.data[i + 1] = d.data[i + 2] = g; }
+  x.putImageData(d, 0, 0); return c;
+}
+function drawBase(x, map, gray) {
+  const b = map.base, w = 80, h = 88;
+  const left = Math.min(640 - w, b.x * T + T - w / 2), top = (b.y + 2) * T - h;
+  x.drawImage(gray ? b.gray : b.img, left, top, w, h);
+}
+function drawFactory(x, map) { x.drawImage(map.gate.img, map.gate.x * T, map.gate.y * T, 2 * T, 2 * T); }
+function drawSmoke(x, map, time) {
+  [4, 11, 18].forEach((sx, i) => {
+    for (let k = 0; k < 4; k++) {
+      const ph = (time * 0.5 + k / 4 + i * 0.37) % 1;
+      const px = map.gate.x * T + (sx + 2) * 2 + Math.sin(time * 2 + k + i) * 3 + ph * 10;
+      const py = map.gate.y * T - ph * 34;
+      x.globalAlpha = 0.55 * (1 - ph); x.fillStyle = k % 2 ? "#9aa0a8" : "#7b828c";
+      const rad = 3 + ph * 7; x.fillRect(px - rad, py - rad, rad * 2, rad * 2);
+    }
+  });
+  x.globalAlpha = 1;
+}
+function drawMini(c, L) { const x = c.getContext("2d"); x.save(); x.scale(0.5, 0.5); paintGround(x, buildMap(L), 0); x.restore(); }
+
+/* ---------- game state ---------- */
+const board = $("board"), ctx = board.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+let G = null;
+
+function startGame(L, d, tutorial) {
+  const diff = SETTINGS.difficulties[d];
+  G = {
+    level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
+    wave: 0, waveActive: false, waveClock: 0, queue: [],
+    health: SETTINGS.baseHealth, leaves: diff.startLeaves, killPoints: 0,
+    towers: [], robots: [], shots: [], fx: [], particles: [],
+    paused: false, speed: 1, pick: null, sel: null, hover: null, over: false,
+    shake: 0, time: 0, seenHider: false, seenBoss: false, factoryCount: 0, flashTiles: [],
+  };
+  G.ground = document.createElement("canvas"); G.ground.width = 640; G.ground.height = 384;
+  redrawGround();
+  $("tpanel").hidden = true; $("overlay").hidden = true; $("banner").hidden = true;
+  renderShelf(); updateHud(); show("game"); fitBoard();
+  $("b-speed").textContent = "1×";
+  if (tutorial) tip("Tap a tower at the bottom, then tap the grass next to the path to place it. Try the Fire Dragon first.", 0);
+}
+function redrawGround() {
+  const fc = Math.round((1 - G.health / SETTINGS.baseHealth) * SETTINGS.factorySquares);
+  const before = G.factoryCount; G.factoryCount = Math.max(0, Math.min(SETTINGS.factorySquares, fc));
+  const x = G.ground.getContext("2d"); x.clearRect(0, 0, 640, 384); paintGround(x, G.map, G.factoryCount);
+  if (G.factoryCount > before) G.map.factoryOrder.slice(before, G.factoryCount).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.6, col: "255,140,40" }));
+  if (G.factoryCount < before) G.map.factoryOrder.slice(G.factoryCount, before).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.8, col: "150,255,140" }));
+}
+
+/* ---------- tutorial ---------- */
+function tip(text, step, who = "Tutorial") {
+  $("banner-text").innerHTML = `<span class="who">${who}</span>${text}`;
+  $("banner").hidden = false;
+  if (step !== undefined) G.tutStep = step;
+}
+$("banner-ok").onclick = () => { $("banner").hidden = true; };
+function tutorialEvent(ev) {
+  if (!G.tutorial) return;
+  const say = (t) => tip(t);
+  if (ev === "placed" && G.tutStep === 0) { G.tutStep = 1; say("Nice! Press Start Wave when you're ready for the robots."); }
+  else if (ev === "wave1") say("Every robot you destroy drops Maple Leaves. Spend them on more towers.");
+  else if (ev === "end1") say("Tap a tower you've placed to Upgrade it or Sell it. Upgraded towers look bigger and hit harder.");
+  else if (ev === "wave2") say("If a robot reaches your treehouse, land turns into Factory, starting from the robots' side. If all 100 squares become Factory, you lose.");
+  else if (ev === "wave3") say("Scouts are fast! Water Frogs rust robots and slow them down.");
+  else if (ev === "wave4") say("The Wizard makes nearby towers attack faster. The Healer Deer heals your Base after every wave, but it's expensive.");
+  else if (ev === "wave5") say("A Boss is coming! Use Pause and the speed button whenever you like. That's the last tip. Good luck!");
+  else if (ev === "end5") { G.tutorial = false; }
+}
+
+/* ---------- shelf, panel, hud ---------- */
+function renderShelf() {
+  const box = $("shelf"); box.innerHTML = "";
+  TOWER_ORDER.forEach((k) => {
+    const t = SETTINGS.towers[k];
+    const b = document.createElement("button"); b.className = "tbtn"; b.id = "tower-" + k; b.title = t.about;
+    b.appendChild(spriteCanvas(k, 32));
+    b.insertAdjacentHTML("beforeend", `<span>${t.name}<span class="c">${t.cost} leaves</span></span>`);
+    b.onclick = () => { G.pick = G.pick === k ? null : k; G.sel = null; $("tpanel").hidden = true; updateShelf(); };
+    box.appendChild(b);
+  });
+  updateShelf();
+}
+function updateShelf() {
+  TOWER_ORDER.forEach((k) => {
+    const b = $("tower-" + k); if (!b) return;
+    b.setAttribute("aria-pressed", String(G.pick === k));
+    b.classList.toggle("poor", G.leaves < SETTINGS.towers[k].cost);
+  });
+}
+let lastLeaves = 0;
+function updateHud() {
+  const h = Math.max(0, Math.round(G.health));
+  $("hnum").textContent = h;
+  $("hfill").style.width = (100 * h / SETTINGS.baseHealth) + "%";
+  $("hbar").classList.toggle("low", h <= SETTINGS.baseHealth * 0.3);
+  const ln = $("lnum"); const L = Math.floor(G.leaves);
+  if (L !== lastLeaves) { ln.textContent = L; if (L > lastLeaves) { ln.classList.remove("bump"); void ln.offsetWidth; ln.classList.add("bump"); } lastLeaves = L; updateShelf(); }
+  $("wnum").textContent = `${G.wave}/${SETTINGS.waves.length}`;
+  const b = $("b-wave"); b.disabled = G.waveActive || G.over;
+  b.textContent = G.over ? "Level over" : G.waveActive ? "Wave in progress" : G.wave === 0 ? "Start Wave" : "Start Wave " + (G.wave + 1);
+  $("b-sound").textContent = Sound.on ? "Sound on" : "Sound off";
+  $("b-pause").textContent = G.paused ? "Resume" : "Pause";
+}
+
+function towerStats(t) {
+  const s = SETTINGS.towers[t.kind], L = t.level;
+  const onFactory = isFactory(t.x, t.y);
+  const out = { ...s, range: (s.range || 0) + SETTINGS.upgradeRange * L };
+  if (s.damage) {
+    out.damage = s.damage * (1 + SETTINGS.upgradeDamage * L);
+    if (onFactory) out.damage = Math.max(1, out.damage - SETTINGS.factoryWeakness);
+    out.attacksPerSecond = s.attacksPerSecond * (1 + SETTINGS.upgradeSpeed * L);
+    out.vision = !!s.vision || L >= SETTINGS.visionAtUpgrade;
+    if (s.burnDamagePerSecond) out.burnDamagePerSecond = s.burnDamagePerSecond * (1 + SETTINGS.upgradeDamage * L);
+  }
+  if (s.speedBoost) out.speedBoost = s.speedBoost + 0.15 * L;
+  if (s.healPerWave) out.healPerWave = s.healPerWave + L;
+  out.onFactory = onFactory;
+  return out;
+}
+function isFactory(x, y) { return G.map.factoryOrder.slice(0, G.factoryCount).some((c) => c.x === x && c.y === y); }
+function upgradePrice(t) { return t.level >= 3 ? null : Math.round(SETTINGS.towers[t.kind].cost * SETTINGS.upgradeCost[t.level]); }
+
+function openPanel(t) {
+  G.sel = t; G.pick = null; updateShelf();
+  const p = $("tpanel"), s = towerStats(t), price = upgradePrice(t);
+  const lines = [];
+  if (s.damage) lines.push(`Damage ${s.damage.toFixed(0)} · ${s.attacksPerSecond.toFixed(1)} per second`);
+  if (s.speedBoost) lines.push(`Nearby towers attack ${Math.round(s.speedBoost * 100)}% faster`);
+  if (s.healPerWave) lines.push(`Heals ${s.healPerWave} Base Health after each wave`);
+  if (s.vision) lines.push("Can see Hiders");
+  if (s.onFactory) lines.push(`On Factory: ${SETTINGS.factoryWeakness} less damage`);
+  p.innerHTML = `<button class="x" id="p-close" aria-label="Close">×</button>
+    <span class="k">${s.name}</span>
+    <span class="stars">${"■".repeat(t.level + 1)}${"□".repeat(3 - t.level)} Upgrade ${t.level}/3</span>
+    <span class="s">${lines.join("<br>")}</span>
+    <div class="row">
+      <button class="go" id="p-up" ${price === null || G.leaves < price ? "disabled" : ""}>${price === null ? "Max" : "Upgrade " + price}</button>
+      <button id="p-sell">Sell +${Math.floor(t.spent * SETTINGS.sellBack)}</button>
+    </div>`;
+  p.hidden = false;
+  const r = board.getBoundingClientRect(), sr = $("stage").getBoundingClientRect(), k = r.width / 640;
+  let left = r.left - sr.left + (t.x + 1.1) * T * k, top = r.top - sr.top + (t.y - 0.5) * T * k;
+  if (left + 254 > sr.width) left = r.left - sr.left + t.x * T * k - 260;
+  left = Math.max(0, Math.min(sr.width - 254, left));
+  top = Math.max(0, Math.min(sr.height - p.offsetHeight - 4, top));
+  p.style.left = left + "px"; p.style.top = top + "px";
+  $("p-close").onclick = () => { p.hidden = true; G.sel = null; };
+  $("p-up").onclick = () => {
+    const pr = upgradePrice(t); if (pr === null || G.leaves < pr) return;
+    G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade");
+    burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); openPanel(t);
+  };
+  $("p-sell").onclick = () => {
+    G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t);
+    Sound.play("sell"); p.hidden = true; G.sel = null; updateHud();
+  };
+}
+
+/* ---------- input ---------- */
+function tileFromEvent(e) {
+  const r = board.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) / r.width * COLS), y = Math.floor((e.clientY - r.top) / r.height * ROWS);
+  return x >= 0 && y >= 0 && x < COLS && y < ROWS ? { x, y } : null;
+}
+const towerAt = (x, y) => G.towers.find((t) => t.x === x && t.y === y);
+board.addEventListener("pointermove", (e) => { if (G) G.hover = tileFromEvent(e); });
+board.addEventListener("pointerleave", () => { if (G) G.hover = null; });
+board.addEventListener("pointerdown", (e) => {
+  if (!G || G.over) return;
+  const c = tileFromEvent(e); if (!c) return;
+  G.hover = c;
+  const t = towerAt(c.x, c.y);
+  if (t) { openPanel(t); return; }
+  if (G.pick) {
+    const spec = SETTINGS.towers[G.pick];
+    if (G.map.cells[c.y][c.x] !== "grass") { Sound.play("nope"); return; }
+    const sc = G.map.scenery[c.x + "," + c.y];
+    if (sc) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, sc === "tree" ? "A tree is here" : sc === "mushroom" ? "Mushrooms here" : "Tall grass here", "#ffd34d"); return; }
+    if (G.leaves < spec.cost) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, "Need " + spec.cost, "#ff8a7a"); return; }
+    G.leaves -= spec.cost;
+    G.towers.push({ kind: G.pick, x: c.x, y: c.y, level: 0, cool: 0.2, spent: spec.cost, born: G.time, boosted: false });
+    Sound.play("place"); burst(c.x * T + 16, c.y * T + 16, "#9be28a", 10);
+    tutorialEvent("placed"); updateHud();
+    if (G.leaves < spec.cost) { G.pick = null; updateShelf(); }
+    return;
+  }
+  G.sel = null; $("tpanel").hidden = true;
+});
+
+$("b-wave").onclick = () => startWave();
+$("b-speed").onclick = () => { G.speed = G.speed === 3 ? 1 : G.speed + 1; $("b-speed").textContent = G.speed + "×"; };
+$("b-pause").onclick = () => { if (G.over) return; G.paused ? resume() : pause(); };
+$("b-sound").onclick = () => { Sound.init(); Sound.setOn(!Sound.on); try { localStorage.setItem("pjs-game-sound", Sound.on ? "on" : "off"); } catch (e) {} updateHud(); };
+document.addEventListener("keydown", (e) => {
+  if (!G || $("game").hidden) return;
+  if (e.key === " " && !G.waveActive) { e.preventDefault(); startWave(); }
+  if (e.key === "p" || e.key === "Escape") G.paused ? resume() : pause();
+});
+
+function overlay(html) { $("overlay-box").innerHTML = html; $("overlay").hidden = false; }
+function pause() {
+  G.paused = true; updateHud();
+  overlay(`<h2>Paused</h2><div class="row"><button class="go" id="o-resume">Resume</button><button id="o-restart">Restart level</button><button id="o-menu">Quit to levels</button></div>`);
+  $("o-resume").onclick = resume;
+  $("o-restart").onclick = () => startGame(G.level, G.diffKey, false);
+  $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
+}
+function resume() { G.paused = false; $("overlay").hidden = true; updateHud(); }
+
+/* ---------- waves ---------- */
+function startWave() {
+  if (!G || G.waveActive || G.over || G.wave >= SETTINGS.waves.length) return;
+  Sound.init();
+  G.wave++; G.waveActive = true; G.waveClock = 0; G.queue = [];
+  let t = 0;
+  for (const [type, count, gap, hp] of SETTINGS.waves[G.wave - 1]) {
+    for (let i = 0; i < count; i++) { G.queue.push({ at: t, type, hp }); t += gap; }
+    t += 1.5;
+  }
+  const hasBoss = G.queue.some((q) => q.type === "boss");
+  const hasHider = G.queue.some((q) => q.type === "hider");
+  Sound.play(hasBoss ? "horn" : "wave");
+  if (G.tutorial && G.wave <= 5) tutorialEvent("wave" + G.wave);
+  else if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
+  else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
+  if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
+  updateHud();
+}
+function spawn(q) {
+  const base = SETTINGS.robots[q.type], d = G.diff;
+  let aura = 0;
+  const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
+  if (cap > 0 && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
+  const A = SETTINGS.auras[aura];
+  const hp = (q.hp || base.health) * d.robotHealth * (A ? A.health : 1);
+  G.robots.push({
+    type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: 0,
+    leaves: Math.round(base.leaves * (A ? A.leaves : 1)), points: Math.round(base.points * (A ? A.points : 1)),
+    slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0,
+  });
+}
+function endWave() {
+  G.waveActive = false;
+  const bonus = SETTINGS.waveBonusLeaves + 2 * G.wave;
+  G.leaves += bonus;
+  const pos = { x: G.map.base.x * T + 32, y: G.map.base.y * T };
+  let heal = G.diff.baseHealsPerWave;
+  G.towers.forEach((t) => { if (t.kind === "healer") heal += towerStats(t).healPerWave; });
+  if (heal > 0 && G.health < SETTINGS.baseHealth) {
+    G.health = Math.min(SETTINGS.baseHealth, G.health + heal); redrawGround();
+    floatText(pos.x, pos.y - 10, "+" + heal, "#9cff8a"); Sound.play("heal");
+    G.towers.filter((t) => t.kind === "healer").forEach((t) => burst(t.x * T + 16, t.y * T + 10, "#ffe58a", 12));
+  }
+  floatText(320, 40, `Wave ${G.wave} cleared! +${bonus} leaves`, "#ffd34d", 2.2);
+  if (G.tutorial && (G.wave === 1 || G.wave === 5)) tutorialEvent("end" + G.wave);
+  if (G.wave >= SETTINGS.waves.length) finish(true);
+  updateHud();
+}
+
+/* ---------- combat ---------- */
+function hurt(r, amt, vision, isBurn) {
+  if (r.dead) return;
+  if (r.hideT > 0 && !vision) return;
+  r.hp -= amt; r.hitT = 0.12;
+  if (r.hp <= 0) { kill(r); return; }
+  if (r.type === "hider" && r.hideT <= 0 && !isBurn) r.hideT = SETTINGS.robots.hider.hideSeconds;
+}
+function kill(r) {
+  r.dead = true;
+  G.leaves += r.leaves; G.killPoints += r.points;
+  const p = posAt(G.map, r.d);
+  Sound.play("pop"); Sound.play("swish");
+  burst(p.x, p.y, "#c9ced6", r.type === "boss" ? 40 : 10);
+  burst(p.x, p.y, "#ffb347", r.type === "boss" ? 20 : 4);
+  const n = r.type === "boss" ? 8 : 1 + (r.leaves > 10 ? 1 : 0);
+  for (let i = 0; i < n; i++) G.particles.push({ kind: "leaf", x: p.x + (Math.random() - 0.5) * 16, y: p.y, t: 0, life: 0.55 + Math.random() * 0.2, sx: p.x, sy: p.y });
+  updateHud();
+}
+function reachBase(r) {
+  r.dead = true;
+  const dmg = Math.min(SETTINGS.maxHitPerRobot, Math.max(1, Math.ceil(r.hp * SETTINGS.robotHitRatio)));
+  G.health = Math.max(0, G.health - dmg);
+  G.shake = 0.3; Sound.play("hit");
+  floatText(G.map.base.x * T + 32, G.map.base.y * T - 8, "-" + dmg, "#ff6a5a");
+  redrawGround(); updateHud();
+  if (G.health <= 0) finish(false);
+}
+function findTarget(t, s) {
+  const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
+  let best = null, bestD = -1;
+  for (const r of G.robots) {
+    if (r.dead || (r.hideT > 0 && !s.vision)) continue;
+    const p = posAt(G.map, r.d);
+    if (Math.hypot(p.x - cx, p.y - cy) <= R && r.d > bestD) { best = r; bestD = r.d; }
+  }
+  return best;
+}
+function fire(t, s, target) {
+  const sx = t.x * T + 16, sy = t.y * T + 10;
+  if (t.kind === "plant") {
+    hurt(target, s.damage, s.vision);
+    target.rootT = target.type === "boss" ? 0.2 : s.holdSeconds;
+    const p = posAt(G.map, target.d);
+    G.fx.push({ kind: "vine", x1: sx, y1: sy + 8, x2: p.x, y2: p.y, t: 0.22 });
+    Sound.play("plant");
+  } else {
+    G.shots.push({ kind: t.kind, x: sx, y: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
+    Sound.play(t.kind);
+  }
+  t.recoil = 0.12;
+}
+function landShot(sh) {
+  const r = sh.target, s = sh.s;
+  if (r.dead) return;
+  hurt(r, s.damage, s.vision);
+  if (r.dead) return;
+  if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
+  if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
+  if (sh.kind === "air") r.d = Math.max(0, r.d - s.pushBack * T * (r.type === "boss" ? 0.25 : 1));
+  const p = posAt(G.map, r.d);
+  burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : "#ffffff", 5);
+}
+
+/* ---------- effects ---------- */
+function burst(x, y, col, n) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = 30 + Math.random() * 90; G.particles.push({ kind: "spark", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0, life: 0.35 + Math.random() * 0.3, col }); }
+}
+function floatText(x, y, text, col, life = 1.1) { G.fx.push({ kind: "text", x, y, text, col, t: life, life }); }
+
+/* ---------- update ---------- */
+function update(dt) {
+  G.time += dt;
+  if (G.waveActive) {
+    G.waveClock += dt;
+    while (G.queue.length && G.queue[0].at <= G.waveClock) spawn(G.queue.shift());
+  }
+  for (const r of G.robots) {
+    if (r.dead) continue;
+    r.hideT = Math.max(0, r.hideT - dt); r.hitT = Math.max(0, r.hitT - dt);
+    if (r.burnT > 0) { r.burnT -= dt; hurt(r, r.burnDps * dt, false, true); if (r.dead) continue; }
+    let sp = r.speed;
+    if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
+    if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
+    r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
+    if (r.d >= G.map.total) reachBase(r);
+    if (G.over) return;
+  }
+  G.robots = G.robots.filter((r) => !r.dead);
+
+  const wizards = G.towers.filter((t) => t.kind === "wizard").map((t) => ({ t, s: towerStats(t) }));
+  for (const t of G.towers) {
+    const s = towerStats(t);
+    t.recoil = Math.max(0, (t.recoil || 0) - dt);
+    if (!s.damage) continue;
+    let boost = 0;
+    for (const w of wizards) if (Math.hypot(w.t.x - t.x, w.t.y - t.y) <= w.s.range) boost = Math.max(boost, w.s.speedBoost);
+    t.boosted = boost > 0;
+    t.cool -= dt * (1 + boost);
+    if (t.cool <= 0) {
+      const target = findTarget(t, s);
+      if (target) { fire(t, s, target); t.cool = 1 / s.attacksPerSecond; } else t.cool = 0;
+    }
+  }
+  for (const sh of G.shots) {
+    const r = sh.target;
+    if (r.dead || (r.hideT > 0 && !sh.s.vision)) { sh.done = true; continue; }
+    const p = posAt(G.map, r.d), dx = p.x - sh.x, dy = p.y - sh.y, dist = Math.hypot(dx, dy), step = sh.speed * dt;
+    if (dist <= step + 4) { landShot(sh); sh.done = true; } else { sh.x += dx / dist * step; sh.y += dy / dist * step; }
+  }
+  G.shots = G.shots.filter((s) => !s.done);
+  if (G.waveActive && !G.queue.length && !G.robots.length && !G.over) endWave();
+}
+function tickFx(dt) {
+  for (const p of G.particles) {
+    p.t += dt;
+    if (p.kind === "spark") { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; }
+  }
+  G.particles = G.particles.filter((p) => p.t < p.life);
+  for (const f of G.fx) f.t -= dt;
+  G.fx = G.fx.filter((f) => f.t > 0);
+  for (const f of G.flashTiles) f.t -= dt;
+  G.flashTiles = G.flashTiles.filter((f) => f.t > 0);
+  G.shake = Math.max(0, G.shake - dt);
+}
+
+/* ---------- draw ---------- */
+function draw() {
+  const x = ctx;
+  x.save();
+  if (G.shake > 0) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
+  x.drawImage(G.ground, 0, 0);
+  for (const f of G.flashTiles) { x.fillStyle = `rgba(${f.col},${Math.min(0.6, f.t)})`; x.fillRect(f.x * T, f.y * T, T, T); }
+
+  // placement preview / selected range
+  const showRange = (tx, ty, range, ok) => {
+    x.beginPath(); x.arc(tx * T + 16, ty * T + 16, range * T, 0, Math.PI * 2);
+    x.fillStyle = ok ? "rgba(255,255,255,0.10)" : "rgba(255,80,60,0.12)"; x.fill();
+    x.strokeStyle = ok ? "rgba(255,255,255,0.5)" : "rgba(255,90,70,0.6)"; x.lineWidth = 2; x.stroke();
+  };
+  if (G.pick && G.hover) {
+    const h = G.hover, ok = G.map.cells[h.y][h.x] === "grass" && !towerAt(h.x, h.y) && !G.map.scenery[h.x + "," + h.y];
+    const spec = SETTINGS.towers[G.pick];
+    showRange(h.x, h.y, spec.range || 0.6, ok);
+    x.globalAlpha = 0.6; x.drawImage(SPR[G.pick], h.x * T, h.y * T, T, T); x.globalAlpha = 1;
+  }
+  if (G.sel) { const s = towerStats(G.sel); showRange(G.sel.x, G.sel.y, s.range || 0.6, true); }
+
+  // towers
+  for (const t of G.towers) {
+    const cx = t.x * T + 16, by = t.y * T + 30;
+    const scale = [0.72, 0.84, 0.96, 1.1][t.level];
+    const sz = 32 * scale, pop = Math.max(0, 1 - (G.time - t.born) * 5);
+    if (t.level >= 3 || t.kind === "healer") {
+      const pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + t.x);
+      const g = x.createRadialGradient(cx, by - sz / 2, 2, cx, by - sz / 2, 22);
+      const col = t.kind === "healer" ? "255,225,120" : t.kind === "air" ? "200,235,255" : t.kind === "fire" ? "255,150,60" : t.kind === "water" ? "120,190,255" : t.kind === "plant" ? "150,255,120" : "190,140,255";
+      g.addColorStop(0, `rgba(${col},${0.35 + 0.25 * pulse})`); g.addColorStop(1, `rgba(${col},0)`);
+      x.fillStyle = g; x.fillRect(cx - 24, by - sz / 2 - 24, 48, 48);
+    }
+    x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4);
+    const rc = (t.recoil || 0) * 10;
+    const s2 = sz * (1 + pop * 0.3);
+    x.drawImage(SPR[t.kind], cx - s2 / 2, by - s2 - rc, s2, s2);
+    if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
+    for (let i = 0; i < t.level; i++) { x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, t.y * T + 1, 4, 3); }
+  }
+
+  // robots
+  const sorted = [...G.robots].sort((a, b) => posAt(G.map, a.d).y - posAt(G.map, b.d).y);
+  for (const r of sorted) {
+    const p = posAt(G.map, r.d), big = r.type === "boss";
+    const sz = big ? 56 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : 28;
+    const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
+    const hidden = r.hideT > 0;
+    if (r.aura && !hidden) {
+      const col = SETTINGS.auras[r.aura].color, pulse = 0.6 + 0.4 * Math.sin(G.time * 5 + r.wob);
+      const g = x.createRadialGradient(p.x, p.y - 4, 3, p.x, p.y - 4, sz * 0.75);
+      g.addColorStop(0, col + "cc"); g.addColorStop(1, col + "00");
+      x.globalAlpha = pulse; x.fillStyle = g; x.fillRect(p.x - sz, p.y - sz, sz * 2, sz * 2); x.globalAlpha = 1;
+    }
+    x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4);
+    x.globalAlpha = hidden ? 0.16 + 0.08 * Math.sin(G.time * 20) : 1;
+    const img = (p.dx < 0 ? SPRF : SPR)[r.type];
+    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4));
+    if (r.type === "clanker") x.rotate(Math.sin(r.wob * 0.5) * 0.08);
+    x.drawImage(img, -sz / 2, -sz / 2, sz, sz);
+    x.restore();
+    if (r.hitT > 0 && !hidden) { x.globalAlpha = 0.5; x.fillStyle = "#fff"; x.fillRect(p.x - sz * 0.3, p.y - sz * 0.45 + wob - (big ? 12 : 4), sz * 0.6, sz * 0.6); }
+    x.globalAlpha = 1;
+    if (r.slowT > 0 && !hidden) { x.fillStyle = "rgba(90,170,255,0.35)"; x.fillRect(p.x - sz * 0.35, p.y - sz * 0.5, sz * 0.7, sz * 0.8); }
+    if (r.burnT > 0 && !hidden) { x.fillStyle = Math.random() < 0.5 ? "#ff9a3c" : "#ffd36b"; x.fillRect(p.x - 6 + Math.random() * 12, p.y - sz * 0.5 - Math.random() * 6, 3, 3); }
+    if (r.rootT > 0) { x.strokeStyle = "#3f9d32"; x.lineWidth = 3; x.beginPath(); x.moveTo(p.x - 10, p.y + 8); x.quadraticCurveTo(p.x, p.y - 6, p.x + 10, p.y + 8); x.stroke(); }
+    if (r.hp < r.maxHp && !hidden) {
+      const w = big ? 44 : 22, top = p.y - sz / 2 - (big ? 22 : 10);
+      x.fillStyle = "#16191d"; x.fillRect(p.x - w / 2 - 1, top - 1, w + 2, 5);
+      x.fillStyle = r.hp / r.maxHp > 0.5 ? "#7cc46a" : r.hp / r.maxHp > 0.25 ? "#ffd34d" : "#e2574c";
+      x.fillRect(p.x - w / 2, top, w * Math.max(0, r.hp / r.maxHp), 3);
+    }
+  }
+
+  // the robots' factory sits on top, so robots walk out of its door
+  drawFactory(x, G.map);
+  drawSmoke(x, G.map, G.time);
+  drawBase(x, G.map, G.takeover && G.takeover.done);
+  if (Math.sin(G.time * 6) > 0) { x.fillStyle = "#ff3b2f"; x.fillRect(G.map.gate.x * T + 54, G.map.gate.y * T + 18, 4, 4); }
+
+  // shots
+  for (const sh of G.shots) {
+    if (sh.kind === "fire") { x.fillStyle = "#ff7a1a"; x.fillRect(sh.x - 4, sh.y - 4, 8, 8); x.fillStyle = "#ffd36b"; x.fillRect(sh.x - 2, sh.y - 2, 4, 4); }
+    else if (sh.kind === "water") { x.fillStyle = "#3d8fe0"; x.fillRect(sh.x - 3, sh.y - 4, 6, 8); x.fillStyle = "#cfeeff"; x.fillRect(sh.x - 1, sh.y - 3, 2, 2); }
+    else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
+  }
+  for (const f of G.fx) {
+    if (f.kind === "vine") { x.strokeStyle = `rgba(80,180,60,${f.t / 0.22})`; x.lineWidth = 3; x.beginPath(); x.moveTo(f.x1, f.y1); x.quadraticCurveTo((f.x1 + f.x2) / 2, Math.min(f.y1, f.y2) - 20, f.x2, f.y2); x.stroke(); }
+  }
+  // particles
+  for (const p of G.particles) {
+    if (p.kind === "spark") { x.globalAlpha = 1 - p.t / p.life; x.fillStyle = p.col; x.fillRect(p.x - 1.5, p.y - 1.5, 3, 3); }
+    else {
+      const k = p.t / p.life, e = k * k, tx = 40, ty = -20;
+      const lx = p.x + (tx - p.x) * e, ly = p.y + (ty - p.y) * e - Math.sin(k * Math.PI) * 30;
+      x.globalAlpha = 1; x.drawImage(SPR.leaf, lx - 9, ly - 9, 18, 18);
+    }
+  }
+  x.globalAlpha = 1;
+  for (const f of G.fx) {
+    if (f.kind !== "text") continue;
+    const a = Math.min(1, f.t / 0.4), rise = (f.life - f.t) * 18;
+    x.globalAlpha = a; x.font = "700 16px 'Atkinson Hyperlegible', sans-serif"; x.textAlign = "center";
+    x.lineWidth = 4; x.strokeStyle = "#16191d"; x.strokeText(f.text, f.x, f.y - rise); x.fillStyle = f.col; x.fillText(f.text, f.x, f.y - rise);
+  }
+  x.globalAlpha = 1;
+  x.restore();
+}
+
+/* ---------- finish ---------- */
+function finish(won) {
+  if (G.over) return;
+  G.over = true; G.waveActive = false; G.sel = null; $("tpanel").hidden = true; $("banner").hidden = true; updateHud();
+  const score = Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes);
+  const H = G.health / SETTINGS.baseHealth;
+  const stars = won ? (H >= 0.9 ? 3 : H >= 0.5 ? 2 : 1) : 0;
+  let best = false;
+  if (!won) { G.takeover = { t: 0, from: G.factoryCount, n: G.factoryCount, done: false }; Sound.play("horn"); }
+  if (won) {
+    const s = slot(); s.best[G.level] = s.best[G.level] || {};
+    const prev = s.best[G.level][G.diffKey];
+    if (!prev || score > prev.score || stars > prev.stars) {
+      s.best[G.level][G.diffKey] = { stars: Math.max(stars, prev ? prev.stars : 0), score: Math.max(score, prev ? prev.score : 0) };
+      best = !prev || score > prev.score;
+    }
+    saveSlots(slots);
+  }
+  setTimeout(() => {
+    Sound.play(won ? "win" : "lose");
+    const lvName = SETTINGS.levels[G.level].name;
+    const nextL = LEVEL_ORDER[LEVEL_ORDER.indexOf(G.level) + 1];
+    overlay(won
+      ? `<h2>${lvName} is saved!</h2>
+         <div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>
+         <div class="scoreline">Score ${score.toLocaleString()}${best ? " · New best!" : ""}</div>
+         <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left</p>
+         <div class="row">${nextL ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button><button id="o-menu">Levels</button></div>`
+      : `<h2>The Factory took over</h2>
+         <p class="muted">The robots got through on Wave ${G.wave} of ${SETTINGS.waves.length}.</p>
+         <div class="scoreline">Score ${score.toLocaleString()}</div>
+         <div class="row"><button class="go" id="o-again">Try again</button><button id="o-menu">Levels</button></div>`);
+    $("o-again").onclick = () => startGame(G.level, G.diffKey, false);
+    $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
+    if ($("o-next")) $("o-next").onclick = () => { setup.level = nextL; G = null; renderSetup(); show("s-setup"); };
+  }, won ? 700 : 3400);
+}
+// When the Base runs out of health, the Factory spreads over every last square, right up to the tree.
+function tickTakeover(dt) {
+  const tk = G.takeover; if (!tk || tk.done) return;
+  tk.t += dt;
+  const all = G.map.grassOrder.length, k = Math.min(1, tk.t / 2.4);
+  const n = Math.round(tk.from + (all - tk.from) * k * k);
+  if (n !== tk.n) {
+    G.map.grassOrder.slice(tk.n, n).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.5, col: "255,140,40" }));
+    tk.n = n;
+    const x = G.ground.getContext("2d"); x.clearRect(0, 0, 640, 384); paintGround(x, G.map, n);
+    if (Math.random() < 0.5) Sound.play("pop");
+  }
+  if (k >= 1) { tk.done = true; G.shake = 0.3; Sound.play("hit"); }
+}
+
+/* ---------- loop & sizing ---------- */
+function fitBoard() {
+  const st = $("stage"), w = st.clientWidth, h = st.clientHeight;
+  if (!w || !h) return;
+  const k = Math.min((w - 8) / 640, (h - 8) / 384);
+  board.style.width = Math.floor(640 * k) + "px"; board.style.height = Math.floor(384 * k) + "px";
+}
+new ResizeObserver(fitBoard).observe($("stage"));
+let lastT = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  if (G && !$("game").hidden) {
+    if (!G.paused && !G.over) for (let i = 0; i < G.speed; i++) { update(dt); if (G.over) break; }
+    if (!G.paused) tickFx(dt * (G.over ? 1 : G.speed));
+    if (G.over) tickTakeover(dt);
+    draw();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__pj = { get G() { return G; }, startGame, startWave, update, SETTINGS };
+</script>
