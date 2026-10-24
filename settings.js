@@ -39,7 +39,7 @@ const SETTINGS = {
               about: "Rusts Robots so they slow down." },
     plant:  { name: "Tree Giant",  cost: 75,  range: 1.9, damage: 12, attacksPerSecond: 1.4, holdSeconds: 0.7,
               about: "Vines grab Robots and hold them still." },
-    air:    { name: "Owl",         cost: 85,  range: 2.7, damage: 5,  attacksPerSecond: 1.6, pushBack: 0.7, vision: true,
+    air:    { name: "Owl",         cost: 85,  range: 3.7, damage: 5,  attacksPerSecond: 1.6, pushBack: 0.7, vision: true,
               about: "Wind pushes Robots back. Can see Hiders." },
     wizard: { name: "Wizard",      cost: 110, range: 2.2, speedBoost: 0.3,
               about: "Helper: nearby Towers attack faster." },
