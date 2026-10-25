@@ -376,7 +376,7 @@ const ART = {
   plant:   ["....kkkkkkkk....","...kLlhlLlhlk...","..kLlLllhlLlLk..","..kkkknnnnkkkk..","....knfnnfnk....","..kkknNnnNnkkk..",".kLnnnkkkknnnLk.","kLnmnnnnnnnnmnLk","knmnnnNnnNnnnmnk","knnnkknnnnkknnnk","knnk.knNNnk.knnk","kNmNk.knnk.kNmNk","kNNNk.knnk.kNNNk",".kkk.knnnnk.kkk.","....kNNkkNNk....","....kkkk.kkk...."],
   air:     ["................","...kk......kk...","...kmk....kmk...","...kmmkkkkmmk...","..kmmmmmmmmmmk..","..kmeekmmkeemk..","..kmeykmmkyemk..","..kmeekookeemk..","..kmmmmkkmmmmk..",".kmmeeeeeeeemmk.",".kmeeeeeeeeeemk.",".kmmeeeeeeeemmk.","..kmmeeeeeemmk..","...kkmmmmmmkk...","....kokk.kok....","................"],
   wizard:  [".......kk.......","......kLLk......",".....kLLyLk.....","....kLLLLLLk....","...kkkkkkkkkk...",".....keeeek..kc.",".....kekekk..kck",".....keeeek..kn.","....kxxxxxxk.kn.","...kLxxxxxxLkkn.","...kLLxxxxLLLkn.","...kLLLLLLLLk.n.","..kLLLLyLLLLLkn.","..kLLLLLLLLLLkn.","..kkkkkkkkkkkk..","................"],
-  healer:  ["..f..f....f..f..","..ff.f....f.ff..","...fff....fff...","....f.kkkk.f....",".....kmmmmk.....","....kmmkmmmk....","....kmmmmmmk....",".....kmmmmk.....","......kmmk......",".....kmmmmkkkkk.","....kmmeemmmmmmk","....kmmmmmmmmmk.",".....kmmmmmmmk..",".....kmk..kmk...",".....kmk..kmk...",".....kk....kk..."],
+  healer:  [".....w..w...wy.w","......fyy....yf.",".......fy....f.w","....wyy.f...f.yy",".........f.f....","........kkkk....",".......kmmmmkk..",".......kmkmmmmk.","......kmmmmmkk..","......kmmmek....","..kk.kmmmeek....",".kekkmmmmeek....","kemmmmmmmmmk....","kmmmnmmmmnmk....",".kmk.kmk.kmk....",".kNk.kNk.kNk...."],
   base:    [".....kkkkkk.....","...kkllllllkk...","..klllLlllLllk..",".kllLllllllllLk.",".klllllllLllllk.","..kkknnnnnnkkk..","...knmmmmmmnk...","...knmkkkkmnk...","...knmkeekmnk...","...knmkeekmnk...","...knnnnnnnnk...","......knnk......","......knnk......",".....knnnnk.....","....knnnnnnk....","....kkkkkkkk...."],
   gate:    ["..kk........kk..","..kGk......kGk..","..kGk......kGk..",".kkkkkkkkkkkkkk.",".kggggggggggggk.",".kgkkkkkkkkkkgk.",".kgkGGGGGGGGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGGGGGGGGkgk.",".kgkkkkkkkkkkgk.",".kggoggggggoggk.",".kkkkkkkkkkkkkk.","................"],
   tree:    ["......kkkk......","....kkllllkk....","...klllLllllk...","..kllLlllllLlk..","..klllllLlllLk..",".kllLlllllllllk.",".klllllLlllLllk.",".kLlllllllllLlk.","..kLLlllLlllLk..","...kLLLLLLLLk...","....kkknnkkk....","......knnk......","......knnk......",".....knnnnk.....","....kkkkkkkk....","................"],
@@ -1639,9 +1639,9 @@ function draw() {
   // towers
   for (const t of G.towers) {
     const cx = t.x * T + 16, by = t.y * T + 30;
-    const scale = [0.72, 0.84, 0.96, 1.1][t.level];
+    const scale = t.kind === "healer" ? [1.0, 1.06, 1.12, 1.2][t.level] : [0.72, 0.84, 0.96, 1.1][t.level];
     const sz = 32 * scale, pop = Math.max(0, 1 - (G.time - t.born) * 5);
-    if (t.level >= 3 || t.kind === "healer") {
+    if (t.level >= 3 && t.kind !== "healer") {
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + t.x);
       const g = x.createRadialGradient(cx, by - sz / 2, 2, cx, by - sz / 2, 22);
       const col = t.kind === "healer" ? "255,225,120" : t.kind === "air" ? "200,235,255" : t.kind === "fire" ? "255,150,60" : t.kind === "water" ? "120,190,255" : t.kind === "plant" ? "150,255,120" : "190,140,255";
@@ -1651,7 +1651,17 @@ function draw() {
     x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4);
     const rc = (t.recoil || 0) * 10;
     const s2 = sz * (1 + pop * 0.3);
+    if (t.kind === "healer") {
+      // The deer's antlers glow: a bright golden halo that pulses, with sparkles floating up.
+      const ax = cx + s2 * 0.12, ay = by - s2 * 0.82, pulse = 0.5 + 0.5 * Math.sin(G.time * 2.5 + t.y);
+      const rad = s2 * (0.55 + 0.12 * pulse);
+      const g2 = x.createRadialGradient(ax, ay, 1, ax, ay, rad);
+      g2.addColorStop(0, `rgba(255,240,170,${0.6 + 0.25 * pulse})`); g2.addColorStop(0.45, `rgba(255,214,107,${0.35 + 0.2 * pulse})`); g2.addColorStop(1, "rgba(255,200,80,0)");
+      x.fillStyle = g2; x.beginPath(); x.arc(ax, ay, rad, 0, Math.PI * 2); x.fill();
+      if (!G.paused && Math.random() < 0.08) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * s2 * 0.6, y: ay, vx: (Math.random() - 0.5) * 10, vy: -25 - Math.random() * 20, t: 0, life: 0.9, col: Math.random() < 0.5 ? "#fff6c9" : "#ffd36b" });
+    }
     x.drawImage(towerSprite(t.kind), cx - s2 / 2, by - s2 - rc, s2, s2);
+
     if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
     for (let i = 0; i < t.level; i++) { x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, t.y * T + 1, 4, 3); }
   }
