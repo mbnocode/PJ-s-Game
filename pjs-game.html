@@ -352,7 +352,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "fire", "water", "plant"];
@@ -362,7 +362,7 @@ const $ = (id) => document.getElementById(id);
 const PAL = {
   k: "#16191d", y: "#f2c230", Y: "#c98e12", w: "#ffffff", r: "#e0443a", R: "#9e2a22", g: "#7a8089", G: "#4a5059",
   o: "#ff8c1a", b: "#3d8fe0", B: "#1f5fa8", c: "#8fd3ff", n: "#7a4a24", N: "#4e2d14", l: "#5fbf4a", L: "#2f7d32",
-  p: "#9a5fd6", h: "#8fd45f", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8",
+  p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", b: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8",
 };
 const ART = {
   clanker: ["................","........r.......",".......k........","........k.......","...kkkkkkkkkk...","..kyyyyyyyyyyk..","..kyYkkkyyyyyk..","..kyYkwkyyeyyk..","..kyYkkkyyyyyk..","..kyyyyyYYyyyk..","..kyyGyyyyyGyk..","..kkkkkkkkkkkk..","..GG.GG..GG.GG..",".kggkggkkggkggk.",".kGGkGGkkGGkGGk.","..kk.kk..kk.kk.."],
@@ -382,6 +382,9 @@ const ART = {
   tree:    ["......kkkk......","....kkllllkk....","...klllLllllk...","..kllLlllllLlk..","..klllllLlllLk..",".kllLlllllllllk.",".klllllLlllLllk.",".kLlllllllllLlk.","..kLLlllLlllLk..","...kLLLLLLLLk...","....kkknnkkk....","......knnk......","......knnk......",".....knnnnk.....","....kkkkkkkk....","................"],
   mushroom: ["................","................","................","...kkkkk........","..krrwrrk.......",".krwrrrwrk......",".krrrrrrrk......",".kkkkkkkkk.kkk..","...keek...krwrk.","...keek..krrrrrk","...keek..kkkkkkk","...keek....kek..","..keeeek...kek..","..kkkkkk..kkkkk.","................","................"],
   tallgrass: ["................","................","................","................","......h.........","..h...Lh....h...","..Lh.hLL...Lh...","...LLhLL..hLL.h.",".h.LhLLh.hLhLLh.",".LhLLhLLhLhLhLL.",".LLhLLLhLLLhLLL.","..LLLLLLLLLLLL..","................","................","................","................"],
+  cypress: ["................",".....kkkkkk.....","...kkvVvvVvkk...","..kvVvvvVvvvVk..",".kVvvVvvvvVvvVk.",".kvvVvvVvvvVvvk.","..kVvvvvVvvvVk..","..kqkkVvvVkkqk..","...q..knnk..q...","...q..knnk..q...","......knNk...q..",".....knnnnk.....","....knNnnNnk....","...knk.kk.knk...","...kk......kk...","................"],
+  cattail: ["................","................","..k.......k.....",".kbk.....kbk....",".kbk..k..kbk....",".kbk.kbk.kbk....","..L..kbk..L..k..","..L..kbk..L.kbk.","..L...L...L.kbk.",".LL...L..LL..L..","..L..LL..L.L.L..","..L..LL.hL.LLL..",".hL.hLL.hL..L.h.","..LhLL.LhLLhLL..",".hLLLLhLLLLLLLh.","................"],
+  glowshroom: ["................","................","................","....kkkkk.......","...kuuUuuk......","..kuUuuuUuk.....","..kuuuuuuuk.kkk.","..kkkkkkkkkkuUuk","....kek....kkkkk","....kek.....kek.","....kek.....kek.","...keeek...keeek","...kkkkk...kkkkk","................","................","................"],
   leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
 };
 function makeSprite(rows, flip) {
@@ -407,6 +410,11 @@ function makeTile(kind) {
     x.fillStyle = "#4f9a3a"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 26; n++) px(rnd() < 0.5 ? "#5fb046" : "#44873a", rnd() * 16 | 0, rnd() * 16 | 0);
     if (rnd() < 0.25) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px(rnd() < 0.5 ? "#ffe066" : "#ff9fbf", i, j); px("#fff6c9", i, j - 1); }
+  } else if (kind === "swamp") {
+    x.fillStyle = "#4f6b33"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 28; n++) px(rnd() < 0.5 ? "#5d7a3a" : "#425a2b", rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.3) { const i = 2 + rnd() * 10 | 0, j = 3 + rnd() * 10 | 0; x.fillStyle = "#5a4a2a"; x.fillRect(i, j, 3, 2); px("#6b5a35", i, j); }
+    if (rnd() < 0.2) { const i = 3 + rnd() * 9 | 0, j = 3 + rnd() * 9 | 0; x.fillStyle = "#3d5a48"; x.fillRect(i, j, 4, 2); px("#6f8f7a", i + 1, j); }
   } else if (kind === "path") {
     x.fillStyle = "#b88a55"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 18; n++) px(rnd() < 0.5 ? "#a37647" : "#c99a64", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -495,6 +503,9 @@ function makeFactory(doorRow) {
   return c;
 }
 const GRASS = Array.from({ length: 8 }, () => makeTile("grass"));
+const SWAMP_GRASS = Array.from({ length: 8 }, () => makeTile("swamp"));
+// What each kind of scenery looks like in each kind of level.
+const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 const STEEL = ["floor", "conveyor", "floor", "gear", "crate", "floor", "pipe", "machine", "floor", "vent", "conveyor", "hazard", "floor"].map(makeTile);
 
@@ -910,24 +921,27 @@ function buildMap(L) {
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass") grass.push({ x, y, k: x * 10 + Math.abs(y - gy) * 0.9 + ((x * 7 + y * 13) % 5) * 0.3 });
   grass.sort((a, b) => a.k - b.k);
   const factoryOrder = grass.slice(0, SETTINGS.factorySquares);
-  const tree = makeGrandTree();
+  const theme = lv_theme(L);
+  const tree = makeGrandTree(theme);
   const scenery = {}, lv = SETTINGS.levels[L];
   for (const [list, kind] of [[lv.trees, "tree"], [lv.mushrooms, "mushroom"], [lv.tallGrass, "tallgrass"]])
     for (const [sx, sy] of list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { cells, segs, total, factoryOrder, gate: { x: 0, y: gTop, img: makeFactory(gy - gTop) }, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery };
+  return { cells, segs, total, factoryOrder, gate: { x: 0, y: gTop, img: makeFactory(gy - gTop) }, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
   for (const s of map.segs) if (d <= s.start + s.len) { const f = (d - s.start) / s.len; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
   const s = map.segs[map.segs.length - 1]; return { x: s.b.x, y: s.b.y, dx: 1 };
 }
+function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
     const kind = map.cells[y][i], v = map.look[y][i];
-    let img = GRASS[v % GRASS.length];
+    let img = tiles[v % tiles.length];
     if (fset.has(i + "," + y)) img = STEEL[v % STEEL.length];
     x.drawImage(img, i * T, y * T, T, T);
   }
@@ -936,7 +950,7 @@ function paintGround(x, map, factoryCount) {
   for (const key in map.scenery) {
     const [sx, sy] = key.split(",").map(Number);
     if (fset.has(key)) { x.globalAlpha = 0.55; x.filter = "grayscale(1)"; }
-    x.drawImage(SPR[map.scenery[key]], sx * T, sy * T, T, T);
+    x.drawImage(SPR[look[map.scenery[key]] || map.scenery[key]], sx * T, sy * T, T, T);
     x.globalAlpha = 1; x.filter = "none";
   }
   drawFactory(x, map);
@@ -973,7 +987,11 @@ function makePathLayer(map) {
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-  const C = { rim: hex("#3b7a2e"), dirt: hex("#b88a55"), dark: hex("#a37647"), light: hex("#c99a64"), edge: hex("#9c7246"), stone: hex("#8f8a80"), rut: hex("#a2774a"), tuft: hex("#4f9a3a"), tuft2: hex("#5fb046") };
+  const swamp = map.theme === "swamp";
+  const C = swamp
+    // murky swamp water with a muddy bank, ripples and lily pads
+    ? { rim: hex("#3a3020"), dirt: hex("#3f5b3a"), dark: hex("#35502f"), light: hex("#4b6a43"), edge: hex("#2c4026"), stone: hex("#5fa040"), rut: hex("#6f8f62"), tuft: hex("#6b8f3a"), tuft2: hex("#8aa64a") }
+    : { rim: hex("#3b7a2e"), dirt: hex("#b88a55"), dark: hex("#a37647"), light: hex("#c99a64"), edge: hex("#9c7246"), stone: hex("#8f8a80"), rut: hex("#a2774a"), tuft: hex("#4f9a3a"), tuft2: hex("#5fb046") };
   const put = (i, col) => { D[i * 4] = col[0]; D[i * 4 + 1] = col[1]; D[i * 4 + 2] = col[2]; D[i * 4 + 3] = 255; };
   for (let i = 0; i < mask.length; i++) {
     const m = mask[i]; if (!m) continue;
@@ -984,7 +1002,17 @@ function makePathLayer(map) {
     put(i, nearEdge ? C.edge : r < 0.12 ? C.dark : r < 0.24 ? C.light : C.dirt);
   }
   for (const [rx, ry] of ruts) { const i = Math.round(ry) * W + Math.round(rx); if (mask[i] === 2 && R() < 0.35) put(i, C.rut); }
-  for (let k = 0; k < 26; k++) {
+  if (swamp) {
+    for (let k = 0; k < 22; k++) {
+      const p = posAt(map, R() * map.total), sx = Math.round(p.x / 2 + (R() - 0.5) * 9), sy = Math.round(p.y / 2 + (R() - 0.5) * 9);
+      const pad = [[1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [1, 3], [2, 3]];
+      if (pad.every(([dx, dy]) => mask[(sy + dy) * W + sx + dx] === 2)) {
+        pad.forEach(([dx, dy]) => put((sy + dy) * W + sx + dx, dy > 1 ? hex("#3f7a2c") : C.stone));
+        put((sy + 1) * W + sx + 2, C.dirt);
+        if (R() < 0.3) put((sy) * W + sx + 1, hex("#ff9fbf"));
+      }
+    }
+  } else for (let k = 0; k < 26; k++) {
     const p = posAt(map, R() * map.total), sx = Math.round(p.x / 2 + (R() - 0.5) * 8), sy = Math.round(p.y / 2 + (R() - 0.5) * 8);
     for (const [dx, dy] of [[0, 0], [1, 0], [0, 1]]) { const i = (sy + dy) * W + sx + dx; if (mask[i] === 2 && (dx + dy === 0 || R() < 0.6)) put(i, C.stone); }
   }
@@ -992,7 +1020,9 @@ function makePathLayer(map) {
   return cv;
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
-function makeGrandTree() {
+function makeGrandTree(theme) {
+  const swamp = theme === "swamp";
+  const leafCols = swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
   const x = c.getContext("2d");
   const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
@@ -1017,21 +1047,36 @@ function makeGrandTree() {
     const edge = !inC(i - 1, j) || !inC(i + 1, j) || !inC(i, j - 1) || !inC(i, j + 1);
     if (edge) { px("#16191d", i, j); continue; }
     const v = (i - 20) * 0.25 + (j - 12) * 0.6 + (R() - 0.5) * 4;
-    px(v < -6 ? "#8fd45f" : v < -1 ? "#5fb046" : v < 5 ? "#3c8a33" : "#24602a", i, j);
+    px(v < -6 ? leafCols[0] : v < -1 ? leafCols[1] : v < 5 ? leafCols[2] : leafCols[3], i, j);
+  }
+  if (swamp) {
+    // a little wooden hut built into the trunk, with a peaked roof
+    x.fillStyle = "#16191d"; x.fillRect(11, 21, 19, 12);
+    x.fillStyle = "#8a6a3a"; x.fillRect(12, 22, 17, 10);
+    x.fillStyle = "#6a4a22"; for (let j = 24; j < 32; j += 3) x.fillRect(12, j, 17, 1);
+    for (let k = 0; k < 10; k++) { x.fillStyle = "#16191d"; x.fillRect(10 + k, 21 - k * 0.6, 21 - k * 2, 1); x.fillStyle = "#5a3a1c"; x.fillRect(11 + k, 21 - k * 0.6 + 1, 19 - k * 2, 1); }
+    x.fillStyle = "#16191d"; x.fillRect(14, 24, 5, 5); x.fillStyle = "#ffd36b"; x.fillRect(15, 25, 3, 3);
+    x.fillStyle = "#16191d"; x.fillRect(9, 32, 23, 1);
+    // stilts and roots standing in the water
+    for (const sx of [11, 29]) { x.fillStyle = "#16191d"; x.fillRect(sx, 33, 2, 11); x.fillStyle = "#6a4a22"; x.fillRect(sx, 33, 1, 10); }
+    // spanish moss hanging from the branches
+    for (let vx = 3; vx < 38; vx += 2) { let top = 27; while (top > 0 && !inC(vx, top)) top--; if (!top || R() < 0.35) continue; const len = 2 + (R() * 6 | 0); for (let k = 1; k <= len; k++) px(k % 2 ? "#a3b18a" : "#8a9a72", vx, top + k); }
+    // fireflies
+    for (let n = 0; n < 8; n++) { const i = 2 + (R() * 36 | 0), j = 4 + (R() * 22 | 0); if (inC(i, j)) px("#f6ff8a", i, j); }
   }
   // blossoms
-  for (let n = 0; n < 22; n++) { const i = 3 + (R() * 34 | 0), j = 2 + (R() * 22 | 0); if (inC(i - 1, j) && inC(i + 1, j) && inC(i, j - 1) && inC(i, j + 1)) { px("#ff9fbf", i, j); if (R() < 0.4) px("#fff1f6", i, j - 1); } }
+  if (!swamp) for (let n = 0; n < 22; n++) { const i = 3 + (R() * 34 | 0), j = 2 + (R() * 22 | 0); if (inC(i - 1, j) && inC(i + 1, j) && inC(i, j - 1) && inC(i, j + 1)) { px("#ff9fbf", i, j); if (R() < 0.4) px("#fff1f6", i, j - 1); } }
   // hanging vines and lanterns
-  for (const [vx, len] of [[7, 5], [12, 7], [29, 6], [33, 4]]) { let top = 27; while (top > 0 && !inC(vx, top)) top--; for (let k = 1; k <= len; k++) px(k % 2 ? "#2f7d32" : "#4fa83f", vx, top + k); }
+  if (!swamp) for (const [vx, len] of [[7, 5], [12, 7], [29, 6], [33, 4]]) { let top = 27; while (top > 0 && !inC(vx, top)) top--; for (let k = 1; k <= len; k++) px(k % 2 ? "#2f7d32" : "#4fa83f", vx, top + k); }
   for (const lx of [10, 30]) { let top = 27; while (top > 0 && !inC(lx, top)) top--; px("#16191d", lx, top + 1); px("#16191d", lx, top + 2); x.fillStyle = "#16191d"; x.fillRect(lx - 1, top + 3, 3, 4); px("#ffb347", lx, top + 4); px("#ffd36b", lx, top + 5); }
   // round window and front door
-  x.fillStyle = "#16191d"; x.fillRect(22, 25, 5, 5); x.fillStyle = "#ffd36b"; x.fillRect(23, 26, 3, 3); px("#ffb347", 25, 28);
+  if (!swamp) { x.fillStyle = "#16191d"; x.fillRect(22, 25, 5, 5); x.fillStyle = "#ffd36b"; x.fillRect(23, 26, 3, 3); px("#ffb347", 25, 28); }
   x.fillStyle = "#16191d"; x.fillRect(16, 34, 7, 10); x.fillRect(17, 33, 5, 1);
   x.fillStyle = "#5b3418"; x.fillRect(17, 35, 5, 9); x.fillRect(18, 34, 3, 1);
   x.fillStyle = "#3a2010"; x.fillRect(19, 35, 1, 9);
   px("#ffd36b", 21, 39);
   // little mushrooms at the roots
-  for (const [mx, my] of [[8, 41], [32, 40]]) { x.fillStyle = "#16191d"; x.fillRect(mx - 1, my - 1, 4, 3); px("#e0443a", mx, my); px("#ffffff", mx + 1, my); px("#e0443a", mx + 2, my - 0); px("#f4e2c0", mx + 1, my + 1); }
+  for (const [mx, my] of [[8, 41], [32, 40]]) { x.fillStyle = "#16191d"; x.fillRect(mx - 1, my - 1, 4, 3); px(swamp ? "#4fd1b8" : "#e0443a", mx, my); px(swamp ? "#c8fff4" : "#ffffff", mx + 1, my); px(swamp ? "#4fd1b8" : "#e0443a", mx + 2, my - 0); px("#f4e2c0", mx + 1, my + 1); }
   return c;
 }
 function grayCopy(src) {
@@ -1518,6 +1563,18 @@ function draw() {
   if (G.shake > 0) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
   x.drawImage(G.ground, 0, 0);
   for (const f of G.flashTiles) { x.fillStyle = `rgba(${f.col},${Math.min(0.6, f.t)})`; x.fillRect(f.x * T, f.y * T, T, T); }
+
+  // bubbles and ripples drifting on the swamp water
+  if (G.map.theme === "swamp") {
+    for (let i = 0; i < 16; i++) {
+      const ph = (G.time * 0.35 + i * 0.137) % 1, p = posAt(G.map, ((i * 97.3) % 1) * G.map.total + Math.sin(i) * 6);
+      const ox = Math.sin(i * 2.3) * 7, oy = Math.cos(i * 1.7) * 6;
+      x.globalAlpha = 0.6 * Math.sin(ph * Math.PI);
+      if (i % 3) { x.fillStyle = "#8fb07a"; x.fillRect(p.x + ox, p.y + oy - ph * 4, 3, 3); x.fillStyle = "#c8e0b4"; x.fillRect(p.x + ox, p.y + oy - ph * 4, 1, 1); }
+      else { x.strokeStyle = "#7f9f6f"; x.lineWidth = 1; x.beginPath(); x.ellipse(p.x + ox, p.y + oy, 3 + ph * 8, 1.5 + ph * 3, 0, 0, Math.PI * 2); x.stroke(); }
+    }
+    x.globalAlpha = 1;
+  }
 
   // placement preview / selected range
   const showRange = (tx, ty, range, ok) => {

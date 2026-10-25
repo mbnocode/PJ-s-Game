@@ -81,7 +81,7 @@ One group of Robots. You press Start Wave when you're ready for the next one.
 _Avoid_: Round, turn
 
 **Level**:
-One map, played through 15 Waves. Level 1 is the Meadow, which has a long, twisty path, and that makes it easier. Level 2 is the Forest, which has a straighter path, and that makes it harder. Beating a Level unlocks the next.
+One map, played through 15 Waves. Level 1 is the Meadow, which has a long, twisty path, and that makes it easier. Level 2 is the Forest, which has a straighter path, and that makes it harder. Level 3 is the Swamp, where the Robots wade through murky water to a swamp treehouse. Beating a Level unlocks the next.
 _Avoid_: Map, stage
 
 **Maple Leaf**:
