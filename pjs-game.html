@@ -385,6 +385,8 @@ const ART = {
   cypress: ["................",".....kkkkkk.....","...kkvVvvVvkk...","..kvVvvvVvvvVk..",".kVvvVvvvvVvvVk.",".kvvVvvVvvvVvvk.","..kVvvvvVvvvVk..","..kqkkVvvVkkqk..","...q..knnk..q...","...q..knnk..q...","......knNk...q..",".....knnnnk.....","....knNnnNnk....","...knk.kk.knk...","...kk......kk...","................"],
   cattail: ["................","................","..k.......k.....",".kjk.....kjk....",".kjk..k..kjk....",".kjk.kjk.kjk....","..L..kjk..L..k..","..L..kjk..L.kjk.","..L...L...L.kjk.",".LL...L..LL..L..","..L..LL..L.L.L..","..L..LL.hL.LLL..",".hL.hLL.hL..L.h.","..LhLL.LhLLhLL..",".hLLLLhLLLLLLLh.","................"],
   glowshroom: ["................","................","................","....kkkkk.......","...kuuUuuk......","..kuUuuuUuk.....","..kuuuuuuuk.kkk.","..kkkkkkkkkkuUuk","....kek....kkkkk","....kek.....kek.","....kek.....kek.","...keeek...keeek","...kkkkk...kkkkk","................","................","................"],
+  fire_mid: ["................................","...................k............","..................kwkk..........","..................kkeek.........",".................kweeeekkkk.....","..................kkeeeerrrkk...","....................kkrrkkrrrkkk","....................krrrffkrrrkr","...k................krrrryrrrrrr","..kRkk..............krrrrrrrrrrr",".kWWRRkk............krMrrRRRRRRk",".kWWWRRRk...........krrffRRRRRk.","kRRWWWWRRkk........krMrfkkkkkk..","kWRRRRWWRRRk......kkrrrfk.......",".kWWWRRRRWRRkk...krrMrffk.......",".kRRRRWWRRRRRRk..kMrrrfrk.......",".kRkkRRRRRRRRRRkkkMrrrfrk.......","kRRRkkkWWWWWMRrMWMrrrffk........","RRRRRk.kkkrrrrrMMrrrrfrk........","kRRRRk..krrrrrrrrrrrrrrk........","kRRRk..krrrrrrrrrrrrrrk.........","krRRk..krrrrrrrrrrrrrk..........","krrrk.krrrrrrrrrfffffrk.........","krrrkkkRrrrrrRryyyyyyk..........","krrrrrrRrrrrrRfffffffk..........","krrrrrrRrrrrrRyyyyyyyk..........","krrrrrrrRrrrRffffffffrk.........",".krrrrrkrrrrkkrkkkrrrrk.........","..kkkkkkrrrrk.k..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
+  fire_down: ["................................","...................k............","..................kwkk..........","..................kkeek.........",".................kweeeekkkk.....","..................kkeeeerrrkk...","....................kkrrkkrrrkkk","....................krrrffkrrrkr","....................krrrryrrrrrr","....................krrrrrrrrrrr","....................krMrrRRRRRRk","....................krrffRRRRRk.","...................krMrfkkkkkk..","..................kkrrrfk.......",".................krrMrffk.......","..k..............kMrrrfrk.......",".kRk........kkkkkkMrrrfrk.......","kRRRk.....kkMrrrrWrrrffk........","RRRRRk...krrrrWWRWrrrfrk........","kRRRRk..kMWWWWRRRrrrrrrk........","kRRRk.kkWWWWRRRRWrrrrrk.........","krRRkkWWWWWRRRRRrrrrrk..........","krrrkWWWWRRWWRWRfffffrk.........","krrrkWWRRWWWRWRWyyyyyk..........","krrrWWRRWWWRWWRffffffk..........","krrrRRWWWWRRWWRyyyyyyk..........","krrRrrrWWWRrWRfffffffrk.........",".krrrrrWWRrrkRrkkkrrrrk.........","..kkkkkkRrrrkkk..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
   leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
 };
 function makeSprite(rows, flip, recolor = {}) {
@@ -401,7 +403,10 @@ function makeSprite(rows, flip, recolor = {}) {
 }
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
-SPR.fire = makeSprite(ART.fire, false, { W: "#c2362e", M: "#ff7a5c", y: "#f2b23a" });   // 32 x 32 dragon
+const DRAGON_COLORS = { W: "#c2362e", M: "#ff7a5c", y: "#f2b23a" };
+SPR.fire = makeSprite(ART.fire, false, DRAGON_COLORS);   // 32 x 32 dragon
+SPR.fire_mid = makeSprite(ART.fire_mid, false, DRAGON_COLORS);    // wing level (for flapping)
+SPR.fire_down = makeSprite(ART.fire_down, false, DRAGON_COLORS);  // wing down (for flapping)
 SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a5a2c", N: "#3a2410", e: "#f6ead2", y: "#ffb347" });
 // In the Swamp, the Water Frog is a muddy brown swamp frog. Everywhere else it stays blue.
 SPR.water_swamp = makeSprite(ART.water, false, { b: "#8a5a2a", B: "#5a3a1a", c: "#c9a46a" });
@@ -1696,7 +1701,7 @@ function draw() {
     }
     if (t.kind === "fire" && t.level >= 3) {
       // Fully upgraded Dragon: it takes off and flies in place, bobbing with each wingbeat.
-      const beat = Math.sin(G.time * 7 + t.x);
+      const beat = Math.sin(G.time * 2.2 + t.x);   // slow, gentle bob
       x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.ellipse(cx, by - 1, sz * (0.32 + 0.04 * beat), 3, 0, 0, Math.PI * 2); x.fill();
       if (!G.paused && Math.random() < 0.12) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * 14, y: by - 4, vx: (Math.random() - 0.5) * 50, vy: 5, t: 0, life: 0.35, col: "rgba(255,255,255,0.7)" });
       rc += 15 + beat * 3.5;
@@ -1710,7 +1715,9 @@ function draw() {
       x.fillStyle = g2; x.beginPath(); x.arc(ax, ay, rad, 0, Math.PI * 2); x.fill();
       if (!G.paused && Math.random() < 0.08) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * s2 * 0.6, y: ay, vx: (Math.random() - 0.5) * 10, vy: -25 - Math.random() * 20, t: 0, life: 0.9, col: Math.random() < 0.5 ? "#fff6c9" : "#ffd36b" });
     }
-    x.drawImage(towerSprite(t.kind), cx - s2 / 2, by - s2 - rc, s2, s2);
+    let img = towerSprite(t.kind);
+    if (t.kind === "fire" && t.level >= 3) img = [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid][Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
+    x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
 
     if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
     for (let i = 0; i < t.level; i++) { x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, t.y * T + 1, 4, 3); }
