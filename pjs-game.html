@@ -1564,7 +1564,7 @@ function landShot(sh) {
       const q = posAt(G.map, o.d);
       if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
         if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
-        if (!o.dead && sh.kind === "air") o.d = Math.max(0, o.d - s.pushBack * T * 0.6 * (o.type === "boss" ? 0.25 : 1)); }
+        if (!o.dead && sh.kind === "air") o.knock = (o.knock || 0) + s.pushBack * T * 0.6 * (o.type === "boss" ? 0.25 : 1); }
     }
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : "120,200,255" });
   }
@@ -1572,7 +1572,7 @@ function landShot(sh) {
   if (r.dead) return;
   if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
-  if (sh.kind === "air") r.d = Math.max(0, r.d - s.pushBack * T * (r.type === "boss" ? 0.25 : 1));
+  if (sh.kind === "air") r.knock = (r.knock || 0) + s.pushBack * T * (r.type === "boss" ? 0.25 : 1);   // slides back over a moment
   const p = posAt(G.map, r.d);
   burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : "#ffffff", 5);
 }
@@ -1668,6 +1668,13 @@ function update(dt) {
     let sp = r.speed;
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
+    // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
+    if (r.knock > 0) {
+      const move = Math.min(r.knock, Math.max(r.knock * 7 * dt, 1.5 * T * dt));   // fast at first, then slows to a stop
+      r.knock -= move; r.d = Math.max(0, r.d - move); sp = 0;
+      if (Math.random() < 0.3) { const q = posAt(G.map, r.d); G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 10, y: q.y + 6, vx: 0, vy: -10, t: 0, life: 0.3, col: "rgba(235,248,255,0.8)" }); }
+      if (r.d <= 0) r.knock = 0;
+    }
     r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
     if (r.d >= G.map.total) reachBase(r);
     if (G.over) return;
