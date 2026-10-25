@@ -371,7 +371,7 @@ const ART = {
   tank:    ["................","................","................",".....kkkkkk.....","....kGGGGGGk....","....kGrGGrGkkkkk","....kGGGGGGsssss","..kkkkkkkkkkkkk.",".kggggggggggggk.",".kgGgGgGgGgGggk.",".kggggggggggggk.",".kkkkkkkkkkkkkk.",".kGkGkGkGkGkGkk.","..kkkkkkkkkkkk..","................","................"],
   hider:   ["................","................","......kkkk......",".....kPPPPk.....","....kPPPPPPk....","....kkkkkkkk....","....kPcPPcPk....","....kPPPPPPk....",".....kPPPPk.....","....kPppppPk....","...kPkppppkPk...","...kk.kppk.kk...","......kPPk......",".....kP..Pk.....",".....kk..kk.....","................"],
   boss:    ["..kk......kk....","..kGk....kGk....","..kGk....kGk....",".kkkkkkkkkkkkk..",".kgggggggggggk..",".kgrrgggggrrgk..",".kgrrgggggrrgk..",".kgggkkkkkgggk..",".kggkwkwkwkggk..",".kgggkkkkkgggk..","kkoGoGoGoGoGokk.","ksk.kgggggk.ksk.","kk..kgggggk..kk.","...kkkkkkkkk....","..kGkGkGkGkGk...","...kkkkkkkkk...."],
-  fire:    ["................","..........k.k...",".........kRkRk..","kk.......krrrrk.","kRk.....krrwkrrk","kRRk....krrrrrrk","kRrRk....krrrrkk","kRrrRk..krrfkk..",".kRkRRkkrrrk....","..k.kRrrrrrrk...","....krrrffffrk..","...krrrkffffrk..","..krk.krrrrrk...",".kok..kRkkRk....","..k...kk..kk....","................"],
+  fire:    ["................................",".............kk....k............","...........kkRRk..kwkk..........","..........kRRRRk..kkeek.........","......kkkkRRWWRk.kweeeekkkk.....",".....kRWWWWWWWRk..kkeeeerrrkk...","....kWWRWWWWWWRWk...kkrrkkrrrkkk","...kWWWWRWWWWWRWk...krrrffkrrrkr","...kWWWWRRWWWWRWk...krrrryrrrrrr","..kWWWWWWRRWWWRRk...krrrrrrrrrrr",".kRRWWWWWWRWWWWRk...krMrrRRRRRRk","..kRRRWWWWWRWWWRk...krrffRRRRRk.","...kWRRRWWWRRWWRk..krMrfkkkkkk..","....kkkWRRWWRRWRk.kkrrrfk.......",".......kWWRRRRWRWkrrMrffk.......","..k....kWWWWRRRRWkMrrrfrk.......",".kRk....kkkkWWRRWkMrrrfrk.......","kRRRk.....kkMWrMWMrrrffk........","RRRRRk...kMMrrrrMrrrrfrk........","kRRRRk..kMrrrrrrrrrrrrrk........","kRRRk..krrrrrrrrrrrrrrk.........","krRRk..krrrrrrrrrrrrrk..........","krrrk.krrrrrrrrrfffffrk.........","krrrkkkRrrrrrRryyyyyyk..........","krrrrrrRrrrrrRfffffffk..........","krrrrrrRrrrrrRyyyyyyyk..........","krrrrrrrRrrrRffffffffrk.........",".krrrrrkrrrrkkrkkkrrrrk.........","..kkkkkkrrrrk.k..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
   water:   ["................","................","................","....kk....kk....","...kwwk..kwwk...","...kwkk..kkwk...","..kbbbbbbbbbbk..",".kbbbbbbbbbbbbk.",".kbccccccccccbk.",".kbbkkkkkkkkbbk.","..kbbbbbbbbbbk..","..kbBbbbbbbBbk..",".kbBBkbbbbkBBbk.",".kkkk.kkkk.kkkk.","................","................"],
   plant:   ["....kkkkkkkk....","...kLlhlLlhlk...","..kLlLllhlLlLk..","..kkkknnnnkkkk..","....knfnnfnk....","..kkknNnnNnkkk..",".kLnnnkkkknnnLk.","kLnmnnnnnnnnmnLk","knmnnnNnnNnnnmnk","knnnkknnnnkknnnk","knnk.knNNnk.knnk","kNmNk.knnk.kNmNk","kNNNk.knnk.kNNNk",".kkk.knnnnk.kkk.","....kNNkkNNk....","....kkkk.kkk...."],
   air:     ["................","...kk......kk...","...kmk....kmk...","...kmmkkkkmmk...","..kmmmmmmmmmmk..","..kmeekmmkeemk..","..kmeykmmkyemk..","..kmeekookeemk..","..kmmmmkkmmmmk..",".kmmeeeeeeeemmk.",".kmeeeeeeeeeemk.",".kmmeeeeeeeemmk.","..kmmeeeeeemmk..","...kkmmmmmmkk...","....kokk.kok....","................"],
@@ -401,6 +401,7 @@ function makeSprite(rows, flip, recolor = {}) {
 }
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
+SPR.fire = makeSprite(ART.fire, false, { W: "#c2362e", M: "#ff7a5c", y: "#f2b23a" });   // 32 x 32 dragon
 SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a5a2c", N: "#3a2410", e: "#f6ead2", y: "#ffb347" });
 // In the Swamp, the Water Frog is a muddy brown swamp frog. Everywhere else it stays blue.
 SPR.water_swamp = makeSprite(ART.water, false, { b: "#8a5a2a", B: "#5a3a1a", c: "#c9a46a" });
@@ -1641,7 +1642,8 @@ function draw() {
   // towers
   for (const t of G.towers) {
     const cx = t.x * T + 16, by = t.y * T + 30;
-    const scale = t.kind === "healer" ? [1.0, 1.06, 1.12, 1.2][t.level] : [0.72, 0.84, 0.96, 1.1][t.level];
+    // The detailed 32 x 32 towers (Healer Deer, Fire Dragon) are drawn bigger so their details show.
+    const scale = t.kind === "healer" ? [1.0, 1.06, 1.12, 1.2][t.level] : t.kind === "fire" ? [0.95, 1.03, 1.11, 1.2][t.level] : [0.72, 0.84, 0.96, 1.1][t.level];
     const sz = 32 * scale, pop = Math.max(0, 1 - (G.time - t.born) * 5);
     if (t.level >= 3 && t.kind !== "healer") {
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + t.x);
