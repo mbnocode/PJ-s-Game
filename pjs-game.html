@@ -49,7 +49,9 @@ body {
 }
 #app { height: 100%; display: flex; flex-direction: column; max-width: 1200px; margin: 0 auto; }
 .screen { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.screen.menu { align-items: center; justify-content: center; gap: 22px; overflow-y: auto; padding-block: 20px; text-align: center; }
+.screen.menu { align-items: center; justify-content: flex-start; gap: 22px; overflow-y: auto; padding-block: 20px; text-align: center; }
+.screen.menu > :first-child { margin-top: auto; }   /* centered when it fits, scrolls from the top when it's tall */
+.screen.menu > :last-child { margin-bottom: auto; }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
 h1 { font-size: clamp(44px, 9vw, 88px); line-height: 0.95; color: var(--ink); text-shadow: 0 4px 0 var(--moss-dark); }
 h2 { font-size: clamp(26px, 4.5vw, 38px); }
@@ -193,6 +195,19 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .perk .pips { color: var(--gold); letter-spacing: 3px; }
 .perk button { align-self: flex-start; font-family: var(--body); font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
 .perk .cost { display: inline-flex; align-items: center; gap: 4px; }
+.foes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; width: min(1240px, 100%); }
+.foe .top { flex-direction: column; align-items: flex-start; }
+.foe { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+.foe .top { display: flex; align-items: center; gap: 12px; }
+.foe canvas { width: 72px; height: 72px; image-rendering: pixelated; background: rgba(0,0,0,0.18); border-radius: 6px; flex: none; }
+.foe .k { font-family: var(--display); font-size: 22px; }
+.foe .s { color: var(--muted); font-size: 14px; }
+.foe .stat { display: grid; grid-template-columns: 78px 1fr 44px; align-items: center; gap: 8px; font-size: 14px; }
+.foe .bar { height: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; overflow: hidden; }
+.foe .bar i { display: block; height: 100%; border-radius: 5px; }
+.foe .stat b { text-align: right; font-weight: 600; }
+.foe .power { color: var(--gold); font-size: 14px; }
+.foe .kills { font-size: 14px; border-top: 1px solid var(--line); padding-top: 6px; }
 .bigcode { font-family: var(--body); font-weight: 700; font-size: clamp(48px, 10vw, 84px); letter-spacing: .08em; color: var(--gold); line-height: 1; -webkit-user-select: text; user-select: text; }
 .lobby-box { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px 18px; width: min(360px, 100%); text-align: left; }
 .lobby-box ol { margin: 8px 0 0; padding-left: 24px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; font-weight: 700; }
@@ -267,7 +282,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button class="go" id="b-perks">Upgrades</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
+    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-enemies">Enemies</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
     <button class="link" id="b-levels-back">Back to save slots</button>
   </section>
 
@@ -310,6 +325,14 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: sometimes a robot drops one when you destroy it on the Meadow.</p>
     <div class="perks" id="perk-list"></div>
     <button class="link" id="b-perks-back">Back to levels</button>
+  </section>
+
+  <!-- Enemies: the robots and their statistics (per save slot) -->
+  <section class="screen menu" id="s-enemies" hidden>
+    <h2>Enemies</h2>
+    <p class="muted">Know your robots. Bars compare each robot to the others. "Defeated" counts every robot you've destroyed in this save slot.</p>
+    <div class="foes" id="foe-list"></div>
+    <button class="link" id="b-enemies-back">Back to levels</button>
   </section>
 
   <!-- Join a challenge -->
@@ -853,7 +876,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -1377,6 +1400,42 @@ function renderPerks() {
     };
   });
 }
+/* ---------- enemies page (per save slot) ---------- */
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider"];
+const FOE_ABOUT = {
+  clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
+  scout: "Tiny and quick. It zooms down the path, so hit it fast.",
+  walker: "The everyday robot. Sturdier than a Clanker and marches at a steady pace.",
+  tank: "Huge, slow and very tough. If it reaches your Base, it hits hard.",
+  hider: "Turns invisible when it gets hit.",
+};
+function renderEnemies() {
+  const s = slot(); s.defeated = s.defeated || {};
+  const R = SETTINGS.robots, hitOf = (k) => Math.round(Math.min(SETTINGS.maxHitPerRobot, R[k].health * SETTINGS.robotHitRatio));
+  const stats = [
+    ["Health", (k) => R[k].health, "#7cc46a"],
+    ["Speed", (k) => R[k].speed, "#7cc8ff"],
+    ["Base hit", hitOf, "#e2574c"],
+    ["Leaves", (k) => R[k].leaves, "#ec7a2c"],
+    ["Points", (k) => R[k].points, "#ffd34d"],
+  ];
+  const box = $("foe-list"); box.innerHTML = "";
+  for (const k of MAIN_FOES) {
+    const r = R[k], d = document.createElement("div"); d.className = "foe";
+    const power = k === "hider" ? `Special: hides for ${r.hideSeconds} seconds after a hit. Only towers with Vision (like the Owl) can hit it while hidden.`
+      : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
+    d.innerHTML = `<div class="top"><span class="pic"></span><div><div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
+      ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.map(f));
+        return `<div class="stat"><span>${label}</span><span class="bar"><i style="width:${Math.max(6, (v / max) * 100)}%;background:${col}"></i></span><b>${v}</b></div>`; }).join("")}
+      ${power ? `<div class="power">${power}</div>` : ""}
+      <div class="kills">Defeated: <b>${s.defeated[k] || 0}</b></div>`;
+    d.querySelector(".pic").replaceWith(spriteCanvas(k, 32));
+    box.appendChild(d);
+  }
+}
+$("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"); };
+$("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
+
 $("b-perks").onclick = () => { Sound.init(); renderPerks(); show("s-perks"); };
 $("b-perks-back").onclick = () => { renderLevels(); show("s-levels"); };
 
@@ -1620,6 +1679,7 @@ function spawn(q) {
 }
 function endWave() {
   G.waveActive = false;
+  if (G.slotDirty) { saveSlots(slots); G.slotDirty = false; }   // keep the "Defeated" counts
   const bonus = SETTINGS.waveBonusLeaves + 2 * G.wave;
   G.leaves += bonus;
   const pos = { x: G.map.base.x * T + 32, y: G.map.base.y * T };
@@ -1654,6 +1714,7 @@ function hurt(r, amt, vision, isBurn) {
 function kill(r) {
   r.dead = true;
   G.leaves += r.leaves; G.killPoints += r.points;
+  { const s = slot(); if (s) { s.defeated = s.defeated || {}; s.defeated[r.type] = (s.defeated[r.type] || 0) + 1; G.slotDirty = true; } }
   const p = posAt(G.map, r.d);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = SETTINGS.levels[G.level].acornDropChance || 0;
@@ -2196,6 +2257,7 @@ function draw() {
 /* ---------- finish ---------- */
 function finish(won) {
   if (G.over) return;
+  if (G.slotDirty) { saveSlots(slots); G.slotDirty = false; }
   G.over = true; G.waveActive = false; G.sel = null; $("tpanel").hidden = true; $("banner").hidden = true; updateHud();
   const score = Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes);
   const H = G.health / G.maxHealth;
