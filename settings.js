@@ -16,8 +16,8 @@ const SETTINGS = {
   maxHitPerRobot: 40,             // no single Robot can hit the Base harder than this
   factoryWeakness: 2,             // Towers standing on Factory do this much less damage
   waveBonusLeaves: 20,            // Maple Leaves you get for clearing a Wave (plus 2 more per Wave number)
-  // A bonus Maple Leaf pops up on an empty square now and then. Tap it before it disappears!
-  bonusLeaf: { leaves: 20, everySecondsMin: 10, everySecondsMax: 15, staySeconds: 5 },
+  // During a Wave, a bonus Maple Leaf pops up on an empty square every few seconds. Tap it before it disappears!
+  bonusLeaf: { leaves: 20, everySecondsMin: 6, everySecondsMax: 8, staySeconds: 5 },
 
   difficulties: {
     easy:      { name: "Easy",      robotHealth: 0.75, robotSpeed: 0.9,  startLeaves: 220, scoreTimes: 1,   baseHealsPerWave: 1, auraChance: 0,    strongestAura: 0 },
