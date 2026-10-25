@@ -1653,8 +1653,22 @@ function draw() {
       x.fillStyle = g; x.fillRect(cx - 24, by - sz / 2 - 24, 48, 48);
     }
     x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4);
-    const rc = (t.recoil || 0) * 10;
+    let rc = (t.recoil || 0) * 10;
     const s2 = sz * (1 + pop * 0.3);
+    if (t.kind === "air" && t.level >= 3) {
+      // Fully upgraded Owl: it hovers above a swirling platform of wind.
+      const py = by - 3, spin = G.time * 4;
+      x.save(); x.translate(cx, py); x.scale(1, 0.38);
+      x.fillStyle = "rgba(200,235,255,0.28)"; x.beginPath(); x.arc(0, 0, 19, 0, Math.PI * 2); x.fill();
+      for (let k = 0; k < 3; k++) {
+        const r = 9 + k * 4.5, a0 = spin * (1 + k * 0.35) + k * 2.1;
+        x.strokeStyle = k === 1 ? "rgba(170,225,255,0.9)" : "rgba(235,248,255,0.85)"; x.lineWidth = 4 - k * 0.7; x.lineCap = "round";
+        for (let j = 0; j < 2; j++) { x.beginPath(); x.arc(0, 0, r, a0 + j * Math.PI, a0 + j * Math.PI + 1.9); x.stroke(); }
+      }
+      x.lineCap = "butt"; x.restore();
+      if (!G.paused && Math.random() < 0.15) { const a = Math.random() * Math.PI * 2; G.particles.push({ kind: "spark", x: cx + Math.cos(a) * 16, y: py + Math.sin(a) * 6, vx: -Math.sin(a) * 40, vy: -10, t: 0, life: 0.5, col: "#e6f6ff" }); }
+      rc += 9 + Math.sin(G.time * 3 + t.x) * 2.5;   // hover height, gently bobbing
+    }
     if (t.kind === "healer") {
       // The deer's antlers glow: a bright golden halo that pulses, with sparkles floating up.
       const ax = cx + s2 * 0.25, ay = by - s2 * 0.88, pulse = 0.5 + 0.5 * Math.sin(G.time * 2.5 + t.y);
