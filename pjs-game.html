@@ -1361,7 +1361,7 @@ function spawn(q) {
   const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
   if (cap > 0 && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
   const A = SETTINGS.auras[aura];
-  const hp = (q.hp || base.health) * d.robotHealth * (A ? A.health : 1);
+  const hp = (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * (A ? A.health : 1);
   G.robots.push({
     type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: 0,
     leaves: Math.round(base.leaves * (A ? A.leaves : 1)), points: Math.round(base.points * (A ? A.points : 1)),
