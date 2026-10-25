@@ -307,7 +307,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-perks" hidden>
     <h2>Upgrades</h2>
     <div class="acorns"><span id="acorn-num">0</span> Golden Acorns</div>
-    <p class="muted">Upgrades last forever in this save slot. Earn Golden Acorns by playing: 1 for every Wave you get through, and more for every star you win.</p>
+    <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: sometimes a robot drops one when you destroy it on the Meadow.</p>
     <div class="perks" id="perk-list"></div>
     <button class="link" id="b-perks-back">Back to levels</button>
   </section>
@@ -1556,7 +1556,7 @@ function kill(r) {
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = SETTINGS.levels[G.level].acornDropChance || 0;
   if (chance && Math.random() < chance) {
-    const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots);
+    const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + 1;
     floatText(p.x, p.y - 18, "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
     burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
@@ -2048,9 +2048,6 @@ function finish(won) {
   sendProgress(true, won ? "won" : "lost", stars, score);
   const on = G.online;
   // Golden Acorns for the save slot: 1 per Wave you got through, plus some for each star.
-  const acorns = (won ? G.wave : Math.max(0, G.wave - 1)) + stars * (SETTINGS.acornsPerStar || 0);
-  { const s = slot(); s.acorns = (s.acorns || 0) + acorns; saveSlots(slots); }
-  G.acornsEarned = acorns;
   if (won) {
     const s = slot(); s.best[G.level] = s.best[G.level] || {};
     const prev = s.best[G.level][G.diffKey];
@@ -2070,14 +2067,14 @@ function finish(won) {
       ? `<h2>${lvName} is saved!</h2>
          <div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>
          <div class="scoreline">Score ${score.toLocaleString()}${best ? " · New best!" : ""}</div>
-         <div class="acorns" style="font-size:20px">+${G.acornsEarned} Golden Acorns</div>
+         ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left</p>
          ${boardBits(on)}
          <div class="row">${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`
       : `<h2>The Factory took over</h2>
          <p class="muted">The robots got through on Wave ${G.wave} of ${SETTINGS.waves.length}.</p>
          <div class="scoreline">Score ${score.toLocaleString()}</div>
-         <div class="acorns" style="font-size:20px">+${G.acornsEarned} Golden Acorns</div>
+         ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          ${boardBits(on)}
          <div class="row"><button class="go" id="o-again">Try again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`);
     $("o-again").onclick = () => startGame(G.level, G.diffKey, false, on ? { code: on.code, nick: on.nick } : null);

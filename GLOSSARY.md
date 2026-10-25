@@ -105,7 +105,7 @@ Optional guidance you can turn on when you start a game. It walks you through th
 _Avoid_: Hints
 
 **Golden Acorn**:
-A prize that belongs to a Save Slot and never goes away. You earn 1 for every Wave you get through, plus 5 for every star when you win. You spend them on Permanent Upgrades.
+A rare prize that belongs to a Save Slot and never goes away. On the Meadow, each Robot you destroy has a 1% chance to drop one. You spend them on Permanent Upgrades.
 _Avoid_: Acorn (Maple Leaves are the money inside a game)
 
 **Permanent Upgrade**:

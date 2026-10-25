@@ -113,9 +113,8 @@ const SETTINGS = {
   },
 
   // ---------------- PERMANENT UPGRADES ----------------
-  // Every game earns Golden Acorns for the save slot: 1 for each Wave you get through,
-  // plus this many for every star when you win. Spend them on the Upgrades page.
-  acornsPerStar: 5,
+  // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
+  // Spend them on the Upgrades page.
   permanentUpgrades: {
     startLeaves: { name: "Bigger Leaf Pile",  about: "Start every game with 25 more Maple Leaves.", per: 25,   costs: [10, 20, 30, 45, 60] },
     damage:      { name: "Stronger Towers",   about: "All towers deal 5% more damage.",            per: 0.05, costs: [15, 30, 45, 65, 90] },
@@ -148,7 +147,7 @@ const SETTINGS = {
   // Maps are 20 squares wide and 12 tall. The path goes through these corners.
   levels: {
     meadow: { name: "The Meadow", about: "A long, twisty path. A good place to start.",
-              acornDropChance: 0.05,   // each robot you destroy here has this chance (0.05 = 5%) to drop a Golden Acorn
+              acornDropChance: 0.01,   // each robot you destroy here has this chance (0.01 = 1%) to drop a Golden Acorn
               path: [[0, 2], [4, 2], [4, 8], [8, 8], [8, 3], [12, 3], [12, 9], [16, 9], [16, 5], [19, 5]],
               // Trees, mushrooms and tall grass: you can't build on these squares. [across, down]
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
