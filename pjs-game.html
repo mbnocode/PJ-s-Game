@@ -1108,6 +1108,7 @@ function towerStats(t) {
       if (c.slowSecondsPlus) out.slowSeconds = (out.slowSeconds || 0) + c.slowSecondsPlus;
       if (c.splash) out.splash += c.splash;
       if (c.burnPlus) out.burnDamagePerSecond = (out.burnDamagePerSecond || 0) + c.burnPlus;
+      if (c.burnSecondsPlus) out.burnSeconds = (out.burnSeconds || 0) + c.burnSecondsPlus;
       if (c.vision) out.vision = true;
     });
     if (onFactory) out.damage = Math.max(1, out.damage - SETTINGS.factoryWeakness);
@@ -1142,6 +1143,7 @@ function openPanel(t) {
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
+  if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
   if (s.slowBy && spec.upgradeChoices) lines.push(`Slows robots ${Math.round(s.slowBy * 100)}% for ${s.slowSeconds.toFixed(1)}s`);
   p.innerHTML = `<button class="x" id="p-close" aria-label="Close">×</button>
     <span class="k">${s.name}</span>
@@ -1338,9 +1340,10 @@ function landShot(sh) {
     for (const o of G.robots) {
       if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
       const q = posAt(G.map, o.d);
-      if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; } }
+      if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
+        if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; } }
     }
-    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3 });
+    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : "120,200,255" });
   }
   hurt(r, s.damage, s.vision);
   if (r.dead) return;
@@ -1501,7 +1504,7 @@ function draw() {
     else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
   }
   for (const f of G.fx) {
-    if (f.kind === "splash") { x.strokeStyle = `rgba(120,200,255,${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
+    if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") { x.strokeStyle = `rgba(80,180,60,${f.t / 0.22})`; x.lineWidth = 3; x.beginPath(); x.moveTo(f.x1, f.y1); x.quadraticCurveTo((f.x1 + f.x2) / 2, Math.min(f.y1, f.y2) - 20, f.x2, f.y2); x.stroke(); }
   }
   // particles

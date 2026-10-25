@@ -34,7 +34,17 @@ const SETTINGS = {
 
   towers: {
     fire:   { name: "Fire Dragon", cost: 60,  range: 2.3, damage: 9,  attacksPerSecond: 2.4, burnDamagePerSecond: 5, burnSeconds: 2,
-              about: "Shoots fireballs that keep burning." },
+              about: "Shoots fireballs that keep burning.",
+              // Pick ONE choice at each upgrade. Same kinds of choices as the Water Frog, plus
+              // burnPlus (extra burn damage per second) and burnSecondsPlus (burns for longer).
+              upgradeChoices: [
+                [ { name: "Splash Fireball", about: "Fireballs also burn robots within 1 square.", splash: 1 },
+                  { name: "Long Flame",      about: "Reaches 1 more square.", rangePlus: 1 } ],
+                [ { name: "Hotter Flames",   about: "Burns twice as hot, for 1 second longer.", burnPlus: 5, burnSecondsPlus: 1 },
+                  { name: "Rapid Fire",      about: "Attacks 50% faster.", speedTimes: 1.5 } ],
+                [ { name: "Inferno",         about: "Hits twice as hard.", damageTimes: 2 },
+                  { name: "Dragon Eyes",     about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
+              ] },
     water:  { name: "Water Frog",  cost: 55,  range: 2.5, damage: 5,  attacksPerSecond: 2, slowBy: 0.45, slowSeconds: 1.6,
               about: "Rusts Robots so they slow down.",
               // Each upgrade lets you pick ONE of these. You can add more choices, or give other towers choices too.
