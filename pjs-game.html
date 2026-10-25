@@ -1841,7 +1841,7 @@ function landShot(sh) {
       const q = posAt(G.map, o.d);
       if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
         if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
-        if (!o.dead && sh.kind === "air") o.knock = (o.knock || 0) + s.pushBack * T * 0.6 * (o.type === "boss" ? 0.25 : 1); }
+        if (!o.dead && sh.kind === "air" && o.type !== "boss") o.knock = (o.knock || 0) + s.pushBack * T * 0.6; }
     }
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : "120,200,255" });
   }
@@ -1849,7 +1849,7 @@ function landShot(sh) {
   if (r.dead) return;
   if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
-  if (sh.kind === "air") r.knock = (r.knock || 0) + s.pushBack * T * (r.type === "boss" ? 0.25 : 1);   // slides back over a moment
+  if (sh.kind === "air" && r.type !== "boss") r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
   const p = posAt(G.map, r.d);
   burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : "#ffffff", 5);
 }
