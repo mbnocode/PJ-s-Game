@@ -189,7 +189,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 @keyframes acorn-bump { 40% { transform: translate(-50%, -50%) scale(1.35); } }
 @media (max-width: 900px) { @keyframes acorn-bump { 40% { transform: scale(1.35); } } }
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
-.acorns::before, .perk .cost::before { content: ""; width: 1em; height: 1.1em; background: radial-gradient(ellipse 55% 40% at 50% 28%, #8a5a2a 60%, transparent 62%), radial-gradient(ellipse 45% 55% at 50% 62%, #f2b23a 65%, transparent 67%); display: inline-block; }
+.acorns::before, .perk .cost::before { content: ""; width: 1.05em; height: 1.18em; background: var(--acorn) center / contain no-repeat; display: inline-block; filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.45)); }
 .perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; width: min(820px, 100%); }
 .perk { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
 .perk.maxed { border-color: var(--moss-dark); }
@@ -479,6 +479,11 @@ function makeSprite(rows, flip, recolor = {}) {
   });
   return c;
 }
+// The Golden Acorn picture, used on screens (as --acorn) and in the game when one flies to the counter.
+const ACORN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36"><defs><radialGradient id="n" cx="38%" cy="40%" r="70%"><stop offset="0" stop-color="#fff6c2"/><stop offset=".35" stop-color="#ffd84a"/><stop offset=".75" stop-color="#e8a417"/><stop offset="1" stop-color="#b06e0a"/></radialGradient><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9824a"/><stop offset="1" stop-color="#6e4220"/></linearGradient><clipPath id="cap"><path d="M3.5 14.5C3.5 8 9 4.5 16 4.5S28.5 8 28.5 14.5c0 1.6-1 2.6-2.6 2.6H6.1c-1.6 0-2.6-1-2.6-2.6z"/></clipPath></defs><path d="M16 34.5c-6.2-2.6-10.6-8.4-10.6-15.4h21.2c0 7-4.4 12.8-10.6 15.4z" fill="url(#n)" stroke="#5a3410" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.2 20.5c.4 4.2 2.6 7.6 5.6 9.8" fill="none" stroke="#fffbe0" stroke-width="2.2" stroke-linecap="round" opacity=".85"/><path d="M22.6 21c-.3 3.2-1.7 5.9-3.8 7.9" fill="none" stroke="#a8620a" stroke-width="1.2" stroke-linecap="round" opacity=".6"/><path d="M3.5 14.5C3.5 8 9 4.5 16 4.5S28.5 8 28.5 14.5c0 1.6-1 2.6-2.6 2.6H6.1c-1.6 0-2.6-1-2.6-2.6z" fill="url(#c)"/><g clip-path="url(#cap)" stroke="#4e2a10" stroke-width=".9" opacity=".75" fill="none"><path d="M0 8l14 12M5 2l18 16M12 0l18 16M19 0l14 12M-4 14l10 8"/><path d="M32 8L18 20M27 2L9 18M20 0L2 16M13 0L-1 12M36 14l-10 8"/></g><path d="M3.5 14.5C3.5 8 9 4.5 16 4.5S28.5 8 28.5 14.5c0 1.6-1 2.6-2.6 2.6H6.1c-1.6 0-2.6-1-2.6-2.6z" fill="none" stroke="#3a2008" stroke-width="1.6"/><path d="M7 9.2c2-2.3 5-3.4 8.5-3.4" fill="none" stroke="#e2b07a" stroke-width="1.4" stroke-linecap="round" opacity=".8"/><path d="M16 4.8c.2-1.8 1.2-3.2 3.2-3.8" fill="none" stroke="#3a2008" stroke-width="3" stroke-linecap="round"/><path d="M16 4.8c.2-1.8 1.2-3.2 3.2-3.8" fill="none" stroke="#8a5a2a" stroke-width="1.5" stroke-linecap="round"/><path d="M25.5 21.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="#fff"/></svg>`;
+const ACORN_URL = "data:image/svg+xml," + encodeURIComponent(ACORN_SVG);
+document.documentElement.style.setProperty("--acorn", `url("${ACORN_URL}")`);
+const ACORN_IMG = new Image(); ACORN_IMG.src = ACORN_URL;
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
 SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like little Clankers
@@ -2599,10 +2604,14 @@ function draw() {
       // flies up to the acorn counter at the top middle
       const k = p.t / p.life, e = k * k, ax = p.x + (320 - p.x) * e, ay = p.y + (-24 - p.y) * e - Math.sin(k * Math.PI) * 40;
       x.globalAlpha = 1;
-      x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(ax, ay + 2, 6.5, 7.5, 0, 0, Math.PI * 2); x.fill();
-      x.fillStyle = "#f2b23a"; x.beginPath(); x.ellipse(ax, ay + 2, 5, 6, 0, 0, Math.PI * 2); x.fill();
-      x.fillStyle = "#16191d"; x.fillRect(ax - 7, ay - 6, 14, 6); x.fillStyle = "#8a5a2a"; x.fillRect(ax - 6, ay - 5, 12, 4); x.fillRect(ax - 1, ay - 8, 2, 3);
-      x.fillStyle = "#fff3b0"; x.fillRect(ax - 3, ay, 2, 3);
+      const s = 18 + Math.sin(Math.min(1, k * 1.6) * Math.PI) * 8;   // pops bigger, then shrinks into the counter
+      const gl = x.createRadialGradient(ax, ay, 1, ax, ay, s); gl.addColorStop(0, "rgba(255,220,100,0.6)"); gl.addColorStop(1, "rgba(255,200,60,0)");
+      x.fillStyle = gl; x.beginPath(); x.arc(ax, ay, s, 0, Math.PI * 2); x.fill();
+      x.save(); x.translate(ax, ay); x.rotate(Math.sin(k * 12) * 0.25);
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
+      if (ACORN_IMG.complete) x.drawImage(ACORN_IMG, -s / 2, -s * 0.56, s, s * 1.125);
+      x.imageSmoothingEnabled = false; x.restore();
+      if (!G.paused && Math.random() < 0.6) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * 8, y: ay + (Math.random() - 0.5) * 8, vx: (Math.random() - 0.5) * 20, vy: 10, t: 0, life: 0.35, col: Math.random() < 0.5 ? "#fff3b0" : "#ffd34d" });
     }
     else {
       const k = p.t / p.life, e = k * k, tx = 40, ty = -20;
