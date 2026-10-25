@@ -79,7 +79,7 @@ const SETTINGS = {
               // Pick ONE choice at each upgrade. Extra choice kinds for the Owl:
               // pushTimes (pushes robots back this many times farther), targetsPlus (blasts this many more robots at once).
               upgradeChoices: [
-                [ { name: "Mighty Gust",   about: "Pushes robots back twice as far.", pushTimes: 2 },
+                [ { name: "Eagle Eyes",    about: "Reaches 1 more square.", rangePlus: 1 },
                   { name: "Twin Gusts",    about: "Blasts 2 robots at once.", targetsPlus: 1 } ],
                 [ { name: "Sharp Talons",  about: "Hits twice as hard.", damageTimes: 2 },
                   { name: "Quick Wings",   about: "Attacks 50% faster.", speedTimes: 1.5 } ],
