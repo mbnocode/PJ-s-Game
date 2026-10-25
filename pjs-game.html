@@ -174,6 +174,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .err { color: #ffb4a8; background: rgba(226, 87, 76, .15); border: 2px solid rgba(226, 87, 76, .5); border-radius: 4px; padding: 8px 12px; }
 .chip { font-family: var(--body); font-weight: 700; font-size: 14px; background: var(--leaf); color: #1b1006; padding: 4px 10px; border-radius: 3px; letter-spacing: .06em; }
 .lookup { align-items: flex-end; }
+.soundcol { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hud-acorns { font-size: 14px; }
+.hud-acorns.bump { animation: bump .4s; }
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
 .acorns::before, .perk .cost::before { content: ""; width: 1em; height: 1.1em; background: radial-gradient(ellipse 55% 40% at 50% 28%, #8a5a2a 60%, transparent 62%), radial-gradient(ellipse 45% 55% at 50% 62%, #f2b23a 65%, transparent 67%); display: inline-block; }
 .perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; width: min(820px, 100%); }
@@ -354,7 +357,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <button class="go" id="b-wave">Start Wave</button>
       <button id="b-speed" title="Game speed">1×</button>
       <button id="b-pause">Pause</button>
-      <button id="b-sound" title="Sound">Sound on</button>
+      <div class="soundcol">
+        <button id="b-sound" title="Sound">Sound on</button>
+        <span class="acorns hud-acorns" id="hud-acorns" title="Golden Acorns in this save slot">0</span>
+      </div>
     </div>
     <div id="stage">
       <canvas id="board" width="640" height="384"></canvas>
@@ -1301,6 +1307,7 @@ function updateHud() {
   const b = $("b-wave"); b.disabled = G.waveActive || G.over;
   b.textContent = G.over ? "Level over" : G.waveActive ? "Wave in progress" : G.wave === 0 ? "Start Wave" : "Start Wave " + (G.wave + 1);
   $("b-sound").textContent = Sound.on ? "Sound on" : "Sound off";
+  $("hud-acorns").textContent = (slot() && slot().acorns) || 0;
   $("b-pause").textContent = G.paused ? "Resume" : "Pause";
 }
 
@@ -1540,6 +1547,14 @@ function kill(r) {
   r.dead = true;
   G.leaves += r.leaves; G.killPoints += r.points;
   const p = posAt(G.map, r.d);
+  // Some levels give a small chance of a Golden Acorn for each robot destroyed.
+  const chance = SETTINGS.levels[G.level].acornDropChance || 0;
+  if (chance && Math.random() < chance) {
+    const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots);
+    floatText(p.x, p.y - 18, "+1 Golden Acorn!", "#ffd34d", 1.6);
+    burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
+    const el = $("hud-acorns"); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+  }
   Sound.play("pop"); Sound.play("swish");
   burst(p.x, p.y, "#c9ced6", r.type === "boss" ? 40 : 10);
   burst(p.x, p.y, "#ffb347", r.type === "boss" ? 20 : 4);

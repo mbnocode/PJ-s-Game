@@ -148,6 +148,7 @@ const SETTINGS = {
   // Maps are 20 squares wide and 12 tall. The path goes through these corners.
   levels: {
     meadow: { name: "The Meadow", about: "A long, twisty path. A good place to start.",
+              acornDropChance: 0.05,   // each robot you destroy here has this chance (0.05 = 5%) to drop a Golden Acorn
               path: [[0, 2], [4, 2], [4, 8], [8, 8], [8, 3], [12, 3], [12, 9], [16, 9], [16, 5], [19, 5]],
               // Trees, mushrooms and tall grass: you can't build on these squares. [across, down]
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
