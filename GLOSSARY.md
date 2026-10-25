@@ -44,6 +44,9 @@ A Tower that doesn't attack. It makes nearby Towers stronger. The Wizard is a He
 **Healer**:
 A glowing deer Tower that gives back 1 Base Health after every Wave, more when upgraded, and turns Factory squares back into grass. Healers are expensive, even the first one. There's no limit on how many you can have, and their healing adds up.
 
+**Pegasus**:
+The Super Tower: a winged horse that shoots golden stars at 3 Robots at once and can see Hiders. It only appears in the shop after you unlock it on the Upgrades page.
+
 **Squirrel**:
 A Tower that doesn't attack. It gathers Maple Leaves and hands them over after every Wave (10 to start, more with Upgrades).
 
@@ -100,6 +103,13 @@ What you earn for beating a Level: 1 to 3, depending on how much Base Health you
 **Tutorial**:
 Optional guidance you can turn on when you start a game. It walks you through the first 5 Waves with tips, then goes away.
 _Avoid_: Hints
+
+**Golden Acorn**:
+A prize that belongs to a Save Slot and never goes away. You earn 1 for every Wave you get through, plus 5 for every star when you win. You spend them on Permanent Upgrades.
+_Avoid_: Acorn (Maple Leaves are the money inside a game)
+
+**Permanent Upgrade**:
+Something you buy with Golden Acorns on the Upgrades page that lasts forever in that Save Slot: more starting leaves, stronger towers, a tougher tree, cheaper towers, or unlocking the Pegasus.
 
 **Save Slot**:
 One of three places a game in progress is kept. You pick a Save Slot to start or continue a game.

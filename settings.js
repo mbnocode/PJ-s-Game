@@ -92,6 +92,9 @@ const SETTINGS = {
               about: "Heals your Base after every Wave." },
     squirrel: { name: "Squirrel", cost: 120, leavesPerWave: 10, leavesPerUpgrade: 5,
               about: "Gathers Maple Leaves for you after every Wave." },
+    // The Super Tower. It only shows up in the shop after you buy it on the Upgrades page.
+    pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 30, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
+              about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders." },
   },
   upgradeCost: [0.7, 1.0, 1.5],   // price of Upgrade 1, 2 and 3, times the Tower's price
   upgradeDamage: 0.45,            // each Upgrade adds this much damage (0.45 = +45%)
@@ -107,6 +110,18 @@ const SETTINGS = {
     tank:    { name: "Tank",    health: 240, speed: 1.2,  leaves: 16,  points: 45 },
     hider:   { name: "Hider",   health: 90,  speed: 2.4,  leaves: 12,  points: 35, hideSeconds: 3 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
+  },
+
+  // ---------------- PERMANENT UPGRADES ----------------
+  // Every game earns Golden Acorns for the save slot: 1 for each Wave you get through,
+  // plus this many for every star when you win. Spend them on the Upgrades page.
+  acornsPerStar: 5,
+  permanentUpgrades: {
+    startLeaves: { name: "Bigger Leaf Pile",  about: "Start every game with 25 more Maple Leaves.", per: 25,   costs: [10, 20, 30, 45, 60] },
+    damage:      { name: "Stronger Towers",   about: "All towers deal 5% more damage.",            per: 0.05, costs: [15, 30, 45, 65, 90] },
+    baseHealth:  { name: "Tougher Tree",      about: "Your Base gets 10 more health.",              per: 10,   costs: [20, 40, 70] },
+    cheaper:     { name: "Bargain Builders",  about: "Towers cost 5% less to build and upgrade.",   per: 0.05, costs: [15, 30, 50, 75] },
+    superTower:  { name: "Super Tower: Pegasus", about: "Unlocks the Pegasus in your tower shop.",  per: 1,    costs: [100] },
   },
 
   // Each Wave is a list of groups: [robot, how many, seconds between them, (Boss health)]

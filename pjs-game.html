@@ -174,6 +174,16 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .err { color: #ffb4a8; background: rgba(226, 87, 76, .15); border: 2px solid rgba(226, 87, 76, .5); border-radius: 4px; padding: 8px 12px; }
 .chip { font-family: var(--body); font-weight: 700; font-size: 14px; background: var(--leaf); color: #1b1006; padding: 4px 10px; border-radius: 3px; letter-spacing: .06em; }
 .lookup { align-items: flex-end; }
+.acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
+.acorns::before, .perk .cost::before { content: ""; width: 1em; height: 1.1em; background: radial-gradient(ellipse 55% 40% at 50% 28%, #8a5a2a 60%, transparent 62%), radial-gradient(ellipse 45% 55% at 50% 62%, #f2b23a 65%, transparent 67%); display: inline-block; }
+.perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; width: min(820px, 100%); }
+.perk { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+.perk.maxed { border-color: var(--moss-dark); }
+.perk .k { font-family: var(--display); font-size: 20px; }
+.perk .s { color: var(--muted); font-size: 15px; }
+.perk .pips { color: var(--gold); letter-spacing: 3px; }
+.perk button { align-self: flex-start; font-family: var(--body); font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
+.perk .cost { display: inline-flex; align-items: center; gap: 4px; }
 .bigcode { font-family: var(--body); font-weight: 700; font-size: clamp(48px, 10vw, 84px); letter-spacing: .08em; color: var(--gold); line-height: 1; -webkit-user-select: text; user-select: text; }
 .lobby-box { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px 18px; width: min(360px, 100%); text-align: left; }
 .lobby-box ol { margin: 8px 0 0; padding-left: 24px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; font-weight: 700; }
@@ -248,7 +258,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
+    <div class="row"><button class="go" id="b-perks">Upgrades</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
     <button class="link" id="b-levels-back">Back to save slots</button>
   </section>
 
@@ -282,6 +292,15 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="err" id="setup-err" hidden></p>
     <button class="go big" id="b-start">Start</button>
     <button class="link" id="b-setup-back">Back to levels</button>
+  </section>
+
+  <!-- Permanent upgrades for this save slot -->
+  <section class="screen menu" id="s-perks" hidden>
+    <h2>Upgrades</h2>
+    <div class="acorns"><span id="acorn-num">0</span> Golden Acorns</div>
+    <p class="muted">Upgrades last forever in this save slot. Earn Golden Acorns by playing: 1 for every Wave you get through, and more for every star you win.</p>
+    <div class="perks" id="perk-list"></div>
+    <button class="link" id="b-perks-back">Back to levels</button>
   </section>
 
   <!-- Join a challenge -->
@@ -355,7 +374,7 @@ const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
-const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant"];
+const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "pegasus"];
 const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
@@ -388,6 +407,7 @@ const ART = {
   fire_mid: ["................................","...................k............","..................kwkk..........","..................kkeek.........",".................kweeeekkkk.....","..................kkeeeerrrkk...","....................kkrrkkrrrkkk","....................krrrffkrrrkr","...k................krrrryrrrrrr","..kRkk..............krrrrrrrrrrr",".kWWRRkk............krMrrRRRRRRk",".kWWWRRRk...........krrffRRRRRk.","kRRWWWWRRkk........krMrfkkkkkk..","kWRRRRWWRRRk......kkrrrfk.......",".kWWWRRRRWRRkk...krrMrffk.......",".kRRRRWWRRRRRRk..kMrrrfrk.......",".kRkkRRRRRRRRRRkkkMrrrfrk.......","kRRRkkkWWWWWMRrMWMrrrffk........","RRRRRk.kkkrrrrrMMrrrrfrk........","kRRRRk..krrrrrrrrrrrrrrk........","kRRRk..krrrrrrrrrrrrrrk.........","krRRk..krrrrrrrrrrrrrk..........","krrrk.krrrrrrrrrfffffrk.........","krrrkkkRrrrrrRryyyyyyk..........","krrrrrrRrrrrrRfffffffk..........","krrrrrrRrrrrrRyyyyyyyk..........","krrrrrrrRrrrRffffffffrk.........",".krrrrrkrrrrkkrkkkrrrrk.........","..kkkkkkrrrrk.k..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
   fire_down: ["................................","...................k............","..................kwkk..........","..................kkeek.........",".................kweeeekkkk.....","..................kkeeeerrrkk...","....................kkrrkkrrrkkk","....................krrrffkrrrkr","....................krrrryrrrrrr","....................krrrrrrrrrrr","....................krMrrRRRRRRk","....................krrffRRRRRk.","...................krMrfkkkkkk..","..................kkrrrfk.......",".................krrMrffk.......","..k..............kMrrrfrk.......",".kRk........kkkkkkMrrrfrk.......","kRRRk.....kkMrrrrWrrrffk........","RRRRRk...krrrrWWRWrrrfrk........","kRRRRk..kMWWWWRRRrrrrrrk........","kRRRk.kkWWWWRRRRWrrrrrk.........","krRRkkWWWWWRRRRRrrrrrk..........","krrrkWWWWRRWWRWRfffffrk.........","krrrkWWRRWWWRWRWyyyyyk..........","krrrWWRRWWWRWWRffffffk..........","krrrRRWWWWRRWWRyyyyyyk..........","krrRrrrWWWRrWRfffffffrk.........",".krrrrrWWRrrkRrkkkrrrrk.........","..kkkkkkRrrrkkk..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
   squirrel: ["................................","...........k....................","........kkkrkkk.................",".......krrrroook...k............","......krrrroooook.krk...........","......krrroooooookkrk...........",".....krrrrrooooorkkRrk..........","......krrrrrooorkkrrrkkk........",".....kRrrrrrrrrrkkrrrrrrk.......","....kRRrrrrrrrrk.krrrrrrrk......","....kRorrrrrrrk.krrrrrwrrrk.....","...kRRorrrrrrrRkrrrrrrrkrrrk....","..kRRoorrrrrrrrRrrrrrrrerrrk....","..kRRoorrrrrrrrRrrrrreeeeekk....","..kRRoorrrrrrrrRkrrrreeeeek.....","..kRooorrrrrrrrrkkrrrrreAkk.....","..kRooorrrrrrrrrrrrrrrAAAAAk....",".kRRooorrrrrrrrrrrrrrrAAAAAk....","..kRooorrrrrrrrrrrrrerraaark....","..kRRoorrrrrrrrrrreeeeraaaak....","..kRRoorrrrrrrrrrreeeeeaaak.....","..kRRoorrrrrrrrrreeeeeeeark.....","..kRRRorrrrrrrrrreeeeeeerrk.....","...kRRorrrrrrrrrreeeeeeerrk.....","....kRRrrrrrrrrrreeeeeeerrk.....","....kRRRRrrRRRrrreeeeeeerk......",".....kRRRRRRRkrrrreeeeerrk......","......kkkRkkk.krrreeeeerkk......",".........k...kRRRRRreRRRRRk.....","............kRRRRRRRRRRRRRRk....",".............kRRRRRkkRRRRRk.....","..............kkkkk..kkkkk......"],
+  pegasus: ["..............k.................","......k......kWk................",".....kbk...kkcWk........k.......",".....kcbk.kWWcWk.......kWk......","....kbbck.kWWcWk.......kWk......","....kbbcbkkcWcWWk.....kWWWk.....","...kbbbbckWcWcWWk......kfWkkk...","...kbbbbcbWWccWWk.....kfWWWWWk..","...kcbbbbcWWcWcWk....kfWWWWkWWk.","..kbbcbbbcWWcWcWk....kfWWWWWWWkk","..kbbbccbbcWWccWk...kfyWWWWWWWWW","...kbbbbcbcWWccWk...kfWWWWWWWWkk","....kbbbbcccWccWWk.kfyfWWWWkkkWk",".....kbbbbbcWWcWWk.kfkWWWWWk..k.","......kbbbbbcWcWWkkfkfWWWWWk....",".......kbbbbbbkkWkkkyWWWWWWk....","........kbkkWWWWWWWkkWWfWWWk....",".......kkWWWWWWWWWWWWWfyfWk.....",".....kkfWWWWWWWWWWWWWWWfWWk.....","...kkfffWWWWWWWWWWWWWWWkkWk.....","..kffffWWWWWWWWWWWWWWWWWkk......","..kfffffWWWWWWWWWWWWWWWk........","..kfffffWWWWWWWWWWWWWWWk........",".kffyffkkWwWWwWWWWWwWWwk........",".kfffffkkwwkwwwwwwwwkwwk........",".kfyffk.kWwkWwkkkkWwkWwk........","..kfffk.kWwkWwk..kWwkWwk........","..kffk..kWwkWwk..kWwkWwk........","...kfk..kWwkWwk..kWwkWwk........","....k...kWwkWwk..kWwkWwk........","........kyykyyk..kyykyyk........",".........kk.kk....kk.kk........."],
   leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
 };
 function makeSprite(rows, flip, recolor = {}) {
@@ -414,6 +434,7 @@ SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a
 SPR.air = makeSprite(ART.air, false, { m: "#a8743e", n: "#6e4220", N: "#4e2d14", e: "#f4e2c0", E: "#ead2a6", y: "#ffd34d", w: "#ffffff", o: "#ff9a2a", O: "#c96a12" });   // 32 x 32 owl
 SPR.plant = makeSprite(ART.plant, false, { n: "#7a4a24", N: "#4e2d14", m: "#9a6434", L: "#2f7d32", l: "#5fbf4a", f: "#ffe066" });   // 32 x 32 tree giant
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
+SPR.pegasus = makeSprite(ART.pegasus, false, { W: "#ffffff", w: "#d8e6f5", b: "#cfe0f2", c: "#9fb8d6", f: "#ffd36b", y: "#f2a93a" });   // 32 x 32 pegasus
 const FROG_FACE = { k: "#16191d", w: "#ffffff", R: "#ff8fa8" };
 SPR.water = makeSprite(ART.water, false, { ...FROG_FACE, b: "#3d8fe0", B: "#1f5fa8", c: "#bfe6ff", h: "#7cc0ff", S: "#2a6fbf" });          // 32 x 32 frog
 SPR.water_swamp = makeSprite(ART.water, false, { ...FROG_FACE, b: "#8a5a2a", B: "#5a3a1a", c: "#e0c08a", h: "#b07a40", S: "#4e2d14" });
@@ -586,6 +607,7 @@ const Sound = {
       case "water": if (this.ok(name, 140)) this.noise(0.14, 0.09, "bandpass", 3200, 1400); break;
       case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
       case "smash": this.tone(90, 0.35, "square", 0.14, 40); this.noise(0.3, 0.3, "lowpass", 400, 120); break;
+      case "pegasus": if (this.ok(name, 150)) { this.tone(1320, 0.12, "sine", 0.06, 1760); this.tone(1760, 0.1, "triangle", 0.04, null, 0.05); } break;
       case "tongue": if (this.ok(name, 120)) this.tone(900, 0.09, "square", 0.05, 300); break;
       case "air": if (this.ok(name, 160)) this.tone(520, 0.28, "sine", 0.08, 280); break;
       case "place": this.tone(520, 0.08, "square", 0.1, 780); break;
@@ -717,7 +739,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -738,7 +760,7 @@ function slotSummary(s) {
   let stars = 0;
   for (const L in s.best) for (const d in s.best[L]) stars += s.best[L][d].stars;
   const beaten = LEVEL_ORDER.filter((L) => s.best[L] && Object.keys(s.best[L]).length).length;
-  return { stars, beaten };
+  return { stars, beaten, acorns: s.acorns || 0 };
 }
 let eraseArmed = -1;
 function renderSlots() {
@@ -749,7 +771,7 @@ function renderSlots() {
       b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="s">Empty. Tap to start a new game.</span>`;
     } else {
       const sum = slotSummary(s);
-      b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="stars">★ ${sum.stars} stars</span><span class="s">${sum.beaten} of ${LEVEL_ORDER.length} levels beaten</span>`;
+      b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="stars">★ ${sum.stars} stars</span><span class="s">${sum.beaten} of ${LEVEL_ORDER.length} levels beaten · ${sum.acorns} Golden Acorns</span>`;
     }
     b.onclick = () => {
       slotIndex = i;
@@ -1171,7 +1193,9 @@ function startGame(L, d, tutorial, online) {
   G = {
     level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
     wave: 0, waveActive: false, waveClock: 0, queue: [],
-    health: SETTINGS.baseHealth, leaves: diff.startLeaves, killPoints: 0,
+    health: SETTINGS.baseHealth + perkValue("baseHealth"), maxHealth: SETTINGS.baseHealth + perkValue("baseHealth"),
+    leaves: diff.startLeaves + perkValue("startLeaves"), killPoints: 0,
+    damageBonus: perkValue("damage"), cheaper: perkValue("cheaper"),
     towers: [], robots: [], shots: [], fx: [], particles: [], tongues: [],
     paused: false, speed: 1, pick: null, sel: null, hover: null, over: false,
     shake: 0, time: 0, seenHider: false, seenBoss: false, factoryCount: 0, flashTiles: [],
@@ -1187,7 +1211,7 @@ function startGame(L, d, tutorial, online) {
   onlineStart(G);
 }
 function redrawGround() {
-  const fc = Math.round((1 - G.health / SETTINGS.baseHealth) * SETTINGS.factorySquares);
+  const fc = Math.round((1 - G.health / G.maxHealth) * SETTINGS.factorySquares);
   const before = G.factoryCount; G.factoryCount = Math.max(0, Math.min(SETTINGS.factorySquares, fc));
   const x = G.ground.getContext("2d"); x.clearRect(0, 0, 640, 384); paintGround(x, G.map, G.factoryCount);
   if (G.factoryCount > before) G.map.factoryOrder.slice(before, G.factoryCount).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.6, col: "255,140,40" }));
@@ -1214,16 +1238,44 @@ function tutorialEvent(ev) {
   else if (ev === "end5") { G.tutorial = false; }
 }
 
+/* ---------- permanent upgrades (per save slot) ---------- */
+function perkLevel(key) { const s = slot(); return (s && s.perks && s.perks[key]) || 0; }
+function perkValue(key) { return perkLevel(key) * ((SETTINGS.permanentUpgrades || {})[key] || {}).per || 0; }
+function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - (G && G.cheaper || 0))); }
+function towerUnlocked(k) { return !SETTINGS.towers[k].superTower || perkLevel("superTower") > 0; }
+function renderPerks() {
+  const s = slot(); s.perks = s.perks || {}; s.acorns = s.acorns || 0;
+  $("acorn-num").textContent = s.acorns;
+  const box = $("perk-list"); box.innerHTML = "";
+  Object.entries(SETTINGS.permanentUpgrades).forEach(([key, u]) => {
+    const lvl = s.perks[key] || 0, max = u.costs.length, cost = u.costs[lvl];
+    const d = document.createElement("div"); d.className = "perk" + (lvl >= max ? " maxed" : "");
+    d.innerHTML = `<span class="k">${u.name}</span><span class="s">${u.about}</span>
+      <span class="pips">${"■".repeat(lvl)}${"□".repeat(max - lvl)}</span>
+      ${lvl >= max ? `<span class="s">${max > 1 ? "Fully upgraded!" : "Unlocked!"}</span>`
+        : `<button class="go" id="perk-${key}" ${s.acorns < cost ? "disabled" : ""}>${lvl ? "Upgrade" : max > 1 ? "Buy" : "Unlock"} <span class="cost">${cost}</span></button>`}`;
+    box.appendChild(d);
+    const b = d.querySelector("button");
+    if (b) b.onclick = () => {
+      if (s.acorns < cost) return;
+      s.acorns -= cost; s.perks[key] = lvl + 1; saveSlots(slots); Sound.play("upgrade"); renderPerks();
+    };
+  });
+}
+$("b-perks").onclick = () => { Sound.init(); renderPerks(); show("s-perks"); };
+$("b-perks-back").onclick = () => { renderLevels(); show("s-levels"); };
+
 /* ---------- shelf, panel, hud ---------- */
 function renderShelf() {
   const box = $("shelf"); box.innerHTML = "";
   TOWER_ORDER.forEach((k) => {
     const t = SETTINGS.towers[k];
+    if (!towerUnlocked(k)) return;
     const b = document.createElement("button"); b.className = "tbtn"; b.id = "tower-" + k; b.title = t.about;
     const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32;
     const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(towerSprite(k), 0, 0, 32, 32);
     b.appendChild(ic);
-    b.insertAdjacentHTML("beforeend", `<span>${t.name}<span class="c">${t.cost} leaves</span></span>`);
+    b.insertAdjacentHTML("beforeend", `<span>${t.name}<span class="c">${towerCost(k)} leaves</span></span>`);
     b.onclick = () => { G.pick = G.pick === k ? null : k; G.sel = null; $("tpanel").hidden = true; updateShelf(); };
     box.appendChild(b);
   });
@@ -1233,15 +1285,15 @@ function updateShelf() {
   TOWER_ORDER.forEach((k) => {
     const b = $("tower-" + k); if (!b) return;
     b.setAttribute("aria-pressed", String(G.pick === k));
-    b.classList.toggle("poor", G.leaves < SETTINGS.towers[k].cost);
+    b.classList.toggle("poor", G.leaves < towerCost(k));
   });
 }
 let lastLeaves = 0;
 function updateHud() {
   const h = Math.max(0, Math.round(G.health));
   $("hnum").textContent = h;
-  $("hfill").style.width = (100 * h / SETTINGS.baseHealth) + "%";
-  $("hbar").classList.toggle("low", h <= SETTINGS.baseHealth * 0.3);
+  $("hfill").style.width = (100 * h / G.maxHealth) + "%";
+  $("hbar").classList.toggle("low", h <= G.maxHealth * 0.3);
   const ln = $("lnum"); const L = Math.floor(G.leaves);
   if (L !== lastLeaves) { ln.textContent = L; if (L > lastLeaves) { ln.classList.remove("bump"); void ln.offsetWidth; ln.classList.add("bump"); } lastLeaves = L; updateShelf(); }
   $("wnum").textContent = `${G.wave}/${SETTINGS.waves.length}`;
@@ -1261,6 +1313,7 @@ function towerStats(t) {
     if (boost.rangePlus) out.range += boost.rangePlus;
     out.levelBoost = boost;
   }
+  if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
   return out;
 }
 function towerStatsBase(t) {
@@ -1302,7 +1355,7 @@ function towerStatsBase(t) {
   return out;
 }
 function isFactory(x, y) { return G.map.factoryOrder.slice(0, G.factoryCount).some((c) => c.x === x && c.y === y); }
-function upgradePrice(t) { return t.level >= 3 ? null : Math.round(SETTINGS.towers[t.kind].cost * SETTINGS.upgradeCost[t.level]); }
+function upgradePrice(t) { return t.level >= 3 ? null : Math.round(towerCost(t.kind) * SETTINGS.upgradeCost[t.level]); }
 
 function openPanel(t) {
   G.sel = t; G.pick = null; updateShelf();
@@ -1384,12 +1437,13 @@ board.addEventListener("pointerdown", (e) => {
     if (G.map.cells[c.y][c.x] !== "grass") { Sound.play("nope"); return; }
     const sc = G.map.scenery[c.x + "," + c.y];
     if (sc) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, sc === "tree" ? "A tree is here" : sc === "mushroom" ? "Mushrooms here" : "Tall grass here", "#ffd34d"); return; }
-    if (G.leaves < spec.cost) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, "Need " + spec.cost, "#ff8a7a"); return; }
-    G.leaves -= spec.cost;
-    G.towers.push({ kind: G.pick, x: c.x, y: c.y, level: 0, cool: 0.2, spent: spec.cost, born: G.time, boosted: false });
+    const price = towerCost(G.pick);
+    if (G.leaves < price) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, "Need " + price, "#ff8a7a"); return; }
+    G.leaves -= price;
+    G.towers.push({ kind: G.pick, x: c.x, y: c.y, level: 0, cool: 0.2, spent: price, born: G.time, boosted: false });
     Sound.play("place"); burst(c.x * T + 16, c.y * T + 16, "#9be28a", 10);
     tutorialEvent("placed"); updateHud();
-    if (G.leaves < spec.cost) { G.pick = null; updateShelf(); }
+    if (G.leaves < price) { G.pick = null; updateShelf(); }
     return;
   }
   G.sel = null; $("tpanel").hidden = true;
@@ -1462,8 +1516,8 @@ function endWave() {
   });
   let heal = G.diff.baseHealsPerWave;
   G.towers.forEach((t) => { if (t.kind === "healer") heal += towerStats(t).healPerWave; });
-  if (heal > 0 && G.health < SETTINGS.baseHealth) {
-    G.health = Math.min(SETTINGS.baseHealth, G.health + heal); redrawGround();
+  if (heal > 0 && G.health < G.maxHealth) {
+    G.health = Math.min(G.maxHealth, G.health + heal); redrawGround();
     floatText(pos.x, pos.y - 10, "+" + heal, "#9cff8a"); Sound.play("heal");
     G.towers.filter((t) => t.kind === "healer").forEach((t) => burst(t.x * T + 16, t.y * T + 10, "#ffe58a", 12));
   }
@@ -1607,6 +1661,7 @@ function collectBonusLeaf() {
 function towerScale(t) {
   if (t.kind === "healer") return [1.0, 1.06, 1.12, 1.2][t.level];
   if (t.kind === "squirrel") return [0.85, 0.95, 1.05, 1.15][t.level];
+  if (t.kind === "pegasus") return [1.0, 1.07, 1.14, 1.22][t.level];
   if (t.kind === "fire" || t.kind === "wizard") return [0.95, 1.03, 1.11, 1.2][t.level];
   if (t.kind === "water") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "air") return [0.9, 1.0, 1.1, 1.2][t.level];
@@ -1912,6 +1967,13 @@ function draw() {
   // shots
   for (const sh of G.shots) {
     if (sh.kind === "fire") drawFireball(x, sh);
+    else if (sh.kind === "pegasus") {
+      x.save(); x.translate(sh.x, sh.y); x.rotate(G.time * 10);
+      x.fillStyle = "rgba(255,220,120,0.45)"; x.beginPath(); x.arc(0, 0, 9, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#ffd36b"; x.beginPath();
+      for (let i = 0; i < 10; i++) { const r = i % 2 ? 2.4 : 6, a = i * Math.PI / 5; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      x.closePath(); x.fill(); x.fillStyle = "#fff8d6"; x.fillRect(-1, -1, 2, 2); x.restore();
+    }
     else if (sh.kind === "water") { x.fillStyle = "#3d8fe0"; x.fillRect(sh.x - 3, sh.y - 4, 6, 8); x.fillStyle = "#cfeeff"; x.fillRect(sh.x - 1, sh.y - 3, 2, 2); }
     else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
   }
@@ -1946,13 +2008,17 @@ function finish(won) {
   if (G.over) return;
   G.over = true; G.waveActive = false; G.sel = null; $("tpanel").hidden = true; $("banner").hidden = true; updateHud();
   const score = Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes);
-  const H = G.health / SETTINGS.baseHealth;
+  const H = G.health / G.maxHealth;
   const stars = won ? (H >= 0.9 ? 3 : H >= 0.5 ? 2 : 1) : 0;
   let best = false;
   // The factory eats the rest of the map at a steady 40 squares a second.
   if (!won) { G.takeover = { t: 0, from: G.factoryCount, n: G.factoryCount, done: false, dur: Math.max(1, (G.map.grassOrder.length - G.factoryCount) / 40) }; Sound.play("horn"); }
   sendProgress(true, won ? "won" : "lost", stars, score);
   const on = G.online;
+  // Golden Acorns for the save slot: 1 per Wave you got through, plus some for each star.
+  const acorns = (won ? G.wave : Math.max(0, G.wave - 1)) + stars * (SETTINGS.acornsPerStar || 0);
+  { const s = slot(); s.acorns = (s.acorns || 0) + acorns; saveSlots(slots); }
+  G.acornsEarned = acorns;
   if (won) {
     const s = slot(); s.best[G.level] = s.best[G.level] || {};
     const prev = s.best[G.level][G.diffKey];
@@ -1972,12 +2038,14 @@ function finish(won) {
       ? `<h2>${lvName} is saved!</h2>
          <div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>
          <div class="scoreline">Score ${score.toLocaleString()}${best ? " · New best!" : ""}</div>
+         <div class="acorns" style="font-size:20px">+${G.acornsEarned} Golden Acorns</div>
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left</p>
          ${boardBits(on)}
          <div class="row">${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`
       : `<h2>The Factory took over</h2>
          <p class="muted">The robots got through on Wave ${G.wave} of ${SETTINGS.waves.length}.</p>
          <div class="scoreline">Score ${score.toLocaleString()}</div>
+         <div class="acorns" style="font-size:20px">+${G.acornsEarned} Golden Acorns</div>
          ${boardBits(on)}
          <div class="row"><button class="go" id="o-again">Try again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`);
     $("o-again").onclick = () => startGame(G.level, G.diffKey, false, on ? { code: on.code, nick: on.nick } : null);
