@@ -217,6 +217,31 @@ const SETTINGS = {
               trees:     [[1, 1], [7, 0], [11, 5], [15, 10], [19, 1], [0, 6], [11, 11], [15, 5]],
               mushrooms: [[4, 8], [7, 4], [16, 0], [12, 10]],
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
+    beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, and the waves bring new robots.", theme: "beach",
+              robotHealth: 1.5,   // every Robot on this level has this many times its normal health
+              path: [[0, 2], [4, 2], [4, 8], [8, 8], [8, 3], [12, 3], [12, 10], [16, 10], [16, 5], [19, 5]],
+              // On the Beach, trees are palm trees, mushrooms are starfish and shells, and tall grass is dune grass.
+              trees:     [[2, 5], [6, 0], [10, 6], [14, 1], [18, 9], [1, 10], [6, 11], [14, 7], [18, 1]],
+              mushrooms: [[2, 9], [10, 0], [14, 11], [17, 7], [6, 5]],
+              tallGrass: [[3, 0], [9, 10], [11, 1], [15, 3], [19, 11], [0, 7]],
+              // The Beach has its own 15 waves instead of the usual ones.
+              waves: [
+                [["scout", 6, 1.3]],                                                    // 1: speedy Scouts first
+                [["clanker", 6, 1.0], ["scout", 5, 0.9]],                               // 2
+                [["walker", 6, 1.2]],                                                   // 3
+                [[["scout", "walker"], 10, 0.9]],                                       // 4
+                [["hider", 3, 1.6], ["boss", 1, 0, 900]],                               // 5
+                [["walker", 8, 0.9], ["hider", 3, 1.2]],                                // 6
+                [["tank", 3, 2.0], [["scout", "scout", "walker"], 9, 0.7]],            // 7
+                [[["hider", "walker"], 10, 0.9]],                                       // 8
+                [["tesla", 2, 2.0], ["tank", 4, 1.6]],                                  // 9: Tesla Coils!
+                [[["walker", "tank"], 8, 1.2], ["boss", 1, 0, 1800]],                   // 10
+                [[["scout", "hider"], 16, 0.5]],                                        // 11
+                [[["tank", "tank", "tesla"], 9, 1.3]],                                  // 12
+                [["hider", 12, 0.7], ["boss", 2, 4, 1300]],                             // 13
+                [[["walker", "tesla", "scout"], 15, 0.7], ["tank", 5, 1.2]],           // 14
+                [[["tank", "hider", "tesla"], 15, 0.9], ["boss", 1, 0, 4000]],          // 15: the big finish
+              ] },
   },
 };
 /* ===================== end of PJ's settings ===================== */
