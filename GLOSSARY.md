@@ -44,6 +44,9 @@ A Tower that doesn't attack. It makes nearby Towers stronger. The Wizard is a He
 **Healer**:
 A glowing deer Tower that gives back 1 Base Health after every Wave, more when upgraded, and turns Factory squares back into grass. Healers are expensive, even the first one. There's no limit on how many you can have, and their healing adds up.
 
+**Squirrel**:
+A Tower that doesn't attack. It gathers Maple Leaves and hands them over after every Wave (10 to start, more with Upgrades).
+
 **Vision**:
 The power to see and hit Hiders while they're invisible. Owls have Vision; other Towers can get it from an upgrade.
 

@@ -110,7 +110,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .hud button { font-size: 16px; padding: 8px 12px; }
 #stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
 #board { image-rendering: pixelated; display: block; border: 3px solid #0b130e; border-radius: 4px; touch-action: none; cursor: pointer; }
-.shelf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-bottom: 2px; }
+.shelf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-bottom: 2px; }
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
@@ -355,7 +355,7 @@ const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
-const TOWER_ORDER = ["air", "wizard", "healer", "fire", "water", "plant"];
+const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant"];
 const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
@@ -387,6 +387,7 @@ const ART = {
   glowshroom: ["................","................","................","....kkkkk.......","...kuuUuuk......","..kuUuuuUuk.....","..kuuuuuuuk.kkk.","..kkkkkkkkkkuUuk","....kek....kkkkk","....kek.....kek.","....kek.....kek.","...keeek...keeek","...kkkkk...kkkkk","................","................","................"],
   fire_mid: ["................................","...................k............","..................kwkk..........","..................kkeek.........",".................kweeeekkkk.....","..................kkeeeerrrkk...","....................kkrrkkrrrkkk","....................krrrffkrrrkr","...k................krrrryrrrrrr","..kRkk..............krrrrrrrrrrr",".kWWRRkk............krMrrRRRRRRk",".kWWWRRRk...........krrffRRRRRk.","kRRWWWWRRkk........krMrfkkkkkk..","kWRRRRWWRRRk......kkrrrfk.......",".kWWWRRRRWRRkk...krrMrffk.......",".kRRRRWWRRRRRRk..kMrrrfrk.......",".kRkkRRRRRRRRRRkkkMrrrfrk.......","kRRRkkkWWWWWMRrMWMrrrffk........","RRRRRk.kkkrrrrrMMrrrrfrk........","kRRRRk..krrrrrrrrrrrrrrk........","kRRRk..krrrrrrrrrrrrrrk.........","krRRk..krrrrrrrrrrrrrk..........","krrrk.krrrrrrrrrfffffrk.........","krrrkkkRrrrrrRryyyyyyk..........","krrrrrrRrrrrrRfffffffk..........","krrrrrrRrrrrrRyyyyyyyk..........","krrrrrrrRrrrRffffffffrk.........",".krrrrrkrrrrkkrkkkrrrrk.........","..kkkkkkrrrrk.k..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
   fire_down: ["................................","...................k............","..................kwkk..........","..................kkeek.........",".................kweeeekkkk.....","..................kkeeeerrrkk...","....................kkrrkkrrrkkk","....................krrrffkrrrkr","....................krrrryrrrrrr","....................krrrrrrrrrrr","....................krMrrRRRRRRk","....................krrffRRRRRk.","...................krMrfkkkkkk..","..................kkrrrfk.......",".................krrMrffk.......","..k..............kMrrrfrk.......",".kRk........kkkkkkMrrrfrk.......","kRRRk.....kkMrrrrWrrrffk........","RRRRRk...krrrrWWRWrrrfrk........","kRRRRk..kMWWWWRRRrrrrrrk........","kRRRk.kkWWWWRRRRWrrrrrk.........","krRRkkWWWWWRRRRRrrrrrk..........","krrrkWWWWRRWWRWRfffffrk.........","krrrkWWRRWWWRWRWyyyyyk..........","krrrWWRRWWWRWWRffffffk..........","krrrRRWWWWRRWWRyyyyyyk..........","krrRrrrWWWRrWRfffffffrk.........",".krrrrrWWRrrkRrkkkrrrrk.........","..kkkkkkRrrrkkk..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
+  squirrel: ["................................","...........k....................","........kkkrkkk.................",".......krrrroook...k............","......krrrroooook.krk...........","......krrroooooookkrk...........",".....krrrrrooooorkkRrk..........","......krrrrrooorkkrrrkkk........",".....kRrrrrrrrrrkkrrrrrrk.......","....kRRrrrrrrrrk.krrrrrrrk......","....kRorrrrrrrk.krrrrrwrrrk.....","...kRRorrrrrrrRkrrrrrrrkrrrk....","..kRRoorrrrrrrrRrrrrrrrerrrk....","..kRRoorrrrrrrrRrrrrreeeeekk....","..kRRoorrrrrrrrRkrrrreeeeek.....","..kRooorrrrrrrrrkkrrrrreAkk.....","..kRooorrrrrrrrrrrrrrrAAAAAk....",".kRRooorrrrrrrrrrrrrrrAAAAAk....","..kRooorrrrrrrrrrrrrerraaark....","..kRRoorrrrrrrrrrreeeeraaaak....","..kRRoorrrrrrrrrrreeeeeaaak.....","..kRRoorrrrrrrrrreeeeeeeark.....","..kRRRorrrrrrrrrreeeeeeerrk.....","...kRRorrrrrrrrrreeeeeeerrk.....","....kRRrrrrrrrrrreeeeeeerrk.....","....kRRRRrrRRRrrreeeeeeerk......",".....kRRRRRRRkrrrreeeeerrk......","......kkkRkkk.krrreeeeerkk......",".........k...kRRRRRreRRRRRk.....","............kRRRRRRRRRRRRRRk....",".............kRRRRRkkRRRRRk.....","..............kkkkk..kkkkk......"],
   leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
 };
 function makeSprite(rows, flip, recolor = {}) {
@@ -412,6 +413,7 @@ SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a
 // In the Swamp, the Water Frog is a muddy brown swamp frog. Everywhere else it stays blue.
 SPR.air = makeSprite(ART.air, false, { m: "#a8743e", n: "#6e4220", N: "#4e2d14", e: "#f4e2c0", E: "#ead2a6", y: "#ffd34d", w: "#ffffff", o: "#ff9a2a", O: "#c96a12" });   // 32 x 32 owl
 SPR.plant = makeSprite(ART.plant, false, { n: "#7a4a24", N: "#4e2d14", m: "#9a6434", L: "#2f7d32", l: "#5fbf4a", f: "#ffe066" });   // 32 x 32 tree giant
+SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 const FROG_FACE = { k: "#16191d", w: "#ffffff", R: "#ff8fa8" };
 SPR.water = makeSprite(ART.water, false, { ...FROG_FACE, b: "#3d8fe0", B: "#1f5fa8", c: "#bfe6ff", h: "#7cc0ff", S: "#2a6fbf" });          // 32 x 32 frog
 SPR.water_swamp = makeSprite(ART.water, false, { ...FROG_FACE, b: "#8a5a2a", B: "#5a3a1a", c: "#e0c08a", h: "#b07a40", S: "#4e2d14" });
@@ -1244,6 +1246,7 @@ function towerStatsBase(t) {
       if (c.vision) out.vision = true;
       if (c.targetsPlus) out.targets = (out.targets || 1) + c.targetsPlus;
       if (c.holdSecondsPlus) out.holdSeconds = (out.holdSeconds || 0) + c.holdSecondsPlus;
+      if (c.pushTimes) out.pushBack = (out.pushBack || 0) * c.pushTimes;
     });
     if (onFactory) out.damage = Math.max(1, out.damage - SETTINGS.factoryWeakness);
     return out;
@@ -1258,6 +1261,7 @@ function towerStatsBase(t) {
   }
   if (s.speedBoost) out.speedBoost = s.speedBoost + 0.15 * L;
   if (s.healPerWave) out.healPerWave = s.healPerWave + L;
+  if (s.leavesPerWave) out.leavesPerWave = s.leavesPerWave + (s.leavesPerUpgrade || 0) * L;
   out.onFactory = onFactory;
   return out;
 }
@@ -1271,6 +1275,7 @@ function openPanel(t) {
   if (s.damage) lines.push(`Damage ${s.damage.toFixed(0)} · ${s.attacksPerSecond.toFixed(1)} per second`);
   if (s.speedBoost) lines.push(`Nearby towers attack ${Math.round(s.speedBoost * 100)}% faster`);
   if (s.healPerWave) lines.push(`Heals ${s.healPerWave} Base Health after each wave`);
+  if (s.leavesPerWave) lines.push(`Gathers ${s.leavesPerWave} leaves after each wave`);
   if (s.vision) lines.push("Can see Hiders");
   if (s.levelBoost) {
     const b = s.levelBoost, parts = [];
@@ -1284,7 +1289,8 @@ function openPanel(t) {
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
-  if ((s.targets || 1) > 1) lines.push(`Grabs ${s.targets} robots at once`);
+  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : "Grabs"} ${s.targets} robots at once`);
+  if (s.pushBack && spec.upgradeChoices) lines.push(`Pushes robots back ${s.pushBack.toFixed(1)} squares`);
   if (s.holdSeconds && t.kind === "plant" && spec.upgradeChoices) lines.push(`Holds robots for ${s.holdSeconds.toFixed(1)}s`);
   if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
   if (s.slowBy && spec.upgradeChoices) lines.push(`Slows robots ${Math.round(s.slowBy * 100)}% for ${s.slowSeconds.toFixed(1)}s`);
@@ -1411,6 +1417,13 @@ function endWave() {
   const bonus = SETTINGS.waveBonusLeaves + 2 * G.wave;
   G.leaves += bonus;
   const pos = { x: G.map.base.x * T + 32, y: G.map.base.y * T };
+  // Squirrels hand over the leaves they gathered.
+  G.towers.filter((t) => t.kind === "squirrel").forEach((t) => {
+    const got = towerStats(t).leavesPerWave; G.leaves += got;
+    const px = t.x * T + 16, py = t.y * T + 4;
+    floatText(px, py, "+" + got, "#ffd34d");
+    for (let i = 0; i < 2; i++) G.particles.push({ kind: "leaf", x: px + (Math.random() - 0.5) * 10, y: py + 8, t: 0, life: 0.6 + Math.random() * 0.2, sx: px, sy: py });
+  });
   let heal = G.diff.baseHealsPerWave;
   G.towers.forEach((t) => { if (t.kind === "healer") heal += towerStats(t).healPerWave; });
   if (heal > 0 && G.health < SETTINGS.baseHealth) {
@@ -1494,6 +1507,13 @@ function fire(t, s, target) {
     Sound.play("tongue");
   } else {
     G.shots.push({ kind: t.kind, x: sx, y: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
+    // Twin Gusts / Feather Storm: extra gusts at the next robots in range.
+    if ((s.targets || 1) > 1) {
+      const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
+      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = posAt(G.map, r.d); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
+        .sort((a, b) => b.d - a.d).slice(0, s.targets - 1)
+        .forEach((r) => G.shots.push({ kind: t.kind, x: sx, y: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
+    }
     Sound.play(t.kind);
   }
   t.recoil = 0.12;
@@ -1507,9 +1527,10 @@ function landShot(sh) {
       if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
       const q = posAt(G.map, o.d);
       if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
-        if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; } }
+        if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
+        if (!o.dead && sh.kind === "air") o.d = Math.max(0, o.d - s.pushBack * T * 0.6 * (o.type === "boss" ? 0.25 : 1)); }
     }
-    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : "120,200,255" });
+    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : "120,200,255" });
   }
   hurt(r, s.damage, s.vision);
   if (r.dead) return;
@@ -1549,6 +1570,7 @@ function collectBonusLeaf() {
 // How big each tower is drawn. The detailed 32 x 32 towers are drawn bigger so their details show.
 function towerScale(t) {
   if (t.kind === "healer") return [1.0, 1.06, 1.12, 1.2][t.level];
+  if (t.kind === "squirrel") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "fire" || t.kind === "wizard") return [0.95, 1.03, 1.11, 1.2][t.level];
   if (t.kind === "water") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "air") return [0.9, 1.0, 1.1, 1.2][t.level];

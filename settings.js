@@ -75,11 +75,23 @@ const SETTINGS = {
                   { name: "Vine Storm",    about: "Grabs 3 more robots at once.", targetsPlus: 3 } ],
               ] },
     air:    { name: "Owl",         cost: 85,  range: 3.7, damage: 5,  attacksPerSecond: 1.6, pushBack: 0.7, vision: true,
-              about: "Wind pushes Robots back. Can see Hiders." },
+              about: "Wind pushes Robots back. Can see Hiders.",
+              // Pick ONE choice at each upgrade. Extra choice kinds for the Owl:
+              // pushTimes (pushes robots back this many times farther), targetsPlus (blasts this many more robots at once).
+              upgradeChoices: [
+                [ { name: "Mighty Gust",   about: "Pushes robots back twice as far.", pushTimes: 2 },
+                  { name: "Twin Gusts",    about: "Blasts 2 robots at once.", targetsPlus: 1 } ],
+                [ { name: "Sharp Talons",  about: "Hits twice as hard.", damageTimes: 2 },
+                  { name: "Quick Wings",   about: "Attacks 50% faster.", speedTimes: 1.5 } ],
+                [ { name: "Tornado",       about: "Each gust also blows back robots within 1 square.", splash: 1, pushTimes: 1.5 },
+                  { name: "Feather Storm", about: "Blasts 2 more robots at once.", targetsPlus: 2 } ],
+              ] },
     wizard: { name: "Wizard",      cost: 110, range: 2.2, speedBoost: 0.3,
               about: "Helper: nearby Towers attack faster." },
     healer: { name: "Healer Deer", cost: 300, healPerWave: 1,
               about: "Heals your Base after every Wave." },
+    squirrel: { name: "Squirrel", cost: 120, leavesPerWave: 10, leavesPerUpgrade: 5,
+              about: "Gathers Maple Leaves for you after every Wave." },
   },
   upgradeCost: [0.7, 1.0, 1.5],   // price of Upgrade 1, 2 and 3, times the Tower's price
   upgradeDamage: 0.45,            // each Upgrade adds this much damage (0.45 = +45%)
