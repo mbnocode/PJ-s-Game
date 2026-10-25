@@ -113,7 +113,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .shelf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-bottom: 2px; }
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.leaf-ico { width: 22px; height: 22px; image-rendering: pixelated; }
+.leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
 .tbtn canvas { width: 36px; height: 36px; image-rendering: pixelated; flex: none; }
 .tbtn .c { display: block; font-family: var(--body); font-weight: 700; font-size: 13px; color: var(--leaf); }
 .tbtn[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
@@ -319,7 +319,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen" id="game" hidden>
     <div class="hud">
       <div class="stat" title="Base Health"><span class="lbl">Base</span><div class="hbar" id="hbar"><i id="hfill"></i></div><span id="hnum">100</span></div>
-      <div class="stat" title="Maple Leaves"><span class="lbl">Leaves</span><canvas class="leaf-ico" id="leaf-ico" width="16" height="16" aria-hidden="true"></canvas><span class="leafnum" id="lnum">0</span></div>
+      <div class="stat" title="Maple Leaves"><span class="lbl">Leaves</span><span class="leafnum" id="lnum">0</span><svg class="leaf-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-6" stroke="#8a4a14" stroke-width="1.8" stroke-linecap="round"/><path d="M12 1.5l1.7 4.4 2.6-1.3-.7 4.3 4.3-1.6-1 3.2 3.6 1.1-3.3 2.6.9 2.2-5.4-.7-1.6 3.6-.6-3.3-.5.2-.5-.2-.6 3.3-1.6-3.6-5.4.7.9-2.2L1.5 11.6l3.6-1.1-1-3.2 4.3 1.6-.7-4.3 2.6 1.3z" fill="#ec7a2c" stroke="#a94f14" stroke-width="1" stroke-linejoin="round"/><path d="M12 16V6M12 12l-4-3M12 12l4-3" stroke="#ffb066" stroke-width=".8" stroke-linecap="round" fill="none"/></svg></div>
       <div class="stat"><span class="lbl">Wave</span><span id="wnum">0/15</span></div>
       <span class="chip" id="code-chip" hidden></span>
       <div class="spacer"></div>
@@ -448,7 +448,6 @@ const GRASS = Array.from({ length: 8 }, () => makeTile("grass"));
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 const STEEL = Array.from({ length: 6 }, () => makeTile("factory"));
 
-$("leaf-ico").getContext("2d").drawImage(SPR.leaf, 0, 0);
 
 /* ---------- sound ---------- */
 const Sound = {
