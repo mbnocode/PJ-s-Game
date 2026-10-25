@@ -1,43 +1,60 @@
-# PJ's Game: the plan (version 1)
+# PJ's Game: how the game works now
 
-Nature vs. tech tower defense. PJ is the game designer; Claude writes the code. Every number (damage, speed, prices, robots per Wave) lives in one settings file PJ can change himself. Words are defined in GLOSSARY.md; ideas for later are in LATER.md.
+Nature vs. Robots tower defense, designed by PJ. Play it at **https://pjs-game.vercel.app** on a computer, Chromebook or iPad.
+Every number lives in `settings.js`. Words are defined in `GLOSSARY.md`; ideas for later are in `LATER.md`.
 
-## Playing a game
-- Open a link in the browser (Chromebook, computer or iPad). Nothing to install.
-- Pick a Save Slot (3), a Level, and a Difficulty: Easy, Normal, Hard or Nightmare.
-- Choose whether to turn on the Tutorial, which guides you through the first 5 Waves.
-- Press Start Wave. Use Pause, 2× or 3× speed any time.
+## Starting a game
+- Pick a Save Slot (3), then a Level, a Difficulty (Easy, Normal, Hard, Nightmare) and whether to turn on the Tutorial (first 5 Waves).
+- Play alone, **host a challenge** (get a code, friends join a lobby, the host presses Start, everyone counts down together), or **join a friend's challenge**.
+- Add a nickname to get on the Leaderboards. Controls: Start Wave, Pause, 1×/2×/3× speed, sound on/off.
 
-## The map
-- A chunky pixel-art grid seen from above, with a twisty path from the Robots' side all the way to the Base.
-- Level 1 is the Meadow (long, twisty path, easier). Level 2 is the Forest (straighter path, harder). Beating a Level unlocks the next.
-- Each Level is 15 Waves, with a Boss on Waves 5, 10 and 15.
+## Levels (15 Waves each, Bosses on Waves 5, 10, 15)
+| Level | Look | Special |
+|---|---|---|
+| The Meadow | green meadow, dirt path, grand blossom tree | Robots have a 1% chance to drop a Golden Acorn |
+| The Forest | straighter path, more trees | Tree Giants attack 50% faster |
+| The Swamp | murky water path with lily pads, swamp treehouse on stilts | Robots have 1.5× health; Water Frogs (brown here) hit 25% harder |
+
+Each level unlocks after you beat the one before it. Trees, mushrooms and tall grass block building. The robots come out of a smoking factory.
 
 ## Losing (and not losing)
-- The Base has 100 Base Health. A Robot that reaches it takes away the health the Robot had left.
-- Every point lost turns one of 100 land squares into Factory, spreading from the Robots' side toward the Base. All 100 Factory = game over.
-- Towers standing on Factory do 2 less damage.
-- The Healer tower (a glowing deer) gives back 1 Base Health per Wave and turns Factory back into grass. It's expensive. On Easy only, the Base also heals a little on its own.
-- Beat a Level to earn 1 to 3 Stars, based on Base Health left.
+- The Base (a grand tree) has 100 Base Health. A robot that reaches it takes away 10% of its remaining health (max 40).
+- Each point lost turns a square into Factory: belts, pipes and machines joined into one factory with a hazard-striped wall. Towers on Factory do 2 less damage.
+- At 0 health the factory sweeps across the whole map, then **GAME OVER** shows for 4 seconds before the results.
+- Winning earns 1–3 Stars based on Base Health left.
 
-## Towers (tap a grass square to place; can't be hurt)
-- Fire dragon: burns. Water frog: rusts Robots so they slow down. Tree giant: vines hold Robots in place. Owl: wind pushes Robots back, and it can see Hiders.
-- Wizard (Helper): nearby Towers attack faster.
-- Healer (glowing deer): heals the Base.
-- Upgrade up to 3 times with Maple Leaves; each Upgrade changes how the Tower looks. Upgrades can give Vision (seeing Hiders). Sell for half price.
+## Towers (tap a grass square to build; each has 3 Upgrades; marks above its head show how upgraded it is)
+| Tower | Cost | What it does | Upgrade choices (pick one at each upgrade) |
+|---|---|---|---|
+| Fire Dragon | 60 | Fireballs that burn | Splash Fireball / Long Flame · Hotter Flames / Rapid Fire · Inferno / Dragon Eyes. Flies and flaps its wings at Upgrade 3 |
+| Water Frog | 55 | Tongue lick that slows (rusts) robots | Double Damage / Long Tongue · Fast Spit / Deep Freeze · Big Splash / Rust Vision |
+| Tree Giant | 75 | Vines hold robots still | Ground Pound / Quick Fists · Thorny Vines / Strong Roots · Earthquake / Vine Storm. Smashes the ground every 5 seconds at Upgrade 3 |
+| Owl | 85 | Gusts push robots back (sliding); sees Hiders | Eagle Eyes / Twin Gusts · Sharp Talons / Quick Wings · Tornado / Feather Storm. Hovers on a wind platform at Upgrade 3 |
+| Wizard | 110 | Helper: nearby towers attack faster | Normal upgrades |
+| Healer Deer | 300 | Heals the Base after every Wave | Normal upgrades |
+| Squirrel | 120 | Gathers 10 Maple Leaves after every Wave (+5 per upgrade) | Normal upgrades |
+| Pegasus (Super Tower) | 350 | Golden stars at 3 robots at once; sees Hiders | Only appears after it's unlocked on the Upgrades page |
 
-## Robots
-- Clanker (wobbly yellow farm bot), Scout (fast, from Wave 3), Walker, Tank, Hider (goes invisible for 3 seconds when hit), and a Boss.
-- A glow shows extra strength: none, blue, purple, orange (strongest). Stronger glows appear in later Waves and on harder Difficulties.
-- Destroyed Robots drop Maple Leaves that fly up to the money bar.
+## Robots (Normal difficulty)
+| Robot | Health | Speed | Leaves | First appears |
+|---|---|---|---|---|
+| Clanker | 30 | 1.8 | 5 | Wave 1 |
+| Scout | 28 | 4.2 | 6 | Wave 3 |
+| Walker | 75 | 2.2 | 8 | Wave 4 |
+| Tank | 240 | 1.2 | 16 | Wave 7 |
+| Hider | 90 | 2.4 | 12 | Wave 8 (invisible for 3 seconds when hit) |
+| Boss | 900 / 2,200 / 4,500 | 0.9 | 120 | Waves 5, 10, 15 |
 
-## Friends and scores
-- Score = points for Robots destroyed (bigger = more) + a bonus for Base Health left, × Difficulty (Nightmare ×3).
-- An all-time Leaderboard for each Level, plus Challenges: a code like LEAF-42 that friends type in to play the same Level and Difficulty for 1 hour, 1 day or 1 week, with its own Leaderboard.
-- Nicknames only, no logins. Preston can delete names.
+Glowing robots are tougher: blue 1.7×, purple 2.6×, orange 4× health. Harder difficulties make robots faster and tougher.
 
-## Sound
-- Clank-pop when a Robot breaks, swish for leaves, a sound for each element, a horn when a Boss arrives, a calm nature music loop, and a mute button.
+## Money and rewards
+- **Maple Leaves** (in-game money): dropped by robots, a bonus after each Wave, Squirrels, and a bonus leaf that pops up about every 7 seconds during a Wave (tap it for +20, gone after 5 seconds).
+- **Golden Acorns** (kept forever in the save slot): only from robot drops on the Meadow (1% each). Shown in the top middle of the screen.
+- **Upgrades page** (per save slot, paid in Golden Acorns): Bigger Leaf Pile, Stronger Towers, Tougher Tree, Bargain Builders, and the Mystery Super Tower (250 acorns, unlocks the Pegasus).
+
+## Online
+- Leaderboards (top 10 per level, plus each challenge) and challenge lobbies use the free Supabase project; a daily Vercel job keeps it awake.
+- Save slots, stars, acorns and upgrades are stored in each browser, so each device has its own saves.
 
 ## How it's built
-- One web page hosted on Vercel at a public link; scores in Supabase's free plan (see docs/adr).
+- `pjs-game.html` (the game) + `settings.js` (all the numbers) in the GitHub repo `mbnocode/PJ-s-Game`. Every push to `main` goes live on Vercel within a minute.
