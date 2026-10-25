@@ -162,7 +162,7 @@ const SETTINGS = {
     tesla:   { name: "Tesla Coil", health: 240, speed: 1.6, leaves: 14, points: 40, boostRadius: 2, boostSpeed: 2 },
     // Junk Splitter breaks into splitInto Mini-Clankers when destroyed. (Shows up on The Beach.)
     splitter: { name: "Junk Splitter", health: 120, speed: 1.4, leaves: 10, points: 30, splitInto: 3 },
-    mini:     { name: "Mini-Clanker", health: 15, speed: 2.6, leaves: 2, points: 5 },
+    mini:     { name: "Mini-Clanker", health: 15, speed: 3, leaves: 2, points: 5 },   // speed = squares per second
     // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds. (Shows up on The Beach.)
     repair:   { name: "Repair Bot", health: 60, speed: 2.0, leaves: 12, points: 35, healRadius: 1.5, healAmount: 15, healEvery: 3 },
     // Coming soon (on the Enemies page, but not in any waves yet):
