@@ -87,6 +87,8 @@ const SETTINGS = {
                   { name: "Feather Storm", about: "Blasts 2 more robots at once.", targetsPlus: 2 } ],
               ] },
     wizard: { name: "Wizard",      cost: 110, range: 2.2, speedBoost: 0.3,
+              // At Upgrade 3 a swirling Elemental Sphere floats over the staff and zaps nearby robots every few seconds.
+              elementalSphere: { everySeconds: 3, radius: 2.2, damage: 22, zaps: 3 },
               about: "Helper: nearby Towers attack faster." },
     healer: { name: "Healer Deer", cost: 300, healPerWave: 1,
               about: "Heals your Base after every Wave." },

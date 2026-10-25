@@ -1538,6 +1538,8 @@ function openPanel(t) {
   const lines = [];
   if (s.damage) lines.push(`Damage ${s.damage.toFixed(0)} · ${s.attacksPerSecond.toFixed(1)} per second`);
   if (s.speedBoost) lines.push(`Nearby towers attack ${Math.round(s.speedBoost * 100)}% faster`);
+  { const es = SETTINGS.towers[t.kind].elementalSphere;
+    if (es) lines.push(t.level >= 3 ? `Elemental Sphere: zaps ${es.zaps} robots for ${es.damage} every ${es.everySeconds}s` : "Max upgrade: Elemental Sphere"); }
   if (s.healPerWave) lines.push(`Heals ${s.healPerWave} Base Health after each wave`);
   if (s.leavesPerWave) lines.push(`Gathers ${s.leavesPerWave} leaves after each wave`);
   if (s.vision) lines.push("Can see Hiders");
@@ -1896,6 +1898,58 @@ function drawVineWrap(x, cx, cy, sz, r) {
   x.lineCap = "butt";
 }
 
+// ---- Wizard's Elemental Sphere (max upgrade) ----
+const ELEMENTS = [
+  { col: "#ff8a3c", glow: "255,138,60" },    // fire
+  { col: "#5cc0ff", glow: "92,192,255" },    // water
+  { col: "#7ee05a", glow: "126,224,90" },    // nature
+  { col: "#f2f6ff", glow: "230,240,255" },   // air
+];
+function spherePos(t) {
+  const s2 = 32 * towerScale(t), face = towerFace(t);
+  return { x: t.x * T + 16 + face * s2 * 0.3, y: t.y * T + 30 - s2 * 0.86 - 13 + Math.sin(G.time * 2.4 + t.x) * 2 };
+}
+function drawElementalSphere(x, t) {
+  const o = spherePos(t), flash = Math.max(0, t.sphereFlash || 0) / 0.3, spin = G.time * 3.2;
+  const r = 6.5 + flash * 2.5;
+  // soft colored glow that slowly shifts between the four elements
+  const el = ELEMENTS[Math.floor(G.time * 1.2) % 4], g = x.createRadialGradient(o.x, o.y, 1, o.x, o.y, 18 + flash * 8);
+  g.addColorStop(0, `rgba(${el.glow},${0.55 + flash * 0.4})`); g.addColorStop(1, `rgba(${el.glow},0)`);
+  x.fillStyle = g; x.beginPath(); x.arc(o.x, o.y, 18 + flash * 8, 0, Math.PI * 2); x.fill();
+  // the core: four colored swirls spinning inside a bright ball
+  x.save(); x.translate(o.x, o.y);
+  x.fillStyle = "#1c1430"; x.beginPath(); x.arc(0, 0, r + 1.5, 0, Math.PI * 2); x.fill();
+  ELEMENTS.forEach((e, i) => {
+    x.fillStyle = e.col; x.beginPath(); x.moveTo(0, 0);
+    x.arc(0, 0, r, spin + i * Math.PI / 2, spin + i * Math.PI / 2 + Math.PI / 2); x.closePath(); x.fill();
+  });
+  x.fillStyle = "rgba(255,255,255,0.85)"; x.beginPath(); x.arc(0, 0, r * 0.38, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "rgba(255,255,255,0.9)"; x.fillRect(-r * 0.55, -r * 0.6, 2, 2);
+  // four little element orbs circling the sphere
+  ELEMENTS.forEach((e, i) => {
+    const a = -spin * 1.4 + i * Math.PI / 2, ox = Math.cos(a) * (r + 6), oy = Math.sin(a) * (r + 6) * 0.45;
+    x.strokeStyle = `rgba(${e.glow},0.5)`; x.lineWidth = 1.5; x.beginPath(); x.ellipse(0, 0, r + 6, (r + 6) * 0.45, 0, a - 0.7, a); x.stroke();
+    x.fillStyle = "#1c1430"; x.fillRect(ox - 2, oy - 2, 4, 4); x.fillStyle = e.col; x.fillRect(ox - 1.5, oy - 1.5, 3, 3);
+  });
+  x.restore();
+  if (!G.paused && Math.random() < 0.12) { const e = ELEMENTS[Math.floor(Math.random() * 4)]; G.particles.push({ kind: "spark", x: o.x + (Math.random() - 0.5) * 10, y: o.y, vx: (Math.random() - 0.5) * 30, vy: -15 - Math.random() * 20, t: 0, life: 0.6, col: e.col }); }
+}
+function drawZap(x, f) {
+  // a crackling bolt of elemental magic from the sphere to the robot
+  const a = f.t / 0.3, n = 7;
+  x.lineCap = "round"; x.lineJoin = "round";
+  for (const [col, w] of [[`rgba(${f.glow},${0.35 * a})`, 7], [f.col, 3], ["rgba(255,255,255,0.9)", 1.2]]) {
+    x.strokeStyle = col; x.lineWidth = w; x.globalAlpha = Math.min(1, a * 1.5); x.beginPath(); x.moveTo(f.x1, f.y1);
+    for (let i = 1; i < n; i++) {
+      const u = i / n, j = Math.sin(f.seed + i * 12.9 + Math.floor(G.time * 30)) * 6;
+      const dx = f.x2 - f.x1, dy = f.y2 - f.y1, L = Math.hypot(dx, dy) || 1;
+      x.lineTo(f.x1 + dx * u - (dy / L) * j, f.y1 + dy * u + (dx / L) * j);
+    }
+    x.lineTo(f.x2, f.y2); x.stroke();
+  }
+  x.globalAlpha = 1; x.lineCap = "butt"; x.lineJoin = "miter";
+}
+
 function towerScale(t) {
   if (t.kind === "healer") return [1.0, 1.06, 1.12, 1.2][t.level];
   if (t.kind === "squirrel") return [0.85, 0.95, 1.05, 1.15][t.level];
@@ -2000,6 +2054,27 @@ function update(dt) {
         G.shake = Math.max(G.shake, 0.18); Sound.play("smash");
       }
     }
+    // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
+    const es = SETTINGS.towers[t.kind].elementalSphere;
+    if (es && t.level >= 3 && G.waveActive) {
+      t.sphereTimer = (t.sphereTimer ?? es.everySeconds) - dt;
+      if (t.sphereTimer <= 0) {
+        const o = spherePos(t), R = es.radius * T;
+        const near = G.robots.filter((r) => !r.dead && (() => { const q = posAt(G.map, r.d); return Math.hypot(q.x - o.x, q.y - o.y) <= R; })())
+          .sort((a, b) => b.d - a.d).slice(0, es.zaps);
+        if (near.length) {
+          t.sphereTimer = es.everySeconds; t.sphereFlash = 0.3;
+          near.forEach((r, i) => {
+            const q = posAt(G.map, r.d), el = ELEMENTS[(Math.floor(G.time * 2) + i) % ELEMENTS.length];
+            G.fx.push({ kind: "zap", x1: o.x, y1: o.y, x2: q.x, y2: q.y - 4, t: 0.3, col: el.col, glow: el.glow, seed: Math.random() * 100 });
+            burst(q.x, q.y - 4, el.col, 8);
+            hurt(r, es.damage * (1 + (G.damageBonus || 0)), true);
+          });
+          Sound.play("upgrade");
+        } else t.sphereTimer = 0.2;   // nothing nearby: check again soon
+      }
+    }
+    if (t.sphereFlash > 0) t.sphereFlash -= dt;
     if (!s.damage) continue;
     let boost = 0;
     for (const w of wizards) if (Math.hypot(w.t.x - t.x, w.t.y - t.y) <= w.s.range) boost = Math.max(boost, w.s.speedBoost);
@@ -2219,9 +2294,12 @@ function draw() {
     else if (sh.kind === "water") { x.fillStyle = "#3d8fe0"; x.fillRect(sh.x - 3, sh.y - 4, 6, 8); x.fillStyle = "#cfeeff"; x.fillRect(sh.x - 1, sh.y - 3, 2, 2); }
     else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
   }
+  // Wizard Elemental Spheres float above everything on the ground
+  for (const t of G.towers) if (t.kind === "wizard" && t.level >= 3) drawElementalSphere(x, t);
   for (const f of G.fx) {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
+    if (f.kind === "zap") drawZap(x, f);
   }
   drawBonusLeaf(x);
 
