@@ -174,6 +174,7 @@ const SETTINGS = {
   // ---------------- PERMANENT UPGRADES ----------------
   // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
   acornsFromWave: 6,   // robots only drop Golden Acorns from this wave on (6 = after wave 5)
+  bossDropsAcorn: true,   // every Boss you defeat always drops a Golden Acorn (any wave, any level)
   // Spend them on the Upgrades page.
   permanentUpgrades: {
     startLeaves: { name: "Bigger Leaf Pile",  about: "Start every game with 25 more Maple Leaves.", per: 25,   costs: [10, 20, 30, 45, 60] },

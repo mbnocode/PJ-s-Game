@@ -336,7 +336,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-perks" hidden>
     <h2>Upgrades</h2>
     <div class="acorns"><span id="acorn-num">0</span> Golden Acorns</div>
-    <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: after wave 5, sometimes a robot drops one when you destroy it. Meadow 1%, Forest 2%, Swamp 3%, Beach 5%.</p>
+    <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: after wave 5, sometimes a robot drops one when you destroy it. Meadow 1%, Forest 2%, Swamp 3%, Beach 5%. Every Boss you defeat always drops one!</p>
     <div class="perks" id="perk-list"></div>
     <button class="link" id="b-perks-back">Back to levels</button>
   </section>
@@ -1847,7 +1847,9 @@ function kill(r) {
   const p = posAt(G.map, r.d);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
-  if (chance && Math.random() < chance) {
+  // Every Boss always drops a Golden Acorn (on any level, any wave).
+  const bossDrop = r.type === "boss" && SETTINGS.bossDropsAcorn;
+  if (bossDrop || (chance && Math.random() < chance)) {
     const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + 1;
     floatText(p.x, p.y - 18, "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
