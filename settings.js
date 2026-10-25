@@ -173,6 +173,7 @@ const SETTINGS = {
 
   // ---------------- PERMANENT UPGRADES ----------------
   // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
+  acornsFromWave: 6,   // robots only drop Golden Acorns from this wave on (6 = after wave 5)
   // Spend them on the Upgrades page.
   permanentUpgrades: {
     startLeaves: { name: "Bigger Leaf Pile",  about: "Start every game with 25 more Maple Leaves.", per: 25,   costs: [10, 20, 30, 45, 60] },
@@ -212,14 +213,14 @@ const SETTINGS = {
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
-    forest: { name: "The Forest", about: "A shady trail through tall pines. Robots get through faster. Tree Giants attack 50% faster here.", theme: "forest",
+    forest: { name: "The Forest", acornDropChance: 0.02,   // 2% Golden Acorn chance per robot about: "A shady trail through tall pines. Robots get through faster. Tree Giants attack 50% faster here.", theme: "forest",
               // In the Forest, trees are tall pines, mushrooms are brown, and tall grass is ferns.
               towerBoosts: { plant: { speedTimes: 1.5 } },
               path: [[0, 6], [7, 6], [7, 2], [13, 2], [13, 9], [19, 9]],
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
-    swamp:  { name: "The Swamp", about: "Robots wade through murky water to the swamp treehouse. They're 50% tougher here, but frogs hit 25% harder.", theme: "swamp",
+    swamp:  { name: "The Swamp", acornDropChance: 0.03,   // 3% Golden Acorn chance per robot about: "Robots wade through murky water to the swamp treehouse. They're 50% tougher here, but frogs hit 25% harder.", theme: "swamp",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
               // takes turns through the list. A number after the gap only changes Boss health (900 = a level 1 Boss).
@@ -237,7 +238,7 @@ const SETTINGS = {
               trees:     [[1, 1], [7, 0], [11, 5], [15, 10], [19, 1], [0, 6], [11, 11], [15, 5]],
               mushrooms: [[4, 8], [7, 4], [16, 0], [12, 10]],
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
-    beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder and scores are worth 1.5x.", theme: "beach",
+    beach:  { name: "The Beach", acornDropChance: 0.05,   // 5% Golden Acorn chance per robot about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder and scores are worth 1.5x.", theme: "beach",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               scoreTimes: 1.5,    // your score on this level is multiplied by this (on top of the difficulty's score bonus)
               // Towers that are stronger on this level: Crabs are at home on the beach.
