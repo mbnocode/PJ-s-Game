@@ -871,7 +871,7 @@ function friendRows(o) {
     const me = p.id === o.id;
     if (me && G && G.online === o && !G.over) p = { ...p, wave: G.wave, health: Math.round(G.health) };
     const h = Math.max(0, Math.min(1, p.health / SETTINGS.baseHealth));
-    const st = p.status === "won" ? "Won!" : p.status === "lost" ? "Factory won" : `Wave ${p.wave}/${SETTINGS.waves.length}`;
+    const st = p.status === "won" ? "Won!" : p.status === "lost" ? "Factory won" : `Wave ${p.wave}/${levelWaves(p.level || (G && G.level)).length}`;
     return `<li class="${me ? "me " : ""}${p.status}"><span class="n">${esc(p.nickname)}${me ? " (you)" : ""}</span><span class="w">${st}</span><span class="hb" title="Base Health"><i style="width:${h * 100}%"></i></span><span class="hp">${p.health} health</span></li>`;
   }).join("");
 }
@@ -1411,7 +1411,7 @@ function renderPerks() {
 }
 /* ---------- enemies page (per save slot) ---------- */
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla"];
-const NEW_FOES = new Set(["tesla"]);   // on the Enemies page, but not in any waves yet
+const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -1434,7 +1434,7 @@ function renderEnemies() {
   for (const k of MAIN_FOES) {
     const r = R[k], d = document.createElement("div"); d.className = "foe" + (NEW_FOES.has(k) ? " coming" : "");
     const power = k === "hider" ? `Special: hides for ${r.hideSeconds} seconds after a hit. Only towers with Vision (like the Owl) can hit it while hidden.`
-      : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first!`
+      : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp from wave 16.`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.map(f));
@@ -1482,7 +1482,7 @@ function updateHud() {
   $("hbar").classList.toggle("low", h <= G.maxHealth * 0.3);
   const ln = $("lnum"); const L = Math.floor(G.leaves);
   if (L !== lastLeaves) { ln.textContent = L; if (L > lastLeaves) { ln.classList.remove("bump"); void ln.offsetWidth; ln.classList.add("bump"); } lastLeaves = L; updateShelf(); }
-  $("wnum").textContent = `${G.wave}/${SETTINGS.waves.length}`;
+  $("wnum").textContent = `${G.wave}/${levelWaves(G.level).length}`;
   const b = $("b-wave"); b.disabled = G.waveActive || G.over;
   b.textContent = G.over ? "Level over" : G.waveActive ? "Wave in progress" : G.wave === 0 ? "Start Wave" : "Start Wave " + (G.wave + 1);
   $("b-sound").textContent = Sound.on ? "Sound on" : "Sound off";
@@ -1659,22 +1659,30 @@ function pause() {
 function resume() { G.paused = false; $("overlay").hidden = true; updateHud(); }
 
 /* ---------- waves ---------- */
+// Every level plays the 15 normal waves, plus any extraWaves that level has (The Swamp has 5 more).
+function levelWaves(L) { const lv = SETTINGS.levels[L] || {}; return SETTINGS.waves.concat(lv.extraWaves || []); }
 function startWave() {
-  if (!G || G.waveActive || G.over || G.wave >= SETTINGS.waves.length) return;
+  if (!G || G.waveActive || G.over || G.wave >= levelWaves(G.level).length) return;
   Sound.init();
   G.wave++; G.waveActive = true; G.waveClock = 0; G.queue = [];
   let t = 0;
-  for (const [type, count, gap, hp] of SETTINGS.waves[G.wave - 1]) {
-    for (let i = 0; i < count; i++) { G.queue.push({ at: t, type, hp }); t += gap; }
+  for (const [type, count, gap, hp] of levelWaves(G.level)[G.wave - 1]) {
+    for (let i = 0; i < count; i++) {
+      // a mixed group takes turns through its list of robots; the health number only changes Bosses in a mix
+      const ty = Array.isArray(type) ? type[i % type.length] : type;
+      G.queue.push({ at: t, type: ty, hp: Array.isArray(type) && ty !== "boss" ? undefined : hp }); t += gap;
+    }
     t += 1.5;
   }
   const hasBoss = G.queue.some((q) => q.type === "boss");
   const hasHider = G.queue.some((q) => q.type === "hider");
+  const hasTesla = G.queue.some((q) => q.type === "tesla");
   Sound.play(hasBoss ? "horn" : "wave");
   if (G.tutorial && G.wave <= 5) tutorialEvent("wave" + G.wave);
   else if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
+  else if (hasTesla && !G.seenTesla) tip(`Tesla Coils are here! Robots near a Tesla Coil move ${SETTINGS.robots.tesla.boostSpeed} times faster. Take them out first!`, undefined, "Heads up");
   else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
-  if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
+  if (hasTesla) G.seenTesla = true; if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
   sendProgress(true);
   updateHud();
 }
@@ -1713,7 +1721,7 @@ function endWave() {
   }
   floatText(320, 40, `Wave ${G.wave} cleared! +${bonus} leaves`, "#ffd34d", 2.2);
   if (G.tutorial && (G.wave === 1 || G.wave === 5)) tutorialEvent("end" + G.wave);
-  if (G.wave >= SETTINGS.waves.length) finish(true); else sendProgress(true);
+  if (G.wave >= levelWaves(G.level).length) finish(true); else sendProgress(true);
   updateHud();
 }
 
@@ -2020,11 +2028,16 @@ function update(dt) {
     G.waveClock += dt;
     while (G.queue.length && G.queue[0].at <= G.waveClock) spawn(G.queue.shift());
   }
+  const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
+  const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => posAt(G.map, r.d));
   for (const r of G.robots) {
     if (r.dead) continue;
     r.hideT = Math.max(0, r.hideT - dt); r.hitT = Math.max(0, r.hitT - dt);
     if (r.burnT > 0) { r.burnT -= dt; hurt(r, r.burnDps * dt, false, true); if (r.dead) continue; }
     let sp = r.speed;
+    // Tesla Coils supercharge nearby robots so they move faster
+    r.charged = r.type !== "tesla" && teslas.some((q) => Math.hypot(q.x - posAt(G.map, r.d).x, q.y - posAt(G.map, r.d).y) <= teslaR);
+    if (r.charged) sp *= SETTINGS.robots.tesla.boostSpeed;
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
@@ -2237,6 +2250,23 @@ function draw() {
     for (let i = 0; i < t.level; i++) { x.fillStyle = "#16191d"; x.fillRect(cx - 8 + i * 5, markY - 1, 6, 5); x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, markY, 4, 3); }
   }
 
+  // Tesla Coil fields: a crackling purple ring on the ground, with little bolts to every robot it's charging
+  for (const tr of G.robots) {
+    if (tr.type !== "tesla" || tr.dead) continue;
+    const c = posAt(G.map, tr.d), R = (SETTINGS.robots.tesla.boostRadius || 0) * T, flick = 0.5 + 0.5 * Math.sin(G.time * 20 + tr.wob);
+    x.fillStyle = `rgba(160,90,230,${0.10 + 0.05 * flick})`; x.beginPath(); x.arc(c.x, c.y + 4, R, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = `rgba(200,150,255,${0.45 + 0.35 * flick})`; x.lineWidth = 1.5; x.setLineDash([5, 4]); x.lineDashOffset = -G.time * 30;
+    x.beginPath(); x.arc(c.x, c.y + 4, R, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+    const hx = c.x, hy = c.y - 14;
+    for (const o of G.robots) {
+      if (!o.charged || o.dead || Math.random() < 0.35) continue;
+      const q = posAt(G.map, o.d); if (Math.hypot(q.x - c.x, q.y - c.y) > R) continue;
+      x.strokeStyle = "rgba(217,184,255,0.9)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(hx, hy);
+      for (let i = 1; i < 5; i++) x.lineTo(hx + (q.x - hx) * i / 5 + (Math.random() - 0.5) * 8, hy + (q.y - 6 - hy) * i / 5 + (Math.random() - 0.5) * 8);
+      x.lineTo(q.x, q.y - 6); x.stroke();
+    }
+  }
+
   // robots
   const sorted = [...G.robots].sort((a, b) => posAt(G.map, a.d).y - posAt(G.map, b.d).y);
   for (const r of sorted) {
@@ -2259,6 +2289,7 @@ function draw() {
     x.restore();
     if (r.hitT > 0 && !hidden) { x.globalAlpha = 0.5; x.fillStyle = "#fff"; x.fillRect(p.x - sz * 0.3, p.y - sz * 0.45 + wob - (big ? 12 : 4), sz * 0.6, sz * 0.6); }
     x.globalAlpha = 1;
+    if (r.charged && !hidden && Math.random() < 0.5) { x.fillStyle = Math.random() < 0.5 ? "#d9b8ff" : "#ffffff"; x.fillRect(p.x - sz * 0.35 + Math.random() * sz * 0.7, p.y - sz * 0.45 + Math.random() * sz * 0.6, 2, 2); }
     if (r.slowT > 0 && !hidden) { x.fillStyle = "rgba(90,170,255,0.35)"; x.fillRect(p.x - sz * 0.35, p.y - sz * 0.5, sz * 0.7, sz * 0.8); }
     if (r.burnT > 0 && !hidden) { x.fillStyle = Math.random() < 0.5 ? "#ff9a3c" : "#ffd36b"; x.fillRect(p.x - 6 + Math.random() * 12, p.y - sz * 0.5 - Math.random() * 6, 3, 3); }
     if (r.rootT > 0) drawVineWrap(x, p.x, p.y + wob - (big ? 12 : 4), sz, r);
@@ -2382,7 +2413,7 @@ function finish(won) {
          ${boardBits(on)}
          <div class="row">${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`
       : `<h2>The Factory took over</h2>
-         <p class="muted">The robots got through on Wave ${G.wave} of ${SETTINGS.waves.length}.</p>
+         <p class="muted">The robots got through on Wave ${G.wave} of ${levelWaves(G.level).length}.</p>
          <div class="scoreline">Score ${score.toLocaleString()}</div>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          ${boardBits(on)}

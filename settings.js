@@ -111,8 +111,8 @@ const SETTINGS = {
     walker:  { name: "Walker",  health: 75,  speed: 2.2,  leaves: 8,   points: 20 },
     tank:    { name: "Tank",    health: 240, speed: 1.2,  leaves: 16,  points: 45 },
     hider:   { name: "Hider",   health: 90,  speed: 2.4,  leaves: 12,  points: 35, hideSeconds: 3 },
-    // Tesla Coil: robots within boostRadius squares of it move boostSpeed times faster. (Not in any waves yet.)
-    tesla:   { name: "Tesla Coil", health: 110, speed: 1.6, leaves: 14, points: 40, boostRadius: 1.5, boostSpeed: 2 },
+    // Tesla Coil: robots within boostRadius squares of it move boostSpeed times faster. (Shows up on The Swamp from wave 16.)
+    tesla:   { name: "Tesla Coil", health: 110, speed: 1.6, leaves: 14, points: 40, boostRadius: 2, boostSpeed: 2 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
   },
 
@@ -165,6 +165,15 @@ const SETTINGS = {
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
     swamp:  { name: "The Swamp", about: "Robots wade through murky water to the swamp treehouse. They're 50% tougher here, but frogs hit 25% harder.", theme: "swamp",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
+              // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
+              // takes turns through the list. A number after the gap only changes Boss health (900 = a level 1 Boss).
+              extraWaves: [
+                [[["tank", "tank", "tesla"], 9, 1.3]],                                      // 16: Tesla Coils arrive with the Tanks
+                [[["hider", "hider", "tesla"], 12, 0.8], ["boss", 1, 0, 900]],              // 17
+                [[["tesla", "hider"], 12, 0.9], ["boss", 2, 3, 900]],                       // 18
+                [["hider", 10, 0.6], [["boss", "tesla", "tesla"], 9, 1.4, 900]],             // 19
+                [[["tesla", "hider", "tesla"], 15, 0.6], [["boss", "tesla"], 6, 1.8, 900]],  // 20: the big finish
+              ],
               // Towers that are stronger on this level. Same kinds of boosts as upgrade choices.
               towerBoosts: { water: { damageTimes: 1.25 } },
               path: [[0, 10], [6, 10], [6, 6], [3, 6], [3, 2], [9, 2], [9, 8], [13, 8], [13, 3], [17, 3], [17, 7], [19, 7]],
