@@ -160,11 +160,12 @@ const SETTINGS = {
     hider:   { name: "Hider",   health: 90,  speed: 2.4,  leaves: 12,  points: 35, hideSeconds: 3 },
     // Tesla Coil: robots within boostRadius squares of it move boostSpeed times faster. (Shows up on The Swamp from wave 16.)
     tesla:   { name: "Tesla Coil", health: 240, speed: 1.6, leaves: 14, points: 40, boostRadius: 2, boostSpeed: 2 },
-    // Coming soon (on the Enemies page, but not in any waves yet):
-    // Junk Splitter breaks into splitInto Mini-Clankers when destroyed.
+    // Junk Splitter breaks into splitInto Mini-Clankers when destroyed. (Shows up on The Beach.)
     splitter: { name: "Junk Splitter", health: 120, speed: 1.4, leaves: 10, points: 30, splitInto: 3 },
-    // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds.
+    mini:     { name: "Mini-Clanker", health: 15, speed: 2.6, leaves: 2, points: 5 },
+    // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds. (Shows up on The Beach.)
     repair:   { name: "Repair Bot", health: 60, speed: 2.0, leaves: 12, points: 35, healRadius: 1.5, healAmount: 15, healEvery: 3 },
+    // Coming soon (on the Enemies page, but not in any waves yet):
     // Sky Drone flies straight over the grass. baseHit = how hard it hits your Base.
     drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 15 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
@@ -245,23 +246,31 @@ const SETTINGS = {
               trees:     [[2, 5], [7, 4], [12, 8], [15, 1], [19, 4], [2, 11], [7, 11], [16, 11], [3, 1]],
               mushrooms: [[1, 2], [7, 7], [13, 4], [15, 8], [11, 11]],
               tallGrass: [[3, 6], [0, 0], [12, 0], [18, 5], [10, 8], [3, 11]],
-              // The Beach has its own 15 waves instead of the usual ones.
+              // The Beach has its own waves instead of the usual ones.
               waves: [
                 [["scout", 6, 1.3]],                                                    // 1: speedy Scouts first
                 [["clanker", 6, 1.0], ["scout", 5, 0.9]],                               // 2
                 [["walker", 6, 1.2]],                                                   // 3
                 [[["scout", "walker"], 10, 0.9]],                                       // 4
                 [["hider", 3, 1.6], ["boss", 1, 0, 900]],                               // 5
-                [["walker", 8, 0.9], ["hider", 3, 1.2]],                                // 6
+                [["walker", 8, 0.9], ["splitter", 3, 2.0]],                             // 6: Junk Splitters arrive
                 [["tank", 4, 1.8], [["scout", "scout", "walker"], 12, 0.5]],           // 7
-                [[["hider", "walker"], 14, 0.7]],                                       // 8
+                [[["walker", "walker", "repair"], 12, 0.8], ["hider", 4, 1.0]],        // 8: Repair Bots arrive
                 [["tesla", 2, 2.0], ["tank", 5, 1.4]],                                  // 9: Tesla Coils!
                 [[["walker", "tank"], 10, 1.0], ["boss", 1, 0, 2200]],                  // 10
                 [[["scout", "hider"], 20, 0.4]],                                        // 11
                 [[["tank", "tank", "tesla"], 12, 1.1]],                                 // 12
-                [["hider", 14, 0.6], ["boss", 2, 4, 1500]],                             // 13
+                [["hider", 10, 0.6], ["splitter", 4, 1.5], ["boss", 2, 4, 1500]],      // 13
                 [[["walker", "tesla", "scout"], 18, 0.6], ["tank", 6, 1.0]],           // 14
-                [[["tank", "hider", "tesla"], 18, 0.8], ["boss", 1, 0, 4500]],          // 15: the big finish
+                [[["tank", "hider", "tesla"], 18, 0.8], ["boss", 1, 0, 4500]],          // 15
+              ],
+              // 5 more waves after those, so The Beach has 20.
+              extraWaves: [
+                [[["tank", "repair"], 10, 1.2], ["splitter", 4, 1.5]],                  // 16
+                [[["splitter", "tesla"], 10, 1.2], ["hider", 8, 0.6]],                  // 17
+                [[["tank", "tank", "repair"], 12, 1.0], ["boss", 1, 0, 2200]],          // 18
+                [[["splitter", "repair", "tesla"], 15, 0.8], ["boss", 2, 4, 1800]],     // 19
+                [[["tank", "splitter", "repair", "tesla"], 20, 0.7], ["boss", 2, 3, 4500]],  // 20: the big finish
               ] },
   },
 };
