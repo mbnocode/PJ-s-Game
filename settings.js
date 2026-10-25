@@ -110,13 +110,16 @@ const SETTINGS = {
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
-    forest: { name: "The Forest", about: "A straighter path. Robots get through faster.",
+    forest: { name: "The Forest", about: "A straighter path. Robots get through faster. Tree Giants attack 50% faster here.",
+              towerBoosts: { plant: { speedTimes: 1.5 } },
               path: [[0, 6], [7, 6], [7, 2], [13, 2], [13, 9], [19, 9]],
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
-    swamp:  { name: "The Swamp", about: "Robots wade through murky water to the swamp treehouse. They're 50% tougher here.", theme: "swamp",
+    swamp:  { name: "The Swamp", about: "Robots wade through murky water to the swamp treehouse. They're 50% tougher here, but frogs hit 25% harder.", theme: "swamp",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
+              // Towers that are stronger on this level. Same kinds of boosts as upgrade choices.
+              towerBoosts: { water: { damageTimes: 1.25 } },
               path: [[0, 10], [6, 10], [6, 6], [3, 6], [3, 2], [9, 2], [9, 8], [13, 8], [13, 3], [17, 3], [17, 7], [19, 7]],
               // In the Swamp, trees are mossy cypress trees, mushrooms glow, and tall grass is cattails.
               trees:     [[1, 1], [7, 0], [11, 5], [15, 10], [19, 1], [0, 6], [11, 11], [15, 5]],

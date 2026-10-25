@@ -1199,7 +1199,19 @@ function updateHud() {
   $("b-pause").textContent = G.paused ? "Resume" : "Pause";
 }
 
+// Some levels make certain towers stronger (see towerBoosts in settings.js).
 function towerStats(t) {
+  const out = towerStatsBase(t);
+  const boost = ((SETTINGS.levels[G.level] || {}).towerBoosts || {})[t.kind];
+  if (boost) {
+    if (boost.damageTimes && out.damage) out.damage *= boost.damageTimes;
+    if (boost.speedTimes && out.attacksPerSecond) out.attacksPerSecond *= boost.speedTimes;
+    if (boost.rangePlus) out.range += boost.rangePlus;
+    out.levelBoost = boost;
+  }
+  return out;
+}
+function towerStatsBase(t) {
   const s = SETTINGS.towers[t.kind], L = t.level;
   const onFactory = isFactory(t.x, t.y);
   if (s.upgradeChoices) {
@@ -1244,6 +1256,13 @@ function openPanel(t) {
   if (s.speedBoost) lines.push(`Nearby towers attack ${Math.round(s.speedBoost * 100)}% faster`);
   if (s.healPerWave) lines.push(`Heals ${s.healPerWave} Base Health after each wave`);
   if (s.vision) lines.push("Can see Hiders");
+  if (s.levelBoost) {
+    const b = s.levelBoost, parts = [];
+    if (b.damageTimes) parts.push(`${Math.round((b.damageTimes - 1) * 100)}% more damage`);
+    if (b.speedTimes) parts.push(`attacks ${Math.round((b.speedTimes - 1) * 100)}% faster`);
+    if (b.rangePlus) parts.push(`+${b.rangePlus} range`);
+    lines.push(`${SETTINGS.levels[G.level].name} bonus: ${parts.join(", ")}`);
+  }
   if (s.onFactory) lines.push(`On Factory: ${SETTINGS.factoryWeakness} less damage`);
   const spec = SETTINGS.towers[t.kind];
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
