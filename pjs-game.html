@@ -1228,6 +1228,8 @@ function towerStatsBase(t) {
       if (c.burnPlus) out.burnDamagePerSecond = (out.burnDamagePerSecond || 0) + c.burnPlus;
       if (c.burnSecondsPlus) out.burnSeconds = (out.burnSeconds || 0) + c.burnSecondsPlus;
       if (c.vision) out.vision = true;
+      if (c.targetsPlus) out.targets = (out.targets || 1) + c.targetsPlus;
+      if (c.holdSecondsPlus) out.holdSeconds = (out.holdSeconds || 0) + c.holdSecondsPlus;
     });
     if (onFactory) out.damage = Math.max(1, out.damage - SETTINGS.factoryWeakness);
     return out;
@@ -1268,6 +1270,8 @@ function openPanel(t) {
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
+  if ((s.targets || 1) > 1) lines.push(`Grabs ${s.targets} robots at once`);
+  if (s.holdSeconds && t.kind === "plant" && spec.upgradeChoices) lines.push(`Holds robots for ${s.holdSeconds.toFixed(1)}s`);
   if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
   if (s.slowBy && spec.upgradeChoices) lines.push(`Slows robots ${Math.round(s.slowBy * 100)}% for ${s.slowSeconds.toFixed(1)}s`);
   p.innerHTML = `<button class="x" id="p-close" aria-label="Close">×</button>
@@ -1446,10 +1450,28 @@ function findTarget(t, s) {
 function fire(t, s, target) {
   const sx = t.x * T + 16, sy = t.y * T + 10;
   if (t.kind === "plant") {
-    hurt(target, s.damage, s.vision);
-    target.rootT = target.type === "boss" ? 0.2 : s.holdSeconds;
-    const p = posAt(G.map, target.d);
-    G.fx.push({ kind: "vine", x1: sx, y1: sy + 8, x2: p.x, y2: p.y, t: 0.22 });
+    // Vines grab the lead robot, plus more if the giant has Twin Vines or Vine Storm.
+    const grabs = [target];
+    if ((s.targets || 1) > 1) {
+      const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
+      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = posAt(G.map, r.d); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
+        .sort((a, b) => b.d - a.d).slice(0, s.targets - 1).forEach((r) => grabs.push(r));
+    }
+    for (const r of grabs) {
+      const p = posAt(G.map, r.d);
+      G.fx.push({ kind: "vine", x1: sx, y1: sy + 8, x2: p.x, y2: p.y, t: 0.22 });
+      if (s.splash) {
+        for (const o of G.robots) {
+          if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
+          const q = posAt(G.map, o.d);
+          if (Math.hypot(q.x - p.x, q.y - p.y) <= s.splash * T) hurt(o, s.damage * 0.5, s.vision);
+        }
+        G.fx.push({ kind: "splash", x: p.x, y: p.y, r: s.splash * T, t: 0.3, col: "150,110,60" });
+      }
+      hurt(r, s.damage, s.vision);
+      if (!r.dead) r.rootT = r.type === "boss" ? 0.2 : s.holdSeconds;
+    }
+    if (s.splash) G.shake = Math.max(G.shake, 0.08);
     Sound.play("plant");
   } else if (t.kind === "water") {
     // The frog's tongue shoots out, smacks the robot, and snaps back.

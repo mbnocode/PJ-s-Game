@@ -59,7 +59,17 @@ const SETTINGS = {
                   { name: "Rust Vision",   about: "Can see Hiders and hits 50% harder.", vision: true, damageTimes: 1.5 } ],
               ] },
     plant:  { name: "Tree Giant",  cost: 75,  range: 1.9, damage: 12, attacksPerSecond: 1.4, holdSeconds: 0.7,
-              about: "Vines grab Robots and hold them still." },
+              about: "Vines grab Robots and hold them still.",
+              // Pick ONE choice at each upgrade. Extra choice kinds for the Tree Giant:
+              // targetsPlus (grab this many more robots at once), holdSecondsPlus (holds robots longer).
+              upgradeChoices: [
+                [ { name: "Ground Pound",  about: "Smashes robots within 1 square too.", splash: 1 },
+                  { name: "Twin Vines",    about: "Grabs 2 robots at once.", targetsPlus: 1 } ],
+                [ { name: "Thorny Vines",  about: "Hits 60% harder.", damageTimes: 1.6 },
+                  { name: "Strong Roots",  about: "Holds robots twice as long.", holdSecondsPlus: 0.7 } ],
+                [ { name: "Earthquake",    about: "Smashes 1 more square around and hits 30% harder.", splash: 1, damageTimes: 1.3 },
+                  { name: "Vine Storm",    about: "Grabs 3 more robots at once.", targetsPlus: 3 } ],
+              ] },
     air:    { name: "Owl",         cost: 85,  range: 3.7, damage: 5,  attacksPerSecond: 1.6, pushBack: 0.7, vision: true,
               about: "Wind pushes Robots back. Can see Hiders." },
     wizard: { name: "Wizard",      cost: 110, range: 2.2, speedBoost: 0.3,
