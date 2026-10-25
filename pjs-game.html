@@ -1250,7 +1250,8 @@ function renderPerks() {
   Object.entries(SETTINGS.permanentUpgrades).forEach(([key, u]) => {
     const lvl = s.perks[key] || 0, max = u.costs.length, cost = u.costs[lvl];
     const d = document.createElement("div"); d.className = "perk" + (lvl >= max ? " maxed" : "");
-    d.innerHTML = `<span class="k">${u.name}</span><span class="s">${u.about}</span>
+    const done = lvl >= max && u.unlockedName;
+    d.innerHTML = `<span class="k">${done ? u.unlockedName : u.name}</span><span class="s">${done ? u.unlockedAbout : u.about}</span>
       <span class="pips">${"■".repeat(lvl)}${"□".repeat(max - lvl)}</span>
       ${lvl >= max ? `<span class="s">${max > 1 ? "Fully upgraded!" : "Unlocked!"}</span>`
         : `<button class="go" id="perk-${key}" ${s.acorns < cost ? "disabled" : ""}>${lvl ? "Upgrade" : max > 1 ? "Buy" : "Unlock"} <span class="cost">${cost}</span></button>`}`;

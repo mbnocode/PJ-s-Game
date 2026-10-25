@@ -121,7 +121,9 @@ const SETTINGS = {
     damage:      { name: "Stronger Towers",   about: "All towers deal 5% more damage.",            per: 0.05, costs: [15, 30, 45, 65, 90] },
     baseHealth:  { name: "Tougher Tree",      about: "Your Base gets 10 more health.",              per: 10,   costs: [20, 40, 70] },
     cheaper:     { name: "Bargain Builders",  about: "Towers cost 5% less to build and upgrade.",   per: 0.05, costs: [15, 30, 50, 75] },
-    superTower:  { name: "Super Tower: Pegasus", about: "Unlocks the Pegasus in your tower shop.",  per: 1,    costs: [100] },
+    // The Super Tower stays a mystery until you unlock it.
+    superTower:  { name: "Mystery Super Tower", about: "A secret, super-powerful tower. Unlock it to find out what it is!", per: 1, costs: [250],
+                   unlockedName: "Super Tower: Pegasus", unlockedAbout: "The Pegasus is in your tower shop!" },
   },
 
   // Each Wave is a list of groups: [robot, how many, seconds between them, (Boss health)]
