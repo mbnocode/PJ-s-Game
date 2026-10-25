@@ -143,6 +143,15 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .banner .who { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #8a4a12; display: block; }
 .banner button { font-size: 15px; padding: 7px 12px; flex: none; }
 
+.overlay.gameover { background: rgba(8, 10, 12, .55); }
+.overlay.gameover .box { background: none; border: none; }
+.go-text {
+  font-family: var(--display); font-weight: 700; font-size: clamp(44px, 9vw, 130px); line-height: 1; letter-spacing: .04em; white-space: nowrap;
+  color: var(--danger); text-shadow: 0 6px 0 #5a1712, 0 0 30px rgba(226, 87, 76, .55);
+  animation: go-drop .7s cubic-bezier(.2, 1.4, .4, 1) both, go-pulse 1.2s .7s ease-in-out infinite;
+}
+@keyframes go-drop { from { transform: translateY(-80px) scale(1.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes go-pulse { 50% { transform: scale(1.05); } }
 .overlay {
   position: absolute; inset: 0; z-index: 8; background: rgba(8, 14, 10, .78); display: flex; align-items: center; justify-content: center;
 }
@@ -1651,8 +1660,10 @@ function finish(won) {
     }
     saveSlots(slots);
   }
-  setTimeout(() => {
-    Sound.play(won ? "win" : "lose");
+  const g = G;
+  const showResult = () => {
+    if (G !== g) return;
+    if (won) Sound.play("win");
     const lvName = SETTINGS.levels[G.level].name;
     const nextL = LEVEL_ORDER[LEVEL_ORDER.indexOf(G.level) + 1];
     overlay(won
@@ -1671,7 +1682,16 @@ function finish(won) {
     if ($("o-boards")) $("o-boards").onclick = () => { const c = on && on.code; G = null; renderBoards(c || undefined); show("s-boards"); };
     $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
     if ($("o-next")) $("o-next").onclick = () => { setup.level = nextL; G = null; renderSetup(); show("s-setup"); };
-  }, won ? 700 : (G.takeover.dur + 0.9) * 1000);
+  };
+  if (won) setTimeout(showResult, 700);
+  else setTimeout(() => {
+    if (G !== g) return;
+    // A big GAME OVER for about 4 seconds, then the results.
+    Sound.play("lose");
+    $("overlay-box").innerHTML = ""; $("overlay").classList.add("gameover"); $("overlay").hidden = false;
+    $("overlay-box").innerHTML = `<div class="go-text">GAME OVER</div>`;
+    setTimeout(() => { $("overlay").classList.remove("gameover"); showResult(); }, 4000);
+  }, (G.takeover.dur + 0.9) * 1000);
 }
 function boardBits(on) {
   if (!on) return `<p class="muted">Add a nickname before you start to get on the leaderboard.</p>`;
