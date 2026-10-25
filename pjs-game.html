@@ -479,6 +479,7 @@ const Sound = {
       case "fire": if (this.ok(name, 140)) this.noise(0.22, 0.12, "lowpass", 900, 250); break;
       case "water": if (this.ok(name, 140)) this.noise(0.14, 0.09, "bandpass", 3200, 1400); break;
       case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
+      case "tongue": if (this.ok(name, 120)) this.tone(900, 0.09, "square", 0.05, 300); break;
       case "air": if (this.ok(name, 160)) this.tone(520, 0.28, "sine", 0.08, 280); break;
       case "place": this.tone(520, 0.08, "square", 0.1, 780); break;
       case "upgrade": [523, 659, 784].forEach((f, i) => this.tone(f, 0.12, "square", 0.08, null, i * 0.07)); break;
@@ -1016,7 +1017,7 @@ function startGame(L, d, tutorial, online) {
     level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
     wave: 0, waveActive: false, waveClock: 0, queue: [],
     health: SETTINGS.baseHealth, leaves: diff.startLeaves, killPoints: 0,
-    towers: [], robots: [], shots: [], fx: [], particles: [],
+    towers: [], robots: [], shots: [], fx: [], particles: [], tongues: [],
     paused: false, speed: 1, pick: null, sel: null, hover: null, over: false,
     shake: 0, time: 0, seenHider: false, seenBoss: false, factoryCount: 0, flashTiles: [],
     online: online ? { ...online, id: online.id || null, secret: online.secret || null, others: [], last: 0, dirty: false, err: false, collapsed: false } : null,
@@ -1326,6 +1327,10 @@ function fire(t, s, target) {
     const p = posAt(G.map, target.d);
     G.fx.push({ kind: "vine", x1: sx, y1: sy + 8, x2: p.x, y2: p.y, t: 0.22 });
     Sound.play("plant");
+  } else if (t.kind === "water") {
+    // The frog's tongue shoots out, smacks the robot, and snaps back.
+    G.tongues.push({ tower: t, target, s, t: 0, dur: 0.3, hit: false, end: null });
+    Sound.play("tongue");
   } else {
     G.shots.push({ kind: t.kind, x: sx, y: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
     Sound.play(t.kind);
@@ -1426,6 +1431,16 @@ function update(dt) {
     if (dist <= step + 4) { landShot(sh); sh.done = true; } else { sh.x += dx / dist * step; sh.y += dy / dist * step; }
   }
   G.shots = G.shots.filter((s) => !s.done);
+  for (const tg of G.tongues) {
+    tg.t += dt;
+    const r = tg.target, canSee = !(r.hideT > 0 && !tg.s.vision);
+    if (!r.dead && canSee) { const p = posAt(G.map, r.d); tg.end = { x: p.x, y: p.y - 4 }; }
+    if (!tg.hit && tg.t >= tg.dur * 0.45) {
+      tg.hit = true;
+      if (!r.dead && canSee) { landShot({ kind: "water", target: r, s: tg.s }); Sound.play("water"); }
+    }
+  }
+  G.tongues = G.tongues.filter((tg) => tg.t < tg.dur && G.towers.includes(tg.tower));
   if (G.waveActive && !G.queue.length && !G.robots.length && !G.over) endWave();
 }
 function tickFx(dt) {
@@ -1521,6 +1536,23 @@ function draw() {
   drawSmoke(x, G.map, G.time);
   drawBase(x, G.map, G.takeover && G.takeover.done);
   if (Math.sin(G.time * 6) > 0) { x.fillStyle = "#ff3b2f"; x.fillRect(G.map.gate.x * T + 54, G.map.gate.y * T + 18, 4, 4); }
+
+  // frog tongues
+  for (const tg of G.tongues) {
+    if (!tg.end) continue;
+    const t = tg.tower, scale = [0.72, 0.84, 0.96, 1.1][t.level] * 32;
+    const mx = t.x * T + 16, my = t.y * T + 30 - scale * 0.42;
+    const k = tg.t / tg.dur, reach = k < 0.45 ? k / 0.45 : Math.max(0, 1 - (k - 0.45) / 0.55);
+    const ex = mx + (tg.end.x - mx) * reach, ey = my + (tg.end.y - my) * reach;
+    const sag = Math.min(14, Math.hypot(ex - mx, ey - my) * 0.15);
+    x.lineCap = "round";
+    x.strokeStyle = "#7a1f3d"; x.lineWidth = 6; x.beginPath(); x.moveTo(mx, my); x.quadraticCurveTo((mx + ex) / 2, (my + ey) / 2 + sag, ex, ey); x.stroke();
+    x.strokeStyle = "#ff6f9a"; x.lineWidth = 3.5; x.beginPath(); x.moveTo(mx, my); x.quadraticCurveTo((mx + ex) / 2, (my + ey) / 2 + sag, ex, ey); x.stroke();
+    x.fillStyle = "#7a1f3d"; x.beginPath(); x.arc(ex, ey, 5.5, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#ff8fb1"; x.beginPath(); x.arc(ex, ey, 4, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#ffd1e0"; x.fillRect(ex - 2, ey - 2.5, 2, 2);
+    x.lineCap = "butt";
+  }
 
   // shots
   for (const sh of G.shots) {
