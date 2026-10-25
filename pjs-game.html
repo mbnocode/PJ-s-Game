@@ -1702,7 +1702,10 @@ function fire(t, s, target) {
     }
     for (const r of grabs) {
       const p = posAt(G.map, r.d);
-      G.fx.push({ kind: "vine", x1: sx, y1: sy + 8, x2: p.x, y2: p.y, t: 0.22 });
+      // A thick vine bursts out of the ground at the giant's feet, snakes over and wraps the robot.
+      const hold = r.type === "boss" ? 0.2 : (s.holdSeconds || 0);
+      const dur = Math.max(0.5, Math.min(1.6, hold + 0.3));
+      G.fx.push({ kind: "vine", robot: r, x1: t.x * T + 16 + (p.x < t.x * T + 16 ? -12 : 12), y1: t.y * T + 29, x2: p.x, y2: p.y + 6, t: dur, dur, seed: Math.random() * 6 });
       if (s.splash) {
         for (const o of G.robots) {
           if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
@@ -1783,6 +1786,55 @@ function collectBonusLeaf() {
   Sound.play("heal");
 }
 // How big each tower is drawn. The detailed 32 x 32 towers are drawn bigger so their details show.
+// ---- Tree Giant vine attack ----
+function vinePoints(f) {
+  // the vine grows out fast, holds on, then pulls back into the ground
+  if (f.robot && !f.robot.dead && G.robots.includes(f.robot)) { const q = posAt(G.map, f.robot.d); f.x2 = q.x; f.y2 = q.y + 6; }
+  const age = f.dur - f.t, grow = Math.min(1, age / 0.12), back = Math.min(1, f.t / 0.15);
+  const reach = Math.min(grow, back);
+  const dx = f.x2 - f.x1, dy = f.y2 - f.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+  const pts = [], N = 18;
+  for (let i = 0; i <= N; i++) {
+    const u = (i / N) * reach, arch = Math.sin(u * Math.PI);
+    const wig = Math.sin(u * Math.PI * 3 + f.seed + G.time * 9) * 5 * arch;
+    pts.push({ x: f.x1 + dx * u + nx * wig, y: f.y1 + dy * u + ny * wig - arch * Math.min(18, len * 0.3), w: 1 - u * 0.45 });
+  }
+  return { pts, reach };
+}
+function drawVine(x, f) {
+  const { pts, reach } = vinePoints(f);
+  if (reach <= 0.02) return;
+  x.lineCap = "round"; x.lineJoin = "round";
+  // dirt bursting where the vine comes out of the ground
+  x.fillStyle = "#6b4a2a"; x.beginPath(); x.ellipse(f.x1, f.y1 + 1, 7, 3, 0, 0, Math.PI * 2); x.fill();
+  const stroke = (col, w) => { for (let i = 1; i < pts.length; i++) { x.strokeStyle = col; x.lineWidth = w * pts[i].w; x.beginPath(); x.moveTo(pts[i - 1].x, pts[i - 1].y); x.lineTo(pts[i].x, pts[i].y); x.stroke(); } };
+  stroke("#1f3d14", 9); stroke("#3f8a28", 6); stroke("#7cc84a", 2);
+  // thorns and leaves along the vine
+  for (let i = 3; i < pts.length - 1; i += 4) {
+    const a = pts[i], b = pts[i + 1], ang = Math.atan2(b.y - a.y, b.x - a.x), side = (i / 4) % 2 ? 1 : -1;
+    x.save(); x.translate(a.x, a.y); x.rotate(ang + side * 1.1);
+    x.fillStyle = "#2f6e1e"; x.beginPath(); x.ellipse(6, 0, 5, 2.4, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#9be26a"; x.fillRect(3, -0.5, 5, 1);
+    x.restore();
+    x.fillStyle = "#e8e0b0"; x.beginPath(); x.moveTo(a.x - 1.5, a.y); x.lineTo(a.x - side * 3, a.y - 4); x.lineTo(a.x + 1.5, a.y); x.fill();
+  }
+  x.lineCap = "butt"; x.lineJoin = "miter";
+}
+function drawVineWrap(x, cx, cy, sz, r) {
+  // the vine coiled tightly around the held robot (front half of each loop, so it looks wrapped)
+  const w = sz * 0.42, squeeze = 1 + Math.sin(G.time * 18) * 0.04;
+  x.lineCap = "round";
+  for (const [oy, tilt] of [[-sz * 0.12, -0.18], [sz * 0.12, 0.15]]) {
+    for (const [col, lw] of [["#1f3d14", 6], ["#3f8a28", 4], ["#7cc84a", 1.3]]) {
+      x.strokeStyle = col; x.lineWidth = lw; x.beginPath();
+      x.ellipse(cx, cy + oy, w * squeeze, 4, tilt, 0.1, Math.PI - 0.1); x.stroke();
+    }
+  }
+  // a leaf sprouting from the coil
+  x.fillStyle = "#4fa52e"; x.beginPath(); x.ellipse(cx + w * 0.8, cy - sz * 0.2, 4, 2, -0.7, 0, Math.PI * 2); x.fill();
+  x.lineCap = "butt";
+}
+
 function towerScale(t) {
   if (t.kind === "healer") return [1.0, 1.06, 1.12, 1.2][t.level];
   if (t.kind === "squirrel") return [0.85, 0.95, 1.05, 1.15][t.level];
@@ -2061,7 +2113,7 @@ function draw() {
     x.globalAlpha = 1;
     if (r.slowT > 0 && !hidden) { x.fillStyle = "rgba(90,170,255,0.35)"; x.fillRect(p.x - sz * 0.35, p.y - sz * 0.5, sz * 0.7, sz * 0.8); }
     if (r.burnT > 0 && !hidden) { x.fillStyle = Math.random() < 0.5 ? "#ff9a3c" : "#ffd36b"; x.fillRect(p.x - 6 + Math.random() * 12, p.y - sz * 0.5 - Math.random() * 6, 3, 3); }
-    if (r.rootT > 0) { x.strokeStyle = "#3f9d32"; x.lineWidth = 3; x.beginPath(); x.moveTo(p.x - 10, p.y + 8); x.quadraticCurveTo(p.x, p.y - 6, p.x + 10, p.y + 8); x.stroke(); }
+    if (r.rootT > 0) drawVineWrap(x, p.x, p.y + wob - (big ? 12 : 4), sz, r);
     if (r.hp < r.maxHp && !hidden) {
       const w = big ? 44 : 22, top = p.y - sz / 2 - (big ? 22 : 10);
       x.fillStyle = "#16191d"; x.fillRect(p.x - w / 2 - 1, top - 1, w + 2, 5);
@@ -2108,7 +2160,7 @@ function draw() {
   }
   for (const f of G.fx) {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
-    if (f.kind === "vine") { x.strokeStyle = `rgba(80,180,60,${f.t / 0.22})`; x.lineWidth = 3; x.beginPath(); x.moveTo(f.x1, f.y1); x.quadraticCurveTo((f.x1 + f.x2) / 2, Math.min(f.y1, f.y2) - 20, f.x2, f.y2); x.stroke(); }
+    if (f.kind === "vine") drawVine(x, f);
   }
   drawBonusLeaf(x);
 
