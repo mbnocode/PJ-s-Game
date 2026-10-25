@@ -193,7 +193,8 @@ const SETTINGS = {
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
-    forest: { name: "The Forest", about: "A straighter path. Robots get through faster. Tree Giants attack 50% faster here.",
+    forest: { name: "The Forest", about: "A shady trail through tall pines. Robots get through faster. Tree Giants attack 50% faster here.", theme: "forest",
+              // In the Forest, trees are tall pines, mushrooms are brown, and tall grass is ferns.
               towerBoosts: { plant: { speedTimes: 1.5 } },
               path: [[0, 6], [7, 6], [7, 2], [13, 2], [13, 9], [19, 9]],
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
