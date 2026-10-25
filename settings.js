@@ -92,8 +92,21 @@ const SETTINGS = {
               about: "Helper: nearby Towers attack faster." },
     healer: { name: "Healer Deer", cost: 300, healPerWave: 1,
               about: "Heals your Base after every Wave." },
-    squirrel: { name: "Squirrel", cost: 120, leavesPerWave: 10, leavesPerUpgrade: 5,
-              about: "Gathers Maple Leaves for you after every Wave." },
+    squirrel: { name: "Squirrel", cost: 120, leavesPerWave: 10,
+              about: "Gathers Maple Leaves for you after every Wave.",
+              // Pick one choice at each Upgrade. leavesPlus (more leaves after each wave), leafSpotter (bonus maple leaves
+              // appear this much more often: 0.3 = 30%), leafValuePlus / leafStaySecondsPlus (bonus leaves worth more / stay longer),
+              // nutWall (adds a button: the squirrel turns into a wall on the path that blocks robots until they break it).
+              upgradeChoices: [
+                [ { name: "Deep Pockets",   about: "Gathers 10 more leaves after every wave.", leavesPlus: 10 },
+                  { name: "Leaf Spotter",   about: "Bonus maple leaves appear 30% more often.", leafSpotter: 0.3 } ],
+                [ { name: "Treasure Hoard", about: "Gathers 15 more leaves after every wave.", leavesPlus: 15 },
+                  { name: "Golden Leaves",  about: "Bonus maple leaves are worth 10 more and stay 2 seconds longer.", leafValuePlus: 10, leafStaySecondsPlus: 2 } ],
+                [ { name: "Nut Wall",       about: "Can jump onto the path and become a wall of nuts that blocks robots. The squirrel is gone for good.", nutWall: { health: 600 } },
+                  { name: "Leaf Whisperer", about: "Bonus maple leaves appear twice as often.", leafSpotter: 1 } ],
+              ],
+              // How fast robots chew through a Nut Wall (health per second). Tanks chew 2x, Bosses 5x.
+              wallChewPerSecond: 25 },
     // The Super Tower. It only shows up in the shop after you buy it on the Upgrades page.
     pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 30, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
               about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders." },
