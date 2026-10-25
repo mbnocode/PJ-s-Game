@@ -64,7 +64,7 @@ const SETTINGS = {
               // targetsPlus (grab this many more robots at once), holdSecondsPlus (holds robots longer).
               upgradeChoices: [
                 [ { name: "Ground Pound",  about: "Smashes robots within 1 square too.", splash: 1 },
-                  { name: "Twin Vines",    about: "Grabs 2 robots at once.", targetsPlus: 1 } ],
+                  { name: "Quick Fists",   about: "Attacks 50% faster.", speedTimes: 1.5 } ],
                 [ { name: "Thorny Vines",  about: "Hits 60% harder.", damageTimes: 1.6 },
                   { name: "Strong Roots",  about: "Holds robots twice as long.", holdSecondsPlus: 0.7 } ],
                 [ { name: "Earthquake",    about: "Smashes 1 more square around and hits 30% harder.", splash: 1, damageTimes: 1.3 },
