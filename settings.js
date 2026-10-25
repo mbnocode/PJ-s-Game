@@ -111,6 +111,8 @@ const SETTINGS = {
     walker:  { name: "Walker",  health: 75,  speed: 2.2,  leaves: 8,   points: 20 },
     tank:    { name: "Tank",    health: 240, speed: 1.2,  leaves: 16,  points: 45 },
     hider:   { name: "Hider",   health: 90,  speed: 2.4,  leaves: 12,  points: 35, hideSeconds: 3 },
+    // Tesla Coil: robots within boostRadius squares of it move boostSpeed times faster. (Not in any waves yet.)
+    tesla:   { name: "Tesla Coil", health: 110, speed: 1.6, leaves: 14, points: 40, boostRadius: 1.5, boostSpeed: 2 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
   },
 
