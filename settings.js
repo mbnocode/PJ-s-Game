@@ -87,11 +87,34 @@ const SETTINGS = {
                   { name: "Feather Storm", about: "Blasts 2 more robots at once.", targetsPlus: 2 } ],
               ] },
     wizard: { name: "Wizard",      cost: 110, range: 2.2, speedBoost: 0.3,
-              // At Upgrade 3 a swirling Elemental Sphere floats over the staff and zaps nearby robots every few seconds.
+              // Elemental Sphere (an Upgrade 3 choice): floats over the staff and zaps nearby robots every few seconds.
               elementalSphere: { everySeconds: 3, radius: 2.2, damage: 22, zaps: 3 },
-              about: "Helper: nearby Towers attack faster." },
-    healer: { name: "Healer Deer", cost: 300, healPerWave: 1,
-              about: "Heals your Base after every Wave." },
+              about: "Helper: nearby Towers attack faster.",
+              // Pick ONE choice at each upgrade. Wizard choice kinds: speedBoostPlus (nearby towers attack even faster),
+              // discount (every tower costs this much less: 0.1 = 10%), damageAura (nearby towers hit harder: 0.25 = 25%),
+              // visionAura (nearby towers can see Hiders), sphere (Elemental Sphere), slowAura (nearby robots move slower: 0.4 = 40%).
+              upgradeChoices: [
+                [ { name: "Haste Spell",      about: "Nearby towers attack 25% faster on top of the normal boost.", speedBoostPlus: 0.25 },
+                  { name: "Bargain Magic",    about: "Every tower you build or upgrade costs 10% less.", discount: 0.1 } ],
+                [ { name: "Power Spell",      about: "Nearby towers hit 25% harder.", damageAura: 0.25 },
+                  { name: "Far Sight",        about: "Reaches 1 more square, and nearby towers can see Hiders.", rangePlus: 1, visionAura: true } ],
+                [ { name: "Elemental Sphere", about: "A swirling sphere over the staff zaps 3 nearby robots every 3 seconds.", sphere: true },
+                  { name: "Time Warp",        about: "Robots near the Wizard move 40% slower.", slowAura: 0.4 } ],
+              ] },
+    healer: { name: "Healer Deer", cost: 300, healPerWave: 1, range: 2.6,
+              about: "Heals your Base after every Wave.",
+              // Antler Shot choices turn on this attack.
+              antler: { damage: 30, attacksPerSecond: 0.7, range: 2.6 },
+              // Deer choice kinds: healPlus (heals more after each wave), antlerShot (shoots antlers), damageAura (nearby towers
+              // hit harder), regenEvery (during waves, heals 1 Base Health every this many seconds), plus damageTimes / targetsPlus / vision.
+              upgradeChoices: [
+                [ { name: "Healing Bloom",  about: "Heals 2 more Base Health after every wave.", healPlus: 2 },
+                  { name: "Antler Shot",    about: "Shoots strong glowing antlers at robots.", antlerShot: true } ],
+                [ { name: "Sacred Grove",   about: "Nearby towers hit 20% harder.", damageAura: 0.2 },
+                  { name: "Antler Volley",  about: "Shoots antlers at 2 robots at once, 50% harder.", antlerShot: true, targetsPlus: 1, damageTimes: 1.5 } ],
+                [ { name: "Spirit Glow",    about: "During waves, heals 1 Base Health every 6 seconds.", regenEvery: 6 },
+                  { name: "Golden Antlers", about: "Antler shots hit twice as hard and can see Hiders.", antlerShot: true, damageTimes: 2, vision: true } ],
+              ] },
     squirrel: { name: "Squirrel", cost: 120, leavesPerWave: 10,
               about: "Gathers Maple Leaves for you after every Wave.",
               // Pick one choice at each Upgrade. leavesPlus (more leaves after each wave), leafSpotter (bonus maple leaves

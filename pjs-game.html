@@ -758,6 +758,7 @@ const Sound = {
       case "pegasus": if (this.ok(name, 150)) { this.tone(1320, 0.12, "sine", 0.06, 1760); this.tone(1760, 0.1, "triangle", 0.04, null, 0.05); } break;
       case "tongue": if (this.ok(name, 120)) this.tone(900, 0.09, "square", 0.05, 300); break;
       case "air": if (this.ok(name, 160)) this.tone(520, 0.28, "sine", 0.08, 280); break;
+      case "healer": if (this.ok(name, 200)) { this.tone(880, 0.18, "triangle", 0.07, 1320); this.noise(0.12, 0.05, "highpass", 3000); } break;
       case "place": this.tone(520, 0.08, "square", 0.1, 780); break;
       case "upgrade": [523, 659, 784].forEach((f, i) => this.tone(f, 0.12, "square", 0.08, null, i * 0.07)); break;
       case "sell": this.tone(700, 0.1, "triangle", 0.12, 350); break;
@@ -1389,7 +1390,8 @@ function tutorialEvent(ev) {
 /* ---------- permanent upgrades (per save slot) ---------- */
 function perkLevel(key) { const s = slot(); return (s && s.perks && s.perks[key]) || 0; }
 function perkValue(key) { return perkLevel(key) * ((SETTINGS.permanentUpgrades || {})[key] || {}).per || 0; }
-function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - (G && G.cheaper || 0))); }
+function wizardDiscount() { let d = 0; if (G) for (const t of G.towers) if (t.kind === "wizard") d += towerStatsBase(t).discount || 0; return d; }
+function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - Math.min(0.5, (G && G.cheaper || 0) + wizardDiscount()))); }
 function towerUnlocked(k) { return !SETTINGS.towers[k].superTower || perkLevel("superTower") > 0; }
 function renderPerks() {
   const s = slot(); s.perks = s.perks || {}; s.acorns = s.acorns || 0;
@@ -1495,6 +1497,18 @@ function updateHud() {
 // Some levels make certain towers stronger (see towerBoosts in settings.js).
 function towerStats(t) {
   const out = towerStatsBase(t);
+  // Helper auras: Wizards and Deer can make nearby towers hit harder or see Hiders.
+  if (out.damage) {
+    let dmg = 0, see = false;
+    for (const h of G.towers) {
+      if (h === t || (h.kind !== "wizard" && h.kind !== "healer")) continue;
+      const hs = towerStatsBase(h); if (!hs.damageAura && !hs.visionAura) continue;
+      if (Math.hypot(h.x - t.x, h.y - t.y) > hs.range) continue;
+      dmg = Math.max(dmg, hs.damageAura || 0); if (hs.visionAura) see = true;
+    }
+    if (dmg) { out.damage *= 1 + dmg; out.auraDamage = dmg; }
+    if (see && !out.vision) { out.vision = true; out.auraVision = true; }
+  }
   const boost = ((SETTINGS.levels[G.level] || {}).towerBoosts || {})[t.kind];
   if (boost) {
     if (boost.damageTimes && out.damage) out.damage *= boost.damageTimes;
@@ -1511,8 +1525,19 @@ function towerStatsBase(t) {
   if (s.upgradeChoices) {
     // Towers with upgrade choices get only what was picked, no automatic boosts.
     const out = { ...s, range: s.range || 0, damage: s.damage, attacksPerSecond: s.attacksPerSecond, vision: !!s.vision, splash: 0, onFactory };
-    (t.picks || []).forEach((ci, lvl) => {
-      const c = (s.upgradeChoices[lvl] || [])[ci]; if (!c) return;
+    const picked = (t.picks || []).map((ci, lvl) => (s.upgradeChoices[lvl] || [])[ci]);
+    // Deer Antler Shot: any antler choice gives the deer its attack first, then the other boosts stack on it.
+    if (s.antler && picked.some((c) => c && c.antlerShot)) { out.damage = s.antler.damage; out.attacksPerSecond = s.antler.attacksPerSecond; out.range = Math.max(out.range, s.antler.range); }
+    picked.forEach((c) => {
+      if (!c) return;
+      if (c.speedBoostPlus) out.speedBoost = (out.speedBoost || 0) + c.speedBoostPlus;
+      if (c.discount) out.discount = (out.discount || 0) + c.discount;
+      if (c.damageAura) out.damageAura = (out.damageAura || 0) + c.damageAura;
+      if (c.visionAura) out.visionAura = true;
+      if (c.sphere) out.sphere = true;
+      if (c.slowAura) out.slowAura = (out.slowAura || 0) + c.slowAura;
+      if (c.healPlus) out.healPerWave = (out.healPerWave || 0) + c.healPlus;
+      if (c.regenEvery) out.regenEvery = c.regenEvery;
       if (c.damageTimes) out.damage *= c.damageTimes;
       if (c.rangePlus) out.range += c.rangePlus;
       if (c.speedTimes) out.attacksPerSecond *= c.speedTimes;
@@ -1558,7 +1583,13 @@ function openPanel(t) {
   if (s.damage) lines.push(`Damage ${s.damage.toFixed(0)} · ${s.attacksPerSecond.toFixed(1)} per second`);
   if (s.speedBoost) lines.push(`Nearby towers attack ${Math.round(s.speedBoost * 100)}% faster`);
   { const es = SETTINGS.towers[t.kind].elementalSphere;
-    if (es) lines.push(t.level >= 3 ? `Elemental Sphere: zaps ${es.zaps} robots for ${es.damage} every ${es.everySeconds}s` : "Max upgrade: Elemental Sphere"); }
+    if (es && s.sphere) lines.push(`Elemental Sphere: zaps ${es.zaps} robots for ${es.damage} every ${es.everySeconds}s`); }
+  if (s.discount) lines.push(`All towers cost ${Math.round(s.discount * 100)}% less`);
+  if (s.damageAura) lines.push(`Nearby towers hit ${Math.round(s.damageAura * 100)}% harder`);
+  if (s.visionAura) lines.push("Nearby towers can see Hiders");
+  if (s.slowAura) lines.push(`Nearby robots move ${Math.round(s.slowAura * 100)}% slower`);
+  if (s.regenEvery) lines.push(`Heals 1 Base Health every ${s.regenEvery}s during waves`);
+  if (s.auraDamage) lines.push(`Helper boost: hits ${Math.round(s.auraDamage * 100)}% harder`);
   if (s.healPerWave) lines.push(`Heals ${s.healPerWave} Base Health after each wave`);
   if (s.leavesPerWave) lines.push(`Gathers ${s.leavesPerWave} leaves after each wave`);
   if (s.leafSpotter) lines.push(`Bonus leaves appear ${Math.round(s.leafSpotter * 100)}% more often`);
@@ -1606,13 +1637,13 @@ function openPanel(t) {
     const pr = upgradePrice(t); if (pr === null || G.leaves < pr) return;
     if (ci !== undefined) t.picks = [...(t.picks || []), ci];
     G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade");
-    burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); openPanel(t);
+    burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); updateShelf(); openPanel(t);
   };
   if ($("p-up")) $("p-up").onclick = () => doUpgrade();
   (choices || []).forEach((c, i) => ($("p-pick-" + i).onclick = () => doUpgrade(i)));
   if ($("p-wall")) $("p-wall").onclick = () => { buildNutWall(t, s.nutWall); p.hidden = true; G.sel = null; updateHud(); };
   $("p-sell").onclick = () => {
-    G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t);
+    G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t); updateShelf();
     Sound.play("sell"); p.hidden = true; G.sel = null; updateHud();
   };
 }
@@ -1851,7 +1882,7 @@ function landShot(sh) {
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
   if (sh.kind === "air" && r.type !== "boss") r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
   const p = posAt(G.map, r.d);
-  burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : "#ffffff", 5);
+  burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : sh.kind === "healer" ? "#ffd36b" : "#ffffff", sh.kind === "healer" ? 9 : 5);
 }
 
 /* ---------- bonus maple leaf ---------- */
@@ -2079,6 +2110,8 @@ function update(dt) {
     while (G.queue.length && G.queue[0].at <= G.waveClock) spawn(G.queue.shift());
   }
   for (const w of G.walls || []) w.lineup = 0;
+  const warps = G.towers.filter((t) => t.kind === "wizard").map((t) => ({ t, s: towerStatsBase(t) })).filter((w) => w.s.slowAura)
+    .map((w) => ({ x: w.t.x * T + 16, y: w.t.y * T + 16, R: w.s.range * T, slow: w.s.slowAura }));
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
   const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => posAt(G.map, r.d));
   for (const r of G.robots) {
@@ -2089,6 +2122,7 @@ function update(dt) {
     // Tesla Coils supercharge nearby robots so they move faster
     r.charged = r.type !== "tesla" && teslas.some((q) => Math.hypot(q.x - posAt(G.map, r.d).x, q.y - posAt(G.map, r.d).y) <= teslaR);
     if (r.charged) sp *= SETTINGS.robots.tesla.boostSpeed;
+    { const q = posAt(G.map, r.d); let slow = 0; for (const w of warps) if (Math.hypot(q.x - w.x, q.y - w.y) <= w.R) slow = Math.max(slow, w.slow); r.warped = slow > 0; if (slow) sp *= 1 - slow; }
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
@@ -2139,7 +2173,7 @@ function update(dt) {
     }
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
-    if (es && t.level >= 3 && G.waveActive) {
+    if (es && s.sphere && G.waveActive) {
       t.sphereTimer = (t.sphereTimer ?? es.everySeconds) - dt;
       if (t.sphereTimer <= 0) {
         const o = spherePos(t), R = es.radius * T;
@@ -2158,6 +2192,14 @@ function update(dt) {
       }
     }
     if (t.sphereFlash > 0) t.sphereFlash -= dt;
+    // Deer Spirit Glow: slowly heals the Base during waves
+    if (s.regenEvery && G.waveActive) {
+      t.regenT = (t.regenT ?? s.regenEvery) - dt;
+      if (t.regenT <= 0) {
+        t.regenT = s.regenEvery;
+        if (G.health < G.maxHealth) { G.health = Math.min(G.maxHealth, G.health + 1); redrawGround(); floatText(t.x * T + 16, t.y * T - 2, "+1", "#9cff8a"); burst(t.x * T + 16, t.y * T + 6, "#ffe58a", 8); updateHud(); }
+      }
+    }
     if (!s.damage) continue;
     let boost = 0;
     for (const w of wizards) if (Math.hypot(w.t.x - t.x, w.t.y - t.y) <= w.s.range) boost = Math.max(boost, w.s.speedBoost);
@@ -2176,6 +2218,7 @@ function update(dt) {
       (sh.trail = sh.trail || []).unshift({ x: sh.x, y: sh.y }); if (sh.trail.length > 7) sh.trail.pop();
       if (Math.random() < 0.35) G.particles.push({ kind: "spark", x: sh.x, y: sh.y, vx: (Math.random() - 0.5) * 40, vy: -20 - Math.random() * 30, t: 0, life: 0.3, col: Math.random() < 0.5 ? "#ffb347" : "#ff6a1a" });
     }
+    if (sh.kind === "healer" && Math.random() < 0.4) G.particles.push({ kind: "spark", x: sh.x, y: sh.y, vx: (Math.random() - 0.5) * 20, vy: -10, t: 0, life: 0.35, col: "#fff1a8" });
     if (dist <= step + 4) { landShot(sh); sh.done = true; } else { sh.x += dx / dist * step; sh.y += dy / dist * step; }
   }
   G.shots = G.shots.filter((s) => !s.done);
@@ -2309,6 +2352,15 @@ function draw() {
   }
 
   drawNutWalls(x);
+  // Wizard Time Warp: a slowly turning clock ring; robots inside move slower
+  for (const t of G.towers) {
+    if (t.kind !== "wizard") continue; const ws = towerStatsBase(t); if (!ws.slowAura) continue;
+    const cx = t.x * T + 16, cy = t.y * T + 16, R = ws.range * T, a0 = G.time * 0.8;
+    x.fillStyle = "rgba(120,140,255,0.08)"; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = "rgba(170,185,255,0.45)"; x.lineWidth = 1.5; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.stroke();
+    for (let i = 0; i < 12; i++) { const a = a0 + i * Math.PI / 6, l = i % 3 ? 3 : 6; x.beginPath(); x.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.lineTo(cx + Math.cos(a) * (R - l), cy + Math.sin(a) * (R - l)); x.stroke(); }
+    x.strokeStyle = "rgba(200,210,255,0.35)"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a0 * 3) * R * 0.5, cy + Math.sin(a0 * 3) * R * 0.5); x.stroke();
+  }
   // Tesla Coil fields: a crackling purple ring on the ground, with little bolts to every robot it's charging
   for (const tr of G.robots) {
     if (tr.type !== "tesla" || tr.dead) continue;
@@ -2348,6 +2400,7 @@ function draw() {
     x.restore();
     if (r.hitT > 0 && !hidden) { x.globalAlpha = 0.5; x.fillStyle = "#fff"; x.fillRect(p.x - sz * 0.3, p.y - sz * 0.45 + wob - (big ? 12 : 4), sz * 0.6, sz * 0.6); }
     x.globalAlpha = 1;
+    if (r.warped && !hidden) { x.strokeStyle = "rgba(180,190,255,0.7)"; x.lineWidth = 1; x.beginPath(); x.arc(p.x, p.y - 4, sz * 0.42, G.time * 2, G.time * 2 + 2); x.stroke(); }
     if (r.charged && !hidden && Math.random() < 0.5) { x.fillStyle = Math.random() < 0.5 ? "#d9b8ff" : "#ffffff"; x.fillRect(p.x - sz * 0.35 + Math.random() * sz * 0.7, p.y - sz * 0.45 + Math.random() * sz * 0.6, 2, 2); }
     if (r.slowT > 0 && !hidden) { x.fillStyle = "rgba(90,170,255,0.35)"; x.fillRect(p.x - sz * 0.35, p.y - sz * 0.5, sz * 0.7, sz * 0.8); }
     if (r.burnT > 0 && !hidden) { x.fillStyle = Math.random() < 0.5 ? "#ff9a3c" : "#ffd36b"; x.fillRect(p.x - 6 + Math.random() * 12, p.y - sz * 0.5 - Math.random() * 6, 3, 3); }
@@ -2386,6 +2439,21 @@ function draw() {
   // shots
   for (const sh of G.shots) {
     if (sh.kind === "fire") drawFireball(x, sh);
+    else if (sh.kind === "healer") {
+      // a glowing golden antler spinning through the air
+      x.save(); x.translate(sh.x, sh.y); x.rotate(G.time * 12);
+      x.fillStyle = "rgba(255,230,140,0.4)"; x.beginPath(); x.arc(0, 0, 10, 0, Math.PI * 2); x.fill();
+      x.lineCap = "round"; x.lineJoin = "round";
+      for (const [col, w] of [["#5a3a10", 4.5], [sh.s.vision ? "#ffd34d" : "#f4e2c0", 2.5]]) {
+        x.strokeStyle = col; x.lineWidth = w; x.beginPath();
+        x.moveTo(-7, 5); x.quadraticCurveTo(-2, 0, 0, -7);   // main beam
+        x.moveTo(-3, 1); x.lineTo(3, -2);                     // tine
+        x.moveTo(-1, -3); x.lineTo(4, -7);                    // tine
+        x.moveTo(-5, 3); x.lineTo(-7, -3);                    // back tine
+        x.stroke();
+      }
+      x.lineCap = "butt"; x.lineJoin = "miter"; x.restore();
+    }
     else if (sh.kind === "pegasus") {
       x.save(); x.translate(sh.x, sh.y); x.rotate(G.time * 10);
       x.fillStyle = "rgba(255,220,120,0.45)"; x.beginPath(); x.arc(0, 0, 9, 0, Math.PI * 2); x.fill();
@@ -2397,7 +2465,7 @@ function draw() {
     else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
   }
   // Wizard Elemental Spheres float above everything on the ground
-  for (const t of G.towers) if (t.kind === "wizard" && t.level >= 3) drawElementalSphere(x, t);
+  for (const t of G.towers) if (t.kind === "wizard" && towerStatsBase(t).sphere) drawElementalSphere(x, t);
   for (const f of G.fx) {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
