@@ -376,7 +376,7 @@ const ART = {
   plant:   ["....kkkkkkkk....","...kLlhlLlhlk...","..kLlLllhlLlLk..","..kkkknnnnkkkk..","....knfnnfnk....","..kkknNnnNnkkk..",".kLnnnkkkknnnLk.","kLnmnnnnnnnnmnLk","knmnnnNnnNnnnmnk","knnnkknnnnkknnnk","knnk.knNNnk.knnk","kNmNk.knnk.kNmNk","kNNNk.knnk.kNNNk",".kkk.knnnnk.kkk.","....kNNkkNNk....","....kkkk.kkk...."],
   air:     ["................","...kk......kk...","...kmk....kmk...","...kmmkkkkmmk...","..kmmmmmmmmmmk..","..kmeekmmkeemk..","..kmeykmmkyemk..","..kmeekookeemk..","..kmmmmkkmmmmk..",".kmmeeeeeeeemmk.",".kmeeeeeeeeeemk.",".kmmeeeeeeeemmk.","..kmmeeeeeemmk..","...kkmmmmmmkk...","....kokk.kok....","................"],
   wizard:  [".......kk.......","......kLLk......",".....kLLyLk.....","....kLLLLLLk....","...kkkkkkkkkk...",".....keeeek..kc.",".....kekekk..kck",".....keeeek..kn.","....kxxxxxxk.kn.","...kLxxxxxxLkkn.","...kLLxxxxLLLkn.","...kLLLLLLLLk.n.","..kLLLLyLLLLLkn.","..kLLLLLLLLLLkn.","..kkkkkkkkkkkk..","................"],
-  healer:  [".....w..w...wy.w","......fyy....yf.",".......fy....f.w","....wyy.f...f.yy",".........f.f....","........kkkk....",".......kmmmmkk..",".......kmkmmmmk.","......kmmmmmkk..","......kmmmek....","..kk.kmmmeek....",".kekkmmmmeek....","kemmmmmmmmmk....","kmmmnmmmmnmk....",".kmk.kmk.kmk....",".kNk.kNk.kNk...."],
+  healer:  [".................kkwk.k...k.kwkk","................kwkfkkwk.kwkkfkw",".................kffkfk...kfkffk",".................kkfkfk...kfkfkk","................kwkkyfk...kfykkw",".................kfffyk...kyfffk","..................kkmkyk.kykkkk.","...................kmekykyk.....","....................kmmmmmmk....",".....................kmwkmmmkk..","....................kmmmmmmmmkk.","....................kmmmmmmmmNk.","...................kmmmmmmmmmk..","..................kmmmmmmekkk...","..................kmmmmmeek.....",".....k....kkkkkkkkmmmmmeek......","....kekkkkMMMMMMMmmmmmmek.......","...keekmMMmmmmmmmmmmmmeek.......","...kekmmmmmmmmmmmmmmmmek........","....kmmmmmmmmmmmmmmmmmmk........","....kmmmmmmmmmmmmmmmmmmk........","....kmmmmmmmmmmmmmmmmmmk........",".....kmmmmmmmmmmmmmmmmk.........","......knneeeeeeeeeennkk.........",".......kmnnmnnnnnnmnkmnk........",".......kmnkmnkkkkkmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kNNkNNk...kNNkNNk........"],
   base:    [".....kkkkkk.....","...kkllllllkk...","..klllLlllLllk..",".kllLllllllllLk.",".klllllllLllllk.","..kkknnnnnnkkk..","...knmmmmmmnk...","...knmkkkkmnk...","...knmkeekmnk...","...knmkeekmnk...","...knnnnnnnnk...","......knnk......","......knnk......",".....knnnnk.....","....knnnnnnk....","....kkkkkkkk...."],
   gate:    ["..kk........kk..","..kGk......kGk..","..kGk......kGk..",".kkkkkkkkkkkkkk.",".kggggggggggggk.",".kgkkkkkkkkkkgk.",".kgkGGGGGGGGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGGGGGGGGkgk.",".kgkkkkkkkkkkgk.",".kggoggggggoggk.",".kkkkkkkkkkkkkk.","................"],
   tree:    ["......kkkk......","....kkllllkk....","...klllLllllk...","..kllLlllllLlk..","..klllllLlllLk..",".kllLlllllllllk.",".klllllLlllLllk.",".kLlllllllllLlk.","..kLLlllLlllLk..","...kLLLLLLLLk...","....kkknnkkk....","......knnk......","......knnk......",".....knnnnk.....","....kkkkkkkk....","................"],
@@ -388,18 +388,20 @@ const ART = {
   leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
 };
 function makeSprite(rows, flip, recolor = {}) {
-  const c = document.createElement("canvas"); c.width = 16; c.height = 16;
+  const n = rows[0].length;   // most pictures are 16 x 16; the Healer Deer is a more detailed 32 x 32
+  const c = document.createElement("canvas"); c.width = n; c.height = rows.length;
   const x = c.getContext("2d");
   rows.forEach((row, y) => {
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < n; i++) {
       const ch = row[i]; if (!ch || ch === ".") continue;
-      x.fillStyle = recolor[ch] || PAL[ch] || "#f0f"; x.fillRect(flip ? 15 - i : i, y, 1, 1);
+      x.fillStyle = recolor[ch] || PAL[ch] || "#f0f"; x.fillRect(flip ? n - 1 - i : i, y, 1, 1);
     }
   });
   return c;
 }
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
+SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a5a2c", N: "#3a2410", e: "#f6ead2", y: "#ffb347" });
 // In the Swamp, the Water Frog is a muddy brown swamp frog. Everywhere else it stays blue.
 SPR.water_swamp = makeSprite(ART.water, false, { b: "#8a5a2a", B: "#5a3a1a", c: "#c9a46a" });
 function towerSprite(kind) { return kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind]; }
@@ -1653,7 +1655,7 @@ function draw() {
     const s2 = sz * (1 + pop * 0.3);
     if (t.kind === "healer") {
       // The deer's antlers glow: a bright golden halo that pulses, with sparkles floating up.
-      const ax = cx + s2 * 0.12, ay = by - s2 * 0.82, pulse = 0.5 + 0.5 * Math.sin(G.time * 2.5 + t.y);
+      const ax = cx + s2 * 0.25, ay = by - s2 * 0.88, pulse = 0.5 + 0.5 * Math.sin(G.time * 2.5 + t.y);
       const rad = s2 * (0.55 + 0.12 * pulse);
       const g2 = x.createRadialGradient(ax, ay, 1, ax, ay, rad);
       g2.addColorStop(0, `rgba(255,240,170,${0.6 + 0.25 * pulse})`); g2.addColorStop(0.45, `rgba(255,214,107,${0.35 + 0.2 * pulse})`); g2.addColorStop(1, "rgba(255,200,80,0)");
