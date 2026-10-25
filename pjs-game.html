@@ -220,6 +220,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .foe .power { color: var(--gold); font-size: 14px; }
 .foe .new { font-family: var(--body); font-size: 12px; background: #4fd1b8; color: #0f2a25; border-radius: 4px; padding: 1px 6px; vertical-align: middle; }
 .foe.coming { border-color: #4fd1b8; }
+.foe.boss { border-color: #e2574c; background: linear-gradient(180deg, rgba(226,87,76,0.14), var(--panel) 40%); }
 .foe .kills { font-size: 14px; border-top: 1px solid var(--line); padding-top: 6px; }
 .bigcode { font-family: var(--body); font-weight: 700; font-size: clamp(48px, 10vw, 84px); letter-spacing: .08em; color: var(--gold); line-height: 1; -webkit-user-select: text; user-select: text; }
 .lobby-box { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px 18px; width: min(360px, 100%); text-align: left; }
@@ -438,6 +439,9 @@ const ART = {
   tank:    ["................","................","................",".....kkkkkk.....","....kGGGGGGk....","....kGrGGrGkkkkk","....kGGGGGGsssss","..kkkkkkkkkkkkk.",".kggggggggggggk.",".kgGgGgGgGgGggk.",".kggggggggggggk.",".kkkkkkkkkkkkkk.",".kGkGkGkGkGkGkk.","..kkkkkkkkkkkk..","................","................"],
   hider:   ["................","................","......kkkk......",".....kPPPPk.....","....kPPPPPPk....","....kkkkkkkk....","....kPcPPcPk....","....kPPPPPPk....",".....kPPPPk.....","....kPppppPk....","...kPkppppkPk...","...kk.kppk.kk...","......kPPk......",".....kP..Pk.....",".....kk..kk.....","................"],
   tesla:   ["..z...kkkk...z..", "...z.kzpppk.z...", "....kpwPPypk....", "..zzkpPwyPpkzz..", "....kpwPPypk....", "...z.kppppk.z...", "..z...kmmk...z..", ".....kmmmmk.....", "......kNNk......", ".....kmmmmk.....", "..kkkkkNNkkkkk..", "..kggggggggggk..", "..kgkcckkcckgk..", "..kGgggyygggGk..", ".kGkGkGkGkGkGkk.", "..kkkkkkkkkkkk.."],
+  splitter: ["................", ".......k........", "......kGk..kkk..", "....kkkgkkkyyk..", "...kgsggGgkkkk..", "..kgrgGgrgGsGk..", "..kggggggggggk..", ".kGygGgsgGgGgGk.", ".kgggGgggggyGgk.", ".kgsGggrgGggsgk.", "..kGgggsgGgGgk..", "..kkkkkkkkkkkk..", "...kGk.kk.kGk...", "..kGk......kGk..", "..kk........kk..", "................"],
+  repair: ["................", ".......kk.......", "......klk.......", "......kGk.......", ".....kkkkkk.....", "....kssssssk....", "....kscsscsk..k.", "....kssssssk.kGk", "...kkkkkkkkkkkGk", "...kssslsssk.kk.", "...ksslllssk....", "...kssslsssk....", "....kkkkkkk.....", "....kGk.kGk.....", "....kkk.kkk.....", "................"],
+  drone: ["................", "kkkkkk....kkkkkk", "..kGk......kGk..", "...k........k...", "..kkkkkkkkkkkk..", ".kGggggggggggGk.", ".kgsggkkkkggsgk.", ".kgggkrrrrkgggk.", ".kgggkrwrrkgggk.", ".kGggkkkkkkggGk.", "..kGGggggggGGk..", "...kkkkkkkkkk...", ".....k.kk.k.....", ".....y..y..y....", "................", "................"],
   boss:    [".......kyk......k.....kyk.......", "........kYk....krk...kYk........", "........kyYkkkkkGkkkkYyk........", ".........kyYggggggGGYyk.........", "..k..k..k.kyYsggggGYyk..k..k..k.", ".kwkkwkkwkkgssggggGGGk.kwkkwkkwk", ".kskkskkskkgRrorrorRGk.kskkskksk", "..kskkskkskgRRRRRRRRGkkskkskksk.", "..kskRsRkskgssggggGGGkkskRsRksk.", "..kRrrrRRRkgssGGGGGGGkkRrrrRRRk.", ".kRrorrrRRRgggggggGGGRRrorrrRRRk", ".kRRrrrRRRRggggggggggGRRrrrRRRRk", ".kRRRRRRRRRggggggggggGRRRRRRRRRk", ".kgRRRRRRRRRRRRggRRRRRGRRRRRRRk.", ".kggGRRRssgggggRRRgggGGGGRRRRRRk", ".kggGGkgssggggRoooRggGGGGkRRRRRk", ".kggGGkgssgggRofyyoRgGGGGkGGGGGk", ".kggGGkgssgggRoyfyoRgGGGGkGGGGGk", ".kggGGkgssgggRoyyyoRgGGGGkRRRRRk", ".kggGGkgssggggRoooRggGGGGkGGGGGk", ".kggGGkgssgggggRRRgggGGGGkGGGGGk", "kRRRRRRgssgggggggggggGGGGkkkkGGk", "kRRRRRRkyykkyykkyykkyykkyk..kGGk", "kRRRRRRkkGggGGkkkkGggGGkk...kGGk", "kskskkskkGggGGk..kGggGGk....krrk", ".k.k..k.kGsgGGk..kGsgGGk....kork", "........kGggGGk..kGggGGk.....kk.", ".......kkGggGGk..kGggGGkk.......", "......kggggggggkkggggggggk......", "......kggggggggkkggggggggk......", "......kGGGGGGGGkkGGGGGGGGk......", ".......kkkkkkkk..kkkkkkkk......."],   // 32 x 32 war-mech Boss
   fire:    ["................................",".............kk....k............","...........kkRRk..kwkk..........","..........kRRRRk..kkeek.........","......kkkkRRWWRk.kweeeekkkk.....",".....kRWWWWWWWRk..kkeeeerrrkk...","....kWWRWWWWWWRWk...kkrrkkrrrkkk","...kWWWWRWWWWWRWk...krrrffkrrrkr","...kWWWWRRWWWWRWk...krrrryrrrrrr","..kWWWWWWRRWWWRRk...krrrrrrrrrrr",".kRRWWWWWWRWWWWRk...krMrrRRRRRRk","..kRRRWWWWWRWWWRk...krrffRRRRRk.","...kWRRRWWWRRWWRk..krMrfkkkkkk..","....kkkWRRWWRRWRk.kkrrrfk.......",".......kWWRRRRWRWkrrMrffk.......","..k....kWWWWRRRRWkMrrrfrk.......",".kRk....kkkkWWRRWkMrrrfrk.......","kRRRk.....kkMWrMWMrrrffk........","RRRRRk...kMMrrrrMrrrrfrk........","kRRRRk..kMrrrrrrrrrrrrrk........","kRRRk..krrrrrrrrrrrrrrk.........","krRRk..krrrrrrrrrrrrrk..........","krrrk.krrrrrrrrrfffffrk.........","krrrkkkRrrrrrRryyyyyyk..........","krrrrrrRrrrrrRfffffffk..........","krrrrrrRrrrrrRyyyyyyyk..........","krrrrrrrRrrrRffffffffrk.........",".krrrrrkrrrrkkrkkkrrrrk.........","..kkkkkkrrrrk.k..krrrrk.........",".......krrrrk.....krrrk.........",".......krrrk......krrrk.........",".......keeek......keeek........."],
   water:   ["................................","................................","................................",".........kk...........kk........",".......kkhhkk.......kkhhkk......","......khwwwwhk.....khwwwwhk.....",".....kbwwwwwwbk...kbwwwwwwbk....",".....kbwwkwkwbkkkkkbwwwkkwbk....",".....kbwwkkkwbbbbbbbwwkkkwbk....",".....kbwwkkkwbbbbbbbwwkkkwbk....",".....kbbwwwwbbhhhhbbbwwwwbbk....","......kbbbbbbhhhhhhbSbbbbbk.....",".....kkbbbbhShhhhhbbbbbbbbk.....","....kSbbbbbbbhbbbbbbbbbbbbSk....",".....kbbbbbbbbbbbbbbbbbbbbbk....",".....kbbkbbbbbbbbbbbbbbbkbbk....","......kbbkkbbbbbbbbbbbkkbbk.....","......kbRRbkkkkkkkkkkkbRRbk.....","......kbbbbbbbbbbbbbbbbbbbk.....","....kkbbbbbbbcccccccbbbbbbbkk...","...kSkbbbbbcccccccccccbbbbbkSk..","...kkBbbbbcccccccccccccbbbbBkk..","..kBBBBbbbcccccccccccccbbbBBBBk.",".kBBBBBbbbcccccccccccccbbbBBBBBk",".kBBBBBBbbcccccccccccccbbBBBBBBk","kBBBBBBBbbcccccccccccccbbBBBBBBB",".kBBBBBBBbcccccccccccccbBBBBBBBk",".kBBBBBBBBBbcccccccccbBBBBBBBBBk","..kBBBBBBkBbBcccccccBbBkBBBBBBk.",".k.kkBBkkbbbbbBBBBBbbbbbkkBBkk.k","kBkBkBk.kbkbkbkkkkkbkbkbk.kBkBkB",".k.k.k...k.k.k.....k.k.k...k.k.k"],
@@ -1452,19 +1456,26 @@ function renderPerks() {
   });
 }
 /* ---------- enemies page (per save slot) ---------- */
-const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla"];
-const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "splitter", "repair", "drone"];
+const NEW_FOES = new Set(["splitter", "repair", "drone"]);   // robots on the Enemies page that aren't in any waves yet
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
   walker: "The everyday robot. Sturdier than a Clanker and marches at a steady pace.",
   tank: "Huge, slow and very tough. If it reaches your Base, it hits hard.",
   hider: "Turns invisible when it gets hit.",
+  boss: "A giant horned war-mech with a glowing reactor core. It stomps in every few waves.",
+  splitter: "A clunky pile of scrap on legs. Destroy it and it bursts apart!",
+  repair: "A little medic bot with a wrench. It keeps the robots around it patched up.",
+  drone: "A flying robot with propellers. It ignores the path and flies straight for your treehouse.",
   tesla: "A walking power plant. Electricity crackles from its coil and supercharges the robots around it.",
 };
 function renderEnemies() {
   const s = slot(); s.defeated = s.defeated || {};
-  const R = SETTINGS.robots, hitOf = (k) => Math.round(Math.min(SETTINGS.maxHitPerRobot, R[k].health * SETTINGS.robotHitRatio));
+  const R = SETTINGS.robots, hitOf = (k) => R[k].baseHit || Math.round(Math.min(SETTINGS.maxHitPerRobot, R[k].health * SETTINGS.robotHitRatio));
+  // Boss health changes by wave, so find the smallest and biggest Boss in every level's waves
+  const bossHps = [SETTINGS.waves, ...Object.values(SETTINGS.levels).map((l) => (l.waves || []).concat(l.extraWaves || []))].flat()
+    .flat().filter((grp) => Array.isArray(grp) && (grp[0] === "boss" || (Array.isArray(grp[0]) && grp[0].includes("boss"))) && grp[3]).map((grp) => grp[3]);
   const stats = [
     ["Health", (k) => R[k].health, "#7cc46a"],
     ["Speed", (k) => R[k].speed, "#7cc8ff"],
@@ -1474,13 +1485,17 @@ function renderEnemies() {
   ];
   const box = $("foe-list"); box.innerHTML = "";
   for (const k of MAIN_FOES) {
-    const r = R[k], d = document.createElement("div"); d.className = "foe" + (NEW_FOES.has(k) ? " coming" : "");
+    const r = R[k], d = document.createElement("div"); d.className = "foe" + (NEW_FOES.has(k) ? " coming" : "") + (k === "boss" ? " boss" : "");
     const power = k === "hider" ? `Special: hides for ${r.hideSeconds} seconds after a hit. Only towers with Vision (like the Owl) can hit it while hidden.`
       : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp and The Beach.`
+      : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Bars are off the chart!`
+      : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it.`
+      : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first!`
+      : k === "drone" ? "Special: flies over the grass instead of following the path. Only flying-hunters like the Owl, the Pegasus and the Wizard's Elemental Sphere can hit it."
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
-      ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.map(f));
-        return `<div class="stat"><span>${label}</span><span class="bar"><i style="width:${Math.max(6, (v / max) * 100)}%;background:${col}"></i></span><b>${v}</b></div>`; }).join("")}
+      ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.filter((o) => o !== "boss").map(f));   // the Boss would squash everyone else's bars
+        return `<div class="stat"><span>${label}</span><span class="bar"><i style="width:${Math.min(100, Math.max(6, (v / max) * 100))}%;background:${col}"></i></span><b>${v}</b></div>`; }).join("")}
       ${power ? `<div class="power">${power}</div>` : ""}
       <div class="kills">${NEW_FOES.has(k) ? "Not in any waves yet" : `Defeated: <b>${s.defeated[k] || 0}</b>`}</div>`;
     d.querySelector(".pic").replaceWith(spriteCanvas(k, 32));

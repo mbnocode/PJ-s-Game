@@ -160,6 +160,13 @@ const SETTINGS = {
     hider:   { name: "Hider",   health: 90,  speed: 2.4,  leaves: 12,  points: 35, hideSeconds: 3 },
     // Tesla Coil: robots within boostRadius squares of it move boostSpeed times faster. (Shows up on The Swamp from wave 16.)
     tesla:   { name: "Tesla Coil", health: 240, speed: 1.6, leaves: 14, points: 40, boostRadius: 2, boostSpeed: 2 },
+    // Coming soon (on the Enemies page, but not in any waves yet):
+    // Junk Splitter breaks into splitInto Mini-Clankers when destroyed.
+    splitter: { name: "Junk Splitter", health: 120, speed: 1.4, leaves: 10, points: 30, splitInto: 3 },
+    // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds.
+    repair:   { name: "Repair Bot", health: 60, speed: 2.0, leaves: 12, points: 35, healRadius: 1.5, healAmount: 15, healEvery: 3 },
+    // Sky Drone flies straight over the grass. baseHit = how hard it hits your Base.
+    drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 15 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
   },
 
