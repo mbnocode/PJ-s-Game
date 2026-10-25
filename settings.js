@@ -220,11 +220,11 @@ const SETTINGS = {
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
     beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, and the waves bring new robots.", theme: "beach",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
-              path: [[0, 2], [4, 2], [4, 8], [8, 8], [8, 3], [12, 3], [12, 10], [16, 10], [16, 5], [19, 5]],
+              path: [[0, 9], [5, 9], [5, 1], [9, 1], [9, 10], [14, 10], [14, 6], [11, 6], [11, 3], [17, 3], [17, 8], [19, 8]],
               // On the Beach, trees are palm trees, mushrooms are starfish and shells, and tall grass is dune grass.
-              trees:     [[2, 5], [6, 0], [10, 6], [14, 1], [18, 9], [1, 10], [6, 11], [14, 7], [18, 1]],
-              mushrooms: [[2, 9], [10, 0], [14, 11], [17, 7], [6, 5]],
-              tallGrass: [[3, 0], [9, 10], [11, 1], [15, 3], [19, 11], [0, 7]],
+              trees:     [[2, 5], [7, 4], [12, 8], [15, 1], [19, 4], [2, 11], [7, 11], [16, 11], [3, 1]],
+              mushrooms: [[1, 2], [7, 7], [13, 4], [15, 8], [11, 11]],
+              tallGrass: [[3, 6], [0, 0], [12, 0], [18, 5], [10, 8], [3, 11]],
               // The Beach has its own 15 waves instead of the usual ones.
               waves: [
                 [["scout", 6, 1.3]],                                                    // 1: speedy Scouts first
@@ -233,15 +233,15 @@ const SETTINGS = {
                 [[["scout", "walker"], 10, 0.9]],                                       // 4
                 [["hider", 3, 1.6], ["boss", 1, 0, 900]],                               // 5
                 [["walker", 8, 0.9], ["hider", 3, 1.2]],                                // 6
-                [["tank", 3, 2.0], [["scout", "scout", "walker"], 9, 0.7]],            // 7
-                [[["hider", "walker"], 10, 0.9]],                                       // 8
-                [["tesla", 2, 2.0], ["tank", 4, 1.6]],                                  // 9: Tesla Coils!
-                [[["walker", "tank"], 8, 1.2], ["boss", 1, 0, 1800]],                   // 10
-                [[["scout", "hider"], 16, 0.5]],                                        // 11
-                [[["tank", "tank", "tesla"], 9, 1.3]],                                  // 12
-                [["hider", 12, 0.7], ["boss", 2, 4, 1300]],                             // 13
-                [[["walker", "tesla", "scout"], 15, 0.7], ["tank", 5, 1.2]],           // 14
-                [[["tank", "hider", "tesla"], 15, 0.9], ["boss", 1, 0, 4000]],          // 15: the big finish
+                [["tank", 4, 1.8], [["scout", "scout", "walker"], 12, 0.5]],           // 7
+                [[["hider", "walker"], 14, 0.7]],                                       // 8
+                [["tesla", 2, 2.0], ["tank", 5, 1.4]],                                  // 9: Tesla Coils!
+                [[["walker", "tank"], 10, 1.0], ["boss", 1, 0, 2200]],                  // 10
+                [[["scout", "hider"], 20, 0.4]],                                        // 11
+                [[["tank", "tank", "tesla"], 12, 1.1]],                                 // 12
+                [["hider", 14, 0.6], ["boss", 2, 4, 1500]],                             // 13
+                [[["walker", "tesla", "scout"], 18, 0.6], ["tank", 6, 1.0]],           // 14
+                [[["tank", "hider", "tesla"], 18, 0.8], ["boss", 1, 0, 4500]],          // 15: the big finish
               ] },
   },
 };
