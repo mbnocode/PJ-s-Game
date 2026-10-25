@@ -175,8 +175,14 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .chip { font-family: var(--body); font-weight: 700; font-size: 14px; background: var(--leaf); color: #1b1006; padding: 4px 10px; border-radius: 3px; letter-spacing: .06em; }
 .lookup { align-items: flex-end; }
 .soundcol { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.hud-acorns { font-size: 14px; }
-.hud-acorns.bump { animation: bump .4s; }
+.hud { position: relative; }
+/* Golden Acorns sit in the top middle of the screen */
+.hud-acorns { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 22px;
+  background: rgba(0, 0, 0, .25); border: 2px solid rgba(255, 211, 77, .35); border-radius: 20px; padding: 2px 12px 2px 8px; pointer-events: none; }
+@media (max-width: 900px) { .hud-acorns { position: static; transform: none; font-size: 18px; } }
+.hud-acorns.bump { animation: acorn-bump .5s; }
+@keyframes acorn-bump { 40% { transform: translate(-50%, -50%) scale(1.35); } }
+@media (max-width: 900px) { @keyframes acorn-bump { 40% { transform: scale(1.35); } } }
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
 .acorns::before, .perk .cost::before { content: ""; width: 1em; height: 1.1em; background: radial-gradient(ellipse 55% 40% at 50% 28%, #8a5a2a 60%, transparent 62%), radial-gradient(ellipse 45% 55% at 50% 62%, #f2b23a 65%, transparent 67%); display: inline-block; }
 .perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; width: min(820px, 100%); }
@@ -359,8 +365,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <button id="b-pause">Pause</button>
       <div class="soundcol">
         <button id="b-sound" title="Sound">Sound on</button>
-        <span class="acorns hud-acorns" id="hud-acorns" title="Golden Acorns in this save slot">0</span>
       </div>
+      <span class="acorns hud-acorns" id="hud-acorns" title="Golden Acorns in this save slot">0</span>
     </div>
     <div id="stage">
       <canvas id="board" width="640" height="384"></canvas>
@@ -1552,6 +1558,7 @@ function kill(r) {
   if (chance && Math.random() < chance) {
     const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots);
     floatText(p.x, p.y - 18, "+1 Golden Acorn!", "#ffd34d", 1.6);
+    G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
     burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
     const el = $("hud-acorns"); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
   }
@@ -2002,6 +2009,15 @@ function draw() {
   // particles
   for (const p of G.particles) {
     if (p.kind === "spark") { x.globalAlpha = 1 - p.t / p.life; x.fillStyle = p.col; x.fillRect(p.x - 1.5, p.y - 1.5, 3, 3); }
+    else if (p.kind === "acorn") {
+      // flies up to the acorn counter at the top middle
+      const k = p.t / p.life, e = k * k, ax = p.x + (320 - p.x) * e, ay = p.y + (-24 - p.y) * e - Math.sin(k * Math.PI) * 40;
+      x.globalAlpha = 1;
+      x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(ax, ay + 2, 6.5, 7.5, 0, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#f2b23a"; x.beginPath(); x.ellipse(ax, ay + 2, 5, 6, 0, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#16191d"; x.fillRect(ax - 7, ay - 6, 14, 6); x.fillStyle = "#8a5a2a"; x.fillRect(ax - 6, ay - 5, 12, 4); x.fillRect(ax - 1, ay - 8, 2, 3);
+      x.fillStyle = "#fff3b0"; x.fillRect(ax - 3, ay, 2, 3);
+    }
     else {
       const k = p.t / p.life, e = k * k, tx = 40, ty = -20;
       const lx = p.x + (tx - p.x) * e, ly = p.y + (ty - p.y) * e - Math.sin(k * Math.PI) * 30;
