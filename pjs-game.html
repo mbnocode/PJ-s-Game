@@ -1729,7 +1729,9 @@ function draw() {
     x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
 
     if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
-    for (let i = 0; i < t.level; i++) { x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, t.y * T + 1, 4, 3); }
+    // Upgrade marks float just above the tower's head and move with it (hovering, bobbing, smashing).
+    const markY = Math.max(1, by - s2 - rc - 5);
+    for (let i = 0; i < t.level; i++) { x.fillStyle = "#16191d"; x.fillRect(cx - 8 + i * 5, markY - 1, 6, 5); x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, markY, 4, 3); }
   }
 
   // robots
