@@ -1675,7 +1675,8 @@ function draw() {
       g.addColorStop(0, `rgba(${col},${0.35 + 0.25 * pulse})`); g.addColorStop(1, `rgba(${col},0)`);
       x.fillStyle = g; x.fillRect(cx - 24, by - sz / 2 - 24, 48, 48);
     }
-    x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4);
+    const hovering = t.level >= 3 && (t.kind === "fire" || t.kind === "air");
+    if (!hovering) { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4); }
     let rc = (t.recoil || 0) * 10;
     if (t.smashAnim > 0) rc += t.smashAnim > 0.2 ? Math.sin(((0.55 - t.smashAnim) / 0.35) * Math.PI / 2) * 9 : Math.max(0, t.smashAnim / 0.2) * 9 - 2;
     const s2 = sz * (1 + pop * 0.3);
@@ -1692,6 +1693,13 @@ function draw() {
       x.lineCap = "butt"; x.restore();
       if (!G.paused && Math.random() < 0.15) { const a = Math.random() * Math.PI * 2; G.particles.push({ kind: "spark", x: cx + Math.cos(a) * 16, y: py + Math.sin(a) * 6, vx: -Math.sin(a) * 40, vy: -10, t: 0, life: 0.5, col: "#e6f6ff" }); }
       rc += 9 + Math.sin(G.time * 3 + t.x) * 2.5;   // hover height, gently bobbing
+    }
+    if (t.kind === "fire" && t.level >= 3) {
+      // Fully upgraded Dragon: it takes off and flies in place, bobbing with each wingbeat.
+      const beat = Math.sin(G.time * 7 + t.x);
+      x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.ellipse(cx, by - 1, sz * (0.32 + 0.04 * beat), 3, 0, 0, Math.PI * 2); x.fill();
+      if (!G.paused && Math.random() < 0.12) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * 14, y: by - 4, vx: (Math.random() - 0.5) * 50, vy: 5, t: 0, life: 0.35, col: "rgba(255,255,255,0.7)" });
+      rc += 15 + beat * 3.5;
     }
     if (t.kind === "healer") {
       // The deer's antlers glow: a bright golden halo that pulses, with sparkles floating up.
