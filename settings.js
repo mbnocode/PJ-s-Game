@@ -130,6 +130,17 @@ const SETTINGS = {
               ],
               // How fast robots chew through a Nut Wall (health per second). Tanks chew 2x, Bosses 5x.
               wallChewPerSecond: 25 },
+    crab:   { name: "Crab",        cost: 95,  range: 2.0, damage: 14, attacksPerSecond: 0.9, splash: 1,
+              about: "Hurls seashells that splash every robot within 1 square.",
+              // Pick ONE choice at each upgrade (splash = how many squares around the hit robot also get hurt; they take half damage).
+              upgradeChoices: [
+                [ { name: "Big Claws",     about: "Hits 50% harder.", damageTimes: 1.5 },
+                  { name: "Wide Splash",   about: "Splashes half a square farther.", splash: 0.5 } ],
+                [ { name: "Quick Snips",   about: "Attacks 50% faster.", speedTimes: 1.5 },
+                  { name: "Long Throw",    about: "Reaches 1 more square.", rangePlus: 1 } ],
+                [ { name: "Tidal Slam",    about: "Splashes 1 more square and hits 30% harder.", splash: 1, damageTimes: 1.3 },
+                  { name: "Double Pinch",  about: "Throws shells at 2 robots at once.", targetsPlus: 1 } ],
+              ] },
     // The Super Tower. It only shows up in the shop after you buy it on the Upgrades page.
     pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 30, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
               about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders." },
