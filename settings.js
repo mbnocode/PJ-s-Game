@@ -60,6 +60,8 @@ const SETTINGS = {
               ] },
     plant:  { name: "Tree Giant",  cost: 75,  range: 1.9, damage: 12, attacksPerSecond: 1.4, holdSeconds: 0.7,
               about: "Vines grab Robots and hold them still.",
+              // At Upgrade 3 the giant smashes its fists on the ground every few seconds, hitting every robot nearby.
+              groundSmash: { everySeconds: 5, radius: 1.8, damage: 25, holdSeconds: 0.5 },
               // Pick ONE choice at each upgrade. Extra choice kinds for the Tree Giant:
               // targetsPlus (grab this many more robots at once), holdSecondsPlus (holds robots longer).
               upgradeChoices: [

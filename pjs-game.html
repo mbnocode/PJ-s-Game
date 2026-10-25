@@ -551,6 +551,7 @@ const Sound = {
       case "fire": if (this.ok(name, 140)) this.noise(0.22, 0.12, "lowpass", 900, 250); break;
       case "water": if (this.ok(name, 140)) this.noise(0.14, 0.09, "bandpass", 3200, 1400); break;
       case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
+      case "smash": this.tone(90, 0.35, "square", 0.14, 40); this.noise(0.3, 0.3, "lowpass", 400, 120); break;
       case "tongue": if (this.ok(name, 120)) this.tone(900, 0.09, "square", 0.05, 300); break;
       case "air": if (this.ok(name, 160)) this.tone(520, 0.28, "sine", 0.08, 280); break;
       case "place": this.tone(520, 0.08, "square", 0.1, 780); break;
@@ -1559,6 +1560,28 @@ function update(dt) {
   for (const t of G.towers) {
     const s = towerStats(t);
     t.recoil = Math.max(0, (t.recoil || 0) - dt);
+    // Max-upgrade Tree Giant: raises its fists and SMASHES the ground every few seconds during a wave.
+    const gs = SETTINGS.towers[t.kind].groundSmash;
+    if (gs && t.level >= 3 && G.waveActive) {
+      t.smashTimer = (t.smashTimer ?? gs.everySeconds) - dt;
+      if (t.smashTimer <= 0) { t.smashTimer = gs.everySeconds; t.smashAnim = 0.55; t.smashed = false; }
+    }
+    if (t.smashAnim > 0) {
+      t.smashAnim -= dt;
+      if (!t.smashed && t.smashAnim <= 0.2) {
+        t.smashed = true;
+        const cx = t.x * T + 16, cy = t.y * T + 22, R = gs.radius * T;
+        for (const r of G.robots) {
+          if (r.dead) continue;
+          const q = posAt(G.map, r.d);
+          if (Math.hypot(q.x - cx, q.y - cy) <= R) { hurt(r, gs.damage, true); if (!r.dead) r.rootT = Math.max(r.rootT, r.type === "boss" ? 0.15 : gs.holdSeconds); }
+        }
+        G.fx.push({ kind: "splash", x: cx, y: cy, r: R, t: 0.3, col: "150,110,60" });
+        G.fx.push({ kind: "splash", x: cx, y: cy, r: R * 0.6, t: 0.3, col: "200,160,90" });
+        for (let i = 0; i < 18; i++) { const a = Math.random() * Math.PI * 2, v = 40 + Math.random() * 80; G.particles.push({ kind: "spark", x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.5 - 40, t: 0, life: 0.45, col: Math.random() < 0.5 ? "#8a6a3a" : "#b88a55" }); }
+        G.shake = Math.max(G.shake, 0.18); Sound.play("smash");
+      }
+    }
     if (!s.damage) continue;
     let boost = 0;
     for (const w of wizards) if (Math.hypot(w.t.x - t.x, w.t.y - t.y) <= w.s.range) boost = Math.max(boost, w.s.speedBoost);
@@ -1654,6 +1677,7 @@ function draw() {
     }
     x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4);
     let rc = (t.recoil || 0) * 10;
+    if (t.smashAnim > 0) rc += t.smashAnim > 0.2 ? Math.sin(((0.55 - t.smashAnim) / 0.35) * Math.PI / 2) * 9 : Math.max(0, t.smashAnim / 0.2) * 9 - 2;
     const s2 = sz * (1 + pop * 0.3);
     if (t.kind === "air" && t.level >= 3) {
       // Fully upgraded Owl: it hovers above a swirling platform of wind.
