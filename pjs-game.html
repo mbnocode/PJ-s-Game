@@ -449,7 +449,19 @@ function drawFactoryFloor(x, px, kind) {
   for (let j = 1; j < 16; j += 4) for (let i = (j % 8 === 1 ? 1 : 3); i < 16; i += 4) { px("#646b75", i, j); px("#646b75", i + 1, j + 1); }
   r("#33383f", 0, 0, 16, 1); r("#33383f", 0, 0, 1, 16);
   r("#5a616b", 1, 1, 15, 1);
-  if (kind === "conveyor" || kind === "crate") {
+  if (kind === "beltH" || kind === "beltCrate") {
+    // a conveyor belt that joins up with the squares on either side
+    r("#16191d", 0, 4, 16, 8); r("#2b2f35", 0, 5, 16, 6);
+    for (let i = 1; i < 16; i += 4) r("#3d424a", i, 5, 1, 6);
+    r("#8b929c", 0, 4, 16, 1); r("#8b929c", 0, 11, 16, 1);
+    for (const i of [3, 11]) { px("#f2c230", i, 7); px("#f2c230", i + 1, 8); px("#f2c230", i, 9); }
+    if (kind === "beltCrate") { r("#16191d", 5, 3, 7, 8); r("#a8743e", 6, 4, 5, 6); r("#7a4a24", 6, 6, 5, 1); r("#7a4a24", 8, 4, 1, 6); }
+  } else if (kind === "pipeV" || kind === "pipeCross") {
+    // a copper pipe running up and down, joining the squares above and below
+    if (kind === "pipeCross") { r("#16191d", 0, 4, 16, 8); r("#2b2f35", 0, 5, 16, 6); r("#8b929c", 0, 4, 16, 1); r("#8b929c", 0, 11, 16, 1); }
+    r("#16191d", 5, 0, 6, 16); r("#b0663a", 6, 0, 4, 16); r("#d98a52", 6, 0, 1, 16); r("#7d4423", 9, 0, 1, 16);
+    r("#16191d", 4, 13, 8, 3); r("#8b929c", 5, 14, 6, 1);
+  } else if (kind === "conveyor" || kind === "crate") {
     r("#16191d", 0, 4, 16, 8);
     r("#2b2f35", 0, 5, 16, 6);
     for (let i = 1; i < 16; i += 3) r("#3d424a", i, 5, 1, 6);
@@ -525,7 +537,17 @@ const SWAMP_GRASS = Array.from({ length: 8 }, () => makeTile("swamp"));
 // What each kind of scenery looks like in each kind of level.
 const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
-const STEEL = ["floor", "conveyor", "floor", "gear", "crate", "floor", "pipe", "machine", "floor", "vent", "conveyor", "hazard", "floor"].map(makeTile);
+// Factory squares, drawn so they join up into one big factory floor.
+const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
+function factoryTileAt(x, y) {
+  const belt = y % 3 === 1, pipe = x % 5 === 2;
+  if (belt && pipe) return "pipeCross";
+  if (belt) return (x * 7 + y * 3) % 6 === 0 ? "beltCrate" : "beltH";
+  if (pipe) return "pipeV";
+  if (y % 3 === 0 && x % 5 === 4) return "machine";
+  if (y % 3 === 2 && x % 5 === 0) return (x + y) % 2 ? "vent" : "gear";
+  return "floor";
+}
 
 
 /* ---------- sound ---------- */
@@ -961,8 +983,22 @@ function paintGround(x, map, factoryCount) {
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
     const kind = map.cells[y][i], v = map.look[y][i];
     let img = tiles[v % tiles.length];
-    if (fset.has(i + "," + y)) img = STEEL[v % STEEL.length];
+    if (fset.has(i + "," + y)) img = FACTORY_TILES[factoryTileAt(i, y)];
     x.drawImage(img, i * T, y * T, T, T);
+  }
+  // A hazard-striped wall around the edge of the factory, so it reads as one building.
+  const isF = (i, y) => fset.has(i + "," + y) || (map.cells[y] && map.cells[y][i] === "gate");
+  for (const key of fset) {
+    const [i, y] = key.split(",").map(Number), X = i * T, Y = y * T;
+    const edges = [[0, -1, X, Y, T, 4], [0, 1, X, Y + T - 4, T, 4], [-1, 0, X, Y, 4, T], [1, 0, X + T - 4, Y, 4, T]];
+    for (const [dx, dy, ex, ey, ew, eh] of edges) {
+      const ny = y + dy, nx = i + dx;
+      if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || isF(nx, ny) || map.cells[ny][nx] === "path") continue;
+      x.fillStyle = "#16191d"; x.fillRect(ex, ey, ew, eh);
+      x.fillStyle = "#f2c230";
+      if (ew > eh) for (let k = 0; k < ew; k += 8) x.fillRect(ex + k, ey + 1, 4, eh - 2);
+      else for (let k = 0; k < eh; k += 8) x.fillRect(ex + 1, ey + k, ew - 2, 4);
+    }
   }
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
