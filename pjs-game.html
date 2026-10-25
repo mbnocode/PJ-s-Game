@@ -362,7 +362,7 @@ const $ = (id) => document.getElementById(id);
 const PAL = {
   k: "#16191d", y: "#f2c230", Y: "#c98e12", w: "#ffffff", r: "#e0443a", R: "#9e2a22", g: "#7a8089", G: "#4a5059",
   o: "#ff8c1a", b: "#3d8fe0", B: "#1f5fa8", c: "#8fd3ff", n: "#7a4a24", N: "#4e2d14", l: "#5fbf4a", L: "#2f7d32",
-  p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", b: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8",
+  p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", j: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8",
 };
 const ART = {
   clanker: ["................","........r.......",".......k........","........k.......","...kkkkkkkkkk...","..kyyyyyyyyyyk..","..kyYkkkyyyyyk..","..kyYkwkyyeyyk..","..kyYkkkyyyyyk..","..kyyyyyYYyyyk..","..kyyGyyyyyGyk..","..kkkkkkkkkkkk..","..GG.GG..GG.GG..",".kggkggkkggkggk.",".kGGkGGkkGGkGGk.","..kk.kk..kk.kk.."],
@@ -383,23 +383,26 @@ const ART = {
   mushroom: ["................","................","................","...kkkkk........","..krrwrrk.......",".krwrrrwrk......",".krrrrrrrk......",".kkkkkkkkk.kkk..","...keek...krwrk.","...keek..krrrrrk","...keek..kkkkkkk","...keek....kek..","..keeeek...kek..","..kkkkkk..kkkkk.","................","................"],
   tallgrass: ["................","................","................","................","......h.........","..h...Lh....h...","..Lh.hLL...Lh...","...LLhLL..hLL.h.",".h.LhLLh.hLhLLh.",".LhLLhLLhLhLhLL.",".LLhLLLhLLLhLLL.","..LLLLLLLLLLLL..","................","................","................","................"],
   cypress: ["................",".....kkkkkk.....","...kkvVvvVvkk...","..kvVvvvVvvvVk..",".kVvvVvvvvVvvVk.",".kvvVvvVvvvVvvk.","..kVvvvvVvvvVk..","..kqkkVvvVkkqk..","...q..knnk..q...","...q..knnk..q...","......knNk...q..",".....knnnnk.....","....knNnnNnk....","...knk.kk.knk...","...kk......kk...","................"],
-  cattail: ["................","................","..k.......k.....",".kbk.....kbk....",".kbk..k..kbk....",".kbk.kbk.kbk....","..L..kbk..L..k..","..L..kbk..L.kbk.","..L...L...L.kbk.",".LL...L..LL..L..","..L..LL..L.L.L..","..L..LL.hL.LLL..",".hL.hLL.hL..L.h.","..LhLL.LhLLhLL..",".hLLLLhLLLLLLLh.","................"],
+  cattail: ["................","................","..k.......k.....",".kjk.....kjk....",".kjk..k..kjk....",".kjk.kjk.kjk....","..L..kjk..L..k..","..L..kjk..L.kjk.","..L...L...L.kjk.",".LL...L..LL..L..","..L..LL..L.L.L..","..L..LL.hL.LLL..",".hL.hLL.hL..L.h.","..LhLL.LhLLhLL..",".hLLLLhLLLLLLLh.","................"],
   glowshroom: ["................","................","................","....kkkkk.......","...kuuUuuk......","..kuUuuuUuk.....","..kuuuuuuuk.kkk.","..kkkkkkkkkkuUuk","....kek....kkkkk","....kek.....kek.","....kek.....kek.","...keeek...keeek","...kkkkk...kkkkk","................","................","................"],
   leaf:    ["......o.........",".....ooo........","..o..ooo..o.....","..oooooooooo....","...oooooooo.....","..oooooooooo....",".ooooooooooooo..","..oooooooooo....","....oooooo......",".......n........",".......n........","................","................","................","................","................"],
 };
-function makeSprite(rows, flip) {
+function makeSprite(rows, flip, recolor = {}) {
   const c = document.createElement("canvas"); c.width = 16; c.height = 16;
   const x = c.getContext("2d");
   rows.forEach((row, y) => {
     for (let i = 0; i < 16; i++) {
       const ch = row[i]; if (!ch || ch === ".") continue;
-      x.fillStyle = PAL[ch] || "#f0f"; x.fillRect(flip ? 15 - i : i, y, 1, 1);
+      x.fillStyle = recolor[ch] || PAL[ch] || "#f0f"; x.fillRect(flip ? 15 - i : i, y, 1, 1);
     }
   });
   return c;
 }
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
+// In the Swamp, the Water Frog is a muddy brown swamp frog. Everywhere else it stays blue.
+SPR.water_swamp = makeSprite(ART.water, false, { b: "#8a5a2a", B: "#5a3a1a", c: "#c9a46a" });
+function towerSprite(kind) { return kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind]; }
 
 let seed = 7;
 const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1165,7 +1168,9 @@ function renderShelf() {
   TOWER_ORDER.forEach((k) => {
     const t = SETTINGS.towers[k];
     const b = document.createElement("button"); b.className = "tbtn"; b.id = "tower-" + k; b.title = t.about;
-    b.appendChild(spriteCanvas(k, 32));
+    const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32;
+    const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(towerSprite(k), 0, 0, 32, 32);
+    b.appendChild(ic);
     b.insertAdjacentHTML("beforeend", `<span>${t.name}<span class="c">${t.cost} leaves</span></span>`);
     b.onclick = () => { G.pick = G.pick === k ? null : k; G.sel = null; $("tpanel").hidden = true; updateShelf(); };
     box.appendChild(b);
@@ -1586,7 +1591,7 @@ function draw() {
     const h = G.hover, ok = G.map.cells[h.y][h.x] === "grass" && !towerAt(h.x, h.y) && !G.map.scenery[h.x + "," + h.y];
     const spec = SETTINGS.towers[G.pick];
     showRange(h.x, h.y, spec.range || 0.6, ok);
-    x.globalAlpha = 0.6; x.drawImage(SPR[G.pick], h.x * T, h.y * T, T, T); x.globalAlpha = 1;
+    x.globalAlpha = 0.6; x.drawImage(towerSprite(G.pick), h.x * T, h.y * T, T, T); x.globalAlpha = 1;
   }
   if (G.sel) { const s = towerStats(G.sel); showRange(G.sel.x, G.sel.y, s.range || 0.6, true); }
 
@@ -1605,7 +1610,7 @@ function draw() {
     x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(cx - sz * 0.35, by - 3, sz * 0.7, 4);
     const rc = (t.recoil || 0) * 10;
     const s2 = sz * (1 + pop * 0.3);
-    x.drawImage(SPR[t.kind], cx - s2 / 2, by - s2 - rc, s2, s2);
+    x.drawImage(towerSprite(t.kind), cx - s2 / 2, by - s2 - rc, s2, s2);
     if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
     for (let i = 0; i < t.level; i++) { x.fillStyle = "#ffd34d"; x.fillRect(cx - 7 + i * 5, t.y * T + 1, 4, 3); }
   }
