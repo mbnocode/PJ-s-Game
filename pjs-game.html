@@ -861,7 +861,8 @@ function timeLeft(d) {
   const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
   return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h left` : h ? `${h}h ${m}m left` : `${m}m left`;
 }
-function currentScore() { return Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes); }
+// Difficulty and some levels (like The Beach) multiply the score.
+function currentScore() { return Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes * (SETTINGS.levels[G.level].scoreTimes || 1)); }
 
 async function onlineStart(g) {
   const o = g.online; if (!o) return;
@@ -2623,7 +2624,7 @@ function finish(won) {
   if (G.over) return;
   if (G.slotDirty) { saveSlots(slots); G.slotDirty = false; }
   G.over = true; G.waveActive = false; G.sel = null; $("tpanel").hidden = true; $("banner").hidden = true; updateHud();
-  const score = Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes);
+  const score = currentScore();
   const H = G.health / G.maxHealth;
   const stars = won ? (H >= 0.9 ? 3 : H >= 0.5 ? 2 : 1) : 0;
   let best = false;

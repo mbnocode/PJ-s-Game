@@ -237,8 +237,9 @@ const SETTINGS = {
               trees:     [[1, 1], [7, 0], [11, 5], [15, 10], [19, 1], [0, 6], [11, 11], [15, 5]],
               mushrooms: [[4, 8], [7, 4], [16, 0], [12, 10]],
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
-    beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder.", theme: "beach",
+    beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder and scores are worth 1.5x.", theme: "beach",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
+              scoreTimes: 1.5,    // your score on this level is multiplied by this (on top of the difficulty's score bonus)
               // Towers that are stronger on this level: Crabs are at home on the beach.
               towerBoosts: { crab: { damageTimes: 1.5 } },
               path: [[0, 9], [5, 9], [5, 1], [9, 1], [9, 10], [14, 10], [14, 6], [11, 6], [11, 3], [17, 3], [17, 8], [19, 8]],
