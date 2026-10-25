@@ -229,8 +229,10 @@ const SETTINGS = {
               trees:     [[1, 1], [7, 0], [11, 5], [15, 10], [19, 1], [0, 6], [11, 11], [15, 5]],
               mushrooms: [[4, 8], [7, 4], [16, 0], [12, 10]],
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
-    beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, and the waves bring new robots.", theme: "beach",
+    beach:  { name: "The Beach", about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder.", theme: "beach",
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
+              // Towers that are stronger on this level: Crabs are at home on the beach.
+              towerBoosts: { crab: { damageTimes: 1.5 } },
               path: [[0, 9], [5, 9], [5, 1], [9, 1], [9, 10], [14, 10], [14, 6], [11, 6], [11, 3], [17, 3], [17, 8], [19, 8]],
               // On the Beach, trees are palm trees, mushrooms are starfish and shells, and tall grass is dune grass.
               trees:     [[2, 5], [7, 4], [12, 8], [15, 1], [19, 4], [2, 11], [7, 11], [16, 11], [3, 1]],
