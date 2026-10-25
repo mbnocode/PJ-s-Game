@@ -447,11 +447,12 @@ SPR.plant = makeSprite(ART.plant, false, { n: "#7a4a24", N: "#4e2d14", m: "#9a64
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 // Smooth (non-pixel) Pegasus drawn with canvas paths onto a 128 x 128 canvas, facing right.
 function makePegasusArt() {
+  // 1) paint every part as one connected shape (no outlines between parts)
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
   const x = c.getContext("2d");
   const ink = "#2b3550";
   x.lineJoin = "round"; x.lineCap = "round";
-  const shape = (draw, fill, stroke = ink, lw = 2.2) => { x.beginPath(); draw(); x.fillStyle = fill; x.fill(); if (stroke) { x.strokeStyle = stroke; x.lineWidth = lw; x.stroke(); } };
+  const shape = (draw, fill, stroke = null, lw = 2.2) => { x.beginPath(); draw(); x.fillStyle = fill; x.fill(); if (stroke) { x.strokeStyle = stroke; x.lineWidth = lw; x.stroke(); } };
   const lin = (x0, y0, x1, y1, stops) => { const g = x.createLinearGradient(x0, y0, x1, y1); stops.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
 
   // far wing (behind the body), a little darker
@@ -459,11 +460,11 @@ function makePegasusArt() {
     const feathers = [[-2.15, 52], [-1.95, 58], [-1.75, 60], [-1.55, 56], [-1.35, 48], [-1.15, 38]];
     feathers.forEach(([a, len], i) => {
       x.save(); x.translate(ox, oy); x.rotate(a); x.scale(scale, scale);
-      shape(() => x.ellipse(len / 2, 0, len / 2, 7.5 - i * 0.4, 0, 0, Math.PI * 2), lin(0, 0, len, 0, [[0, tint[0]], [1, tint[1]]]), ink, 1.6);
+      shape(() => x.ellipse(len / 2, 0, len / 2, 7.5 - i * 0.4, 0, 0, Math.PI * 2), lin(0, 0, len, 0, [[0, tint[0]], [1, tint[1]]]), "#9fb2cf", 1.4);
       x.restore();
     });
     x.save(); x.translate(ox, oy); x.scale(scale, scale);
-    shape(() => { x.moveTo(-6, 4); x.quadraticCurveTo(-26, -20, -18, -40); x.quadraticCurveTo(4, -24, 8, 2); x.closePath(); }, lin(0, -40, 0, 4, [[0, tint[0]], [1, "#ffffff"]]), ink, 1.6);
+    shape(() => { x.moveTo(-6, 4); x.quadraticCurveTo(-26, -20, -18, -40); x.quadraticCurveTo(4, -24, 8, 2); x.closePath(); }, lin(0, -40, 0, 4, [[0, tint[0]], [1, "#ffffff"]]));
     x.restore();
   };
   wing(58, 58, 0.85, ["#b9cbe6", "#dfe9f7"]);
@@ -507,13 +508,35 @@ function makePegasusArt() {
   // near wing, raised high above the back
   wing(66, 60, 1, ["#cfdcf0", "#ffffff"]);
 
+  // shoulder: blends the near wing into the body
+  shape(() => x.ellipse(70, 64, 9, 7, 0, 0, Math.PI * 2), "#f4f7fc");
+  // a soft line where the near legs meet the belly
+  x.strokeStyle = "#c9d6e8"; x.lineWidth = 1.4; x.beginPath(); x.moveTo(46, 82); x.quadraticCurveTo(62, 88, 86, 82); x.stroke();
+
   // a little golden star on the chest
   x.save(); x.translate(92, 64); x.fillStyle = "#ffd36b"; x.strokeStyle = "#c97f12"; x.lineWidth = 1;
   x.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 2.2 : 5, a = -Math.PI / 2 + i * Math.PI / 5; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fill(); x.stroke(); x.restore();
-  return c;
+
+  // 2) one dark outline around the whole silhouette, so it reads as one creature
+  const o = document.createElement("canvas"); o.width = 128; o.height = 128;
+  const ox = o.getContext("2d");
+  for (let a = 0; a < 16; a++) ox.drawImage(c, Math.cos(a * Math.PI / 8) * 3.5, Math.sin(a * Math.PI / 8) * 3.5);
+  ox.globalCompositeOperation = "source-in"; ox.fillStyle = ink; ox.fillRect(0, 0, 128, 128);
+  ox.globalCompositeOperation = "source-over"; ox.drawImage(c, 0, 0);
+
+  // 3) shrink to 48 x 48 so it is gently pixelated, like the other towers
+  const p = document.createElement("canvas"); p.width = 48; p.height = 48;
+  const px = p.getContext("2d"); px.imageSmoothingEnabled = true; px.imageSmoothingQuality = "high";
+  px.drawImage(o, 0, 0, 48, 48);
+  const d = px.getImageData(0, 0, 48, 48);
+  for (let i = 3; i < d.data.length; i += 4) d.data[i] = d.data[i] > 110 ? 255 : 0;   // crisp pixel edges
+  px.putImageData(d, 0, 0);
+  px.fillStyle = ink; px.fillRect(39, 13, 2, 2);          // a clear eye
+  px.fillStyle = "#ffffff"; px.fillRect(39, 13, 1, 1);
+  return p;
 }
 SPR.pegasus = makePegasusArt();
-const SMOOTH_SPRITES = new Set(["pegasus"]);   // drawn with smooth curves, so they are scaled smoothly (not pixelated)
+const SMOOTH_SPRITES = new Set([]);   // add a tower name here to draw it smoothly instead of pixelated
 const FROG_FACE = { k: "#16191d", w: "#ffffff", R: "#ff8fa8" };
 SPR.water = makeSprite(ART.water, false, { ...FROG_FACE, b: "#3d8fe0", B: "#1f5fa8", c: "#bfe6ff", h: "#7cc0ff", S: "#2a6fbf" });          // 32 x 32 frog
 SPR.water_swamp = makeSprite(ART.water, false, { ...FROG_FACE, b: "#8a5a2a", B: "#5a3a1a", c: "#e0c08a", h: "#b07a40", S: "#4e2d14" });
