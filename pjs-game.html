@@ -375,7 +375,7 @@ const ART = {
   water:   ["................","................","................","....kk....kk....","...kwwk..kwwk...","...kwkk..kkwk...","..kbbbbbbbbbbk..",".kbbbbbbbbbbbbk.",".kbccccccccccbk.",".kbbkkkkkkkkbbk.","..kbbbbbbbbbbk..","..kbBbbbbbbBbk..",".kbBBkbbbbkBBbk.",".kkkk.kkkk.kkkk.","................","................"],
   plant:   ["....kkkkkkkk....","...kLlhlLlhlk...","..kLlLllhlLlLk..","..kkkknnnnkkkk..","....knfnnfnk....","..kkknNnnNnkkk..",".kLnnnkkkknnnLk.","kLnmnnnnnnnnmnLk","knmnnnNnnNnnnmnk","knnnkknnnnkknnnk","knnk.knNNnk.knnk","kNmNk.knnk.kNmNk","kNNNk.knnk.kNNNk",".kkk.knnnnk.kkk.","....kNNkkNNk....","....kkkk.kkk...."],
   air:     ["................","...kk......kk...","...kmk....kmk...","...kmmkkkkmmk...","..kmmmmmmmmmmk..","..kmeekmmkeemk..","..kmeykmmkyemk..","..kmeekookeemk..","..kmmmmkkmmmmk..",".kmmeeeeeeeemmk.",".kmeeeeeeeeeemk.",".kmmeeeeeeeemmk.","..kmmeeeeeemmk..","...kkmmmmmmkk...","....kokk.kok....","................"],
-  wizard:  [".......kk.......","......kLLk......",".....kLLyLk.....","....kLLLLLLk....","...kkkkkkkkkk...",".....keeeek..kc.",".....kekekk..kck",".....keeeek..kn.","....kxxxxxxk.kn.","...kLxxxxxxLkkn.","...kLLxxxxLLLkn.","...kLLLLLLLLk.n.","..kLLLLyLLLLLkn.","..kLLLLLLLLLLkn.","..kkkkkkkkkkkk..","................"],
+  wizard:  ["..............kPPPkk............",".............kppPPPPk...........",".............kppPPkkPk...uu.....","............kpppPPk.k...UUuu....","............kpppPyPk...uUuuuu...","...........kppyPPPPk...uuuuuu...","...........kpppPPPPPk...uuuu....","..........kpyppPPPPPk...kuuk....",".......kkkkffffffffffkkkknNk....","......kPPPpppppPPPPPPPPPknNk....",".......kkkkPPPPPPPPPkkkkknNk....","...........kekeekeek....knNk....","...........keeeeeReok...knNk....","..........kwwwwewwwwk...knNk....",".........kpwwwwwwgwwPk..knNk....",".........kppwgwwwwwPPk..knNk....",".........kppwwwwgwwPPPkkknNk....","........kpppwwwwwwwPPPPPPnNk....","........kppppwgwwwPPPPPeenNk....","........kppppwwwwwPPPPPPenNk....","........kyyyyywgwyPPPPPPPnNk....",".......kppppppwwwPPPPPkkPnNk....",".......kppppppPwPPPPPPk.knNk....",".......kppppppPfPPPyPPPkknNk....",".......kpyppppPfPPPPPPPkknNk....","......kpppppppPfPPPPPPPkknNk....","......kppppppPPfPPPPPPPkknNk....","......kpppppyPPfPPPPyPPkknNk....","......kppppppPPfPPPPPPPPknNk....",".....kffffffffffffffffffknNk....",".....kpppppppPPfPPPPPPPPknNk....","......kkkNNNkkkkkkNNNkkkknNk...."],
   healer:  [".................kkwk.k...k.kwkk","................kwkfkkwk.kwkkfkw",".................kffkfk...kfkffk",".................kkfkfk...kfkfkk","................kwkkyfk...kfykkw",".................kfffyk...kyfffk","..................kkmkyk.kykkkk.","...................kmekykyk.....","....................kmmmmmmk....",".....................kmwkmmmkk..","....................kmmmmmmmmkk.","....................kmmmmmmmmNk.","...................kmmmmmmmmmk..","..................kmmmmmmekkk...","..................kmmmmmeek.....",".....k....kkkkkkkkmmmmmeek......","....kekkkkMMMMMMMmmmmmmek.......","...keekmMMmmmmmmmmmmmmeek.......","...kekmmmmmmmmmmmmmmmmek........","....kmmmmmmmmmmmmmmmmmmk........","....kmmmmmmmmmmmmmmmmmmk........","....kmmmmmmmmmmmmmmmmmmk........",".....kmmmmmmmmmmmmmmmmk.........","......knneeeeeeeeeennkk.........",".......kmnnmnnnnnnmnkmnk........",".......kmnkmnkkkkkmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kmnkmnk...kmnkmnk........",".......kNNkNNk...kNNkNNk........"],
   base:    [".....kkkkkk.....","...kkllllllkk...","..klllLlllLllk..",".kllLllllllllLk.",".klllllllLllllk.","..kkknnnnnnkkk..","...knmmmmmmnk...","...knmkkkkmnk...","...knmkeekmnk...","...knmkeekmnk...","...knnnnnnnnk...","......knnk......","......knnk......",".....knnnnk.....","....knnnnnnk....","....kkkkkkkk...."],
   gate:    ["..kk........kk..","..kGk......kGk..","..kGk......kGk..",".kkkkkkkkkkkkkk.",".kggggggggggggk.",".kgkkkkkkkkkkgk.",".kgkGGGGGGGGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGkkkkkkGkgk.",".kgkGGGGGGGGkgk.",".kgkkkkkkkkkkgk.",".kggoggggggoggk.",".kkkkkkkkkkkkkk.","................"],
@@ -405,6 +405,7 @@ const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
 const DRAGON_COLORS = { W: "#c2362e", M: "#ff7a5c", y: "#f2b23a" };
 SPR.fire = makeSprite(ART.fire, false, DRAGON_COLORS);   // 32 x 32 dragon
+SPR.wizard = makeSprite(ART.wizard, false, { P: "#4b2f9e", p: "#6d4fd0", y: "#f2c230", e: "#f1c9a0", R: "#e58a8a", o: "#d9a074", w: "#f4f4f4", g: "#c9ced6", n: "#8a5a2c", N: "#4e2d14", u: "#4fd1e8", U: "#e0fbff" });   // 32 x 32 wizard
 SPR.fire_mid = makeSprite(ART.fire_mid, false, DRAGON_COLORS);    // wing level (for flapping)
 SPR.fire_down = makeSprite(ART.fire_down, false, DRAGON_COLORS);  // wing down (for flapping)
 SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a5a2c", N: "#3a2410", e: "#f6ead2", y: "#ffb347" });
@@ -1671,7 +1672,7 @@ function draw() {
   for (const t of G.towers) {
     const cx = t.x * T + 16, by = t.y * T + 30;
     // The detailed 32 x 32 towers (Healer Deer, Fire Dragon) are drawn bigger so their details show.
-    const scale = t.kind === "healer" ? [1.0, 1.06, 1.12, 1.2][t.level] : t.kind === "fire" ? [0.95, 1.03, 1.11, 1.2][t.level] : [0.72, 0.84, 0.96, 1.1][t.level];
+    const scale = t.kind === "healer" ? [1.0, 1.06, 1.12, 1.2][t.level] : (t.kind === "fire" || t.kind === "wizard") ? [0.95, 1.03, 1.11, 1.2][t.level] : [0.72, 0.84, 0.96, 1.1][t.level];
     const sz = 32 * scale, pop = Math.max(0, 1 - (G.time - t.born) * 5);
     if (t.level >= 3 && t.kind !== "healer") {
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + t.x);
@@ -1714,6 +1715,14 @@ function draw() {
       g2.addColorStop(0, `rgba(255,240,170,${0.6 + 0.25 * pulse})`); g2.addColorStop(0.45, `rgba(255,214,107,${0.35 + 0.2 * pulse})`); g2.addColorStop(1, "rgba(255,200,80,0)");
       x.fillStyle = g2; x.beginPath(); x.arc(ax, ay, rad, 0, Math.PI * 2); x.fill();
       if (!G.paused && Math.random() < 0.08) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * s2 * 0.6, y: ay, vx: (Math.random() - 0.5) * 10, vy: -25 - Math.random() * 20, t: 0, life: 0.9, col: Math.random() < 0.5 ? "#fff6c9" : "#ffd36b" });
+    }
+    if (t.kind === "wizard") {
+      // The Wizard's crystal orb glows and pulses.
+      const ox = cx + s2 * 0.3, oy = by - s2 * 0.86 - rc, pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + t.x);
+      const go = x.createRadialGradient(ox, oy, 1, ox, oy, s2 * 0.42);
+      go.addColorStop(0, `rgba(200,250,255,${0.55 + 0.3 * pulse})`); go.addColorStop(0.4, `rgba(100,200,255,${0.25 + 0.15 * pulse})`); go.addColorStop(1, "rgba(120,160,255,0)");
+      x.fillStyle = go; x.beginPath(); x.arc(ox, oy, s2 * 0.42, 0, Math.PI * 2); x.fill();
+      if (!G.paused && Math.random() < 0.06) G.particles.push({ kind: "spark", x: ox, y: oy, vx: (Math.random() - 0.5) * 30, vy: -20 - Math.random() * 15, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#c8f4ff" : "#c8a2ff" });
     }
     let img = towerSprite(t.kind);
     if (t.kind === "fire" && t.level >= 3) img = [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid][Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
