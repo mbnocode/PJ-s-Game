@@ -166,6 +166,8 @@ const SETTINGS = {
     // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds. (Shows up on The Beach.)
     repair:   { name: "Repair Bot", health: 60, speed: 2.0, leaves: 12, points: 35, healRadius: 1.5, healAmount: 15, healEvery: 3 },
     // Coming soon (on the Enemies page, but not in any waves yet):
+    // Sand Golem (a Boss): every sandstormEvery seconds, towers within sandstormRadius squares can't attack for sandstormSeconds.
+    sandboss: { name: "Sand Golem", health: 1600, speed: 0.8, leaves: 150, points: 500, baseHit: 40, sandstormEvery: 6, sandstormRadius: 2, sandstormSeconds: 2 },
     // Sky Drone flies straight over the grass. baseHit = how hard it hits your Base.
     drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 15 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
