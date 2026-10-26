@@ -11,6 +11,7 @@
    ===================================================================== */
 const SETTINGS = {
   baseHealth: 100,                // how much health your Base starts with
+  minHealthTimes: 0.5,            // the score is multiplied by your Base health (30 health = x0.30), but never by less than this
   factorySquares: 100,            // how many squares of land the Robots can take over
   robotHitRatio: 0.1,             // a Robot that reaches the Base hits it for this much of the health it has left (0.1 = 10%)
   maxHitPerRobot: 40,             // no single Robot can hit the Base harder than this
