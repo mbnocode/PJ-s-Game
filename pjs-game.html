@@ -90,15 +90,23 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .card:hover { border-color: var(--moss); background: var(--panel); }
 .card .k { font-family: var(--display); font-size: 22px; }
 .card .s { color: var(--muted); font-size: 15px; }
-#slot-scene { width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; grid-area: scene; }
+/* the meadow battle fills the whole save slot screen, behind the title and the slots */
+#slot-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; image-rendering: pixelated; z-index: 0; pointer-events: none; }
+#s-slots { position: relative; }
+#s-slots > *:not(.slot-layout), .slot-layout > *:not(#slot-scene), .slot-layout #slot-cards > * { position: relative; z-index: 1; }
+#s-slots h2 { text-shadow: 0 3px 0 #16191d, 0 0 14px rgba(0,0,0,0.8); }
+#s-slots #b-slots-back { background: rgba(20,32,26,0.85); padding: 6px 14px; border-radius: 6px; }
+.slot-layout .card { background: rgba(20, 32, 26, 0.88); backdrop-filter: blur(2px); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+.slot-layout .erase { background: rgba(20,32,26,0.85); border-radius: 4px; padding: 2px 8px; align-self: flex-start; }
 /* save slots around the battle scene: Slot 1 on the left, Slot 2 on the right, Slot 3 underneath */
-.slot-layout { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 680px) minmax(150px, 230px); grid-template-areas: "s1 scene s2" ". s3 ."; gap: 14px; align-items: center; width: min(1200px, 100%); }
+.slot-layout { display: grid; grid-template-columns: minmax(170px, 250px) minmax(120px, 1fr) minmax(170px, 250px); grid-template-areas: "s1 . s2" ". s3 ."; gap: 18px; row-gap: clamp(96px, 18vh, 160px); align-items: center; width: min(1200px, 100%); }   /* the road runs through the gap */
 .slot-layout #slot-cards { display: contents; }
 .slot-layout #slot-cards > div { max-width: none !important; width: 100%; }
 .slot-layout #slot-cards > :nth-child(1) { grid-area: s1; }
 .slot-layout #slot-cards > :nth-child(2) { grid-area: s2; }
 .slot-layout #slot-cards > :nth-child(3) { grid-area: s3; justify-self: center; width: min(340px, 100%); }
-@media (max-width: 760px) { .slot-layout { grid-template-columns: 1fr; grid-template-areas: "scene" "s1" "s2" "s3"; } .slot-layout #slot-cards > :nth-child(3) { width: 100%; } }
+.slot-layout { flex: none; }
+@media (max-width: 760px) { .slot-layout { grid-template-columns: 1fr; grid-template-areas: "s1" "s2" "s3"; row-gap: 14px; } .slot-layout #slot-cards > :nth-child(3) { width: 100%; margin-top: 84px; } }   /* phones: the road runs above Slot 3 */
 #level-cards { max-width: 1300px; }
 #level-cards .card { flex: 1 1 190px; max-width: 238px; padding: 14px; }
 #level-cards .card .k { font-size: 20px; }
@@ -987,6 +995,7 @@ const vs = document.createElement("span"); vs.className = "vs"; vs.textContent =
 $("lineup").appendChild(spriteCanvas("clanker"));
 
 $("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); startSlotScene(); };
+addEventListener("resize", () => { if (slotScene && $("s-slots")) $("slot-scene").dataset.r = Date.now(); });
 $("b-slots-back").onclick = () => show("s-title");
 $("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); startSlotScene(); };
 
@@ -994,25 +1003,52 @@ $("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); startSlotSc
 let slotScene = null;
 function startSlotScene() {
   if (slotScene) return;
-  const cv = $("slot-scene"), x = cv.getContext("2d"), TS = 32, W = cv.width, H = cv.height, PY = 2.5 * TS;
-  // the ground: meadow grass, a dirt road through the middle, a few trees
-  const ground = document.createElement("canvas"); ground.width = W; ground.height = H;
-  const gx = ground.getContext("2d"); gx.imageSmoothingEnabled = false;
-  for (let j = 0; j < 5; j++) for (let i = 0; i < 15; i++) gx.drawImage(j === 2 ? DIRT[(i * 3 + j) % DIRT.length] : GRASS[(i * 7 + j * 5) % GRASS.length], i * TS, j * TS, TS, TS);
-  gx.fillStyle = "#3b7a2e"; gx.fillRect(0, 2 * TS - 2, W, 2); gx.fillRect(0, 3 * TS, W, 2);
-  for (const [k, i, j] of [["tree", 0, 0], ["tree", 14, 4], ["mushroom", 1, 4], ["tallgrass", 7, 0], ["tree", 11, 4], ["mushroom", 14, 0]]) gx.drawImage(SPR[k], i * TS, j * TS, TS, TS);
-  const towers = [["fire", 3, 1], ["water", 5, 3], ["plant", 8, 1], ["fire", 10, 3], ["water", 12, 1]].map(([k, i, j]) => ({ k, x: i * TS + 16, y: j * TS + 16, cool: Math.random(), rec: 0 }));
-  const S = { robots: [], shots: [], fx: [], parts: [], spawn: 0, n: 0, last: performance.now() };
+  const cv = $("slot-scene"), x = cv.getContext("2d"), TS = 32, PX = 2;   // each game pixel is 2 screen pixels
+  const S = { robots: [], shots: [], fx: [], parts: [], spawn: 0, n: 0, last: performance.now(), size: "" };
+  let W, H, PY, ground, towers, hpTimes;
+  // Build the meadow to fit the whole screen: a road across the middle, towers along it, scenery around.
+  const layout = () => {
+    const vw = Math.max(320, innerWidth), vh = Math.max(320, innerHeight);
+    W = Math.ceil(vw / PX); H = Math.ceil(vh / PX); cv.width = W; cv.height = H; S.size = vw + "x" + vh;
+    const cols = Math.ceil(W / TS), rows = Math.ceil(H / TS);
+    // Run the road through the gap between the top slots and the bottom slot, and keep towers out from under the cards.
+    const cards = [...document.querySelectorAll("#slot-cards > div")].map((el) => el.getBoundingClientRect()).filter((r) => r.width);
+    let road = Math.floor(rows / 2);
+    if (cards.length === 3 && cards[2].top > cards[0].bottom) road = Math.max(1, Math.min(rows - 2, Math.floor(((Math.max(cards[0].bottom, cards[1].bottom) + cards[2].top) / 2) / PX / TS)));
+    const covered = (i, j) => cards.some((r) => (i + 1) * TS * PX > r.left - 8 && i * TS * PX < r.right + 8 && (j + 1) * TS * PX > r.top - 8 && j * TS * PX < r.bottom + 8);
+    PY = road * TS + TS / 2;
+    ground = document.createElement("canvas"); ground.width = W; ground.height = H;
+    const gx = ground.getContext("2d"); gx.imageSmoothingEnabled = false;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) gx.drawImage(j === road ? DIRT[(i * 3 + j) % DIRT.length] : GRASS[(i * 7 + j * 5) % GRASS.length], i * TS, j * TS, TS, TS);
+    gx.fillStyle = "#3b7a2e"; gx.fillRect(0, road * TS - 2, W, 2); gx.fillRect(0, (road + 1) * TS, W, 2);
+    const kinds = ["fire", "water", "plant"];
+    towers = [];
+    for (let n = 0, i = 3; i < cols - 1; i += 3) {
+      const j = n % 2 ? road + 1 : road - 1, alt = n % 2 ? road - 1 : road + 1;
+      const row = !covered(i, j) ? j : !covered(i, alt) ? alt : null;
+      if (row === null) continue;
+      towers.push({ k: kinds[n % 3], x: i * TS + 16, y: row * TS + 16, cool: Math.random(), rec: 0 }); n++;
+    }
+    const taken = new Set(towers.map((t) => ((t.x - 16) / TS) + "," + ((t.y - 16) / TS)));
+    let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      if (Math.abs(j - road) <= 1 && taken.has(i + "," + j)) continue;
+      if (j === road || taken.has(i + "," + j)) continue;
+      const r = R(); if (r < 0.06) gx.drawImage(SPR.tree, i * TS, j * TS, TS, TS); else if (r < 0.09) gx.drawImage(SPR.mushroom, i * TS, j * TS, TS, TS); else if (r < 0.13) gx.drawImage(SPR.tallgrass, i * TS, j * TS, TS, TS);
+    }
+    hpTimes = Math.max(1, towers.length / 5);   // more towers on a wide screen, so the robots get tougher to keep the fight going
+    S.robots = []; S.shots = []; S.fx = [];
+  };
+  layout(); setTimeout(layout, 60);
   const kinds = [["clanker", 90, 30], ["walker", 140, 34], ["scout", 80, 60], ["clanker", 90, 30], ["tank", 320, 24], ["walker", 140, 34]];   // [robot, health, speed]
   const boom = (px, py, col, n) => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 30 + Math.random() * 70; S.parts.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, t: 0, life: 0.5, col }); } };
   const hurt = (r, d) => { if (r.dead) return; r.hp -= d; r.hit = 0.1; if (r.hp <= 0) { r.dead = true; boom(r.x, r.y, "#c9ced6", 12); boom(r.x, r.y, "#ffb347", 5); S.fx.push({ k: "leaf", x: r.x, y: r.y, t: 0 }); } };
   function tick(now) {
     if ($("s-slots").hidden) { slotScene = null; return; }   // stop when the screen is closed
+    if (S.size !== Math.max(320, innerWidth) + "x" + Math.max(320, innerHeight)) layout();   // screen resized or rotated
     const dt = Math.min(0.05, (now - S.last) / 1000); S.last = now;
-    // new robots march in from the left every so often
-    if ((S.spawn -= dt) <= 0) { const [k, hp, sp] = kinds[S.n++ % kinds.length]; S.robots.push({ k, hp, max: hp, sp, x: -16, y: PY, wob: Math.random() * 6, hit: 0 }); S.spawn = 1.1 + Math.random() * 0.7; }
+    if ((S.spawn -= dt) <= 0) { const [k, hp, sp] = kinds[S.n++ % kinds.length]; S.robots.push({ k, hp: hp * hpTimes, max: hp * hpTimes, sp, x: -16, y: PY, wob: Math.random() * 6, hit: 0 }); S.spawn = 1.0 + Math.random() * 0.6; }
     for (const r of S.robots) { r.x += r.sp * dt; r.wob += dt * 8; r.hit = Math.max(0, r.hit - dt); }
-    // towers attack the robot furthest along the road within reach
     for (const t of towers) {
       t.rec = Math.max(0, t.rec - dt); if ((t.cool -= dt) > 0) continue;
       const tg = S.robots.filter((r) => !r.dead && r.x > 0 && Math.hypot(r.x - t.x, r.y - t.y) < 92).sort((a, b) => b.x - a.x)[0];
@@ -1033,7 +1069,6 @@ function startSlotScene() {
     for (const q of S.parts) { q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 160 * dt; }
     S.parts = S.parts.filter((q) => q.t < q.life);
     S.robots = S.robots.filter((r) => !r.dead && r.x < W + 20);
-    // draw
     x.imageSmoothingEnabled = false; x.drawImage(ground, 0, 0);
     for (const t of towers) { const sz = 30 * (t.k === "plant" ? 1.05 : 1); x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(t.x - 10, t.y + 12, 20, 3); x.drawImage(SPR[t.k], t.x - sz / 2, t.y - sz / 2 - 2 - t.rec * 10, sz, sz); }
     for (const f of S.fx) {
