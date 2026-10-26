@@ -107,8 +107,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .slot-layout #slot-cards > :nth-child(3) { grid-area: s3; justify-self: center; width: min(340px, 100%); }
 .slot-layout { flex: none; }
 @media (max-width: 760px) { .slot-layout { grid-template-columns: 1fr; grid-template-areas: "s1" "s2" "s3"; row-gap: 14px; } .slot-layout #slot-cards > :nth-child(3) { width: 100%; margin-top: 84px; } }   /* phones: the road runs above Slot 3 */
-#level-cards { max-width: 1300px; }
-#level-cards .card { flex: 1 1 190px; max-width: 238px; padding: 14px; }
+#level-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 300px)); justify-content: center; max-width: 1000px; }
+@media (max-width: 760px) { #level-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 440px) { #level-cards { grid-template-columns: 1fr; } }
+#level-cards .card { max-width: none; padding: 14px; }
 #level-cards .card .k { font-size: 20px; }
 .card canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; }
 .card.locked { opacity: .5; }
@@ -489,7 +491,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus"];
@@ -527,6 +529,9 @@ const ART = {
   cypress: ["................",".....kkkkkk.....","...kkvVvvVvkk...","..kvVvvvVvvvVk..",".kVvvVvvvvVvvVk.",".kvvVvvVvvvVvvk.","..kVvvvvVvvvVk..","..kqkkVvvVkkqk..","...q..knnk..q...","...q..knnk..q...","......knNk...q..",".....knnnnk.....","....knNnnNnk....","...knk.kk.knk...","...kk......kk...","................"],
   pine: [".......kk.......", "......kLLk......", ".....kLlLLk.....", "....kLlLLLLk....", "......kLLk......", ".....kLlLLLk....", "....kLlLLLLLk...", "...kLlLLLLLLLk..", ".....kLlLLLk....", "....kLlLLLLLk...", "...kLlLLLLLLLk..", "..kLlLLLLLLLLLk.", "..kkkkkknkkkkkk.", "......knNk......", ".....kkkkkk.....", "................"],
   fern: ["................", "................", "................", "......l.........", ".....lL....l....", "..l..Ll...lL..l.", "..Ll.lL.l.Ll.lL.", "...LllLlL.LlLL..", ".l..LLLlLlLL..l.", ".Ll..LLLLLLL.lL.", "..LLl.LLLLL.LL..", "....LLLLLLLLL...", "......LLLLL.....", "................", "................", "................"],
+  column: ["................", "....kkkkkkk.....", "....keeeeek.....", "....kkkkkkk.....", ".....kemek......", ".....kemek......", ".....kemek......", ".....kemekk.....", ".....kem..k.....", ".....kemek......", ".....kemek......", ".....kemek......", "....kkkkkkk.....", "...keeeeeeek....", "...kkkkkkkkk....", "................"],
+  obelisk: ["................", ".......kk.......", "......kffk......", "......kmek......", "......kemk......", ".....kemmek.....", ".....kekmek.....", ".....kemmek.....", ".....kemkek.....", ".....kemmek.....", ".....kekmek.....", ".....kemmek.....", "....kkkkkkkk....", "...keeeeeeeek...", "...kkkkkkkkkk...", "................"],
+  mummy: ["................", ".....kkkkkk.....", "....keeweeek....", "....kehkkhek....", "....keeeweek....", ".....kwekeek....", "...kkkkkkkkkk...", "..keeweeeeweek..", "..kekeweeewekk..", "..kk.keeweek.kk.", ".....kewweek....", ".....keeeeek....", ".....kek.kek....", "....keek.keek...", "....kkkk.kkkk...", "................"],
   cactus: ["................", ".......kk.......", "......kLlk......", "......kLlk..kk..", "..kk..kLlk.kLlk.", ".kLlk.kLlk.kLlk.", ".kLlk.kLlkkLLlk.", ".kLLkkkLlkLLlk..", "..kLLLLLlLLlk...", "...kkkkLlkkk....", "......kLlk......", "......kLlk......", "......kLlk......", ".....kLLllk.....", "....kkkkkkkk....", "................"],
   boulder: ["................", "................", "................", "................", ".....kkkkk......", "....kmmmmnk.....", "...kmmmnnnnk....", "..kmmmnnnnnNk...", "..kmmnnnnnNNk...", "..knnnnnNNNNk...", "...kkkkkkkkk....", "...........kkk..", "..........kwwwk.", "...........kkk..", "................", "................"],
   tumbleweed: ["................", "................", "................", "................", "......kkkk......", "....kkmjmjkk....", "...kjm.j.mjmk...", "..kmj.jmj..jk...", "..kj.mj.jmj.mk..", "..km.j.mj..jk...", "...kjmj.mjmk....", "....kkjmjkkk....", "......kkkk......", "................", "................", "................"],
@@ -703,6 +708,11 @@ function makeTile(kind) {
     for (let n = 0; n < 28; n++) px(rnd() < 0.5 ? "#468a3a" : "#33692c", rnd() * 16 | 0, rnd() * 16 | 0);
     for (let n = 0, m = rnd() * 3 | 0; n < m; n++) { const i = 1 + rnd() * 13 | 0, j = 1 + rnd() * 13 | 0, c = ["#d9822b", "#b85a1e", "#e6b030", "#8a5a2a"][rnd() * 4 | 0]; px(c, i, j); px(c, i + 1, j); px(c, i, j + 1); }
     if (rnd() < 0.2) { const i = 2 + rnd() * 10 | 0, j = 2 + rnd() * 12 | 0; x.fillStyle = "#6b4a28"; x.fillRect(i, j, 4, 1); }
+  } else if (kind === "sandstone") {
+    // golden temple sand with bits of old carved stone
+    x.fillStyle = "#e2c486"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 28; n++) px(rnd() < 0.5 ? "#ead09a" : "#d2b072", rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.09) { const i = 2 + rnd() * 9 | 0, j = 2 + rnd() * 10 | 0; x.fillStyle = "#c9a866"; x.fillRect(i, j, 5, 3); x.fillStyle = "#b8955a"; x.fillRect(i, j + 2, 5, 1); px("#8a6a3a", i + 1, j + 1); px("#8a6a3a", i + 3, j + 1); }   // a carved stone slab
   } else if (kind === "desert") {
     // warm desert sand with ripples, pebbles and little cracks
     x.fillStyle = "#e0b06a"; x.fillRect(0, 0, 16, 16);
@@ -818,13 +828,17 @@ const SWAMP_GRASS = Array.from({ length: 8 }, () => makeTile("swamp"));
 const SAND = Array.from({ length: 8 }, () => makeTile("sand"));
 const FOREST_FLOOR = Array.from({ length: 8 }, () => makeTile("forestfloor"));
 const DESERT = Array.from({ length: 8 }, () => makeTile("desert"));
+const SANDSTONE = Array.from({ length: 8 }, () => makeTile("sandstone"));
+SPR.column = makeSprite(ART.column, false, { e: "#ead09a", m: "#c9a866" });
+SPR.obelisk = makeSprite(ART.obelisk, false, { e: "#ead09a", m: "#b8955a", f: "#ffd36b" });
+SPR.papyrus = makeSprite(ART.cattail, false, { j: "#7fbf4a", L: "#4f8a2a", h: "#a8d86a" });
 SPR.cactus = makeSprite(ART.cactus, false, { l: "#7fc45a", L: "#3f8a3a" });
 SPR.boulder = makeSprite(ART.boulder, false, { m: "#c28a52", n: "#9c6a3a", N: "#6e4624" });
 SPR.tumbleweed = makeSprite(ART.tumbleweed, false, { j: "#8a5a2a", m: "#c9a060" });
 SPR.brownshroom = makeSprite(ART.mushroom, false, { r: "#9a5a2a", w: "#e8c98a" });
 SPR.dunegrass = makeSprite(ART.tallgrass, false, { h: "#e6e48a", L: "#7a9a3a" });
 // What each kind of scenery looks like in each kind of level.
-const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" } };
+const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" }, pyramid: { tree: "column", mushroom: "obelisk", tallgrass: "papyrus" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -1381,8 +1395,11 @@ function buildMap(L) {
   const scenery = {};
   for (const [list, kind] of [[lv.trees, "tree"], [lv.mushrooms, "mushroom"], [lv.tallGrass, "tallgrass"]])
     for (const [sx, sy] of lv.mirror ? [...(list || []), ...mirror(list)] : list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
+  // A big landmark (like the pyramid) covers several squares: nothing can be built there.
+  if (lv.landmark) for (let j = 0; j < lv.landmark.h; j++) for (let i = 0; i < lv.landmark.w; i++) { const cx = lv.landmark.x + i, cy = lv.landmark.y + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }
+  const quick = new Set((lv.quicksand || []).map(([qx, qy]) => qx + "," + qy));   // quicksand squares on the road
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { landmark: lv.landmark, quick, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 // Where a robot is right now (robots on a two-factory level each follow their own path).
 function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
@@ -1398,7 +1415,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
@@ -1423,7 +1440,10 @@ function paintGround(x, map, factoryCount) {
   }
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
+  for (const key of map.quick || []) drawQuicksand(x, ...key.split(",").map(Number));
+  if (map.landmark) drawPyramid(x, map.landmark, map.grassOrder.slice(0, factoryCount).some((c) => c.x >= map.landmark.x && c.x < map.landmark.x + map.landmark.w && c.y >= map.landmark.y && c.y < map.landmark.y + map.landmark.h));
   for (const key in map.scenery) {
+    if (map.scenery[key] === "landmark") continue;
     const [sx, sy] = key.split(",").map(Number);
     if (fset.has(key)) { x.globalAlpha = 0.55; x.filter = "grayscale(1)"; }
     x.drawImage(SPR[look[map.scenery[key]] || map.scenery[key]], sx * T, sy * T, T, T);
@@ -1464,7 +1484,11 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const C = desert
+  const pyramid = map.theme === "pyramid";
+  const C = pyramid
+    // an ancient paved road of worn stone slabs
+    ? { rim: hex("#b8955a"), dirt: hex("#c8b08a"), dark: hex("#b29a74"), light: hex("#d8c29c"), edge: hex("#9c8460"), stone: hex("#8a7250"), rut: hex("#a8906a"), tuft: hex("#e2c486"), tuft2: hex("#d2b072") }
+    : desert
     // a sun-baked canyon road: red-brown packed dirt with dark cracks
     ? { rim: hex("#b8834a"), dirt: hex("#b0683a"), dark: hex("#94542c"), light: hex("#c47c48"), edge: hex("#8a4c28"), stone: hex("#6e3a1c"), rut: hex("#9a5a30"), tuft: hex("#e0b06a"), tuft2: hex("#d29f5a") }
     : forest
@@ -1506,7 +1530,7 @@ function makePathLayer(map) {
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
 function makeGrandTree(theme) {
-  const beach = theme === "beach" || theme === "desert", swamp = theme === "swamp" || beach;   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
+  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach;   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
   const forest = theme === "forest";
   const leafCols = forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -1570,6 +1594,30 @@ function makeGrandTree(theme) {
   // little mushrooms at the roots
   for (const [mx, my] of [[8, 41], [32, 40]]) { x.fillStyle = "#16191d"; x.fillRect(mx - 1, my - 1, 4, 3); px(beach ? "#ff8c1a" : swamp ? "#4fd1b8" : "#e0443a", mx, my); px(beach ? "#ffd36b" : swamp ? "#c8fff4" : "#ffffff", mx + 1, my); px(beach ? "#ff8c1a" : swamp ? "#4fd1b8" : "#e0443a", mx + 2, my - 0); px("#f4e2c0", mx + 1, my + 1); }
   return c;
+}
+// The great pyramid in the middle of The Lost Pyramid level.
+function drawPyramid(x, L, gray) {
+  const X = L.x * T, Y = L.y * T, W = L.w * T, H = L.h * T, top = { x: X + W / 2, y: Y - 10 };
+  x.save(); if (gray) x.filter = "grayscale(0.85) brightness(0.8)";
+  x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.moveTo(X - 2, Y + H); x.lineTo(X + W + 14, Y + H); x.lineTo(top.x + 14, top.y + 10); x.closePath(); x.fill();   // shadow
+  x.fillStyle = "#16191d"; x.beginPath(); x.moveTo(top.x, top.y - 3); x.lineTo(X + W + 3, Y + H + 2); x.lineTo(X - 3, Y + H + 2); x.closePath(); x.fill();
+  x.fillStyle = "#e8c47a"; x.beginPath(); x.moveTo(top.x, top.y); x.lineTo(X, Y + H); x.lineTo(top.x, Y + H); x.closePath(); x.fill();        // sunny side
+  x.fillStyle = "#b8904e"; x.beginPath(); x.moveTo(top.x, top.y); x.lineTo(X + W, Y + H); x.lineTo(top.x, Y + H); x.closePath(); x.fill();    // shady side
+  x.strokeStyle = "rgba(90,60,25,0.55)"; x.lineWidth = 1;
+  for (let k = 1; k < 9; k++) { const yy = top.y + (Y + H - top.y) * k / 9, half = (W / 2) * k / 9; x.beginPath(); x.moveTo(top.x - half, yy); x.lineTo(top.x + half, yy); x.stroke(); }   // stone steps
+  x.fillStyle = "#ffd36b"; x.beginPath(); x.moveTo(top.x, top.y); x.lineTo(top.x - 9, top.y + 13); x.lineTo(top.x + 9, top.y + 13); x.closePath(); x.fill();   // golden capstone
+  x.fillStyle = "#fff3b0"; x.fillRect(top.x - 2, top.y + 4, 2, 4);
+  x.fillStyle = "#16191d"; x.fillRect(top.x - 7, Y + H - 18, 14, 18); x.fillStyle = "#3a2410"; x.fillRect(top.x - 5, Y + H - 16, 10, 16);   // entrance
+  x.fillStyle = "#ffd36b"; x.fillRect(top.x - 1, Y + H - 26, 3, 3);
+  x.restore();
+}
+// A pit of quicksand on the road: robots crossing it are slowed down.
+function drawQuicksand(x, qx, qy) {
+  const cx = qx * T + 16, cy = qy * T + 16;
+  x.fillStyle = "#8a6a3a"; x.beginPath(); x.ellipse(cx, cy, 15, 12, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#c29a58"; x.beginPath(); x.ellipse(cx, cy, 13, 10, 0, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = "#8a6a3a"; x.lineWidth = 1.5;
+  for (const r of [4, 8]) { x.beginPath(); x.ellipse(cx, cy, r * 1.2, r, 0, 0.3, Math.PI * 1.6); x.stroke(); }
 }
 function grayCopy(src) {
   const c = document.createElement("canvas"); c.width = src.width; c.height = src.height;
@@ -1686,7 +1734,7 @@ function renderPerks() {
   });
 }
 /* ---------- enemies page (per save slot) ---------- */
-const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone"];
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy"];
 const NEW_FOES = new Set([]);
 const BOSS_FOES = new Set(["boss", "sandboss"]);   // robots on the Enemies page that aren't in any waves yet
 const FOE_ABOUT = {
@@ -1697,6 +1745,7 @@ const FOE_ABOUT = {
   hider: "Turns invisible when it gets hit.",
   boss: "A giant horned war-mech with a glowing reactor core. It stomps in every few waves.",
   sandboss: "A hulking golem of scorched sandstone, with bone-white spikes, burning eyes and a crack of glowing magma down its chest. It rises out of the dunes.",
+  mummy: "An ancient robot wrapped in old bandages, with glowing green eyes. It shambles out of the Lost Pyramid.",
   splitter: "A clunky pile of scrap on legs. Destroy it and it bursts apart!",
   repair: "A little medic bot with a wrench. It keeps the robots around it patched up.",
   drone: "A flying robot with propellers. It ignores the path and flies straight for your treehouse.",
@@ -1722,6 +1771,7 @@ function renderEnemies() {
       : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp and The Beach.`
       : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Always drops a Golden Acorn! Bars are off the chart!`
       : k === "sandboss" ? `Special: every ${r.sandstormEvery} seconds it whips up a sandstorm. Towers within ${r.sandstormRadius} squares are blinded and can't attack for ${r.sandstormSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on The Desert from wave 8.`
+      : k === "mummy" ? `Special: unravels into ${r.splitInto} speedy Scouts when destroyed. Shows up on The Lost Pyramid.`
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
       : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
@@ -2204,17 +2254,18 @@ function startWave() {
   const hasGolem = G.queue.some((q) => q.type === "sandboss"), hasDrone = G.queue.some((q) => q.type === "drone");
   const hasHider = G.queue.some((q) => q.type === "hider");
   const hasTesla = G.queue.some((q) => q.type === "tesla");
-  const hasSplit = G.queue.some((q) => q.type === "splitter"), hasRepair = G.queue.some((q) => q.type === "repair");
+  const hasSplit = G.queue.some((q) => q.type === "splitter"), hasRepair = G.queue.some((q) => q.type === "repair"), hasMummy = G.queue.some((q) => q.type === "mummy");
   Sound.play(hasBoss ? "horn" : "wave");
   if (G.tutorial && G.wave <= 5) tutorialEvent("wave" + G.wave);
   else if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
   else if (hasGolem && !G.seenGolem) tip(`A Sand Golem is rising from the dunes! Its sandstorms stop towers within ${SETTINGS.robots.sandboss.sandstormRadius} squares from attacking for ${SETTINGS.robots.sandboss.sandstormSeconds} seconds. Spread your towers out!`, undefined, "Heads up");
   else if (hasDrone && !G.seenDrone) tip("Sky Drones are here! They fly straight over the sand to your treehouse. Only Owls, Dragons, the Pegasus and the Wizard's Elemental Sphere can hit them.", undefined, "Heads up");
+  else if (hasMummy && !G.seenMummy) tip("Mummy Bots are here! When you destroy one, it unravels into 2 speedy Scouts. Watch out for the quicksand: it slows robots down, so build towers next to it!", undefined, "Heads up");
   else if (hasSplit && !G.seenSplit) tip("Junk Splitters are here! When you destroy one, it breaks into 3 Mini-Clankers. Splash towers like the Crab are great against them.", undefined, "Heads up");
   else if (hasRepair && !G.seenRepair) tip("Repair Bots are here! Every few seconds they heal the robots around them. Take them out first!", undefined, "Heads up");
   else if (hasTesla && !G.seenTesla) tip(`Tesla Coils are here! Robots near a Tesla Coil move ${SETTINGS.robots.tesla.boostSpeed} times faster. Take them out first!`, undefined, "Heads up");
   else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
-  if (hasGolem) G.seenGolem = true; if (hasDrone) G.seenDrone = true; if (hasSplit) G.seenSplit = true; if (hasRepair) G.seenRepair = true; if (hasTesla) G.seenTesla = true; if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
+  if (hasMummy) G.seenMummy = true; if (hasGolem) G.seenGolem = true; if (hasDrone) G.seenDrone = true; if (hasSplit) G.seenSplit = true; if (hasRepair) G.seenRepair = true; if (hasTesla) G.seenTesla = true; if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
   sendProgress(true);
   updateHud();
 }
@@ -2272,8 +2323,8 @@ function kill(r) {
   // Junk Splitter: bursts into Mini-Clankers that keep marching from where it fell
   const sb = SETTINGS.robots[r.type];
   if (sb && sb.splitInto) {
-    for (let i = 0; i < sb.splitInto; i++) spawn({ type: "mini", d: Math.max(0, r.d - i * 9), path: r.path });
-    const q = rpos(r); burst(q.x, q.y, "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, "Split!", "#c9ced6");
+    for (let i = 0; i < sb.splitInto; i++) spawn({ type: sb.splitType || "mini", d: Math.max(0, r.d - i * 9), path: r.path });
+    const q = rpos(r); burst(q.x, q.y, r.type === "mummy" ? "#f4e2c0" : "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, r.type === "mummy" ? "Unraveled!" : "Split!", "#c9ced6");
   }
   G.leaves += r.leaves; G.killPoints += r.points;
   { const s = slot(); if (s) { s.defeated = s.defeated || {}; s.defeated[r.type] = (s.defeated[r.type] || 0) + 1; G.slotDirty = true; } }
@@ -2661,6 +2712,7 @@ function update(dt) {
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
+    if (G.map.quick && G.map.quick.size && !r.flying) { const q = rpos(r); r.sinking = G.map.quick.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sinking) sp *= 1 - (SETTINGS.quicksandSlow ?? 0.5); }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
     if (r.knock > 0) {
       const move = Math.min(r.knock, Math.max(r.knock * 7 * dt, 1.5 * T * dt));   // fast at first, then slows to a stop
@@ -2804,6 +2856,12 @@ function draw() {
     x.globalAlpha = 1;
   }
 
+  // quicksand slowly swirls
+  for (const key of G.map.quick || []) {
+    const [qx, qy] = key.split(",").map(Number), cx = qx * T + 16, cy = qy * T + 16, a = G.time * 1.5;
+    x.strokeStyle = "rgba(110,80,40,0.7)"; x.lineWidth = 1.5;
+    for (const r of [5, 9]) { x.beginPath(); x.ellipse(cx, cy, r * 1.2, r, 0, a + r, a + r + 2.4); x.stroke(); }
+  }
   // rolling waves and sparkles on the beach water
   if (G.map.theme === "beach") {
     for (let i = 0; i < 18; i++) {
@@ -2951,7 +3009,7 @@ function draw() {
     else { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4); }
     x.globalAlpha = hidden ? 0.16 + 0.08 * Math.sin(G.time * 20) : 1;
     const img = (p.dx < 0 ? SPRF : SPR)[r.type];
-    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0));
+    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0));   // robots sink a little in quicksand
     if (r.type === "clanker") x.rotate(Math.sin(r.wob * 0.5) * 0.08);
     x.drawImage(img, -sz / 2, -sz / 2, sz, sz);
     if (r.type === "sandboss" && !hidden) {

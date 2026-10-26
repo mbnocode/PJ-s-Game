@@ -11,6 +11,7 @@
    ===================================================================== */
 const SETTINGS = {
   baseHealth: 100,                // how much health your Base starts with
+  quicksandSlow: 0.5,             // robots in quicksand move this much slower (0.5 = half speed)
   minHealthTimes: 0.5,            // the score is multiplied by your Base health (30 health = x0.30), but never by less than this (even when you lose)
   factorySquares: 100,            // how many squares of land the Robots can take over
   robotHitRatio: 0.1,             // a Robot that reaches the Base hits it for this much of the health it has left (0.1 = 10%)
@@ -166,6 +167,8 @@ const SETTINGS = {
     mini:     { name: "Mini-Clanker", health: 15, speed: 3, leaves: 2, points: 5 },   // speed = squares per second
     // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds. (Shows up on The Beach.)
     repair:   { name: "Repair Bot", health: 60, speed: 2.0, leaves: 12, points: 35, healRadius: 1.5, healAmount: 15, healEvery: 3 },
+    // Mummy Bot unravels into splitInto robots of type splitType when destroyed. (Shows up on The Lost Pyramid.)
+    mummy:    { name: "Mummy Bot", health: 160, speed: 1.3, leaves: 14, points: 35, splitInto: 2, splitType: "scout" },
     // Desert robots:
     // Sand Golem (a Boss): every sandstormEvery seconds, towers within sandstormRadius squares can't attack for sandstormSeconds.
     sandboss: { name: "Sand Golem", health: 1600, speed: 0.8, leaves: 150, points: 500, baseHit: 40, isBoss: true, sandstormEvery: 6, sandstormRadius: 2, sandstormSeconds: 2 },
@@ -327,6 +330,40 @@ const SETTINGS = {
                 [[["splitter", "hider", "drone"], 18, 0.6], ["boss", 2, 4, 2500]],      // 18
                 [["sandboss", 2, 5], [["drone", "drone", "tesla"], 15, 0.6]],           // 19
                 [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
+              ] },
+    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Quicksand slows them down, and Mummy Bots unravel! Scores are worth 2x.", theme: "pyramid",
+              // 5% Golden Acorn chance per robot (after wave 5)
+              robotHealth: 1.4,      // robots have this many times their normal health (the quicksand helps you a lot)
+              scoreTimes: 2,         // your score on this level is multiplied by this
+              path: [[0, 10], [6, 10], [6, 1], [13, 1], [13, 8], [16, 8], [16, 3], [19, 3]],
+              landmark: { kind: "pyramid", x: 8, y: 4, w: 4, h: 4 },   // the big pyramid (top-left square, width, height); nothing can be built on it
+              quicksand: [[6, 6], [6, 7], [10, 1], [13, 5], [16, 6]],   // road squares with quicksand (robots move at half speed there)
+              // In the Lost Pyramid, trees are broken columns, mushrooms are little obelisks, and tall grass is papyrus reeds.
+              trees:     [[2, 3], [3, 7], [9, 9], [15, 11], [18, 9], [11, 11]],
+              mushrooms: [[1, 1], [9, 2], [18, 5], [4, 5]],
+              tallGrass: [[3, 0], [8, 11], [14, 4], [19, 11], [0, 7]],
+              // The Lost Pyramid's own 20 waves.
+              waves: [
+                [["clanker", 8, 1.1]],                                                  // 1
+                [["walker", 6, 1.1], ["scout", 4, 1.0]],                                // 2
+                [["mummy", 3, 2.0], ["clanker", 6, 0.9]],                               // 3: Mummy Bots arrive
+                [[["walker", "scout"], 10, 0.8]],                                       // 4
+                [["mummy", 4, 1.6], ["boss", 1, 0, 1000]],                              // 5
+                [["hider", 6, 1.0], ["walker", 6, 0.9]],                                // 6
+                [[["mummy", "walker"], 10, 1.0]],                                       // 7
+                [["tank", 4, 1.6], ["tesla", 2, 2.0]],                                  // 8
+                [[["mummy", "hider"], 12, 0.8]],                                        // 9
+                [[["tank", "mummy"], 10, 1.1], ["boss", 1, 0, 2200]],                   // 10
+                [["splitter", 5, 1.4], ["repair", 3, 1.6], ["walker", 8, 0.7]],         // 11
+                [[["mummy", "mummy", "tesla"], 12, 0.9]],                               // 12
+                [["drone", 6, 1.0], [["tank", "hider"], 10, 0.9]],                      // 13
+                [[["mummy", "repair", "walker"], 15, 0.7]],                             // 14
+                [["sandboss", 1, 0], [["mummy", "scout"], 12, 0.6]],                    // 15
+                [[["tank", "mummy", "tesla"], 15, 0.8]],                                // 16
+                [[["hider", "drone", "mummy"], 15, 0.7], ["boss", 1, 0, 3000]],         // 17
+                [[["splitter", "mummy", "repair"], 18, 0.6]],                           // 18
+                [["sandboss", 2, 5], [["mummy", "drone"], 14, 0.6]],                    // 19
+                [[["tank", "mummy", "repair", "tesla"], 20, 0.6], ["boss", 2, 4, 4000], ["sandboss", 1, 0]],  // 20: the big finish
               ] },
   },
 };
