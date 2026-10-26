@@ -87,7 +87,15 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .card:hover { border-color: var(--moss); background: var(--panel); }
 .card .k { font-family: var(--display); font-size: 22px; }
 .card .s { color: var(--muted); font-size: 15px; }
-#slot-scene { width: min(720px, 100%); height: auto; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; flex: none; }
+#slot-scene { width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; grid-area: scene; }
+/* save slots around the battle scene: Slot 1 on the left, Slot 2 on the right, Slot 3 underneath */
+.slot-layout { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 680px) minmax(150px, 230px); grid-template-areas: "s1 scene s2" ". s3 ."; gap: 14px; align-items: center; width: min(1200px, 100%); }
+.slot-layout #slot-cards { display: contents; }
+.slot-layout #slot-cards > div { max-width: none !important; width: 100%; }
+.slot-layout #slot-cards > :nth-child(1) { grid-area: s1; }
+.slot-layout #slot-cards > :nth-child(2) { grid-area: s2; }
+.slot-layout #slot-cards > :nth-child(3) { grid-area: s3; justify-self: center; width: min(340px, 100%); }
+@media (max-width: 760px) { .slot-layout { grid-template-columns: 1fr; grid-template-areas: "scene" "s1" "s2" "s3"; } .slot-layout #slot-cards > :nth-child(3) { width: 100%; } }
 #level-cards { max-width: 1300px; }
 #level-cards .card { flex: 1 1 190px; max-width: 238px; padding: 14px; }
 #level-cards .card .k { font-size: 20px; }
@@ -289,8 +297,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- Save slots -->
   <section class="screen menu" id="s-slots" hidden>
     <h2>Pick a save slot</h2>
-    <canvas id="slot-scene" width="480" height="160" aria-label="Dragons, frogs and tree giants fighting off robots in the meadow"></canvas>
-    <div class="cards" id="slot-cards"></div>
+    <div class="slot-layout">
+      <canvas id="slot-scene" width="480" height="160" aria-label="Dragons, frogs and tree giants fighting off robots in the meadow"></canvas>
+      <div class="cards" id="slot-cards"></div>
+    </div>
     <button class="link" id="b-slots-back">Back</button>
   </section>
 
