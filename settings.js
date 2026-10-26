@@ -165,11 +165,12 @@ const SETTINGS = {
     mini:     { name: "Mini-Clanker", health: 15, speed: 3, leaves: 2, points: 5 },   // speed = squares per second
     // Repair Bot heals robots within healRadius squares by healAmount every healEvery seconds. (Shows up on The Beach.)
     repair:   { name: "Repair Bot", health: 60, speed: 2.0, leaves: 12, points: 35, healRadius: 1.5, healAmount: 15, healEvery: 3 },
-    // Coming soon (on the Enemies page, but not in any waves yet):
+    // Desert robots:
     // Sand Golem (a Boss): every sandstormEvery seconds, towers within sandstormRadius squares can't attack for sandstormSeconds.
-    sandboss: { name: "Sand Golem", health: 1600, speed: 0.8, leaves: 150, points: 500, baseHit: 40, sandstormEvery: 6, sandstormRadius: 2, sandstormSeconds: 2 },
-    // Sky Drone flies straight over the grass. baseHit = how hard it hits your Base.
-    drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 15 },
+    sandboss: { name: "Sand Golem", health: 1600, speed: 0.8, leaves: 150, points: 500, baseHit: 40, isBoss: true, sandstormEvery: 6, sandstormRadius: 2, sandstormSeconds: 2 },
+    // Sky Drone flies straight to the treehouse instead of following the road. Only Owls, Dragons, the Pegasus and the
+    // Wizard's Elemental Sphere can hit it. baseHit = how hard it hits your Base.
+    drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 8 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
   },
 
@@ -290,7 +291,30 @@ const SETTINGS = {
               // In the Desert, trees are cacti, mushrooms are boulders, and tall grass is tumbleweeds (left half; mirrored too).
               trees:     [[2, 6], [5, 0], [7, 10], [0, 11]],
               mushrooms: [[5, 4], [2, 2]],
-              tallGrass: [[3, 8], [8, 11], [9, 1]] },
+              tallGrass: [[3, 8], [8, 11], [9, 1]],
+              // The Desert has its own 20 waves. Robots take turns coming from the left and right factories.
+              waves: [
+                [["clanker", 6, 1.4]],                                                  // 1: an easy start
+                [["clanker", 6, 1.1], ["scout", 3, 1.3]],                               // 2
+                [["walker", 5, 1.4]],                                                   // 3
+                [[["clanker", "scout"], 8, 1.1]],                                       // 4
+                [["walker", 6, 1.1], ["hider", 2, 1.6]],                                // 5
+                [["drone", 3, 2.0], ["walker", 6, 0.9]],                                // 6: Sky Drones arrive
+                [[["scout", "scout", "drone"], 9, 0.8], ["tank", 2, 2.0]],             // 7
+                [["walker", 6, 1.0], ["sandboss", 1, 0]],                               // 8: the Sand Golem rises!
+                [[["drone", "hider"], 10, 0.8], ["tank", 3, 1.6]],                      // 9
+                [["tesla", 2, 2.0], ["tank", 4, 1.4], ["boss", 1, 0, 2200]],            // 10
+                [[["drone", "drone", "scout"], 12, 0.6]],                               // 11
+                [["sandboss", 2, 6], ["walker", 8, 0.8]],                               // 12: one Golem from each side
+                [[["splitter", "drone"], 10, 1.0], ["repair", 3, 1.5]],                 // 13
+                [[["tank", "drone", "hider"], 15, 0.8]],                                // 14
+                [["sandboss", 1, 0], ["boss", 1, 0, 3000], [["drone", "scout"], 10, 0.6]],  // 15
+                [[["tank", "repair", "drone"], 15, 0.9]],                               // 16
+                [[["tesla", "drone"], 12, 0.8], ["sandboss", 1, 0]],                    // 17
+                [[["splitter", "hider", "drone"], 18, 0.6], ["boss", 2, 4, 2500]],      // 18
+                [["sandboss", 2, 5], [["drone", "drone", "tesla"], 15, 0.6]],           // 19
+                [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
+              ] },
   },
 };
 /* ===================== end of PJ's settings ===================== */

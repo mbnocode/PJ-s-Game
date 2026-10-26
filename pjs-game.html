@@ -1190,6 +1190,11 @@ function buildMap(L) {
     for (let i = 0; i < pts.length - 1; i++) { const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y); segs.push({ a: pts[i], b: pts[i + 1], start: total, len }); total += len; }
     return { segs, total };
   });
+  // Flying robots skip the road and fly straight from their factory to the treehouse.
+  const flights = gates.map((g0) => {
+    const a = { x: (g0.gx + (g0.flip ? 1 : -1) + 0.5) * T, y: (g0.gy + 0.5) * T }, b = { x: (bLeft + 1) * T, y: (bTop + 1) * T };
+    const len = Math.hypot(b.x - a.x, b.y - a.y); return { segs: [{ a, b, start: 0, len }], total: len };
+  });
   // Factory spreads from the Robots' side: the grass squares closest to a factory go first.
   const grass = [];
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass")
@@ -1202,10 +1207,15 @@ function buildMap(L) {
   for (const [list, kind] of [[lv.trees, "tree"], [lv.mushrooms, "mushroom"], [lv.tallGrass, "tallgrass"]])
     for (const [sx, sy] of lv.mirror ? [...(list || []), ...mirror(list)] : list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { cells, segs: paths[0].segs, total: paths[0].total, paths, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 // Where a robot is right now (robots on a two-factory level each follow their own path).
-function rpos(r) { return posAt(r.path || G.map, r.d); }
+function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
+// Bosses (and boss robots like the Sand Golem) are heavy: Owls can't push them, vines hold them only briefly.
+function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
+// Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus (and the Wizard's Elemental Sphere).
+const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard"]);
+const canHit = (kind, r) => !r.flying || AIR_HUNTERS.has(kind);
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
   for (const s of map.segs) if (d <= s.start + s.len) { const f = (d - s.start) / s.len; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
@@ -1502,7 +1512,7 @@ function renderPerks() {
 }
 /* ---------- enemies page (per save slot) ---------- */
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone"];
-const NEW_FOES = new Set(["drone", "sandboss"]);
+const NEW_FOES = new Set([]);
 const BOSS_FOES = new Set(["boss", "sandboss"]);   // robots on the Enemies page that aren't in any waves yet
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
@@ -1536,10 +1546,10 @@ function renderEnemies() {
     const power = k === "hider" ? `Special: hides for ${r.hideSeconds} seconds after a hit. Only towers with Vision (like the Owl) can hit it while hidden.`
       : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp and The Beach.`
       : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Bars are off the chart!`
-      : k === "sandboss" ? `Special: every ${r.sandstormEvery} seconds it whips up a sandstorm. Towers within ${r.sandstormRadius} squares are blinded and can't attack for ${r.sandstormSeconds} seconds. Too heavy for Owls to push back.`
+      : k === "sandboss" ? `Special: every ${r.sandstormEvery} seconds it whips up a sandstorm. Towers within ${r.sandstormRadius} squares are blinded and can't attack for ${r.sandstormSeconds} seconds. Too heavy for Owls to push back. Shows up on The Desert from wave 8.`
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
-      : k === "drone" ? "Special: flies over the grass instead of following the path. Only flying-hunters like the Owl, the Pegasus and the Wizard's Elemental Sphere can hit it."
+      : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.filter((o) => !BOSS_FOES.has(o)).map(f));   // the Boss would squash everyone else's bars
@@ -1819,17 +1829,20 @@ function startWave() {
     t += 1.5;
   }
   const hasBoss = G.queue.some((q) => q.type === "boss");
+  const hasGolem = G.queue.some((q) => q.type === "sandboss"), hasDrone = G.queue.some((q) => q.type === "drone");
   const hasHider = G.queue.some((q) => q.type === "hider");
   const hasTesla = G.queue.some((q) => q.type === "tesla");
   const hasSplit = G.queue.some((q) => q.type === "splitter"), hasRepair = G.queue.some((q) => q.type === "repair");
   Sound.play(hasBoss ? "horn" : "wave");
   if (G.tutorial && G.wave <= 5) tutorialEvent("wave" + G.wave);
   else if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
+  else if (hasGolem && !G.seenGolem) tip(`A Sand Golem is rising from the dunes! Its sandstorms stop towers within ${SETTINGS.robots.sandboss.sandstormRadius} squares from attacking for ${SETTINGS.robots.sandboss.sandstormSeconds} seconds. Spread your towers out!`, undefined, "Heads up");
+  else if (hasDrone && !G.seenDrone) tip("Sky Drones are here! They fly straight over the sand to your treehouse. Only Owls, Dragons, the Pegasus and the Wizard's Elemental Sphere can hit them.", undefined, "Heads up");
   else if (hasSplit && !G.seenSplit) tip("Junk Splitters are here! When you destroy one, it breaks into 3 Mini-Clankers. Splash towers like the Crab are great against them.", undefined, "Heads up");
   else if (hasRepair && !G.seenRepair) tip("Repair Bots are here! Every few seconds they heal the robots around them. Take them out first!", undefined, "Heads up");
   else if (hasTesla && !G.seenTesla) tip(`Tesla Coils are here! Robots near a Tesla Coil move ${SETTINGS.robots.tesla.boostSpeed} times faster. Take them out first!`, undefined, "Heads up");
   else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
-  if (hasSplit) G.seenSplit = true; if (hasRepair) G.seenRepair = true; if (hasTesla) G.seenTesla = true; if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
+  if (hasGolem) G.seenGolem = true; if (hasDrone) G.seenDrone = true; if (hasSplit) G.seenSplit = true; if (hasRepair) G.seenRepair = true; if (hasTesla) G.seenTesla = true; if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
   sendProgress(true);
   updateHud();
 }
@@ -1842,7 +1855,8 @@ function spawn(q) {
   const hp = (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * (A ? A.health : 1);
   G.robots.push({
     type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: q.d || 0,
-    path: q.path || G.map.paths[(G.spawnN = (G.spawnN || 0) + 1) % G.map.paths.length],   // two factories take turns
+    flying: !!base.flying,
+    path: q.path || (base.flying ? G.map.flights : G.map.paths)[(G.spawnN = (G.spawnN || 0) + 1) % G.map.paths.length],   // two factories take turns
     leaves: Math.round(base.leaves * (A ? A.leaves : 1)), points: Math.round(base.points * (A ? A.points : 1)),
     slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0,
   });
@@ -1895,7 +1909,7 @@ function kill(r) {
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
   // Every Boss always drops a Golden Acorn (on any level, any wave).
-  const bossDrop = r.type === "boss" && SETTINGS.bossDropsAcorn;
+  const bossDrop = isHeavy(r) && SETTINGS.bossDropsAcorn;
   if (bossDrop || (chance && Math.random() < chance)) {
     const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + 1;
     floatText(p.x, p.y - 18, "+1 Golden Acorn!", "#ffd34d", 1.6);
@@ -1904,15 +1918,15 @@ function kill(r) {
     const el = $("hud-acorns"); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
   }
   Sound.play("pop"); Sound.play("swish");
-  burst(p.x, p.y, "#c9ced6", r.type === "boss" ? 40 : 10);
-  burst(p.x, p.y, "#ffb347", r.type === "boss" ? 20 : 4);
-  const n = r.type === "boss" ? 8 : 1 + (r.leaves > 10 ? 1 : 0);
+  burst(p.x, p.y, "#c9ced6", isHeavy(r) ? 40 : 10);
+  burst(p.x, p.y, "#ffb347", isHeavy(r) ? 20 : 4);
+  const n = isHeavy(r) ? 8 : 1 + (r.leaves > 10 ? 1 : 0);
   for (let i = 0; i < n; i++) G.particles.push({ kind: "leaf", x: p.x + (Math.random() - 0.5) * 16, y: p.y, t: 0, life: 0.55 + Math.random() * 0.2, sx: p.x, sy: p.y });
   updateHud();
 }
 function reachBase(r) {
   r.dead = true;
-  const dmg = Math.min(SETTINGS.maxHitPerRobot, Math.max(1, Math.ceil(r.hp * SETTINGS.robotHitRatio)));
+  const dmg = (SETTINGS.robots[r.type] || {}).baseHit || Math.min(SETTINGS.maxHitPerRobot, Math.max(1, Math.ceil(r.hp * SETTINGS.robotHitRatio)));
   G.health = Math.max(0, G.health - dmg);
   G.shake = 0.3; Sound.play("hit");
   floatText(G.map.base.x * T + 32, G.map.base.y * T - 8, "-" + dmg, "#ff6a5a");
@@ -1923,7 +1937,7 @@ function findTarget(t, s) {
   const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
   let best = null, bestD = -1;
   for (const r of G.robots) {
-    if (r.dead || (r.hideT > 0 && !s.vision)) continue;
+    if (r.dead || (r.hideT > 0 && !s.vision) || !canHit(t.kind, r)) continue;
     const p = rpos(r);
     if (Math.hypot(p.x - cx, p.y - cy) <= R && r.d > bestD) { best = r; bestD = r.d; }
   }
@@ -1936,25 +1950,25 @@ function fire(t, s, target) {
     const grabs = [target];
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
-      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
+      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
         .sort((a, b) => b.d - a.d).slice(0, s.targets - 1).forEach((r) => grabs.push(r));
     }
     for (const r of grabs) {
       const p = rpos(r);
       // A thick vine bursts out of the ground at the giant's feet, snakes over and wraps the robot.
-      const hold = r.type === "boss" ? 0.2 : (s.holdSeconds || 0);
+      const hold = isHeavy(r) ? 0.2 : (s.holdSeconds || 0);
       const dur = Math.max(0.5, Math.min(1.6, hold + 0.3));
       G.fx.push({ kind: "vine", robot: r, x1: t.x * T + 16 + (p.x < t.x * T + 16 ? -12 : 12), y1: t.y * T + 29, x2: p.x, y2: p.y + 6, t: dur, dur, seed: Math.random() * 6 });
       if (s.splash) {
         for (const o of G.robots) {
-          if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
+          if (o === r || o.dead || (o.hideT > 0 && !s.vision) || o.flying) continue;
           const q = rpos(o);
           if (Math.hypot(q.x - p.x, q.y - p.y) <= s.splash * T) hurt(o, s.damage * 0.5, s.vision);
         }
         G.fx.push({ kind: "splash", x: p.x, y: p.y, r: s.splash * T, t: 0.3, col: "150,110,60" });
       }
       hurt(r, s.damage, s.vision);
-      if (!r.dead) r.rootT = r.type === "boss" ? 0.2 : s.holdSeconds;
+      if (!r.dead) r.rootT = isHeavy(r) ? 0.2 : s.holdSeconds;
     }
     if (s.splash) G.shake = Math.max(G.shake, 0.08);
     Sound.play("plant");
@@ -1967,7 +1981,7 @@ function fire(t, s, target) {
     // Twin Gusts / Feather Storm: extra gusts at the next robots in range.
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
-      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
+      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
         .sort((a, b) => b.d - a.d).slice(0, s.targets - 1)
         .forEach((r) => G.shots.push({ kind: t.kind, x: sx, y: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
     }
@@ -1981,11 +1995,11 @@ function landShot(sh) {
   if (s.splash) {
     const c = rpos(r), R = s.splash * T;
     for (const o of G.robots) {
-      if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
+      if (o === r || o.dead || (o.hideT > 0 && !s.vision) || !canHit(sh.kind, o)) continue;
       const q = rpos(o);
       if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
         if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
-        if (!o.dead && sh.kind === "air" && o.type !== "boss") o.knock = (o.knock || 0) + s.pushBack * T * 0.6; }
+        if (!o.dead && sh.kind === "air" && !isHeavy(o)) o.knock = (o.knock || 0) + s.pushBack * T * 0.6; }
     }
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : sh.kind === "crab" ? "255,150,110" : "120,200,255" });
     if (sh.kind === "crab") { burst(c.x, c.y, "#ffb08a", 10); burst(c.x, c.y, "#e8f6ff", 8); G.shake = Math.max(G.shake, 0.05); }
@@ -1994,7 +2008,7 @@ function landShot(sh) {
   if (r.dead) return;
   if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
-  if (sh.kind === "air" && r.type !== "boss") r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
+  if (sh.kind === "air" && !isHeavy(r)) r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
   const p = rpos(r);
   burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : sh.kind === "healer" ? "#ffd36b" : "#ffffff", sh.kind === "healer" ? 9 : 5);
 }
@@ -2245,6 +2259,19 @@ function update(dt) {
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: RB.healRadius * T, t: 0.3, col: "124,240,122" });
     if (healed) floatText(c.x, c.y - 20, "Repair!", "#7cf07a");
   }
+  // Sand Golems whip up sandstorms that stop nearby towers from attacking for a moment
+  const SG = SETTINGS.robots.sandboss;
+  for (const sg of G.robots) {
+    if (sg.type !== "sandboss" || sg.dead) continue;
+    sg.stormT = (sg.stormT ?? SG.sandstormEvery * 0.5) - dt;
+    if (sg.stormT > 0) continue;
+    sg.stormT = SG.sandstormEvery;
+    const c = rpos(sg), R = SG.sandstormRadius * T;
+    for (const t of G.towers) if (Math.hypot(t.x * T + 16 - c.x, t.y * T + 16 - c.y) <= R) t.stunT = SG.sandstormSeconds;
+    G.fx.push({ kind: "sandstorm", x: c.x, y: c.y, r: R, t: 0.9 });
+    for (let i = 0; i < 30; i++) { const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 90; G.particles.push({ kind: "spark", x: c.x, y: c.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#e0b06a" : "#c28a52" }); }
+    floatText(c.x, c.y - 30, "Sandstorm!", "#f2c27a"); G.shake = Math.max(G.shake, 0.15); Sound.play("smash");
+  }
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
   const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => rpos(r));
   for (const r of G.robots) {
@@ -2269,7 +2296,7 @@ function update(dt) {
     const wall = (G.walls || []).find((w) => w.hp > 0 && (w.path || G.map.paths[0]) === (r.path || G.map.paths[0]) && r.d < w.d && r.d + sp * T * dt >= w.d - 14 - (w.lineup || 0) * 16);
     if (wall) {
       r.d = Math.max(r.d, wall.d - 14 - (wall.lineup || 0) * 16); sp = 0; const spot = wall.lineup || 0; wall.lineup = spot + 1;   // robots line up behind each other
-      if (spot < 3) wall.hp -= SETTINGS.towers.squirrel.wallChewPerSecond * (r.type === "boss" ? 5 : r.type === "tank" ? 2 : 1) * dt; wall.hitT = 0.1;   // only the 3 robots at the front can reach the wall to chew it
+      if (spot < 3) wall.hp -= SETTINGS.towers.squirrel.wallChewPerSecond * (isHeavy(r) ? 5 : r.type === "tank" ? 2 : 1) * dt; wall.hitT = 0.1;   // only the 3 robots at the front can reach the wall to chew it
       if (wall.hp <= 0) breakNutWall(wall);
     }
     r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
@@ -2294,9 +2321,9 @@ function update(dt) {
         t.smashed = true;
         const cx = t.x * T + 16, cy = t.y * T + 22, R = gs.radius * T;
         for (const r of G.robots) {
-          if (r.dead) continue;
+          if (r.dead || r.flying) continue;
           const q = rpos(r);
-          if (Math.hypot(q.x - cx, q.y - cy) <= R) { hurt(r, gs.damage, true); if (!r.dead) r.rootT = Math.max(r.rootT, r.type === "boss" ? 0.15 : gs.holdSeconds); }
+          if (Math.hypot(q.x - cx, q.y - cy) <= R) { hurt(r, gs.damage, true); if (!r.dead) r.rootT = Math.max(r.rootT, isHeavy(r) ? 0.15 : gs.holdSeconds); }
         }
         G.fx.push({ kind: "splash", x: cx, y: cy, r: R, t: 0.3, col: "150,110,60" });
         G.fx.push({ kind: "splash", x: cx, y: cy, r: R * 0.6, t: 0.3, col: "200,160,90" });
@@ -2304,6 +2331,7 @@ function update(dt) {
         G.shake = Math.max(G.shake, 0.18); Sound.play("smash");
       }
     }
+    if (t.stunT > 0) { t.stunT -= dt; continue; }   // caught in a sandstorm: can't attack
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
     if (es && s.sphere && G.waveActive) {
@@ -2490,6 +2518,9 @@ function draw() {
     else x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
     x.imageSmoothingEnabled = false;
 
+    if (t.stunT > 0) {   // swirling sand: this tower can't attack right now
+      for (let i = 0; i < 6; i++) { const a = G.time * 6 + i * 1.05, rr = 10 + (i % 3) * 3; x.fillStyle = i % 2 ? "#e0b06a" : "#c28a52"; x.fillRect(cx + Math.cos(a) * rr - 1.5, by - 14 + Math.sin(a) * rr * 0.5 - 1.5, 3, 3); }
+    }
     if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
     // Upgrade marks float just above the tower's head and move with it (hovering, bobbing, smashing).
     const markY = Math.max(1, by - s2 - rc - 5);
@@ -2526,8 +2557,8 @@ function draw() {
   // robots
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
-    const p = rpos(r), big = r.type === "boss";
-    const sz = big ? 56 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
+    const p = rpos(r), big = isHeavy(r);
+    const sz = r.type === "sandboss" ? 60 : big ? 56 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0;
     if (G.map.theme === "beach" && !hidden) {   // robots splash through the water, leaving a little white wake
@@ -2540,12 +2571,23 @@ function draw() {
       g.addColorStop(0, col + "cc"); g.addColorStop(1, col + "00");
       x.globalAlpha = pulse; x.fillStyle = g; x.fillRect(p.x - sz, p.y - sz, sz * 2, sz * 2); x.globalAlpha = 1;
     }
-    x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4);
+    if (r.flying) { x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.ellipse(p.x, p.y + 18, sz * 0.32, 3, 0, 0, Math.PI * 2); x.fill(); }   // shadow on the ground below
+    else { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4); }
     x.globalAlpha = hidden ? 0.16 + 0.08 * Math.sin(G.time * 20) : 1;
     const img = (p.dx < 0 ? SPRF : SPR)[r.type];
-    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4));
+    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0));
     if (r.type === "clanker") x.rotate(Math.sin(r.wob * 0.5) * 0.08);
     x.drawImage(img, -sz / 2, -sz / 2, sz, sz);
+    if (r.type === "sandboss" && !hidden) {
+      // the Sand Golem's magma crack and eyes glow and throb
+      const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 3.5 + r.wob), fl = p.dx < 0 ? -1 : 1;
+      for (const [ax, ay, rad, col] of [[16, 16, 9, "255,110,20"], [16, 8.5, 6, "255,40,20"]]) {
+        const gx = (ax - 16) * k * fl, gy = (ay - 16) * k, gr = x.createRadialGradient(gx, gy, 0, gx, gy, rad * k);
+        gr.addColorStop(0, `rgba(${col},${0.45 + 0.4 * pulse})`); gr.addColorStop(1, `rgba(${col},0)`);
+        x.fillStyle = gr; x.beginPath(); x.arc(gx, gy, rad * k, 0, Math.PI * 2); x.fill();
+      }
+      if (!G.paused && Math.random() < 0.25) G.particles.push({ kind: "spark", x: p.x + (Math.random() - 0.5) * sz * 0.5, y: p.y + sz * 0.3, vx: (Math.random() - 0.5) * 10, vy: 15, t: 0, life: 0.5, col: "#c28a52" });   // sand trickling off
+    }
     if (r.type === "boss" && !hidden) {
       // the Boss's visor and reactor core glow and pulse
       const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 5 + r.wob);
@@ -2637,6 +2679,11 @@ function draw() {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
     if (f.kind === "zap") drawZap(x, f);
+    if (f.kind === "sandstorm") {
+      const k = 1 - f.t / 0.9;
+      x.fillStyle = `rgba(224,176,106,${0.35 * (1 - k)})`; x.beginPath(); x.arc(f.x, f.y, f.r * (0.4 + 0.6 * k), 0, Math.PI * 2); x.fill();
+      x.strokeStyle = `rgba(194,138,82,${0.8 * (1 - k)})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (0.4 + 0.6 * k), 0, Math.PI * 2); x.stroke();
+    }
   }
   drawBonusLeaf(x);
 
