@@ -1995,7 +1995,10 @@ function startWave() {
     for (let i = 0; i < count; i++) {
       // a mixed group takes turns through its list of robots; the health number only changes Bosses in a mix
       const ty = Array.isArray(type) ? type[i % type.length] : type;
-      G.queue.push({ at: t, type: ty, hp: Array.isArray(type) && ty !== "boss" ? undefined : hp }); t += gap;
+      let bhp = Array.isArray(type) && ty !== "boss" ? undefined : hp;
+      const cap = SETTINGS.levels[G.level].maxBossHealth;   // some levels keep their Bosses smaller
+      if (ty === "boss" && cap) bhp = Math.min(bhp || SETTINGS.robots.boss.health, cap);
+      G.queue.push({ at: t, type: ty, hp: bhp }); t += gap;
     }
     t += 1.5;
   }
