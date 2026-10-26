@@ -2945,25 +2945,7 @@ function finish(won) {
     if ($("o-boards")) $("o-boards").onclick = () => { const c = on && on.code; G = null; renderBoards(c || undefined); show("s-boards"); };
     $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
     if ($("o-next")) $("o-next").onclick = () => { setup.level = nextL; G = null; renderSetup(); show("s-setup"); };
-    if ($("o-submit")) {
-      const submit = async () => {
-        const nick = $("o-nick").value.trim(), msg = $("o-msg");
-        if (!nick) { msg.textContent = "Type a nickname first."; msg.hidden = false; $("o-nick").focus(); return; }
-        $("o-submit").disabled = true; $("o-submit").textContent = "Adding…"; msg.hidden = true;
-        try {
-          const rows = await rpc("join_game", { p_code: null, p_nickname: nick, p_level: g.level, p_difficulty: g.diffKey });
-          await rpc("update_progress", { p_id: rows[0].id, p_secret: rows[0].secret, p_wave: g.wave, p_health: Math.round(g.health), p_status: "won", p_score: score, p_stars: stars });
-          rememberNick(nick);
-          $("o-ask").outerHTML = `<p class="muted">You're on the leaderboard for ${esc(SETTINGS.levels[g.level].name)} as <b>${esc(nick)}</b>! <button class="link" id="o-see">See it</button></p>`;
-          $("o-see").onclick = () => { G = null; boardLevel = g.level; renderBoards(); show("s-boards"); };
-        } catch (e) {
-          msg.textContent = "Couldn't reach the leaderboard. Check the internet and try again."; msg.hidden = false;
-          $("o-submit").disabled = false; $("o-submit").textContent = "Add to leaderboard";
-        }
-      };
-      $("o-submit").onclick = submit;
-      $("o-nick").onkeydown = (e) => { if (e.key === "Enter") submit(); };
-    }
+    if ($("o-ask")) askForBoard(g, won, score, stars);
   };
   if (won) setTimeout(showResult, 700);
   else setTimeout(() => {
@@ -2975,12 +2957,42 @@ function finish(won) {
     setTimeout(() => { $("overlay").classList.remove("gameover"); showResult(); }, 4000);
   }, (G.takeover.dur + 0.9) * 1000);
 }
+// Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 10.
+async function askForBoard(g, won, score, stars) {
+  const box = $("o-ask"); if (!box) return;
+  const lvName = SETTINGS.levels[g.level].name;
+  if (!won) {
+    box.innerHTML = `<p class="muted">Checking the leaderboard…</p>`;
+    let top = null;
+    try { top = await sb(`players?level=eq.${g.level}&status=in.(won,lost)&select=score&order=score.desc&limit=10`); } catch (e) {}
+    if (!$("o-ask")) return;
+    if (!top) { box.innerHTML = `<p class="muted">Couldn't reach the leaderboard.</p>`; return; }
+    if (top.length >= 10 && score <= top[9].score) { box.innerHTML = `<p class="muted">Get into the Top 10 to put your score on the leaderboard.</p>`; return; }
+  }
+  box.innerHTML = `<label class="field" for="o-nick">${won ? "Put your score on the leaderboard" : "You made the Top 10! Put your score on the leaderboard"}<small>Type your nickname.</small>
+      <input id="o-nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ" value="${esc(savedNick())}"></label>
+    <button class="go" id="o-submit">Add to leaderboard</button><p class="err" id="o-msg" hidden></p>`;
+  const submit = async () => {
+    const nick = $("o-nick").value.trim(), msg = $("o-msg");
+    if (!nick) { msg.textContent = "Type a nickname first."; msg.hidden = false; $("o-nick").focus(); return; }
+    $("o-submit").disabled = true; $("o-submit").textContent = "Adding…"; msg.hidden = true;
+    try {
+      const rows = await rpc("join_game", { p_code: null, p_nickname: nick, p_level: g.level, p_difficulty: g.diffKey });
+      await rpc("update_progress", { p_id: rows[0].id, p_secret: rows[0].secret, p_wave: g.wave, p_health: Math.round(Math.max(0, g.health)), p_status: won ? "won" : "lost", p_score: score, p_stars: won ? stars : 0 });
+      rememberNick(nick);
+      box.innerHTML = `<p class="muted">You're on the leaderboard for ${esc(lvName)} as <b>${esc(nick)}</b>! <button class="link" id="o-see">See it</button></p>`;
+      $("o-see").onclick = () => { G = null; boardLevel = g.level; renderBoards(); show("s-boards"); };
+    } catch (e) {
+      msg.textContent = "Couldn't reach the leaderboard. Check the internet and try again."; msg.hidden = false;
+      $("o-submit").disabled = false; $("o-submit").textContent = "Add to leaderboard";
+    }
+  };
+  $("o-submit").onclick = submit;
+  $("o-nick").onkeydown = (e) => { if (e.key === "Enter") submit(); };
+}
 function boardBits(on, won) {
   // Beat a level without a nickname? Ask for one now and put the score on the leaderboard.
-  if (!on) return won ? `<div class="board-ask" id="o-ask">
-      <label class="field" for="o-nick">Put your score on the leaderboard<small>Type your nickname.</small>
-        <input id="o-nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ" value="${esc(savedNick())}"></label>
-      <button class="go" id="o-submit">Add to leaderboard</button><p class="err" id="o-msg" hidden></p></div>` : `<p class="muted">Beat the level to put your score on the leaderboard.</p>`;
+  if (!on) return `<div class="board-ask" id="o-ask"></div>`;   // filled in by askForBoard()
   if (!on.code) return on.id ? `<p class="muted">Your score is on the leaderboard for ${SETTINGS.levels[G.level].name} as ${esc(on.nick)}.</p>` : "";
   const rows = friendRows(on);
   return rows ? `<div class="mini-board"><b>Challenge ${esc(on.code)} so far</b><ol>${(on.others || []).map((p) => `<li>${esc(p.nickname)} <span>· ${p.score.toLocaleString()} · ${resultText(p)}</span></li>`).join("")}</ol></div>` : "";
