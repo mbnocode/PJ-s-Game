@@ -233,6 +233,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .foe .new { font-family: var(--body); font-size: 12px; background: #4fd1b8; color: #0f2a25; border-radius: 4px; padding: 1px 6px; vertical-align: middle; }
 .foe.coming { border-color: #4fd1b8; }
 .foe.boss { border-color: #e2574c; background: linear-gradient(180deg, rgba(226,87,76,0.14), var(--panel) 40%); }
+.foe .ups { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+.foe .ups b { color: var(--ink, #e8efe6); font-weight: 600; }
 .foe .kills { font-size: 14px; border-top: 1px solid var(--line); padding-top: 6px; }
 .bigcode { font-family: var(--body); font-weight: 700; font-size: clamp(48px, 10vw, 84px); letter-spacing: .08em; color: var(--gold); line-height: 1; -webkit-user-select: text; user-select: text; }
 .lobby-box { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px 18px; width: min(360px, 100%); text-align: left; }
@@ -311,7 +313,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-enemies">Enemies</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
+    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
     <button class="link" id="b-levels-back">Back to save slots</button>
   </section>
 
@@ -354,6 +356,14 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: after wave 5, sometimes a robot drops one when you destroy it. Meadow 1%, Forest 2%, Swamp 3%, Beach 5%. Every Boss you defeat always drops one!</p>
     <div class="perks" id="perk-list"></div>
     <button class="link" id="b-perks-back">Back to levels</button>
+  </section>
+
+  <!-- Towers: what each tower does and its starting statistics (per save slot) -->
+  <section class="screen menu" id="s-towers" hidden>
+    <h2>Towers</h2>
+    <p class="muted" id="tower-perks">Every tower's starting statistics, before upgrades. Bars compare the towers with each other.</p>
+    <div class="foes" id="tower-list"></div>
+    <button class="link" id="b-towers-back">Back to levels</button>
   </section>
 
   <!-- Enemies: the robots and their statistics (per save slot) -->
@@ -956,7 +966,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -1647,6 +1657,73 @@ function renderEnemies() {
     box.appendChild(d);
   }
 }
+/* ---------- towers page (per save slot) ---------- */
+const TOWER_INFO = {
+  air: "A wise old owl. Its gusts of wind push robots back down the road. It can see Hiders and hit flying robots.",
+  wizard: "A helper. It doesn't attack, but its magic makes nearby towers attack faster.",
+  healer: "A majestic deer with glowing antlers. It heals your treehouse after every wave.",
+  squirrel: "A busy squirrel. It doesn't attack, but it gathers Maple Leaves for you after every wave.",
+  fire: "A fire-breathing dragon. Its fireballs set robots on fire so they keep burning. It can hit flying robots.",
+  water: "A frog with a super-long tongue. Its sticky tongue slows robots down.",
+  plant: "A hulking tree. Thorny vines burst out of the ground and grab robots, holding them in place.",
+  crab: "A beach crab that hurls seashells. Each shell splashes and hurts every robot nearby.",
+  pegasus: "The Super Tower! A winged horse that shoots golden stars at 3 robots at once. It can see Hiders and hit flying robots.",
+};
+function renderTowersInfo() {
+  const s = slot(), TW = SETTINGS.towers;
+  const dps = (k) => +(((TW[k].damage || 0) * (TW[k].attacksPerSecond || 0))).toFixed(1);
+  const stats = [
+    ["Cost", (k) => Math.round(TW[k].cost * (1 - perkValue("cheaper"))), "#ec7a2c", " leaves"],
+    ["Range", (k) => TW[k].range || 0, "#7cc8ff", " squares"],
+    ["Damage", (k) => TW[k].damage || 0, "#e2574c", ""],
+    ["Attacks / sec", (k) => TW[k].attacksPerSecond || 0, "#ffd34d", ""],
+    ["Damage / sec", dps, "#c8a2ff", ""],
+  ];
+  // what this save slot's permanent upgrades add
+  const perks = [];
+  if (perkValue("damage")) perks.push(`all towers deal ${Math.round(perkValue("damage") * 100)}% more damage`);
+  if (perkValue("cheaper")) perks.push(`towers cost ${Math.round(perkValue("cheaper") * 100)}% less (prices below already include it)`);
+  $("tower-perks").textContent = "Every tower's starting statistics, before upgrades. Bars compare the towers with each other." + (perks.length ? " In this save slot, " + perks.join(" and ") + "." : "");
+  const box = $("tower-list"); box.innerHTML = "";
+  for (const k of TOWER_ORDER) {
+    const t = TW[k], d = document.createElement("div"), locked = !towerUnlocked(k);
+    d.className = "foe" + (t.superTower ? " boss" : "");
+    if (locked) {
+      d.innerHTML = `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Super Tower</div><div class="s">Unlock it on the Upgrades page with Golden Acorns to find out what it is!</div></div></div>`;
+      const c = document.createElement("canvas"); c.width = c.height = 32; const cx = c.getContext("2d"); cx.fillStyle = "#16191d"; cx.fillRect(0, 0, 32, 32); cx.fillStyle = "#ffd34d"; cx.font = "bold 22px sans-serif"; cx.textAlign = "center"; cx.fillText("?", 16, 24);
+      d.querySelector(".pic").replaceWith(c); box.appendChild(d); continue;
+    }
+    // special powers, read straight from settings.js
+    const sp = [];
+    if (t.burnDamagePerSecond) sp.push(`Burns robots for ${t.burnDamagePerSecond} damage a second for ${t.burnSeconds}s`);
+    if (t.slowBy) sp.push(`Slows robots ${Math.round(t.slowBy * 100)}% for ${t.slowSeconds}s`);
+    if (t.holdSeconds) sp.push(`Holds robots still for ${t.holdSeconds}s`);
+    if (t.pushBack) sp.push(`Pushes robots back ${t.pushBack} squares (not Bosses)`);
+    if (t.splash) sp.push(`Splashes robots within ${t.splash} square${t.splash > 1 ? "s" : ""} for half damage`);
+    if ((t.targets || 1) > 1) sp.push(`Hits ${t.targets} robots at once`);
+    if (t.speedBoost) sp.push(`Nearby towers attack ${Math.round(t.speedBoost * 100)}% faster`);
+    if (t.healPerWave) sp.push(`Heals ${t.healPerWave} Base Health after every wave`);
+    if (t.leavesPerWave) sp.push(`Gathers ${t.leavesPerWave} leaves after every wave`);
+    if (t.vision) sp.push("Can see Hiders");
+    if (t.damage && AIR_HUNTERS.has(k)) sp.push("Can hit flying robots");
+    if (t.groundSmash) sp.push(`At Upgrade 3: smashes the ground every ${t.groundSmash.everySeconds}s`);
+    if (k === "air") sp.push("At Upgrade 3: hovers on a swirling wind platform");
+    if (k === "fire") sp.push("At Upgrade 3: takes off and flies");
+    const ups = (t.upgradeChoices || []).map((pair, i) => `<span><b>Upgrade ${i + 1}:</b> ${pair.map((c) => c.name).join(" or ")}</span>`).join("");
+    d.innerHTML = `<div class="top"><span class="pic"></span><div><div class="k">${t.name}</div><div class="s">${TOWER_INFO[k] || t.about}</div></div></div>
+      ${stats.map(([label, f, col, unit]) => { const v = f(k), max = Math.max(...TOWER_ORDER.map(f));
+        return `<div class="stat"><span>${label}</span><span class="bar"><i style="width:${v ? Math.max(6, (v / max) * 100) : 0}%;background:${col}"></i></span><b>${v || "—"}${v && unit === " leaves" ? "" : ""}</b></div>`; }).join("")}
+      ${sp.length ? `<div class="power">${sp.join("<br>")}</div>` : ""}
+      ${ups ? `<div class="ups">${ups}</div>` : ""}`;
+    const pc = document.createElement("canvas"); pc.width = pc.height = 32; const px = pc.getContext("2d");
+    px.imageSmoothingEnabled = SMOOTH_SPRITES.has(k); px.imageSmoothingQuality = "high"; px.drawImage(towerSprite(k), 0, 0, 32, 32);
+    d.querySelector(".pic").replaceWith(pc);
+    box.appendChild(d);
+  }
+}
+$("b-towers").onclick = () => { Sound.init(); renderTowersInfo(); show("s-towers"); };
+$("b-towers-back").onclick = () => { renderLevels(); show("s-levels"); };
+
 $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"); };
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
