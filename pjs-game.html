@@ -87,6 +87,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .card:hover { border-color: var(--moss); background: var(--panel); }
 .card .k { font-family: var(--display); font-size: 22px; }
 .card .s { color: var(--muted); font-size: 15px; }
+#slot-scene { width: min(720px, 100%); height: auto; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; flex: none; }
 #level-cards { max-width: 1300px; }
 #level-cards .card { flex: 1 1 190px; max-width: 238px; padding: 14px; }
 #level-cards .card .k { font-size: 20px; }
@@ -288,6 +289,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- Save slots -->
   <section class="screen menu" id="s-slots" hidden>
     <h2>Pick a save slot</h2>
+    <canvas id="slot-scene" width="480" height="160" aria-label="Dragons, frogs and tree giants fighting off robots in the meadow"></canvas>
     <div class="cards" id="slot-cards"></div>
     <button class="link" id="b-slots-back">Back</button>
   </section>
@@ -952,9 +954,81 @@ function spriteCanvas(name, size = 16) {
 const vs = document.createElement("span"); vs.className = "vs"; vs.textContent = "vs"; $("lineup").appendChild(vs);
 $("lineup").appendChild(spriteCanvas("clanker"));
 
-$("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); };
+$("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); startSlotScene(); };
 $("b-slots-back").onclick = () => show("s-title");
-$("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); };
+$("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); startSlotScene(); };
+
+/* ---------- save slot screen: a little meadow battle that loops forever ---------- */
+let slotScene = null;
+function startSlotScene() {
+  if (slotScene) return;
+  const cv = $("slot-scene"), x = cv.getContext("2d"), TS = 32, W = cv.width, H = cv.height, PY = 2.5 * TS;
+  // the ground: meadow grass, a dirt road through the middle, a few trees
+  const ground = document.createElement("canvas"); ground.width = W; ground.height = H;
+  const gx = ground.getContext("2d"); gx.imageSmoothingEnabled = false;
+  for (let j = 0; j < 5; j++) for (let i = 0; i < 15; i++) gx.drawImage(j === 2 ? DIRT[(i * 3 + j) % DIRT.length] : GRASS[(i * 7 + j * 5) % GRASS.length], i * TS, j * TS, TS, TS);
+  gx.fillStyle = "#3b7a2e"; gx.fillRect(0, 2 * TS - 2, W, 2); gx.fillRect(0, 3 * TS, W, 2);
+  for (const [k, i, j] of [["tree", 0, 0], ["tree", 14, 4], ["mushroom", 1, 4], ["tallgrass", 7, 0], ["tree", 11, 4], ["mushroom", 14, 0]]) gx.drawImage(SPR[k], i * TS, j * TS, TS, TS);
+  const towers = [["fire", 3, 1], ["water", 5, 3], ["plant", 8, 1], ["fire", 10, 3], ["water", 12, 1]].map(([k, i, j]) => ({ k, x: i * TS + 16, y: j * TS + 16, cool: Math.random(), rec: 0 }));
+  const S = { robots: [], shots: [], fx: [], parts: [], spawn: 0, n: 0, last: performance.now() };
+  const kinds = [["clanker", 90, 30], ["walker", 140, 34], ["scout", 80, 60], ["clanker", 90, 30], ["tank", 320, 24], ["walker", 140, 34]];   // [robot, health, speed]
+  const boom = (px, py, col, n) => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 30 + Math.random() * 70; S.parts.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, t: 0, life: 0.5, col }); } };
+  const hurt = (r, d) => { if (r.dead) return; r.hp -= d; r.hit = 0.1; if (r.hp <= 0) { r.dead = true; boom(r.x, r.y, "#c9ced6", 12); boom(r.x, r.y, "#ffb347", 5); S.fx.push({ k: "leaf", x: r.x, y: r.y, t: 0 }); } };
+  function tick(now) {
+    if ($("s-slots").hidden) { slotScene = null; return; }   // stop when the screen is closed
+    const dt = Math.min(0.05, (now - S.last) / 1000); S.last = now;
+    // new robots march in from the left every so often
+    if ((S.spawn -= dt) <= 0) { const [k, hp, sp] = kinds[S.n++ % kinds.length]; S.robots.push({ k, hp, max: hp, sp, x: -16, y: PY, wob: Math.random() * 6, hit: 0 }); S.spawn = 1.1 + Math.random() * 0.7; }
+    for (const r of S.robots) { r.x += r.sp * dt; r.wob += dt * 8; r.hit = Math.max(0, r.hit - dt); }
+    // towers attack the robot furthest along the road within reach
+    for (const t of towers) {
+      t.rec = Math.max(0, t.rec - dt); if ((t.cool -= dt) > 0) continue;
+      const tg = S.robots.filter((r) => !r.dead && r.x > 0 && Math.hypot(r.x - t.x, r.y - t.y) < 92).sort((a, b) => b.x - a.x)[0];
+      if (!tg) { t.cool = 0.1; continue; }
+      t.rec = 0.12;
+      if (t.k === "fire") { S.shots.push({ x: t.x, y: t.y - 10, tg, trail: [] }); t.cool = 0.75; }
+      else if (t.k === "water") { S.fx.push({ k: "tongue", t0: t, tg, t: 0 }); t.cool = 0.9; }
+      else { S.fx.push({ k: "vine", t0: t, tg, t: 0 }); t.cool = 1.1; }
+    }
+    for (const s of S.shots) {
+      const dx = s.tg.x - s.x, dy = s.tg.y - 4 - s.y, d = Math.hypot(dx, dy), st = 230 * dt;
+      s.trail.unshift({ x: s.x, y: s.y }); if (s.trail.length > 6) s.trail.pop();
+      if (d <= st + 3 || s.tg.dead) { if (!s.tg.dead) { hurt(s.tg, 14); boom(s.x, s.y, "#ff9a3c", 6); } s.done = true; } else { s.x += dx / d * st; s.y += dy / d * st; }
+    }
+    S.shots = S.shots.filter((s) => !s.done);
+    for (const f of S.fx) { f.t += dt; if ((f.k === "tongue" || f.k === "vine") && !f.hitDone && f.t > 0.12) { f.hitDone = true; hurt(f.tg, f.k === "tongue" ? 16 : 22); } }
+    S.fx = S.fx.filter((f) => f.t < (f.k === "leaf" ? 0.8 : f.k === "vine" ? 0.35 : 0.28));
+    for (const q of S.parts) { q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 160 * dt; }
+    S.parts = S.parts.filter((q) => q.t < q.life);
+    S.robots = S.robots.filter((r) => !r.dead && r.x < W + 20);
+    // draw
+    x.imageSmoothingEnabled = false; x.drawImage(ground, 0, 0);
+    for (const t of towers) { const sz = 30 * (t.k === "plant" ? 1.05 : 1); x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(t.x - 10, t.y + 12, 20, 3); x.drawImage(SPR[t.k], t.x - sz / 2, t.y - sz / 2 - 2 - t.rec * 10, sz, sz); }
+    for (const f of S.fx) {
+      if (f.k === "tongue" || f.k === "vine") {
+        const a = f.t0, b = f.tg, k = f.k === "tongue" ? Math.min(1, f.t / 0.12) * (f.t > 0.16 ? Math.max(0, 1 - (f.t - 0.16) / 0.12) : 1) : Math.min(1, f.t / 0.1);
+        const ex = a.x + (b.x - a.x) * k, ey = a.y + (b.y - 4 - a.y) * k;
+        x.lineCap = "round";
+        if (f.k === "tongue") { x.strokeStyle = "#7a1f3d"; x.lineWidth = 5; x.beginPath(); x.moveTo(a.x, a.y - 2); x.lineTo(ex, ey); x.stroke(); x.strokeStyle = "#ff6f9a"; x.lineWidth = 3; x.stroke(); x.fillStyle = "#ff8fb1"; x.beginPath(); x.arc(ex, ey, 3.5, 0, 6.28); x.fill(); }
+        else { x.strokeStyle = "#1f3d14"; x.lineWidth = 6; x.beginPath(); x.moveTo(a.x + 6, a.y + 12); x.quadraticCurveTo((a.x + ex) / 2, Math.min(a.y, ey) - 12, ex, ey); x.stroke(); x.strokeStyle = "#4f9a2e"; x.lineWidth = 3.5; x.stroke(); }
+        x.lineCap = "butt";
+      }
+    }
+    for (const r of S.robots) {
+      const sz = r.k === "tank" ? 34 : r.k === "scout" ? 24 : 28, bob = Math.abs(Math.sin(r.wob)) * -1.5;
+      x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(r.x - sz * 0.35, r.y + sz * 0.3, sz * 0.7, 3);
+      x.drawImage(SPR[r.k], r.x - sz / 2, r.y - sz / 2 - 4 + bob, sz, sz);
+      if (r.hit > 0) { x.globalAlpha = 0.5; x.fillStyle = "#fff"; x.fillRect(r.x - sz * 0.3, r.y - sz * 0.45, sz * 0.6, sz * 0.6); x.globalAlpha = 1; }
+      if (r.hp < r.max) { x.fillStyle = "#16191d"; x.fillRect(r.x - 11, r.y - sz / 2 - 9, 22, 4); x.fillStyle = r.hp / r.max > 0.5 ? "#7cc46a" : "#e2574c"; x.fillRect(r.x - 10, r.y - sz / 2 - 8, 20 * r.hp / r.max, 2); }
+    }
+    for (const s of S.shots) { s.trail.forEach((q, i) => { x.globalAlpha = 0.5 * (1 - i / 6); x.fillStyle = "#ff8a2a"; x.beginPath(); x.arc(q.x, q.y, 4 - i * 0.5, 0, 6.28); x.fill(); }); x.globalAlpha = 1; x.fillStyle = "#ffd36b"; x.beginPath(); x.arc(s.x, s.y, 4.5, 0, 6.28); x.fill(); x.fillStyle = "#fff6c9"; x.fillRect(s.x - 1, s.y - 2, 2, 2); }
+    for (const q of S.parts) { x.globalAlpha = 1 - q.t / q.life; x.fillStyle = q.col; x.fillRect(q.x - 1.5, q.y - 1.5, 3, 3); }
+    x.globalAlpha = 1;
+    for (const f of S.fx) if (f.k === "leaf") { const k = f.t / 0.8; x.globalAlpha = 1 - k; x.drawImage(SPR.leaf, f.x - 8, f.y - 12 - k * 26, 16, 16); x.globalAlpha = 1; }
+    requestAnimationFrame(tick);
+  }
+  slotScene = requestAnimationFrame(tick);
+}
 $("b-setup-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 const starText = (n) => "★".repeat(n) + "☆".repeat(3 - n);

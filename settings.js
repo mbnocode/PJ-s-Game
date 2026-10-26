@@ -22,8 +22,8 @@ const SETTINGS = {
   difficulties: {
     easy:      { name: "Easy",      robotHealth: 0.75, robotSpeed: 0.9,  startLeaves: 220, scoreTimes: 1,   baseHealsPerWave: 1, auraChance: 0,    strongestAura: 0 },
     normal:    { name: "Normal",    robotHealth: 1,    robotSpeed: 1,    startLeaves: 180, scoreTimes: 1.5, baseHealsPerWave: 0, auraChance: 0.15, strongestAura: 2 },
-    hard:      { name: "Hard",      robotHealth: 1.35, robotSpeed: 1.12, startLeaves: 165, scoreTimes: 2,   baseHealsPerWave: 0, auraChance: 0.25, strongestAura: 3 },
-    nightmare: { name: "Nightmare", robotHealth: 1.6,  robotSpeed: 1.3,  startLeaves: 150, scoreTimes: 3,   baseHealsPerWave: 0, auraChance: 0.4,  strongestAura: 3 },
+    hard:      { name: "Hard",      robotHealth: 1.35, robotSpeed: 1.12, startLeaves: 170, scoreTimes: 2,   baseHealsPerWave: 0, auraChance: 0.25, strongestAura: 3 },
+    nightmare: { name: "Nightmare", robotHealth: 1.6,  robotSpeed: 1.3,  startLeaves: 160, scoreTimes: 3,   baseHealsPerWave: 0, auraChance: 0.4,  strongestAura: 3 },
   },
 
   // Glowing Robots are tougher. Index 1 = blue, 2 = purple, 3 = orange.
