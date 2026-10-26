@@ -1985,7 +1985,7 @@ function resume() { G.paused = false; $("overlay").hidden = true; updateHud(); }
 
 /* ---------- waves ---------- */
 // Every level plays the 15 normal waves (or its own waves list, like The Beach), plus any extraWaves (The Swamp has 5 more).
-function levelWaves(L) { const lv = SETTINGS.levels[L] || {}; return (lv.waves || SETTINGS.waves).concat(lv.extraWaves || []); }
+function levelWaves(L) { const lv = SETTINGS.levels[L] || {}; return (lv.waves || SETTINGS.waves).slice(0, lv.waveCount || undefined).concat(lv.extraWaves || []); }   // waveCount = stop early
 function startWave() {
   if (!G || G.waveActive || G.over || G.wave >= levelWaves(G.level).length) return;
   Sound.init();

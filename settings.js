@@ -212,6 +212,7 @@ const SETTINGS = {
   levels: {
     meadow: { name: "The Meadow", about: "A long, twisty path. A good place to start.",
               acornDropChance: 0.01,   // each robot you destroy here has this chance (0.01 = 1%) to drop a Golden Acorn
+              waveCount: 10,           // the Meadow only plays the first 10 waves (it ends with the big Boss on wave 10)
               path: [[0, 2], [4, 2], [4, 8], [8, 8], [8, 3], [12, 3], [12, 9], [16, 9], [16, 5], [19, 5]],
               // Trees, mushrooms and tall grass: you can't build on these squares. [across, down]
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
