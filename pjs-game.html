@@ -1649,8 +1649,8 @@ function renderEnemies() {
     const r = R[k], d = document.createElement("div"); d.className = "foe" + (NEW_FOES.has(k) ? " coming" : "") + (BOSS_FOES.has(k) ? " boss" : "");
     const power = k === "hider" ? `Special: hides for ${r.hideSeconds} seconds after a hit. Only towers with Vision (like the Owl) can hit it while hidden.`
       : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp and The Beach.`
-      : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Bars are off the chart!`
-      : k === "sandboss" ? `Special: every ${r.sandstormEvery} seconds it whips up a sandstorm. Towers within ${r.sandstormRadius} squares are blinded and can't attack for ${r.sandstormSeconds} seconds. Too heavy for Owls to push back. Shows up on The Desert from wave 8.`
+      : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Always drops a Golden Acorn! Bars are off the chart!`
+      : k === "sandboss" ? `Special: every ${r.sandstormEvery} seconds it whips up a sandstorm. Towers within ${r.sandstormRadius} squares are blinded and can't attack for ${r.sandstormSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on The Desert from wave 8.`
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
       : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
