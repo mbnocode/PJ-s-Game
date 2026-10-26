@@ -909,7 +909,13 @@ function timeLeft(d) {
   return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h left` : h ? `${h}h ${m}m left` : `${m}m left`;
 }
 // Difficulty and some levels (like The Beach) multiply the score.
-function currentScore() { return Math.round((G.killPoints + Math.max(0, G.health) * 10) * G.diff.scoreTimes * (SETTINGS.levels[G.level].scoreTimes || 1)); }
+// Score = points from destroyed robots x treehouse health (30 health = x0.30) x difficulty x level bonus.
+function healthTimes() { return Math.max(0, G.health) / (SETTINGS.baseHealth || 100); }
+function currentScore() { return Math.round(G.killPoints * healthTimes() * G.diff.scoreTimes * (SETTINGS.levels[G.level].scoreTimes || 1)); }
+function scoreMath() {   // shown on the results screen, e.g. "1,200 points x 0.30 health x 1.5 Normal"
+  const lv = SETTINGS.levels[G.level].scoreTimes || 1, f = (n) => (Math.round(n * 100) / 100).toString();
+  return `${G.killPoints.toLocaleString()} points × ${healthTimes().toFixed(2)} health × ${f(G.diff.scoreTimes)} ${G.diff.name}${lv !== 1 ? ` × ${f(lv)} ${SETTINGS.levels[G.level].name}` : ""}`;
+}
 
 async function onlineStart(g) {
   const o = g.online; if (!o) return;
@@ -2917,6 +2923,7 @@ function finish(won) {
       ? `<h2>${lvName} is saved!</h2>
          <div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>
          <div class="scoreline">Score ${score.toLocaleString()}${best ? " · New best!" : ""}</div>
+         <p class="muted scoremath">${scoreMath()}</p>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left</p>
          ${boardBits(on)}
@@ -2924,6 +2931,7 @@ function finish(won) {
       : `<h2>The Factory took over</h2>
          <p class="muted">The robots got through on Wave ${G.wave} of ${levelWaves(G.level).length}.</p>
          <div class="scoreline">Score ${score.toLocaleString()}</div>
+         <p class="muted scoremath">${scoreMath()}</p>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          ${boardBits(on)}
          <div class="row"><button class="go" id="o-again">Try again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`);
