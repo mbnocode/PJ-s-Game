@@ -1215,8 +1215,14 @@ function startSlotScene() {
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       if (Math.abs(j - road) <= 1 && taken.has(i + "," + j)) continue;
       if (j === road || taken.has(i + "," + j)) continue;
-      const r = R();
-      if (S.serp && i <= S.serp.i + 1 && j <= S.serp.j + 1) continue;   // keep the serpent's tree the top-left one if (r < 0.06) gx.drawImage(SPR.tree, i * TS, j * TS, TS, TS); else if (r < 0.09) gx.drawImage(SPR.mushroom, i * TS, j * TS, TS, TS); else if (r < 0.13) gx.drawImage(SPR.tallgrass, i * TS, j * TS, TS, TS);
+      const r = R(), pick = R();
+      if (S.serp && i <= S.serp.i + 1 && j <= S.serp.j + 1) continue;   // keep the serpent's tree the top-left one
+      if (blocked(i, j)) continue;   // keep scenery off the slot cards, the title and the Back button
+      // a mix of trees and mushrooms (and some tall grass and ferns) around the battle
+      const look = r < 0.09 ? ["tree", "tree", "pine", "cypress"][pick * 4 | 0]
+        : r < 0.15 ? ["mushroom", "mushroom", "brownshroom", "glowshroom"][pick * 4 | 0]
+        : r < 0.19 ? (pick < 0.6 ? "tallgrass" : "fern") : null;
+      if (look && SPR[look]) gx.drawImage(SPR[look], i * TS, j * TS, TS, TS);
     }
     hpTimes = Math.max(1, towers.length / 5);   // more towers on a wide screen, so the robots get tougher to keep the fight going
     S.robots = []; S.shots = []; S.fx = [];
