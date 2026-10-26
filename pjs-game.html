@@ -146,6 +146,11 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ab-cost::after { content: ""; width: 12px; height: 12px; background: #ec7a2c; -webkit-mask: radial-gradient(circle, #000 60%, transparent 62%); mask: radial-gradient(circle, #000 60%, transparent 62%); }
 .ab-cool { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 6px; font-size: 20px; color: #fff; }
 .ability.on .ab-cost { color: #2a1004; }
+.ability.ice { background: #10283a; border-color: #7cd4ff; color: #d8f4ff; box-shadow: 0 0 12px rgba(120,210,255,0.35); }
+.ability.ice:hover:not(:disabled) { background: #163650; }
+.ability.ice .ab-cost { color: #9fe0ff; }
+.ability.ice.on { background: #7cd4ff; color: #062033; border-color: #e8faff; box-shadow: 0 0 18px rgba(160,230,255,0.85); }
+.ability.ice.on .ab-cost { color: #062033; }
 @media (max-width: 760px) { .abilities { position: absolute; right: 6px; bottom: 6px; margin: 0; } .ability { width: 70px; font-size: 12px; } }
 #board.aiming { cursor: crosshair; }
 #board { image-rendering: pixelated; display: block; border: 3px solid #0b130e; border-radius: 4px; touch-action: none; cursor: pointer; }
@@ -459,7 +464,11 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="abilities" id="abilities">
         <button class="ability" id="b-fireball" title="Mega Fireball: tap it, then tap where it should land">
           <canvas class="ab-icon" id="fb-icon" width="40" height="40"></canvas>
-          <span class="ab-name">Fireball</span><span class="ab-cost" id="fb-cost">300</span><span class="ab-cool" id="fb-cool" hidden></span>
+          <span class="ab-name">Fireball</span><span class="ab-cost" id="fireball-cost">300</span><span class="ab-cool" id="fireball-cool" hidden></span>
+        </button>
+        <button class="ability ice" id="b-freeze" title="Freeze: tap it, then tap where to freeze the robots">
+          <canvas class="ab-icon" id="fz-icon" width="40" height="40"></canvas>
+          <span class="ab-name">Freeze</span><span class="ab-cost" id="freeze-cost">100</span><span class="ab-cool" id="freeze-cool" hidden></span>
         </button>
       </div>
       <div class="panel" id="tpanel" hidden></div>
@@ -2000,14 +2009,30 @@ board.addEventListener("pointerleave", () => { if (G) G.hover = null; });
 /* ---------- Mega Fireball ability ---------- */
 function boardPos(e) { const r = board.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 640, y: (e.clientY - r.top) / r.height * 384 }; }
 board.addEventListener("pointermove", (e) => { if (G && G.aim) G.aimPos = boardPos(e); });
-function fireballReady() { const A = SETTINGS.abilities.fireball; return G && !G.over && G.leaves >= A.cost && !(G.fbCool > 0); }
-function setAiming(on) { G.aim = on; if (on) { G.pick = null; G.sel = null; $("tpanel").hidden = true; updateShelf(); } board.classList.toggle("aiming", on); updateAbilities(); }
-function castFireball(pos) {
-  const A = SETTINGS.abilities.fireball;
-  if (!fireballReady()) { setAiming(false); return; }
-  G.leaves -= A.cost; G.fbCool = A.cooldownSeconds || 0; setAiming(false);
-  G.meteors = G.meteors || []; G.meteors.push({ x: pos.x, y: pos.y, t: 0, dur: 0.6 });
-  Sound.play("fire"); updateHud();
+// Abilities: tap a button beside the board, then tap the board to use it there. G.aim = which one you're aiming.
+const ABILITIES = ["fireball", "freeze"];
+function abilityReady(k) { const A = SETTINGS.abilities[k]; return G && !G.over && G.leaves >= A.cost && !((G.cool || {})[k] > 0); }
+function setAiming(k) { G.aim = k || null; if (k) { G.pick = null; G.sel = null; $("tpanel").hidden = true; updateShelf(); } board.classList.toggle("aiming", !!k); updateAbilities(); }
+function castAbility(k, pos) {
+  const A = SETTINGS.abilities[k];
+  if (!abilityReady(k)) { setAiming(null); return; }
+  G.leaves -= A.cost; G.cool = G.cool || {}; G.cool[k] = A.cooldownSeconds || 0; setAiming(null);
+  if (k === "fireball") { G.meteors = G.meteors || []; G.meteors.push({ x: pos.x, y: pos.y, t: 0, dur: 0.6 }); Sound.play("fire"); }
+  if (k === "freeze") castFreeze(pos);
+  updateHud();
+}
+// Freeze: every robot in the circle is frozen solid for a few seconds.
+function castFreeze(pos) {
+  const A = SETTINGS.abilities.freeze, R = A.radius * T; let hits = 0;
+  for (const r of G.robots) {
+    if (r.dead) continue;
+    const q = rpos(r); if (Math.hypot(q.x - pos.x, q.y - pos.y) > R) continue;
+    r.freezeT = Math.max(r.freezeT || 0, A.seconds); r.knock = 0; hits++;
+  }
+  G.fx.push({ kind: "iceflash", t: 0.15 }, { kind: "shock", x: pos.x, y: pos.y, r: R * 1.3, t: 0.5, w: 6, col: "200,240,255" }, { kind: "frost", x: pos.x, y: pos.y, r: R, t: A.seconds, dur: A.seconds });
+  for (let i = 0; i < 50; i++) { const a = Math.random() * Math.PI * 2, v = 40 + Math.random() * 150; G.particles.push({ kind: "spark", x: pos.x, y: pos.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.7 - 30, t: 0, life: 0.5 + Math.random() * 0.5, col: ["#ffffff", "#c8f0ff", "#7cd4ff", "#e8faff"][i % 4] }); }
+  G.shake = Math.max(G.shake, 0.15); Sound.play("tongue"); Sound.play("upgrade");
+  floatText(pos.x, pos.y - 20, hits ? `Freeze! x${hits}` : "Freeze!", "#c8f0ff", 1.4);
 }
 function landFireball(m) {
   const A = SETTINGS.abilities.fireball, R = A.radius * T;
@@ -2064,14 +2089,28 @@ function drawMeteor(x, m) {
 }
 function updateAbilities() {
   if (!G) return;
-  const A = SETTINGS.abilities.fireball, b = $("b-fireball"), cool = $("fb-cool");
-  $("fb-cost").textContent = A.cost;
-  b.classList.toggle("on", !!G.aim);
-  b.disabled = !G.aim && !fireballReady();
-  const cs = G.fbCool > 0 ? Math.ceil(G.fbCool) : 0;
-  cool.hidden = !cs; if (cs) cool.textContent = cs + "s";
+  for (const k of ABILITIES) {
+    const A = SETTINGS.abilities[k], b = $("b-" + k), cool = $(k + "-cool");
+    $(k + "-cost").textContent = A.cost;
+    b.classList.toggle("on", G.aim === k);
+    b.disabled = G.aim !== k && !abilityReady(k);
+    const c = (G.cool || {})[k], cs = c > 0 ? Math.ceil(c) : 0;
+    cool.hidden = !cs; if (cs) cool.textContent = cs + "s";
+  }
 }
-$("b-fireball").onclick = () => { if (!G || G.over) return; if (G.aim) { setAiming(false); return; } if (fireballReady()) { setAiming(true); floatText(320, 30, "Tap where the fireball should land!", "#ffb347", 1.6); } };
+const AIM_HINT = { fireball: ["Tap where the fireball should land!", "#ffb347"], freeze: ["Tap where to freeze the robots!", "#c8f0ff"] };
+for (const k of ABILITIES) $("b-" + k).onclick = () => {
+  if (!G || G.over) return;
+  if (G.aim === k) { setAiming(null); return; }   // tap again to cancel
+  if (abilityReady(k)) { setAiming(k); floatText(320, 30, AIM_HINT[k][0], AIM_HINT[k][1], 1.6); }
+};
+{ // the Freeze button's snowflake picture
+  const c = $("fz-icon").getContext("2d"), gr = c.createRadialGradient(20, 20, 2, 20, 20, 19);
+  gr.addColorStop(0, "rgba(220,248,255,0.9)"); gr.addColorStop(1, "rgba(80,180,255,0)"); c.fillStyle = gr; c.beginPath(); c.arc(20, 20, 19, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = "#ffffff"; c.lineWidth = 2.5; c.lineCap = "round";
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, ex = 20 + Math.cos(a) * 15, ey = 20 + Math.sin(a) * 15; c.beginPath(); c.moveTo(20, 20); c.lineTo(ex, ey);
+    for (const s of [-1, 1]) { const bx = 20 + Math.cos(a) * 9, by = 20 + Math.sin(a) * 9; c.moveTo(bx, by); c.lineTo(bx + Math.cos(a + s * 0.8) * 5, by + Math.sin(a + s * 0.8) * 5); } c.stroke(); }
+}
 { // the button's fireball picture
   const c = $("fb-icon").getContext("2d"), gr = c.createRadialGradient(17, 17, 2, 20, 20, 18);
   gr.addColorStop(0, "#fff3b0"); gr.addColorStop(0.35, "#ffb347"); gr.addColorStop(0.75, "#ff5a1a"); gr.addColorStop(1, "rgba(200,40,10,0)");
@@ -2080,7 +2119,7 @@ $("b-fireball").onclick = () => { if (!G || G.over) return; if (G.aim) { setAimi
 }
 board.addEventListener("pointerdown", (e) => {
   if (!G || G.over) return;
-  if (G.aim) { castFireball(boardPos(e)); return; }   // aiming the Mega Fireball
+  if (G.aim) { castAbility(G.aim, boardPos(e)); return; }   // aiming an ability
   const c = tileFromEvent(e); if (!c) return;
   G.hover = c;
   if (G.bonus && G.bonus.x === c.x && G.bonus.y === c.y) { collectBonusLeaf(); return; }
@@ -2110,7 +2149,7 @@ $("b-sound").onclick = () => { Sound.init(); Sound.setOn(!Sound.on); try { local
 document.addEventListener("keydown", (e) => {
   if (!G || $("game").hidden) return;
   if (e.key === " " && !G.waveActive) { e.preventDefault(); startWave(); }
-  if (e.key === "Escape" && G.aim) { setAiming(false); return; }   // cancel aiming
+  if (e.key === "Escape" && G.aim) { setAiming(null); return; }   // cancel aiming
   if (e.key === "p" || e.key === "Escape") G.paused ? resume() : pause();
 });
 
@@ -2550,7 +2589,7 @@ function floatText(x, y, text, col, life = 1.1) { G.fx.push({ kind: "text", x, y
 /* ---------- update ---------- */
 function update(dt) {
   G.time += dt;
-  if (G.fbCool > 0) G.fbCool -= dt;
+  for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;
   for (const m of G.meteors || []) { m.t += dt; if (m.t >= m.dur && !m.hit) { m.hit = true; landFireball(m); } }
   if (G.meteors) G.meteors = G.meteors.filter((m) => !m.hit);
   if (G.waveActive) {
@@ -2603,6 +2642,7 @@ function update(dt) {
     { const q = rpos(r); let slow = 0; for (const w of warps) if (Math.hypot(q.x - w.x, q.y - w.y) <= w.R) slow = Math.max(slow, w.slow); r.warped = slow > 0; if (slow) sp *= 1 - slow; }
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
+    if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
     if (r.knock > 0) {
       const move = Math.min(r.knock, Math.max(r.knock * 7 * dt, 1.5 * T * dt));   // fast at first, then slows to a stop
@@ -2923,6 +2963,13 @@ function draw() {
     if (r.slowT > 0 && !hidden) { x.fillStyle = "rgba(90,170,255,0.35)"; x.fillRect(p.x - sz * 0.35, p.y - sz * 0.5, sz * 0.7, sz * 0.8); }
     if (r.burnT > 0 && !hidden) { x.fillStyle = Math.random() < 0.5 ? "#ff9a3c" : "#ffd36b"; x.fillRect(p.x - 6 + Math.random() * 12, p.y - sz * 0.5 - Math.random() * 6, 3, 3); }
     if (r.rootT > 0) drawVineWrap(x, p.x, p.y + wob - (big ? 12 : 4), sz, r);
+    if (r.freezeT > 0 && !hidden) {   // encased in a block of ice
+      const bw = sz * 0.8, bh = sz * 0.85, bx = p.x - bw / 2, byy = p.y - bh / 2 - (big ? 12 : 4), melt = Math.min(1, r.freezeT / 1);
+      x.fillStyle = `rgba(150,220,255,${0.45 * melt})`; x.fillRect(bx, byy, bw, bh);
+      x.strokeStyle = `rgba(230,250,255,${0.9 * melt})`; x.lineWidth = 1.5; x.strokeRect(bx, byy, bw, bh);
+      x.fillStyle = `rgba(255,255,255,${0.8 * melt})`; x.fillRect(bx + 2, byy + 2, bw * 0.3, 2); x.fillRect(bx + 2, byy + 2, 2, bh * 0.35);
+      if (!G.paused && Math.random() < 0.05) G.particles.push({ kind: "spark", x: bx + Math.random() * bw, y: byy, vx: 0, vy: -12, t: 0, life: 0.5, col: "#e8faff" });
+    }
     if (r.hp < r.maxHp && !hidden) {
       const w = big ? 44 : 22, top = p.y - sz / 2 - (big ? 22 : 10);
       x.fillStyle = "#16191d"; x.fillRect(p.x - w / 2 - 1, top - 1, w + 2, 5);
@@ -3003,7 +3050,16 @@ function draw() {
       x.fillStyle = `rgba(60,28,14,${0.5 * a})`; x.beginPath(); x.ellipse(f.x, f.y + 4, f.r * 0.6, f.r * 0.32, 0, 0, Math.PI * 2); x.fill();
       for (const [ex, ey] of f.embers || []) { const fl = 0.5 + 0.5 * Math.sin(G.time * 12 + ex); x.fillStyle = `rgba(255,${140 + 80 * fl},40,${a * (0.5 + 0.5 * fl)})`; x.fillRect(f.x + ex - 1, f.y + 4 + ey - 1, 3, 3); }
     }
-    if (f.kind === "shock") { const k = 1 - f.t / (f.w > 4 ? 0.5 : 0.35); x.strokeStyle = `rgba(255,230,170,${0.9 * (1 - k)})`; x.lineWidth = f.w * (1 - k) + 1; x.beginPath(); x.ellipse(f.x, f.y + 2, f.r * k, f.r * k * 0.6, 0, 0, Math.PI * 2); x.stroke(); }
+    if (f.kind === "shock") { const k = 1 - f.t / (f.w > 4 ? 0.5 : 0.35); x.strokeStyle = `rgba(${f.col || "255,230,170"},${0.9 * (1 - k)})`; x.lineWidth = f.w * (1 - k) + 1; x.beginPath(); x.ellipse(f.x, f.y + 2, f.r * k, f.r * k * 0.6, 0, 0, Math.PI * 2); x.stroke(); }
+    if (f.kind === "iceflash") { x.fillStyle = `rgba(210,245,255,${0.5 * f.t / 0.15})`; x.fillRect(0, 0, 640, 384); }
+    if (f.kind === "frost") {   // icy ground with little crystals; fades as the freeze wears off
+      const a = Math.min(1, f.t / 1) * 0.55;
+      const gr = x.createRadialGradient(f.x, f.y, 4, f.x, f.y, f.r); gr.addColorStop(0, `rgba(230,250,255,${a})`); gr.addColorStop(0.7, `rgba(150,220,255,${a * 0.7})`); gr.addColorStop(1, "rgba(150,220,255,0)");
+      x.fillStyle = gr; x.beginPath(); x.arc(f.x, f.y, f.r, 0, Math.PI * 2); x.fill();
+      x.strokeStyle = `rgba(255,255,255,${a * 1.4})`; x.lineWidth = 1;
+      for (let i = 0; i < 10; i++) { const ang = i * 0.628 + 0.3, d = f.r * (0.3 + (i % 3) * 0.22), cx = f.x + Math.cos(ang) * d, cy = f.y + Math.sin(ang) * d * 0.7;
+        x.beginPath(); for (let j = 0; j < 3; j++) { const b = j * Math.PI / 3; x.moveTo(cx - Math.cos(b) * 3, cy - Math.sin(b) * 3); x.lineTo(cx + Math.cos(b) * 3, cy + Math.sin(b) * 3); } x.stroke(); }
+    }
     if (f.kind === "flash") { x.fillStyle = `rgba(255,240,200,${0.55 * f.t / 0.18})`; x.fillRect(0, 0, 640, 384); }
     if (f.kind === "fireburst") {   // a ball of fire that puffs up and fades
       const k = 1 - f.t / 0.55, rr = f.r * (0.4 + 0.7 * Math.sqrt(k));
@@ -3020,9 +3076,9 @@ function draw() {
   drawBonusLeaf(x);
   // Mega Fireball: the target circle while aiming, and the fireball falling from the sky
   if (G.aim && G.aimPos) {
-    const R = SETTINGS.abilities.fireball.radius * T, p = G.aimPos, pulse = 0.5 + 0.5 * Math.sin(G.time * 8);
-    x.fillStyle = `rgba(255,110,30,${0.14 + 0.08 * pulse})`; x.beginPath(); x.arc(p.x, p.y, R, 0, Math.PI * 2); x.fill();
-    x.strokeStyle = "rgba(255,180,80,0.9)"; x.lineWidth = 2; x.setLineDash([6, 5]); x.lineDashOffset = -G.time * 20; x.beginPath(); x.arc(p.x, p.y, R, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+    const ice = G.aim === "freeze", R = SETTINGS.abilities[G.aim].radius * T, p = G.aimPos, pulse = 0.5 + 0.5 * Math.sin(G.time * 8);
+    x.fillStyle = ice ? `rgba(120,210,255,${0.16 + 0.08 * pulse})` : `rgba(255,110,30,${0.14 + 0.08 * pulse})`; x.beginPath(); x.arc(p.x, p.y, R, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = ice ? "rgba(220,248,255,0.95)" : "rgba(255,180,80,0.9)"; x.lineWidth = 2; x.setLineDash([6, 5]); x.lineDashOffset = -G.time * 20; x.beginPath(); x.arc(p.x, p.y, R, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
     x.beginPath(); x.moveTo(p.x - 8, p.y); x.lineTo(p.x + 8, p.y); x.moveTo(p.x, p.y - 8); x.lineTo(p.x, p.y + 8); x.stroke();
   }
   for (const m of G.meteors || []) drawMeteor(x, m);
@@ -3191,7 +3247,7 @@ function frame(now) {
   if (G && !$("game").hidden) {
     if (!G.paused && !G.over) for (let i = 0; i < G.speed; i++) { update(dt); if (G.over) break; }
     if (!G.paused) tickFx(dt * (G.over ? 1 : G.speed));
-    if (G.fbCool > -1) { updateAbilities(); if (G.fbCool <= 0) G.fbCool = -1; }   // keep the Fireball countdown ticking
+    if (Object.values(G.cool || {}).some((c) => c > 0) || G.coolShown) { updateAbilities(); G.coolShown = Object.values(G.cool || {}).some((c) => c > 0); }   // keep ability countdowns ticking
     if (G.over) tickTakeover(dt);
     else if (!G.paused) tickBonusLeaf(dt * G.speed);   // bonus leaves follow the game speed (2x / 3x)
     draw();

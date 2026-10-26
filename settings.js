@@ -180,6 +180,8 @@ const SETTINGS = {
   abilities: {
     // Add burnDamagePerSecond + burnSeconds to set robots on fire, or cooldownSeconds to make it wait between uses.
     fireball: { name: "Mega Fireball", cost: 300, damage: 500, radius: 1.6 },
+    // Freeze: every robot in the circle (even Bosses and flying ones) stops moving for this many seconds.
+    freeze:   { name: "Freeze", cost: 100, seconds: 5, radius: 1.6 },
   },
 
   // ---------------- PERMANENT UPGRADES ----------------
