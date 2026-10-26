@@ -134,6 +134,20 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .hud .spacer { flex: 1; }
 .hud button { font-size: 16px; padding: 8px 12px; }
 #stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+/* special abilities sit in a column beside the board (on small screens they float over its right edge) */
+.abilities { display: flex; flex-direction: column; gap: 10px; margin-left: 10px; z-index: 3; }
+.ability { position: relative; width: 82px; padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-family: var(--body); font-weight: 700; font-size: 14px; line-height: 1.1; background: #3a1c10; border: 2px solid #ff8a3c; border-radius: 8px; color: #ffe2c4; box-shadow: 0 0 12px rgba(255,120,40,0.35); }
+.ability:hover:not(:disabled) { background: #4a2414; }
+.ability.on { background: #ff7a1a; color: #2a1004; border-color: #ffd36b; box-shadow: 0 0 18px rgba(255,180,60,0.8); animation: ab-pulse 0.8s infinite alternate; }
+@keyframes ab-pulse { to { transform: scale(1.06); } }
+.ability:disabled { opacity: 0.5; filter: grayscale(0.5); box-shadow: none; }
+.ab-icon { width: 40px; height: 40px; }
+.ab-cost { font-size: 13px; color: #ffb066; display: inline-flex; align-items: center; gap: 3px; }
+.ab-cost::after { content: ""; width: 12px; height: 12px; background: #ec7a2c; -webkit-mask: radial-gradient(circle, #000 60%, transparent 62%); mask: radial-gradient(circle, #000 60%, transparent 62%); }
+.ab-cool { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 6px; font-size: 20px; color: #fff; }
+.ability.on .ab-cost { color: #2a1004; }
+@media (max-width: 760px) { .abilities { position: absolute; right: 6px; bottom: 6px; margin: 0; } .ability { width: 70px; font-size: 12px; } }
+#board.aiming { cursor: crosshair; }
 #board { image-rendering: pixelated; display: block; border: 3px solid #0b130e; border-radius: 4px; touch-action: none; cursor: pointer; }
 .shelf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-bottom: 2px; }
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
@@ -442,6 +456,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     </div>
     <div id="stage">
       <canvas id="board" width="640" height="384"></canvas>
+      <div class="abilities" id="abilities">
+        <button class="ability" id="b-fireball" title="Mega Fireball: tap it, then tap where it should land">
+          <canvas class="ab-icon" id="fb-icon" width="40" height="40"></canvas>
+          <span class="ab-name">Fireball</span><span class="ab-cost" id="fb-cost">300</span><span class="ab-cool" id="fb-cool" hidden></span>
+        </button>
+      </div>
       <div class="panel" id="tpanel" hidden></div>
       <div class="friends" id="friends" hidden></div>
       <div class="banner" id="banner" hidden><p id="banner-text"></p><button id="banner-ok">Got it</button></div>
@@ -1811,6 +1831,7 @@ function updateHud() {
   $("b-sound").textContent = Sound.on ? "Sound on" : "Sound off";
   $("hud-acorns").textContent = (slot() && slot().acorns) || 0;
   $("b-pause").textContent = G.paused ? "Resume" : "Pause";
+  updateAbilities();
 }
 
 // Some levels make certain towers stronger (see towerBoosts in settings.js).
@@ -1976,8 +1997,51 @@ function tileFromEvent(e) {
 const towerAt = (x, y) => G.towers.find((t) => t.x === x && t.y === y);
 board.addEventListener("pointermove", (e) => { if (G) G.hover = tileFromEvent(e); });
 board.addEventListener("pointerleave", () => { if (G) G.hover = null; });
+/* ---------- Mega Fireball ability ---------- */
+function boardPos(e) { const r = board.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 640, y: (e.clientY - r.top) / r.height * 384 }; }
+board.addEventListener("pointermove", (e) => { if (G && G.aim) G.aimPos = boardPos(e); });
+function fireballReady() { const A = SETTINGS.abilities.fireball; return G && !G.over && G.leaves >= A.cost && !(G.fbCool > 0); }
+function setAiming(on) { G.aim = on; if (on) { G.pick = null; G.sel = null; $("tpanel").hidden = true; updateShelf(); } board.classList.toggle("aiming", on); updateAbilities(); }
+function castFireball(pos) {
+  const A = SETTINGS.abilities.fireball;
+  if (!fireballReady()) { setAiming(false); return; }
+  G.leaves -= A.cost; G.fbCool = A.cooldownSeconds; setAiming(false);
+  G.meteors = G.meteors || []; G.meteors.push({ x: pos.x, y: pos.y, t: 0, dur: 0.6 });
+  Sound.play("fire"); updateHud();
+}
+function landFireball(m) {
+  const A = SETTINGS.abilities.fireball, R = A.radius * T;
+  let hits = 0;
+  for (const r of G.robots) {
+    if (r.dead) continue;
+    const q = rpos(r); if (Math.hypot(q.x - m.x, q.y - m.y) > R) continue;
+    hurt(r, A.damage, true); hits++;
+    if (!r.dead) { r.burnT = A.burnSeconds; r.burnDps = A.burnDamagePerSecond; }
+  }
+  G.fx.push({ kind: "splash", x: m.x, y: m.y, r: R, t: 0.3, col: "255,140,40" }, { kind: "splash", x: m.x, y: m.y, r: R * 0.6, t: 0.3, col: "255,220,120" }, { kind: "scorch", x: m.x, y: m.y, r: R * 0.7, t: 2.5 });
+  for (let i = 0; i < 40; i++) { const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 160; G.particles.push({ kind: "spark", x: m.x, y: m.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, t: 0, life: 0.6 + Math.random() * 0.3, col: ["#ff6a1a", "#ffb347", "#ffd36b", "#fff3b0"][i % 4] }); }
+  G.shake = Math.max(G.shake, 0.4); Sound.play("smash"); Sound.play("fire");
+  floatText(m.x, m.y - 20, hits ? `Mega Fireball! x${hits}` : "Mega Fireball!", "#ffb347", 1.4);
+}
+function updateAbilities() {
+  if (!G) return;
+  const A = SETTINGS.abilities.fireball, b = $("b-fireball"), cool = $("fb-cool");
+  $("fb-cost").textContent = A.cost;
+  b.classList.toggle("on", !!G.aim);
+  b.disabled = !G.aim && !fireballReady();
+  const cs = G.fbCool > 0 ? Math.ceil(G.fbCool) : 0;
+  cool.hidden = !cs; if (cs) cool.textContent = cs + "s";
+}
+$("b-fireball").onclick = () => { if (!G || G.over) return; if (G.aim) { setAiming(false); return; } if (fireballReady()) { setAiming(true); floatText(320, 30, "Tap where the fireball should land!", "#ffb347", 1.6); } };
+{ // the button's fireball picture
+  const c = $("fb-icon").getContext("2d"), gr = c.createRadialGradient(17, 17, 2, 20, 20, 18);
+  gr.addColorStop(0, "#fff3b0"); gr.addColorStop(0.35, "#ffb347"); gr.addColorStop(0.75, "#ff5a1a"); gr.addColorStop(1, "rgba(200,40,10,0)");
+  c.fillStyle = gr; c.beginPath(); c.arc(20, 20, 18, 0, Math.PI * 2); c.fill();
+  c.fillStyle = "rgba(255,140,40,0.5)"; for (const [a, d] of [[2.3, 15], [2.7, 17], [3.2, 14]]) { c.beginPath(); c.arc(20 + Math.cos(a) * d, 20 + Math.sin(a) * d * -1, 4, 0, Math.PI * 2); c.fill(); }
+}
 board.addEventListener("pointerdown", (e) => {
   if (!G || G.over) return;
+  if (G.aim) { castFireball(boardPos(e)); return; }   // aiming the Mega Fireball
   const c = tileFromEvent(e); if (!c) return;
   G.hover = c;
   if (G.bonus && G.bonus.x === c.x && G.bonus.y === c.y) { collectBonusLeaf(); return; }
@@ -2007,6 +2071,7 @@ $("b-sound").onclick = () => { Sound.init(); Sound.setOn(!Sound.on); try { local
 document.addEventListener("keydown", (e) => {
   if (!G || $("game").hidden) return;
   if (e.key === " " && !G.waveActive) { e.preventDefault(); startWave(); }
+  if (e.key === "Escape" && G.aim) { setAiming(false); return; }   // cancel aiming
   if (e.key === "p" || e.key === "Escape") G.paused ? resume() : pause();
 });
 
@@ -2446,6 +2511,9 @@ function floatText(x, y, text, col, life = 1.1) { G.fx.push({ kind: "text", x, y
 /* ---------- update ---------- */
 function update(dt) {
   G.time += dt;
+  if (G.fbCool > 0) G.fbCool -= dt;
+  for (const m of G.meteors || []) { m.t += dt; if (m.t >= m.dur && !m.hit) { m.hit = true; landFireball(m); } }
+  if (G.meteors) G.meteors = G.meteors.filter((m) => !m.hit);
   if (G.waveActive) {
     G.waveClock += dt;
     while (G.queue.length && G.queue[0].at <= G.waveClock) spawn(G.queue.shift());
@@ -2890,6 +2958,7 @@ function draw() {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
     if (f.kind === "zap") drawZap(x, f);
+    if (f.kind === "scorch") { x.fillStyle = `rgba(40,20,10,${0.45 * Math.min(1, f.t / 1)})`; x.beginPath(); x.ellipse(f.x, f.y + 4, f.r, f.r * 0.55, 0, 0, Math.PI * 2); x.fill(); }
     if (f.kind === "sandstorm") {
       const k = 1 - f.t / 0.9;
       x.fillStyle = `rgba(224,176,106,${0.35 * (1 - k)})`; x.beginPath(); x.arc(f.x, f.y, f.r * (0.4 + 0.6 * k), 0, Math.PI * 2); x.fill();
@@ -2897,6 +2966,22 @@ function draw() {
     }
   }
   drawBonusLeaf(x);
+  // Mega Fireball: the target circle while aiming, and the fireball falling from the sky
+  if (G.aim && G.aimPos) {
+    const R = SETTINGS.abilities.fireball.radius * T, p = G.aimPos, pulse = 0.5 + 0.5 * Math.sin(G.time * 8);
+    x.fillStyle = `rgba(255,110,30,${0.14 + 0.08 * pulse})`; x.beginPath(); x.arc(p.x, p.y, R, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = "rgba(255,180,80,0.9)"; x.lineWidth = 2; x.setLineDash([6, 5]); x.lineDashOffset = -G.time * 20; x.beginPath(); x.arc(p.x, p.y, R, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+    x.beginPath(); x.moveTo(p.x - 8, p.y); x.lineTo(p.x + 8, p.y); x.moveTo(p.x, p.y - 8); x.lineTo(p.x, p.y + 8); x.stroke();
+  }
+  for (const m of G.meteors || []) {
+    const k = Math.min(1, m.t / m.dur), e = k * k, sx = m.x + 180, sy = -60, mx = sx + (m.x - sx) * e, my = sy + (m.y - sy) * e;
+    x.strokeStyle = "rgba(255,180,80,0.5)"; x.lineWidth = 1.5; x.beginPath(); x.arc(m.x, m.y, 10 + 30 * (1 - k), 0, Math.PI * 2); x.stroke();   // shadow ring where it will land
+    for (let i = 5; i >= 1; i--) { const tk = Math.max(0, k - i * 0.05), te = tk * tk; x.globalAlpha = 0.12 * (6 - i); x.fillStyle = "#ff7a1a"; x.beginPath(); x.arc(sx + (m.x - sx) * te, sy + (m.y - sy) * te, 14 - i, 0, Math.PI * 2); x.fill(); }
+    x.globalAlpha = 1;
+    const gr = x.createRadialGradient(mx - 3, my - 3, 2, mx, my, 18); gr.addColorStop(0, "#fff6c9"); gr.addColorStop(0.35, "#ffb347"); gr.addColorStop(0.8, "#ff5a1a"); gr.addColorStop(1, "rgba(255,60,10,0)");
+    x.fillStyle = gr; x.beginPath(); x.arc(mx, my, 18, 0, Math.PI * 2); x.fill();
+    if (!G.paused && Math.random() < 0.8) G.particles.push({ kind: "spark", x: mx + (Math.random() - 0.5) * 10, y: my + (Math.random() - 0.5) * 10, vx: (Math.random() - 0.5) * 30, vy: -20, t: 0, life: 0.4, col: Math.random() < 0.5 ? "#ffb347" : "#ff6a1a" });
+  }
 
   // particles
   for (const p of G.particles) {
@@ -3051,7 +3136,8 @@ function tickTakeover(dt) {
 function fitBoard() {
   const st = $("stage"), w = st.clientWidth, h = st.clientHeight;
   if (!w || !h) return;
-  const k = Math.min((w - 8) / 640, (h - 8) / 384);
+  const side = innerWidth > 760 ? 100 : 0;   // room for the ability buttons beside the board
+  const k = Math.min((w - 8 - side) / 640, (h - 8) / 384);
   board.style.width = Math.floor(640 * k) + "px"; board.style.height = Math.floor(384 * k) + "px";
 }
 new ResizeObserver(fitBoard).observe($("stage"));
@@ -3061,6 +3147,7 @@ function frame(now) {
   if (G && !$("game").hidden) {
     if (!G.paused && !G.over) for (let i = 0; i < G.speed; i++) { update(dt); if (G.over) break; }
     if (!G.paused) tickFx(dt * (G.over ? 1 : G.speed));
+    if (G.fbCool > -1) { updateAbilities(); if (G.fbCool <= 0) G.fbCool = -1; }   // keep the Fireball countdown ticking
     if (G.over) tickTakeover(dt);
     else if (!G.paused) tickBonusLeaf(dt * G.speed);   // bonus leaves follow the game speed (2x / 3x)
     draw();

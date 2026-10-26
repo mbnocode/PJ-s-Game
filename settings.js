@@ -175,6 +175,12 @@ const SETTINGS = {
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
   },
 
+  // ---------------- ABILITIES ----------------
+  // Special powers on the button beside the board. Tap the button, then tap where it should land.
+  abilities: {
+    fireball: { name: "Mega Fireball", cost: 300, damage: 350, radius: 1.6, burnDamagePerSecond: 15, burnSeconds: 3, cooldownSeconds: 12 },
+  },
+
   // ---------------- PERMANENT UPGRADES ----------------
   // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
   acornsFromWave: 6,   // robots only drop Golden Acorns from this wave on (6 = after wave 5)
