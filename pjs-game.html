@@ -912,8 +912,8 @@ function timeLeft(d) {
 }
 // Difficulty and some levels (like The Beach) multiply the score.
 // Score = points from destroyed robots x treehouse health (30 health = x0.30) x difficulty x level bonus.
-// Health multiplier: 30 health = x0.30, but never lower than minHealthTimes (0.5) while the treehouse is still standing.
-function healthTimes() { const h = Math.max(0, G.health) / (SETTINGS.baseHealth || 100); return G.health > 0 ? Math.max(SETTINGS.minHealthTimes ?? 0, h) : 0; }
+// Health multiplier: 30 health = x0.30, but never lower than minHealthTimes (0.5), even if the treehouse falls.
+function healthTimes() { return Math.max(SETTINGS.minHealthTimes ?? 0, Math.max(0, G.health) / (SETTINGS.baseHealth || 100)); }
 function currentScore() { return Math.round(G.killPoints * healthTimes() * G.diff.scoreTimes * (SETTINGS.levels[G.level].scoreTimes || 1)); }
 function scoreMath() {   // shown on the results screen, e.g. "1,200 points x 0.30 health x 1.5 Normal"
   const lv = SETTINGS.levels[G.level].scoreTimes || 1, f = (n) => (Math.round(n * 100) / 100).toString();
