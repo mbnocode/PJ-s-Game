@@ -187,6 +187,14 @@ const SETTINGS = {
     freeze:   { name: "Freeze", cost: 100, seconds: 5, radius: 1.6 },
   },
 
+  // ---------------- THE SERPENT'S SHOP ----------------
+  // The secret shop you reach by tapping the serpent hiding behind a tree on the save slot screen.
+  // Each item costs Golden Acorns. Add items like this (they don't do anything in the game yet):
+  //   dragonScale: { name: "Dragon Scale", cost: 50, about: "A shiny scale. Something might need it someday." },
+  serpentShop: {
+  },
+  serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
+
   // ---------------- PERMANENT UPGRADES ----------------
   // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
   acornsFromWave: 6,   // robots only drop Golden Acorns from this wave on (6 = after wave 5)

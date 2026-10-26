@@ -94,6 +94,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #slot-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; image-rendering: pixelated; z-index: 0; pointer-events: none; }
 #s-slots { position: relative; }
 #s-slots > *:not(.slot-layout), .slot-layout > *:not(#slot-scene), .slot-layout #slot-cards > * { position: relative; z-index: 1; }
+#s-slots #b-serpent { position: fixed; z-index: 2; background: transparent; border: 0; box-shadow: none; padding: 0; min-height: 0; cursor: pointer; border-radius: 10px; }
+#s-slots #b-serpent:focus-visible { outline: 3px solid var(--gold); }
+#serp-portrait { width: min(384px, 90vw); image-rendering: pixelated; }
+#serp-shop .cost::before { content: ""; width: 1.05em; height: 1.18em; background: var(--acorn) center / contain no-repeat; display: inline-block; vertical-align: -0.2em; margin-right: 4px; }
+#serp-shop .soon { opacity: 0.6; border-style: dashed; }
+#serp-shop .owned { color: var(--gold); font-family: var(--body); font-weight: 700; }
 #s-slots h2 { text-shadow: 0 3px 0 #16191d, 0 0 14px rgba(0,0,0,0.8); }
 #s-slots #b-slots-back { background: rgba(20,32,26,0.85); padding: 6px 14px; border-radius: 6px; }
 .slot-layout .card { background: rgba(20, 32, 26, 0.88); backdrop-filter: blur(2px); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
@@ -339,6 +345,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <canvas id="slot-scene" width="480" height="160" aria-label="Dragons, frogs and tree giants fighting off robots in the meadow"></canvas>
       <div class="cards" id="slot-cards"></div>
     </div>
+    <button id="b-serpent" aria-label="Something is hiding behind the tree…" title="Something is hiding behind the tree…" hidden></button>
     <button class="link" id="b-slots-back">Back</button>
   </section>
 
@@ -392,6 +399,17 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <input id="gift-code" maxlength="20" autocomplete="off" spellcheck="false" placeholder="Type the code"></label>
       <button class="go" id="b-gift">Use code</button><p class="muted" id="gift-msg" hidden></p></div>
     <button class="link" id="b-perks-back">Back to levels</button>
+  </section>
+
+  <!-- The Serpent's Shop: a secret shop reached by tapping the serpent on the save slot screen -->
+  <section class="screen menu" id="s-serpent" hidden>
+    <h2>The Serpent's Shop</h2>
+    <canvas id="serp-portrait" width="96" height="48" aria-label="A green serpent coiled around a pile of Golden Acorns"></canvas>
+    <p class="muted" id="serp-say"></p>
+    <div class="choices" id="serp-slots"></div>
+    <div class="acorns" id="serp-acorns-row"><span id="serp-acorns">0</span> Golden Acorns</div>
+    <div class="perks" id="serp-shop"></div>
+    <button class="link" id="b-serpent-back">Back to save slots</button>
   </section>
 
   <!-- Towers: what each tower does and its starting statistics (per save slot) -->
@@ -1031,7 +1049,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -1049,10 +1067,110 @@ $("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); startSlotSc
 
 /* ---------- save slot screen: a little meadow battle that loops forever ---------- */
 let slotScene = null;
+/* ---------- the secret serpent ---------- */
+const SERP_HEAD = ["...kkkkk...", "..kLLlLLkk.", ".kLllyklLLk", "kLlllllllLk", "kLlhhhhhhk.", ".kkkkkkkk.."];
+const SERP_TAIL = ["....kkk.", "..kklLlk", ".klLlkk.", "kLkk...."];
+function pxRows(c, rows, x, y, s) { rows.forEach((row, j) => { for (let i = 0; i < row.length; i++) { const ch = row[i]; if (ch === ".") continue; c.fillStyle = PAL[ch]; c.fillRect(x + i * s, y + j * s, s, s); } }); }
+function drawSerpentNeck(c, x0, x1, y, s, wig) {   // a striped green body going from x0 to x1
+  for (let px = x0; px < x1; px += s) {
+    const yy = y + Math.round(Math.sin((px + wig) / 7) * 1.5) * s / 2;
+    c.fillStyle = PAL.k; c.fillRect(px, yy, s, s * 4);
+    c.fillStyle = ((px / s) | 0) % 3 === 0 ? PAL.L : PAL.l; c.fillRect(px, yy + s * 0.5, s, s * 2);
+    c.fillStyle = PAL.h; c.fillRect(px, yy + s * 2.5, s, s);
+  }
+}
+function drawSerpentHead(c, hx, hy, s, tongue) {
+  pxRows(c, SERP_HEAD, hx, hy, s);
+  if (tongue) { c.fillStyle = PAL.r; c.fillRect(hx + 11 * s, hy + 3 * s, s * 2, s); c.fillRect(hx + 13 * s, hy + 2 * s, s, s); c.fillRect(hx + 13 * s, hy + 4 * s, s, s); }
+}
+function drawSerpentTree(c, sp, dt) {
+  sp.t += dt; sp.peek -= dt;
+  if (sp.peek < -5 - Math.random() * 3) sp.peek = 1.6;   // every few seconds it peeks out
+  const want = sp.hover ? 18 : sp.peek > 0 ? 12 : 0;
+  sp.out += (want - sp.out) * Math.min(1, dt * 6);
+  const x = sp.x, y = sp.y, out = Math.round(sp.out), hx = x + 8 + out, hy = y + 9;
+  drawSerpentNeck(c, x + 6, hx + 4, hy + 4, 2, sp.t * 30);
+  drawSerpentHead(c, hx, hy, 2, out > 6 && (sp.t % 1.2) < 0.35);
+  c.drawImage(SPR.tree, x, y, TS_SLOT, TS_SLOT);
+  pxRows(c, SERP_TAIL, x + 4, y + 24, 2);   // its tail curls around the trunk
+  if (sp.hover) { c.font = "bold 9px " + getComputedStyle(document.body).fontFamily; c.fillStyle = "#16191d"; c.fillText("Psst…", hx + 2, hy - 3); c.fillStyle = "#ffe58a"; c.fillText("Psst…", hx + 1, hy - 4); }
+}
+const TS_SLOT = 32;
+$("b-serpent").onmouseenter = () => { if (slotSerp()) slotSerp().hover = true; };
+$("b-serpent").onmouseleave = () => { if (slotSerp()) slotSerp().hover = false; };
+$("b-serpent").onclick = () => { Sound.play("place"); openSerpentShop(); };
+let serpSceneRef = null; const slotSerp = () => serpSceneRef && serpSceneRef.serp;
+
+let serpSlot = -1, serpAnim = null;
+function openSerpentShop() {
+  serpSlot = slots[slotIndex] ? slotIndex : slots.findIndex((s) => s);
+  renderSerpentShop(); show("s-serpent");
+  if (!serpAnim) serpAnim = requestAnimationFrame(serpPortrait);
+}
+function renderSerpentShop() {
+  const has = slots.some((s) => s);
+  const box = $("serp-slots"); box.innerHTML = "";
+  slots.forEach((s, i) => {
+    if (!s) return;
+    const b = document.createElement("button"); b.id = "serp-slot-" + i; b.setAttribute("aria-pressed", String(i === serpSlot));
+    b.innerHTML = `Slot ${i + 1}<small>${s.acorns || 0} Golden Acorns</small>`;
+    b.onclick = () => { serpSlot = i; renderSerpentShop(); };
+    box.appendChild(b);
+  });
+  box.hidden = slots.filter((s) => s).length < 2;
+  $("serp-say").textContent = has ? "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns. Pick a save slot to shop with.”"
+    : "“Sssso… you found me. Come back when you have a save slot and some Golden Acorns.”";
+  if (has && slots.filter((s) => s).length < 2) $("serp-say").textContent = "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns.”";
+  const s = slots[serpSlot];
+  $("serp-acorns-row").hidden = !s; if (s) $("serp-acorns").textContent = s.acorns || 0;
+  const shop = $("serp-shop"); shop.innerHTML = "";
+  const items = Object.entries(SETTINGS.serpentShop || {});
+  items.forEach(([key, it]) => {
+    const own = (s && s.materials && s.materials[key]) || 0;
+    const d = document.createElement("div"); d.className = "perk";
+    d.innerHTML = `<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>${own ? `<span class="owned">You have ${own}</span>` : ""}
+      <button class="go" id="serp-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>Buy <span class="cost">${it.cost}</span></button>`;
+    d.querySelector("button").onclick = () => {
+      if (!s || (s.acorns || 0) < it.cost) return;
+      s.acorns -= it.cost; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + 1;
+      saveSlots(slots); Sound.play("upgrade"); renderSerpentShop();
+    };
+    shop.appendChild(d);
+  });
+  for (let n = items.length; n < (SETTINGS.serpentShopSlots || 3); n++) {
+    const d = document.createElement("div"); d.className = "perk soon";
+    d.innerHTML = `<span class="k">???</span><span class="s">Coming soon. The serpent is still gathering its treasures…</span>`;
+    shop.appendChild(d);
+  }
+}
+function serpPortrait(now) {
+  if ($("s-serpent").hidden) { serpAnim = null; return; }
+  const c = $("serp-portrait").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false;
+  c.clearRect(0, 0, 96, 48);
+  // a pile of Golden Acorns
+  if (ACORN_IMG.complete) [[50, 34], [60, 34], [70, 34], [55, 27], [65, 27], [60, 20]].forEach(([ax, ay]) => c.drawImage(ACORN_IMG, ax, ay, 11, 12));
+  // one smooth body: tail along the ground, curling around the pile, then the neck rises and sways
+  c.fillStyle = "rgba(0,0,0,0.25)"; c.fillRect(26, 45, 68, 2);
+  const P = [[92, 42], [80, 43], [66, 43], [52, 43], [42, 41], [35, 37], [31, 31], [29, 24], [27, 18], [25, 13]];
+  const pts = [];
+  for (let k = 0; k < P.length - 1; k++) for (let u = 0; u < 1; u += 0.12) {
+    const up = Math.max(0, (k - 4) / 5), sw = Math.sin(t * 1.6 + k * 0.6) * 2.5 * up;
+    pts.push([P[k][0] + (P[k + 1][0] - P[k][0]) * u + sw, P[k][1] + (P[k + 1][1] - P[k][1]) * u, k + u]);
+  }
+  const size = (q) => q[2] < 2 ? 2 + q[2] : 4;   // thin tail, thick body
+  pts.forEach((q) => { const r = size(q); c.fillStyle = PAL.k; c.fillRect(Math.round(q[0] - r - 1), Math.round(q[1] - r - 1), r * 2 + 2, r * 2 + 2); });
+  pts.forEach((q, i) => { const r = size(q); c.fillStyle = Math.floor(q[2] * 2.2) % 2 ? PAL.l : PAL.L; c.fillRect(Math.round(q[0] - r), Math.round(q[1] - r), r * 2, r * 2); });
+  pts.forEach((q) => { const r = size(q); c.fillStyle = PAL.h; if (q[2] < 4.5) c.fillRect(Math.round(q[0] - r), Math.round(q[1] + r - 2), r * 2, 2); else c.fillRect(Math.round(q[0] + r - 2), Math.round(q[1] - r), 2, r * 2); });
+  const hd = pts[pts.length - 1];
+  drawSerpentHead(c, Math.round(hd[0]) - 6, Math.round(hd[1]) - 12, 2, (t % 1.6) < 0.4);
+  serpAnim = requestAnimationFrame(serpPortrait);
+}
+$("b-serpent-back").onclick = () => { renderSlots(); show("s-slots"); startSlotScene(); };
+
 function startSlotScene() {
   if (slotScene) return;
   const cv = $("slot-scene"), x = cv.getContext("2d"), TS = 32, PX = 2;   // each game pixel is 2 screen pixels
-  const S = { robots: [], shots: [], fx: [], parts: [], spawn: 0, n: 0, last: performance.now(), size: "" };
+  const S = { robots: [], shots: [], fx: [], parts: [], spawn: 0, n: 0, last: performance.now(), size: "" }; serpSceneRef = S;
   let W, H, PY, ground, towers, hpTimes;
   // Build the meadow to fit the whole screen: a road across the middle, towers along it, scenery around.
   const layout = () => {
@@ -1063,6 +1181,8 @@ function startSlotScene() {
     const cards = [...document.querySelectorAll("#slot-cards > div")].map((el) => el.getBoundingClientRect()).filter((r) => r.width);
     let road = Math.floor(rows / 2);
     if (cards.length === 3 && cards[2].top > cards[0].bottom) road = Math.max(1, Math.min(rows - 2, Math.floor(((Math.max(cards[0].bottom, cards[1].bottom) + cards[2].top) / 2) / PX / TS)));
+    const blocks = cards.concat([document.querySelector("#s-slots h2"), $("b-slots-back")].map((el) => el.getBoundingClientRect()).filter((r) => r.width));
+    const blocked = (i, j) => blocks.some((r) => (i + 1) * TS * PX > r.left - 8 && i * TS * PX < r.right + 8 && (j + 1) * TS * PX > r.top - 8 && j * TS * PX < r.bottom + 8);
     const covered = (i, j) => cards.some((r) => (i + 1) * TS * PX > r.left - 8 && i * TS * PX < r.right + 8 && (j + 1) * TS * PX > r.top - 8 && j * TS * PX < r.bottom + 8);
     PY = road * TS + TS / 2;
     ground = document.createElement("canvas"); ground.width = W; ground.height = H;
@@ -1078,11 +1198,25 @@ function startSlotScene() {
       towers.push({ k: kinds[n % 3], x: i * TS + 16, y: row * TS + 16, cool: Math.random(), rec: 0 }); n++;
     }
     const taken = new Set(towers.map((t) => ((t.x - 16) / TS) + "," + ((t.y - 16) / TS)));
+    // The secret serpent hides behind the top-left tree (the closest open spot to the top-left corner).
+    S.serp = null;
+    let best = null;
+    for (const roomy of [true, false]) {   // first look for a spot with room for its head to peek out; on small screens, any free corner
+      for (let j = 0; j < rows - 1; j++) for (let i = roomy ? 1 : 0; i < cols - 2; i++) {
+        if (Math.abs(j - road) <= 1 || blocked(i, j) || (roomy && blocked(i + 1, j))) continue;
+        if (!best || i + j < best.i + best.j) best = { i, j };
+      }
+      if (best) break;
+    }
+    if (best) S.serp = { i: best.i, j: best.j, x: best.i * TS, y: best.j * TS, t: 0, peek: 0, out: 0 };
+    const sb = $("b-serpent"); sb.hidden = !S.serp;
+    if (S.serp) Object.assign(sb.style, { left: S.serp.x * PX + "px", top: S.serp.y * PX + "px", width: (TS + 20) * PX + "px", height: TS * PX + "px" });
     let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       if (Math.abs(j - road) <= 1 && taken.has(i + "," + j)) continue;
       if (j === road || taken.has(i + "," + j)) continue;
-      const r = R(); if (r < 0.06) gx.drawImage(SPR.tree, i * TS, j * TS, TS, TS); else if (r < 0.09) gx.drawImage(SPR.mushroom, i * TS, j * TS, TS, TS); else if (r < 0.13) gx.drawImage(SPR.tallgrass, i * TS, j * TS, TS, TS);
+      const r = R();
+      if (S.serp && i <= S.serp.i + 1 && j <= S.serp.j + 1) continue;   // keep the serpent's tree the top-left one if (r < 0.06) gx.drawImage(SPR.tree, i * TS, j * TS, TS, TS); else if (r < 0.09) gx.drawImage(SPR.mushroom, i * TS, j * TS, TS, TS); else if (r < 0.13) gx.drawImage(SPR.tallgrass, i * TS, j * TS, TS, TS);
     }
     hpTimes = Math.max(1, towers.length / 5);   // more towers on a wide screen, so the robots get tougher to keep the fight going
     S.robots = []; S.shots = []; S.fx = [];
@@ -1118,6 +1252,7 @@ function startSlotScene() {
     S.parts = S.parts.filter((q) => q.t < q.life);
     S.robots = S.robots.filter((r) => !r.dead && r.x < W + 20);
     x.imageSmoothingEnabled = false; x.drawImage(ground, 0, 0);
+    if (S.serp) drawSerpentTree(x, S.serp, dt);
     for (const t of towers) { const sz = 30 * (t.k === "plant" ? 1.05 : 1); x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(t.x - 10, t.y + 12, 20, 3); x.drawImage(SPR[t.k], t.x - sz / 2, t.y - sz / 2 - 2 - t.rec * 10, sz, sz); }
     for (const f of S.fx) {
       if (f.k === "tongue" || f.k === "vine") {
