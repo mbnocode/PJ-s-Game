@@ -187,6 +187,14 @@ const SETTINGS = {
     freeze:   { name: "Freeze", cost: 100, seconds: 5, radius: 1.6 },
   },
 
+  // ---------------- COMING SOON LEVELS ----------------
+  // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
+  comingSoon: [
+    { name: "The Basalt Delta", look: "basalt", about: "Tall black basalt pillars and bubbling lava pools. Watch your step!" },
+    { name: "The Magma Fields", look: "magma",  about: "The ground is cracked, and glowing magma flows underneath." },
+    { name: "Inside the Volcano", look: "volcano", about: "Deep inside the mountain, above a boiling lava lake. The hottest level yet!" },
+  ],
+
   // ---------------- THE SERPENT'S SHOP ----------------
   // The secret shop you reach by tapping the serpent hiding behind a tree on the save slot screen.
   // Each item costs Golden Acorns. Add items like this (they don't do anything in the game yet):

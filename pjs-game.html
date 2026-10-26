@@ -120,6 +120,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #level-cards .card .k { font-size: 20px; }
 .card canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; }
 .card.locked { opacity: .5; }
+.card.soon { opacity: .8; position: relative; cursor: default; }
+.card.soon canvas { filter: saturate(0.85); }
+.card.soon .ribbon { position: absolute; top: 18px; right: 18px; background: #ff7a1a; color: #2a1004; font-family: var(--body); font-weight: 700; font-size: 14px; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 0 #16191d; transform: rotate(4deg); }
 .stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
 .erase { align-self: flex-start; }
 
@@ -1343,6 +1346,59 @@ function renderLevels() {
     b.onclick = () => openSetup(L);
     box.appendChild(b);
   });
+  (SETTINGS.comingSoon || []).forEach((c, n) => {
+    const b = document.createElement("button"); b.className = "card soon"; b.id = "soon-" + n; b.disabled = true;
+    const mini = document.createElement("canvas"); mini.width = 320; mini.height = 192; drawSoonMini(mini, c.look);
+    b.appendChild(mini);
+    b.insertAdjacentHTML("beforeend", `<span class="ribbon">Coming soon</span><span class="k">${c.name}</span><span class="s">${c.about}</span>`);
+    box.appendChild(b);
+  });
+}
+/* little pixel pictures for the "Coming soon" levels: drawn small (80 x 48) and blown up */
+function drawSoonMini(cv, look) {
+  const W = 80, H = 48, sm = document.createElement("canvas"); sm.width = W; sm.height = H;
+  const x = sm.getContext("2d"); let sd = look.length * 977 + 13; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const px = (a, b, col, w = 1, h = 1) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  const road = (col, edge) => {   // a twisty road like the real levels
+    const pts = [[0, 30], [14, 30], [14, 12], [34, 12], [34, 36], [56, 36], [56, 20], [80, 20]];
+    for (let k = 0; k < pts.length - 1; k++) { const [a, b] = pts[k], [c, d] = pts[k + 1];
+      px(Math.min(a, c) - 3, Math.min(b, d) - 3, edge, Math.abs(c - a) + 6, Math.abs(d - b) + 6); }
+    for (let k = 0; k < pts.length - 1; k++) { const [a, b] = pts[k], [c, d] = pts[k + 1];
+      px(Math.min(a, c) - 2, Math.min(b, d) - 2, col, Math.abs(c - a) + 4, Math.abs(d - b) + 4); }
+  };
+  if (look === "basalt") {
+    px(0, 0, "#2c2a30", W, H);
+    for (let i = 0; i < 220; i++) px(R() * W | 0, R() * H | 0, R() < 0.5 ? "#36343b" : "#242228");
+    road("#55505a", "#1a181d");
+    for (let i = 0; i < 60; i++) px(R() * W | 0, R() * H | 0, "#4a4650");
+    // lava pools
+    [[5, 4], [44, 25], [66, 40], [24, 42]].forEach(([a, b]) => { px(a - 1, b, "#7a2a0e", 8, 4); px(a, b - 1, "#7a2a0e", 6, 6); px(a, b, "#ff6a1a", 6, 4); px(a + 1, b + 1, "#ffc04d", 3, 1); });
+    // tall basalt pillars (hex-topped columns) standing up out of the ground
+    [[24, 18], [44, 4], [66, 28], [4, 40], [70, 6], [26, 30], [48, 44]].forEach(([a, b], k) => {
+      const h = 6 + (k * 3) % 7; px(a, b - h, "#1a181d", 6, h + 2); px(a + 1, b - h + 1, "#3c3944", 4, h);
+      px(a + 1, b - h + 1, "#5b5766", 1, h); px(a + 1, b - h, "#6c6878", 4, 2); px(a + 2, b - h, "#8a8596", 2, 1);
+    });
+  } else if (look === "magma") {
+    px(0, 0, "#2a1712", W, H);
+    for (let i = 0; i < 260; i++) px(R() * W | 0, R() * H | 0, R() < 0.5 ? "#3a1f17" : "#1f110d");
+    // glowing cracks: random walks of magma
+    for (let c = 0; c < 9; c++) { let a = R() * W, b = R() * H; for (let s = 0; s < 22; s++) { px(a | 0, b | 0, "#ff7a1a"); if (R() < 0.3) px((a | 0) + 1, b | 0, "#ffd36b"); a += R() < 0.5 ? 1 : -1; b += R() < 0.5 ? 1 : 0; if (R() < 0.3) a += R() < 0.5 ? 1 : -1; } }
+    road("#4a3a34", "#ff5a14");
+    for (let i = 0; i < 40; i++) px(R() * W | 0, R() * H | 0, "#5a463e");
+    // magma blocks
+    [[4, 4], [60, 4], [22, 40], [70, 40], [42, 24]].forEach(([a, b]) => { px(a, b, "#16191d", 7, 7); px(a + 1, b + 1, "#c8400e", 5, 5); px(a + 2, b + 2, "#ff8a2a", 3, 1); px(a + 2, b + 4, "#ffd36b", 1, 1); px(a + 4, b + 3, "#ffd36b", 1, 1); });
+  } else {
+    // inside the volcano: rock walls, a lava lake below, a stone path across
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#1a0d0a"); g.addColorStop(1, "#5a1a08"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < W; i++) { const t = 6 + Math.round(Math.sin(i / 5) * 2 + R() * 2); px(i, 0, "#120806", 1, t); px(i, t, "#3a1a10", 1, 1); }   // jagged ceiling
+    for (let i = 0; i < W; i++) { const t = 36 + Math.round(Math.sin(i / 4) * 1.5); px(i, t, "#ff6a1a", 1, H - t); px(i, t, "#ffd36b", 1, 1); }   // lava lake
+    for (let i = 0; i < 30; i++) px(R() * W | 0, 38 + R() * 10 | 0, R() < 0.5 ? "#ffb347" : "#c8400e");
+    road("#4e3a32", "#1a0d0a");
+    for (let i = 0; i < 30; i++) px(R() * W | 0, R() * 34 | 0, "#ff8a2a");   // floating embers
+    [[8, 6], [30, 7], [52, 6], [72, 8]].forEach(([a, b]) => { px(a, b, "#ff7a1a", 1, 4); px(a, b + 4, "#ffd36b"); });   // lava drips
+    for (let j = 0; j < 36; j++) { const w = 4 - Math.round(Math.abs(Math.sin(j / 3)) * 2); px(0, j, "#120806", w, 1); px(W - w, j, "#120806", w, 1); }   // side walls
+  }
+  const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
 }
 
 const setup = { level: "meadow", diff: "normal", tutorial: false, mode: "solo", hours: 24 };
