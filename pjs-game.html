@@ -2002,7 +2002,7 @@ function squirrelLeafPerks() {
   return out;
 }
 const nextBonusIn = () => { const b = SETTINGS.bonusLeaf; return (b.everySecondsMin + Math.random() * (b.everySecondsMax - b.everySecondsMin)) / squirrelLeafPerks().rate; };
-// Runs on real time (not game speed), so the leaf is just as easy to tap at 3x.
+// Runs at game speed: at 3x, leaves show up 3 times as often and vanish 3 times as fast.
 function tickBonusLeaf(dt) {
   if (!SETTINGS.bonusLeaf) return;
   if (G.bonus) { G.bonus.t += dt; if (G.bonus.t >= G.bonus.stay) G.bonus = null; }
@@ -2760,7 +2760,7 @@ function frame(now) {
     if (!G.paused && !G.over) for (let i = 0; i < G.speed; i++) { update(dt); if (G.over) break; }
     if (!G.paused) tickFx(dt * (G.over ? 1 : G.speed));
     if (G.over) tickTakeover(dt);
-    else if (!G.paused) tickBonusLeaf(dt);
+    else if (!G.paused) tickBonusLeaf(dt * G.speed);   // bonus leaves follow the game speed (2x / 3x)
     draw();
   }
   requestAnimationFrame(frame);
