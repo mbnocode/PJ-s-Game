@@ -360,7 +360,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div>
       <h3 style="margin-bottom:10px">Turn on the tutorial?</h3>
       <div class="choices" id="tut-choices">
-        <button id="tut-yes" aria-pressed="false">Yes<small>Tips for the first 5 waves</small></button>
+        <button id="tut-yes" aria-pressed="false">Yes<small>Tips about towers and robots while you play</small></button>
         <button id="tut-no" aria-pressed="true">No<small>I know how to play</small></button>
       </div>
     </div>
@@ -1199,12 +1199,15 @@ function renderLevels() {
     b.appendChild(mini);
     b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
     b.disabled = !open;
-    b.onclick = () => { setup.level = L; renderSetup(); show("s-setup"); };
+    b.onclick = () => openSetup(L);
     box.appendChild(b);
   });
 }
 
 const setup = { level: "meadow", diff: "normal", tutorial: false, mode: "solo", hours: 24 };
+/* the tutorial starts switched on until this save slot has beaten the Meadow */
+function beatMeadow() { const s = slot(); return !!(s && s.best && s.best.meadow && Object.keys(s.best.meadow).length); }
+function openSetup(L) { setup.level = L; setup.tutorial = !beatMeadow(); renderSetup(); show("s-setup"); }
 function renderSetup() {
   $("setup-title").textContent = SETTINGS.levels[setup.level].name;
   const box = $("diff-choices"); box.innerHTML = "";
@@ -1675,7 +1678,8 @@ function startGame(L, d, tutorial, online) {
   $("tpanel").hidden = true; $("overlay").hidden = true; $("banner").hidden = true;
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
-  if (tutorial) tip("Tap a tower at the bottom, then tap the grass next to the path to place it. Try the Fire Dragon first.", 0);
+  tipQueue.length = 0;
+  if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
   $("code-chip").hidden = true; $("friends").hidden = true;
   onlineStart(G);
 }
@@ -1688,23 +1692,43 @@ function redrawGround() {
 }
 
 /* ---------- tutorial ---------- */
+/* tips wait in line: if one is already showing, the next appears after "Got it" */
+const tipQueue = [];
+function showTip(t) { $("banner-text").innerHTML = `<span class="who">${t.who}</span>${t.text}`; $("banner").hidden = false; }
 function tip(text, step, who = "Tutorial") {
-  $("banner-text").innerHTML = `<span class="who">${who}</span>${text}`;
-  $("banner").hidden = false;
   if (step !== undefined) G.tutStep = step;
+  if ($("banner").hidden) showTip({ text, who }); else tipQueue.push({ text, who });
 }
-$("banner-ok").onclick = () => { $("banner").hidden = true; };
-function tutorialEvent(ev) {
+$("banner-ok").onclick = () => { if (tipQueue.length) showTip(tipQueue.shift()); else $("banner").hidden = true; };
+/* what each tower does: shown the first time you place one with the tutorial on */
+const TUT_TOWER = {
+  fire: "<b>Fire Dragon:</b> breathes fireballs that set robots on fire, so they keep burning. It can hit flying robots too.",
+  water: "<b>Water Frog:</b> its sticky tongue slows robots down. Put it near a bend so robots stay in range longer.",
+  plant: "<b>Tree Giant:</b> strong vines grab robots and hold them in place for a moment. Put Dragons next to it!",
+  air: "<b>Owl:</b> gusts of wind push robots back down the road. Owls can also see invisible Hiders and hit flying robots.",
+  wizard: "<b>Wizard:</b> it doesn't attack, but its magic makes towers near it attack faster. Put it in the middle of your towers.",
+  healer: "<b>Healer Deer:</b> heals your treehouse after every wave. It's expensive, but great for long levels.",
+  squirrel: "<b>Squirrel:</b> it doesn't attack, but it gathers extra Maple Leaves for you after every wave. Build it early!",
+  crab: "<b>Crab:</b> hurls seashells that splash and hurt every robot nearby. Great against big groups.",
+  pegasus: "<b>Pegasus:</b> the Super Tower! It shoots golden stars at 3 robots at once.",
+};
+function tutorialEvent(ev, kind) {
   if (!G.tutorial) return;
   const say = (t) => tip(t);
-  if (ev === "placed" && G.tutStep === 0) { G.tutStep = 1; say("Nice! Press Start Wave when you're ready for the robots."); }
-  else if (ev === "wave1") say("Every robot you destroy drops Maple Leaves. Spend them on more towers.");
-  else if (ev === "end1") say("Tap a tower you've placed to Upgrade it or Sell it. Upgraded towers look bigger and hit harder.");
-  else if (ev === "wave2") say("If a robot reaches your treehouse, land turns into Factory, starting from the robots' side. If all 100 squares become Factory, you lose.");
-  else if (ev === "wave3") say("Scouts are fast! Water Frogs rust robots and slow them down.");
-  else if (ev === "wave4") say("The Wizard makes nearby towers attack faster. The Healer Deer heals your Base after every wave, but it's expensive.");
-  else if (ev === "wave5") say("A Boss is coming! Use Pause and the speed button whenever you like. That's the last tip. Good luck!");
-  else if (ev === "end5") { G.tutorial = false; }
+  if (ev === "placed") {
+    if (G.tutStep === 0) { G.tutStep = 1; say("Nice! Press <b>Start Wave</b> when you're ready for the robots."); }
+    G.tutTowers = G.tutTowers || {};
+    if (TUT_TOWER[kind] && !G.tutTowers[kind]) { G.tutTowers[kind] = true; say(TUT_TOWER[kind]); }
+  }
+  else if (ev === "wave1") say("Every robot you destroy drops Maple Leaves. Spend them on more towers. If a big maple leaf floats onto the grass, tap it for free leaves!");
+  else if (ev === "end1") say("Tap a tower you've placed to <b>Upgrade</b> or <b>Sell</b> it. On some upgrades you get to pick between two choices, so read them and pick your favorite!");
+  else if (ev === "wave2") say("If a robot reaches your treehouse, your <b>Base health</b> (at the top) goes down and the land turns into Factory. If your health hits 0, you lose. You also score more when you keep your health high!");
+  else if (ev === "wave3") say("Scouts are fast! Water Frogs slow robots down, and Tree Giants can hold them in place. Try mixing different towers.");
+  else if (ev === "wave4") say("See the <b>Fireball</b> and <b>Freeze</b> buttons beside the board? Tap one, then tap the road where robots are. Fireball blasts them, and Freeze stops them for 5 seconds.");
+  else if (ev === "end4") say("You can press <b>Pause</b> any time. The speed button makes the game go 2× or 3× faster.");
+  else if (ev === "wave6") say("Try a Wizard next to your attack towers, or a Squirrel for extra leaves. Every tower is different, so experiment!");
+  else if (ev === "wave8") say("Robots sometimes drop <b>Golden Acorns</b>, and Bosses always do. Spend them on the <b>Upgrades</b> page for power-ups that last forever.");
+  else if (ev === "wave10") say("The last wave! That's the final tip. Check the <b>Towers</b> and <b>Enemies</b> pages to learn more. Good luck!");
 }
 
 /* ---------- permanent upgrades (per save slot) ---------- */
@@ -2203,7 +2227,7 @@ board.addEventListener("pointerdown", (e) => {
     G.leaves -= price;
     G.towers.push({ kind: G.pick, x: c.x, y: c.y, face: pathFacing(c.x, c.y), level: 0, cool: 0.2, spent: price, born: G.time, boosted: false });
     Sound.play("place"); burst(c.x * T + 16, c.y * T + 16, "#9be28a", 10);
-    tutorialEvent("placed"); updateHud();
+    tutorialEvent("placed", G.pick); updateHud();
     if (G.leaves < price) { G.pick = null; updateShelf(); }
     return;
   }
@@ -2256,8 +2280,8 @@ function startWave() {
   const hasTesla = G.queue.some((q) => q.type === "tesla");
   const hasSplit = G.queue.some((q) => q.type === "splitter"), hasRepair = G.queue.some((q) => q.type === "repair"), hasMummy = G.queue.some((q) => q.type === "mummy");
   Sound.play(hasBoss ? "horn" : "wave");
-  if (G.tutorial && G.wave <= 5) tutorialEvent("wave" + G.wave);
-  else if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
+  if (G.tutorial) tutorialEvent("wave" + G.wave);
+  if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
   else if (hasGolem && !G.seenGolem) tip(`A Sand Golem is rising from the dunes! Its sandstorms stop towers within ${SETTINGS.robots.sandboss.sandstormRadius} squares from attacking for ${SETTINGS.robots.sandboss.sandstormSeconds} seconds. Spread your towers out!`, undefined, "Heads up");
   else if (hasDrone && !G.seenDrone) tip("Sky Drones are here! They fly straight over the sand to your treehouse. Only Owls, Dragons, the Pegasus and the Wizard's Elemental Sphere can hit them.", undefined, "Heads up");
   else if (hasMummy && !G.seenMummy) tip("Mummy Bots are here! When you destroy one, it unravels into 2 speedy Scouts. Watch out for the quicksand: it slows robots down, so build towers next to it!", undefined, "Heads up");
@@ -2305,7 +2329,7 @@ function endWave() {
     G.towers.filter((t) => t.kind === "healer").forEach((t) => burst(t.x * T + 16, t.y * T + 10, "#ffe58a", 12));
   }
   floatText(320, 40, `Wave ${G.wave} cleared! +${bonus} leaves`, "#ffd34d", 2.2);
-  if (G.tutorial && (G.wave === 1 || G.wave === 5)) tutorialEvent("end" + G.wave);
+  if (G.tutorial) tutorialEvent("end" + G.wave);
   if (G.wave >= levelWaves(G.level).length) finish(true); else sendProgress(true);
   updateHud();
 }
@@ -3240,7 +3264,7 @@ function finish(won) {
     $("o-again").onclick = () => startGame(G.level, G.diffKey, false, on ? { code: on.code, nick: on.nick } : null);
     if ($("o-boards")) $("o-boards").onclick = () => { const c = on && on.code; G = null; renderBoards(c || undefined); show("s-boards"); };
     $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
-    if ($("o-next")) $("o-next").onclick = () => { setup.level = nextL; G = null; renderSetup(); show("s-setup"); };
+    if ($("o-next")) $("o-next").onclick = () => { G = null; openSetup(nextL); };
     if ($("o-ask")) askForBoard(g, won, score, stars);
   };
   if (won) setTimeout(showResult, 700);
