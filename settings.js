@@ -178,7 +178,8 @@ const SETTINGS = {
   // ---------------- ABILITIES ----------------
   // Special powers on the button beside the board. Tap the button, then tap where it should land.
   abilities: {
-    fireball: { name: "Mega Fireball", cost: 300, damage: 350, radius: 1.6, burnDamagePerSecond: 15, burnSeconds: 3, cooldownSeconds: 12 },
+    // Add burnDamagePerSecond + burnSeconds to set robots on fire, or cooldownSeconds to make it wait between uses.
+    fireball: { name: "Mega Fireball", cost: 300, damage: 500, radius: 1.6 },
   },
 
   // ---------------- PERMANENT UPGRADES ----------------
