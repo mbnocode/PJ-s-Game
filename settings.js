@@ -278,6 +278,17 @@ const SETTINGS = {
                 [[["splitter", "repair", "tesla"], 15, 0.8], ["boss", 2, 4, 1800]],     // 19
                 [[["tank", "splitter", "repair", "tesla"], 20, 0.7], ["boss", 2, 3, 4500]],  // 20: the big finish
               ] },
+    // A two-factory level: the left half is written here, and mirror: true copies the path, scenery and factory onto the right half.
+    desert: { name: "The Desert", acornDropChance: 0.04, about: "Two factories! Robots march from both sides along twisty canyon roads to the oasis treehouse in the middle.", theme: "desert",
+              // 4% Golden Acorn chance per robot (after wave 5)
+              mirror: true,          // build a matching path and factory on the right side
+              base: [9, 5],          // the treehouse sits in the middle (top-left square of its 2 x 2 spot)
+              robotHealth: 0.85,     // robots have this many times their normal health (you must guard two roads, so they are a bit weaker)
+              path: [[0, 1], [3, 1], [3, 4], [1, 4], [1, 10], [4, 10], [4, 7], [6, 7], [6, 2], [8, 2], [8, 6], [9, 6]],
+              // In the Desert, trees are cacti, mushrooms are boulders, and tall grass is tumbleweeds (left half; mirrored too).
+              trees:     [[2, 6], [5, 0], [7, 10], [0, 11]],
+              mushrooms: [[5, 4], [2, 2]],
+              tallGrass: [[3, 8], [8, 11], [9, 1]] },
   },
 };
 /* ===================== end of PJ's settings ===================== */

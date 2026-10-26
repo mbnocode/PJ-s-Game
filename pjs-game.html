@@ -87,8 +87,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .card:hover { border-color: var(--moss); background: var(--panel); }
 .card .k { font-family: var(--display); font-size: 22px; }
 .card .s { color: var(--muted); font-size: 15px; }
-#level-cards { max-width: 1060px; }
-#level-cards .card { flex: 1 1 200px; max-width: 250px; padding: 14px; }
+#level-cards { max-width: 1300px; }
+#level-cards .card { flex: 1 1 190px; max-width: 238px; padding: 14px; }
 #level-cards .card .k { font-size: 20px; }
 .card canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; }
 .card.locked { opacity: .5; }
@@ -420,7 +420,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus"];
@@ -457,6 +457,9 @@ const ART = {
   cypress: ["................",".....kkkkkk.....","...kkvVvvVvkk...","..kvVvvvVvvvVk..",".kVvvVvvvvVvvVk.",".kvvVvvVvvvVvvk.","..kVvvvvVvvvVk..","..kqkkVvvVkkqk..","...q..knnk..q...","...q..knnk..q...","......knNk...q..",".....knnnnk.....","....knNnnNnk....","...knk.kk.knk...","...kk......kk...","................"],
   pine: [".......kk.......", "......kLLk......", ".....kLlLLk.....", "....kLlLLLLk....", "......kLLk......", ".....kLlLLLk....", "....kLlLLLLLk...", "...kLlLLLLLLLk..", ".....kLlLLLk....", "....kLlLLLLLk...", "...kLlLLLLLLLk..", "..kLlLLLLLLLLLk.", "..kkkkkknkkkkkk.", "......knNk......", ".....kkkkkk.....", "................"],
   fern: ["................", "................", "................", "......l.........", ".....lL....l....", "..l..Ll...lL..l.", "..Ll.lL.l.Ll.lL.", "...LllLlL.LlLL..", ".l..LLLlLlLL..l.", ".Ll..LLLLLLL.lL.", "..LLl.LLLLL.LL..", "....LLLLLLLLL...", "......LLLLL.....", "................", "................", "................"],
+  cactus: ["................", ".......kk.......", "......kLlk......", "......kLlk..kk..", "..kk..kLlk.kLlk.", ".kLlk.kLlk.kLlk.", ".kLlk.kLlkkLLlk.", ".kLLkkkLlkLLlk..", "..kLLLLLlLLlk...", "...kkkkLlkkk....", "......kLlk......", "......kLlk......", "......kLlk......", ".....kLLllk.....", "....kkkkkkkk....", "................"],
+  boulder: ["................", "................", "................", "................", ".....kkkkk......", "....kmmmmnk.....", "...kmmmnnnnk....", "..kmmmnnnnnNk...", "..kmmnnnnnNNk...", "..knnnnnNNNNk...", "...kkkkkkkkk....", "...........kkk..", "..........kwwwk.", "...........kkk..", "................", "................"],
+  tumbleweed: ["................", "................", "................", "................", "......kkkk......", "....kkmjmjkk....", "...kjm.j.mjmk...", "..kmj.jmj..jk...", "..kj.mj.jmj.mk..", "..km.j.mj..jk...", "...kjmj.mjmk....", "....kkjmjkkk....", "......kkkk......", "................", "................", "................"],
   palm: ["....kk...kk.....", "..kkllk.kllkk...", ".kllLLlkllLLlk..", "kllkkLlllLkkllk.", "kLk..kLNNLk..kLk", ".k..kLkNNkLk..k.", "....kk.kmk.kk...", ".......kmk......", "......kmnk......", "......kmnk......", ".....kmnk.......", ".....kmnk.......", ".....kmnk.......", "....kmnnk.......", "...kkkkkkk......", "................"],
   starfish: ["................", "................", "................", "................", "......k.........", ".....kok........", "..kkkkokkkk.....", "..kooofoook.....", "...kkoookk......", "....kokok...kk..", "...kok.kok.kwek.", "...kk...kk.kwwek", "...........kkkk.", "................", "................", "................"],
   cattail: ["................","................","..k.......k.....",".kjk.....kjk....",".kjk..k..kjk....",".kjk.kjk.kjk....","..L..kjk..L..k..","..L..kjk..L.kjk.","..L...L...L.kjk.",".LL...L..LL..L..","..L..LL..L.L.L..","..L..LL.hL.LLL..",".hL.hLL.hL..L.h.","..LhLL.LhLLhLL..",".hLLLLhLLLLLLLh.","................"],
@@ -627,6 +630,12 @@ function makeTile(kind) {
     for (let n = 0; n < 28; n++) px(rnd() < 0.5 ? "#468a3a" : "#33692c", rnd() * 16 | 0, rnd() * 16 | 0);
     for (let n = 0, m = rnd() * 3 | 0; n < m; n++) { const i = 1 + rnd() * 13 | 0, j = 1 + rnd() * 13 | 0, c = ["#d9822b", "#b85a1e", "#e6b030", "#8a5a2a"][rnd() * 4 | 0]; px(c, i, j); px(c, i + 1, j); px(c, i, j + 1); }
     if (rnd() < 0.2) { const i = 2 + rnd() * 10 | 0, j = 2 + rnd() * 12 | 0; x.fillStyle = "#6b4a28"; x.fillRect(i, j, 4, 1); }
+  } else if (kind === "desert") {
+    // warm desert sand with ripples, pebbles and little cracks
+    x.fillStyle = "#e0b06a"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#eabd7a" : "#d29f5a", rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.35) { const j = 3 + rnd() * 10 | 0; for (let i = 2; i < 13; i++) if ((i + j) % 3) px("#cf9a52", i, j + (i % 4 < 2 ? 0 : 1)); }   // a wind ripple
+    if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#9c6a36", i, j); px("#b07a40", i + 1, j); }
   } else if (kind === "sand") {
     x.fillStyle = "#e8d29a"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#f2e0ae" : "#d9bf82", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -735,10 +744,14 @@ const GRASS = Array.from({ length: 8 }, () => makeTile("grass"));
 const SWAMP_GRASS = Array.from({ length: 8 }, () => makeTile("swamp"));
 const SAND = Array.from({ length: 8 }, () => makeTile("sand"));
 const FOREST_FLOOR = Array.from({ length: 8 }, () => makeTile("forestfloor"));
+const DESERT = Array.from({ length: 8 }, () => makeTile("desert"));
+SPR.cactus = makeSprite(ART.cactus, false, { l: "#7fc45a", L: "#3f8a3a" });
+SPR.boulder = makeSprite(ART.boulder, false, { m: "#c28a52", n: "#9c6a3a", N: "#6e4624" });
+SPR.tumbleweed = makeSprite(ART.tumbleweed, false, { j: "#8a5a2a", m: "#c9a060" });
 SPR.brownshroom = makeSprite(ART.mushroom, false, { r: "#9a5a2a", w: "#e8c98a" });
 SPR.dunegrass = makeSprite(ART.tallgrass, false, { h: "#e6e48a", L: "#7a9a3a" });
 // What each kind of scenery looks like in each kind of level.
-const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" } };
+const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -1148,35 +1161,47 @@ async function renderBoards(code) {
 
 /* ---------- map ---------- */
 function buildMap(L) {
-  const wp = SETTINGS.levels[L].path;
+  const lv = SETTINGS.levels[L];
+  // mirror: true copies the path and scenery onto the right half, with a second factory on the right.
+  const mirror = (pts) => (pts || []).map(([x, y]) => [COLS - 1 - x, y]);
+  const wps = lv.mirror ? [lv.path, mirror(lv.path)] : [lv.path];
   const cells = Array.from({ length: ROWS }, () => Array(COLS).fill("grass"));
-  for (let i = 0; i < wp.length - 1; i++) {
+  for (const wp of wps) for (let i = 0; i < wp.length - 1; i++) {
     let [x, y] = wp[i]; const [x2, y2] = wp[i + 1];
     const dx = Math.sign(x2 - x), dy = Math.sign(y2 - y);
     cells[y][x] = "path";
     while (x !== x2 || y !== y2) { x += dx; y += dy; cells[y][x] = "path"; }
   }
-  const [gx, gy] = wp[0], [bx, by] = wp[wp.length - 1];
-  const gTop = gy > 0 ? gy - 1 : gy;
-  for (let j = gTop; j < gTop + 2; j++) for (let i = 0; i < 2; i++) cells[j][i] = "gate";
-  const bTop = by > 0 ? by - 1 : by, bLeft = bx > 0 ? bx - 1 : bx;
+  const gates = wps.map((wp) => {
+    const [gx, gy] = wp[0], right = gx >= COLS - 1, gTop = gy > 0 ? gy - 1 : gy;
+    for (let j = gTop; j < gTop + 2; j++) for (let i = 0; i < 2; i++) cells[j][right ? COLS - 2 + i : i] = "gate";
+    return { x: right ? COLS - 2 : 0, y: gTop, gx, gy, flip: right, img: makeFactory(gy - gTop) };
+  });
+  const [bx, by] = wps[0][wps[0].length - 1];
+  const [bLeft, bTop] = lv.base || [bx > 0 ? bx - 1 : bx, by > 0 ? by - 1 : by];
   for (let j = bTop; j < bTop + 2; j++) for (let i = bLeft; i < bLeft + 2; i++) cells[j][i] = "base";
-  const pts = [[gx - 1, gy], ...wp].map(([x, y]) => ({ x: (x + 0.5) * T, y: (y + 0.5) * T }));
-  const segs = []; let total = 0;
-  for (let i = 0; i < pts.length - 1; i++) { const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y); segs.push({ a: pts[i], b: pts[i + 1], start: total, len }); total += len; }
-  // Factory spreads from the Robots' side: the grass squares closest to the gate go first.
+  const paths = wps.map((wp, n) => {
+    const g0 = gates[n], pts = [[g0.gx + (g0.flip ? 1 : -1), g0.gy], ...wp].map(([x, y]) => ({ x: (x + 0.5) * T, y: (y + 0.5) * T }));
+    const segs = []; let total = 0;
+    for (let i = 0; i < pts.length - 1; i++) { const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y); segs.push({ a: pts[i], b: pts[i + 1], start: total, len }); total += len; }
+    return { segs, total };
+  });
+  // Factory spreads from the Robots' side: the grass squares closest to a factory go first.
   const grass = [];
-  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass") grass.push({ x, y, k: x * 10 + Math.abs(y - gy) * 0.9 + ((x * 7 + y * 13) % 5) * 0.3 });
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass")
+    grass.push({ x, y, k: Math.min(...gates.map((g0) => Math.abs(x - g0.gx) * 10 + Math.abs(y - g0.gy) * 0.9)) + ((x * 7 + y * 13) % 5) * 0.3 });
   grass.sort((a, b) => a.k - b.k);
   const factoryOrder = grass.slice(0, SETTINGS.factorySquares);
   const theme = lv_theme(L);
   const tree = makeGrandTree(theme);
-  const scenery = {}, lv = SETTINGS.levels[L];
+  const scenery = {};
   for (const [list, kind] of [[lv.trees, "tree"], [lv.mushrooms, "mushroom"], [lv.tallGrass, "tallgrass"]])
-    for (const [sx, sy] of list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
+    for (const [sx, sy] of lv.mirror ? [...(list || []), ...mirror(list)] : list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { cells, segs, total, factoryOrder, gate: { x: 0, y: gTop, img: makeFactory(gy - gTop) }, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { cells, segs: paths[0].segs, total: paths[0].total, paths, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
+// Where a robot is right now (robots on a two-factory level each follow their own path).
+function rpos(r) { return posAt(r.path || G.map, r.d); }
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
   for (const s of map.segs) if (d <= s.start + s.len) { const f = (d - s.start) / s.len; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
@@ -1184,7 +1209,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
@@ -1234,23 +1259,26 @@ function makePathLayer(map) {
     }
   };
   const ruts = [];
-  for (let d = 0; d <= map.total; d += 1.5) {
-    const p = posAt(map, d), cx = p.x / 2, cy = p.y / 2, r = 6.4 + 1.3 * wob(d / 2);
+  for (const pm of map.paths || [map]) for (let d = 0; d <= pm.total; d += 1.5) {
+    const p = posAt(pm, d), cx = p.x / 2, cy = p.y / 2, r = 6.4 + 1.3 * wob(d / 2);
     disc(cx, cy, r + 1.3, 1); disc(cx, cy, r, 2);
-    const q = posAt(map, d + 2), tx = (q.x - p.x), ty = (q.y - p.y), tl = Math.hypot(tx, ty) || 1;
+    const q = posAt(pm, d + 2), tx = (q.x - p.x), ty = (q.y - p.y), tl = Math.hypot(tx, ty) || 1;
     ruts.push([cx - ty / tl * 2.5, cy + tx / tl * 2.5], [cx + ty / tl * 2.5, cy - tx / tl * 2.5]);
   }
   // little grassy bites along the edges
   for (let k = 0; k < 40; k++) {
-    const d = R() * map.total, p = posAt(map, d), ang = R() * Math.PI * 2;
+    const pm = (map.paths || [map])[k % (map.paths || [map]).length], d = R() * pm.total, p = posAt(pm, d), ang = R() * Math.PI * 2;
     const bx = Math.round(p.x / 2 + Math.cos(ang) * 6.5), by = Math.round(p.y / 2 + Math.sin(ang) * 6.5);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (R() < 0.7) { const i = (by + dy) * W + bx + dx; if (i >= 0 && i < mask.length && mask[i] === 2) mask[i] = 3; }
   }
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-  const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest";
-  const C = forest
+  const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
+  const C = desert
+    // a sun-baked canyon road: red-brown packed dirt with dark cracks
+    ? { rim: hex("#b8834a"), dirt: hex("#b0683a"), dark: hex("#94542c"), light: hex("#c47c48"), edge: hex("#8a4c28"), stone: hex("#6e3a1c"), rut: hex("#9a5a30"), tuft: hex("#e0b06a"), tuft2: hex("#d29f5a") }
+    : forest
     // a dark, packed-earth forest trail with roots and pine needles
     ? { rim: hex("#2c5a26"), dirt: hex("#7a5434"), dark: hex("#5f3f24"), light: hex("#8f6a44"), edge: hex("#5a3c22"), stone: hex("#4e2d14"), rut: hex("#6b4a2a"), tuft: hex("#3d7a34"), tuft2: hex("#2f6528") }
     : beach
@@ -1289,7 +1317,7 @@ function makePathLayer(map) {
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
 function makeGrandTree(theme) {
-  const beach = theme === "beach", swamp = theme === "swamp" || beach;   // the beach treehouse is built like the swamp one, in sandy colors
+  const beach = theme === "beach" || theme === "desert", swamp = theme === "swamp" || beach;   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
   const forest = theme === "forest";
   const leafCols = forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -1366,13 +1394,19 @@ function drawBase(x, map, gray) {
   const left = Math.min(640 - w, b.x * T + T - w / 2), top = (b.y + 2) * T - h;
   x.drawImage(gray ? b.gray : b.img, left, top, w, h);
 }
-function drawFactory(x, map) { x.drawImage(map.gate.img, map.gate.x * T, map.gate.y * T, 2 * T, 2 * T); }
+function drawFactory(x, map) {
+  for (const gt of map.gates || [map.gate]) {
+    if (gt.flip) { x.save(); x.translate(gt.x * T + 2 * T, gt.y * T); x.scale(-1, 1); x.drawImage(gt.img, 0, 0, 2 * T, 2 * T); x.restore(); }
+    else x.drawImage(gt.img, gt.x * T, gt.y * T, 2 * T, 2 * T);
+  }
+}
 function drawSmoke(x, map, time) {
-  [4, 11, 18].forEach((sx, i) => {
+  for (const gt of map.gates || [map.gate]) [4, 11, 18].forEach((sx, i) => {
     for (let k = 0; k < 4; k++) {
       const ph = (time * 0.5 + k / 4 + i * 0.37) % 1;
-      const px = map.gate.x * T + (sx + 2) * 2 + Math.sin(time * 2 + k + i) * 3 + ph * 10;
-      const py = map.gate.y * T - ph * 34;
+      const off = (sx + 2) * 2 + Math.sin(time * 2 + k + i) * 3 + ph * 10;
+      const px = gt.flip ? gt.x * T + 2 * T - off : gt.x * T + off;
+      const py = gt.y * T - ph * 34;
       x.globalAlpha = 0.55 * (1 - ph); x.fillStyle = k % 2 ? "#9aa0a8" : "#7b828c";
       const rad = 3 + ph * 7; x.fillRect(px - rad, py - rad, rad * 2, rad * 2);
     }
@@ -1801,6 +1835,7 @@ function spawn(q) {
   const hp = (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * (A ? A.health : 1);
   G.robots.push({
     type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: q.d || 0,
+    path: q.path || G.map.paths[(G.spawnN = (G.spawnN || 0) + 1) % G.map.paths.length],   // two factories take turns
     leaves: Math.round(base.leaves * (A ? A.leaves : 1)), points: Math.round(base.points * (A ? A.points : 1)),
     slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0,
   });
@@ -1844,12 +1879,12 @@ function kill(r) {
   // Junk Splitter: bursts into Mini-Clankers that keep marching from where it fell
   const sb = SETTINGS.robots[r.type];
   if (sb && sb.splitInto) {
-    for (let i = 0; i < sb.splitInto; i++) spawn({ type: "mini", d: Math.max(0, r.d - i * 9) });
-    const q = posAt(G.map, r.d); burst(q.x, q.y, "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, "Split!", "#c9ced6");
+    for (let i = 0; i < sb.splitInto; i++) spawn({ type: "mini", d: Math.max(0, r.d - i * 9), path: r.path });
+    const q = rpos(r); burst(q.x, q.y, "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, "Split!", "#c9ced6");
   }
   G.leaves += r.leaves; G.killPoints += r.points;
   { const s = slot(); if (s) { s.defeated = s.defeated || {}; s.defeated[r.type] = (s.defeated[r.type] || 0) + 1; G.slotDirty = true; } }
-  const p = posAt(G.map, r.d);
+  const p = rpos(r);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
   // Every Boss always drops a Golden Acorn (on any level, any wave).
@@ -1882,7 +1917,7 @@ function findTarget(t, s) {
   let best = null, bestD = -1;
   for (const r of G.robots) {
     if (r.dead || (r.hideT > 0 && !s.vision)) continue;
-    const p = posAt(G.map, r.d);
+    const p = rpos(r);
     if (Math.hypot(p.x - cx, p.y - cy) <= R && r.d > bestD) { best = r; bestD = r.d; }
   }
   return best;
@@ -1894,11 +1929,11 @@ function fire(t, s, target) {
     const grabs = [target];
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
-      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = posAt(G.map, r.d); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
+      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
         .sort((a, b) => b.d - a.d).slice(0, s.targets - 1).forEach((r) => grabs.push(r));
     }
     for (const r of grabs) {
-      const p = posAt(G.map, r.d);
+      const p = rpos(r);
       // A thick vine bursts out of the ground at the giant's feet, snakes over and wraps the robot.
       const hold = r.type === "boss" ? 0.2 : (s.holdSeconds || 0);
       const dur = Math.max(0.5, Math.min(1.6, hold + 0.3));
@@ -1906,7 +1941,7 @@ function fire(t, s, target) {
       if (s.splash) {
         for (const o of G.robots) {
           if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
-          const q = posAt(G.map, o.d);
+          const q = rpos(o);
           if (Math.hypot(q.x - p.x, q.y - p.y) <= s.splash * T) hurt(o, s.damage * 0.5, s.vision);
         }
         G.fx.push({ kind: "splash", x: p.x, y: p.y, r: s.splash * T, t: 0.3, col: "150,110,60" });
@@ -1925,7 +1960,7 @@ function fire(t, s, target) {
     // Twin Gusts / Feather Storm: extra gusts at the next robots in range.
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
-      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = posAt(G.map, r.d); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
+      G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
         .sort((a, b) => b.d - a.d).slice(0, s.targets - 1)
         .forEach((r) => G.shots.push({ kind: t.kind, x: sx, y: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
     }
@@ -1937,10 +1972,10 @@ function landShot(sh) {
   const r = sh.target, s = sh.s;
   if (r.dead) return;
   if (s.splash) {
-    const c = posAt(G.map, r.d), R = s.splash * T;
+    const c = rpos(r), R = s.splash * T;
     for (const o of G.robots) {
       if (o === r || o.dead || (o.hideT > 0 && !s.vision)) continue;
-      const q = posAt(G.map, o.d);
+      const q = rpos(o);
       if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
         if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
         if (!o.dead && sh.kind === "air" && o.type !== "boss") o.knock = (o.knock || 0) + s.pushBack * T * 0.6; }
@@ -1953,7 +1988,7 @@ function landShot(sh) {
   if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
   if (sh.kind === "air" && r.type !== "boss") r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
-  const p = posAt(G.map, r.d);
+  const p = rpos(r);
   burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : sh.kind === "healer" ? "#ffd36b" : "#ffffff", sh.kind === "healer" ? 9 : 5);
 }
 
@@ -1995,10 +2030,11 @@ function collectBonusLeaf() {
 function buildNutWall(t, cfg) {
   const cx = t.x * T + 16, cy = t.y * T + 16;
   let best = Infinity, bd = 0;
-  for (let d = 0; d <= G.map.total; d += 2) { const q = posAt(G.map, d), k = Math.hypot(q.x - cx, q.y - cy); if (k < best) { best = k; bd = d; } }
-  const q = posAt(G.map, bd);
+  let bp = G.map.paths[0];
+  for (const pm of G.map.paths) for (let d = 0; d <= pm.total; d += 2) { const q = posAt(pm, d), k = Math.hypot(q.x - cx, q.y - cy); if (k < best) { best = k; bd = d; bp = pm; } }
+  const q = posAt(bp, bd);
   G.walls = G.walls || [];
-  G.walls.push({ d: bd, x: q.x, y: q.y, hp: cfg.health, maxHp: cfg.health, vertical: Math.abs(q.dx) > 0, hitT: 0 });
+  G.walls.push({ d: bd, path: bp, x: q.x, y: q.y, hp: cfg.health, maxHp: cfg.health, vertical: Math.abs(q.dx) > 0, hitT: 0 });
   G.towers = G.towers.filter((o) => o !== t);
   // the squirrel leaps from its spot to the path
   for (let i = 0; i < 10; i++) G.particles.push({ kind: "spark", x: cx + (q.x - cx) * i / 10, y: cy + (q.y - cy) * i / 10 - Math.sin(i / 10 * Math.PI) * 18, vx: 0, vy: -10, t: 0, life: 0.5, col: "#c98e12" });
@@ -2025,7 +2061,7 @@ function drawNutWalls(x) {
 // ---- Tree Giant vine attack ----
 function vinePoints(f) {
   // the vine grows out fast, holds on, then pulls back into the ground
-  if (f.robot && !f.robot.dead && G.robots.includes(f.robot)) { const q = posAt(G.map, f.robot.d); f.x2 = q.x; f.y2 = q.y + 6; }
+  if (f.robot && !f.robot.dead && G.robots.includes(f.robot)) { const q = rpos(f.robot); f.x2 = q.x; f.y2 = q.y + 6; }
   const age = f.dur - f.t, grow = Math.min(1, age / 0.12), back = Math.min(1, f.t / 0.15);
   const reach = Math.min(grow, back);
   const dx = f.x2 - f.x1, dy = f.y2 - f.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
@@ -2192,10 +2228,10 @@ function update(dt) {
     rb.healT = (rb.healT ?? RB.healEvery) - dt;
     if (rb.healT > 0) continue;
     rb.healT = RB.healEvery;
-    const c = posAt(G.map, rb.d); let healed = 0;
+    const c = rpos(rb); let healed = 0;
     for (const o of G.robots) {
       if (o.dead || o.hp >= o.maxHp) continue;
-      const q = posAt(G.map, o.d); if (Math.hypot(q.x - c.x, q.y - c.y) > RB.healRadius * T) continue;
+      const q = rpos(o); if (Math.hypot(q.x - c.x, q.y - c.y) > RB.healRadius * T) continue;
       o.hp = Math.min(o.maxHp, o.hp + RB.healAmount * (SETTINGS.levels[G.level].robotHealth || 1)); healed++;
       for (let i = 0; i < 3; i++) G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 12, y: q.y - 4, vx: 0, vy: -25, t: 0, life: 0.6, col: "#7cf07a" });
     }
@@ -2203,34 +2239,34 @@ function update(dt) {
     if (healed) floatText(c.x, c.y - 20, "Repair!", "#7cf07a");
   }
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
-  const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => posAt(G.map, r.d));
+  const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => rpos(r));
   for (const r of G.robots) {
     if (r.dead) continue;
     r.hideT = Math.max(0, r.hideT - dt); r.hitT = Math.max(0, r.hitT - dt);
     if (r.burnT > 0) { r.burnT -= dt; hurt(r, r.burnDps * dt, false, true); if (r.dead) continue; }
     let sp = r.speed;
     // Tesla Coils supercharge nearby robots so they move faster
-    r.charged = r.type !== "tesla" && teslas.some((q) => Math.hypot(q.x - posAt(G.map, r.d).x, q.y - posAt(G.map, r.d).y) <= teslaR);
+    r.charged = r.type !== "tesla" && teslas.some((q) => Math.hypot(q.x - rpos(r).x, q.y - rpos(r).y) <= teslaR);
     if (r.charged) sp *= SETTINGS.robots.tesla.boostSpeed;
-    { const q = posAt(G.map, r.d); let slow = 0; for (const w of warps) if (Math.hypot(q.x - w.x, q.y - w.y) <= w.R) slow = Math.max(slow, w.slow); r.warped = slow > 0; if (slow) sp *= 1 - slow; }
+    { const q = rpos(r); let slow = 0; for (const w of warps) if (Math.hypot(q.x - w.x, q.y - w.y) <= w.R) slow = Math.max(slow, w.slow); r.warped = slow > 0; if (slow) sp *= 1 - slow; }
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
     if (r.knock > 0) {
       const move = Math.min(r.knock, Math.max(r.knock * 7 * dt, 1.5 * T * dt));   // fast at first, then slows to a stop
       r.knock -= move; r.d = Math.max(0, r.d - move); sp = 0;
-      if (Math.random() < 0.3) { const q = posAt(G.map, r.d); G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 10, y: q.y + 6, vx: 0, vy: -10, t: 0, life: 0.3, col: "rgba(235,248,255,0.8)" }); }
+      if (Math.random() < 0.3) { const q = rpos(r); G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 10, y: q.y + 6, vx: 0, vy: -10, t: 0, life: 0.3, col: "rgba(235,248,255,0.8)" }); }
       if (r.d <= 0) r.knock = 0;
     }
     // Nut Walls block the path: robots stop at the wall and chew through it.
-    const wall = (G.walls || []).find((w) => w.hp > 0 && r.d < w.d && r.d + sp * T * dt >= w.d - 14 - (w.lineup || 0) * 16);
+    const wall = (G.walls || []).find((w) => w.hp > 0 && (w.path || G.map.paths[0]) === (r.path || G.map.paths[0]) && r.d < w.d && r.d + sp * T * dt >= w.d - 14 - (w.lineup || 0) * 16);
     if (wall) {
       r.d = Math.max(r.d, wall.d - 14 - (wall.lineup || 0) * 16); sp = 0; const spot = wall.lineup || 0; wall.lineup = spot + 1;   // robots line up behind each other
       if (spot < 3) wall.hp -= SETTINGS.towers.squirrel.wallChewPerSecond * (r.type === "boss" ? 5 : r.type === "tank" ? 2 : 1) * dt; wall.hitT = 0.1;   // only the 3 robots at the front can reach the wall to chew it
       if (wall.hp <= 0) breakNutWall(wall);
     }
     r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
-    if (r.d >= G.map.total) reachBase(r);
+    if (r.d >= (r.path || G.map).total) reachBase(r);
     if (G.over) return;
   }
   G.robots = G.robots.filter((r) => !r.dead);
@@ -2252,7 +2288,7 @@ function update(dt) {
         const cx = t.x * T + 16, cy = t.y * T + 22, R = gs.radius * T;
         for (const r of G.robots) {
           if (r.dead) continue;
-          const q = posAt(G.map, r.d);
+          const q = rpos(r);
           if (Math.hypot(q.x - cx, q.y - cy) <= R) { hurt(r, gs.damage, true); if (!r.dead) r.rootT = Math.max(r.rootT, r.type === "boss" ? 0.15 : gs.holdSeconds); }
         }
         G.fx.push({ kind: "splash", x: cx, y: cy, r: R, t: 0.3, col: "150,110,60" });
@@ -2267,12 +2303,12 @@ function update(dt) {
       t.sphereTimer = (t.sphereTimer ?? es.everySeconds) - dt;
       if (t.sphereTimer <= 0) {
         const o = spherePos(t), R = es.radius * T;
-        const near = G.robots.filter((r) => !r.dead && (() => { const q = posAt(G.map, r.d); return Math.hypot(q.x - o.x, q.y - o.y) <= R; })())
+        const near = G.robots.filter((r) => !r.dead && (() => { const q = rpos(r); return Math.hypot(q.x - o.x, q.y - o.y) <= R; })())
           .sort((a, b) => b.d - a.d).slice(0, es.zaps);
         if (near.length) {
           t.sphereTimer = es.everySeconds; t.sphereFlash = 0.3;
           near.forEach((r, i) => {
-            const q = posAt(G.map, r.d), el = ELEMENTS[(Math.floor(G.time * 2) + i) % ELEMENTS.length];
+            const q = rpos(r), el = ELEMENTS[(Math.floor(G.time * 2) + i) % ELEMENTS.length];
             G.fx.push({ kind: "zap", x1: o.x, y1: o.y, x2: q.x, y2: q.y - 4, t: 0.3, col: el.col, glow: el.glow, seed: Math.random() * 100 });
             burst(q.x, q.y - 4, el.col, 8);
             hurt(r, es.damage * (1 + (G.damageBonus || 0)), true);
@@ -2303,7 +2339,7 @@ function update(dt) {
   for (const sh of G.shots) {
     const r = sh.target;
     if (r.dead || (r.hideT > 0 && !sh.s.vision)) { sh.done = true; continue; }
-    const p = posAt(G.map, r.d), dx = p.x - sh.x, dy = p.y - sh.y, dist = Math.hypot(dx, dy), step = sh.speed * dt;
+    const p = rpos(r), dx = p.x - sh.x, dy = p.y - sh.y, dist = Math.hypot(dx, dy), step = sh.speed * dt;
     if (sh.kind === "fire") {
       (sh.trail = sh.trail || []).unshift({ x: sh.x, y: sh.y }); if (sh.trail.length > 7) sh.trail.pop();
       if (Math.random() < 0.35) G.particles.push({ kind: "spark", x: sh.x, y: sh.y, vx: (Math.random() - 0.5) * 40, vy: -20 - Math.random() * 30, t: 0, life: 0.3, col: Math.random() < 0.5 ? "#ffb347" : "#ff6a1a" });
@@ -2315,7 +2351,7 @@ function update(dt) {
   for (const tg of G.tongues) {
     tg.t += dt;
     const r = tg.target, canSee = !(r.hideT > 0 && !tg.s.vision);
-    if (!r.dead && canSee) { const p = posAt(G.map, r.d); tg.end = { x: p.x, y: p.y - 4 }; }
+    if (!r.dead && canSee) { const p = rpos(r); tg.end = { x: p.x, y: p.y - 4 }; }
     if (!tg.hit && tg.t >= tg.dur * 0.45) {
       tg.hit = true;
       if (!r.dead && canSee) { landShot({ kind: "water", target: r, s: tg.s }); Sound.play("water"); }
@@ -2466,14 +2502,14 @@ function draw() {
   // Tesla Coil fields: a crackling purple ring on the ground, with little bolts to every robot it's charging
   for (const tr of G.robots) {
     if (tr.type !== "tesla" || tr.dead) continue;
-    const c = posAt(G.map, tr.d), R = (SETTINGS.robots.tesla.boostRadius || 0) * T, flick = 0.5 + 0.5 * Math.sin(G.time * 20 + tr.wob);
+    const c = rpos(tr), R = (SETTINGS.robots.tesla.boostRadius || 0) * T, flick = 0.5 + 0.5 * Math.sin(G.time * 20 + tr.wob);
     x.fillStyle = `rgba(160,90,230,${0.10 + 0.05 * flick})`; x.beginPath(); x.arc(c.x, c.y + 4, R, 0, Math.PI * 2); x.fill();
     x.strokeStyle = `rgba(200,150,255,${0.45 + 0.35 * flick})`; x.lineWidth = 1.5; x.setLineDash([5, 4]); x.lineDashOffset = -G.time * 30;
     x.beginPath(); x.arc(c.x, c.y + 4, R, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
     const hx = c.x, hy = c.y - 14;
     for (const o of G.robots) {
       if (!o.charged || o.dead || Math.random() < 0.35) continue;
-      const q = posAt(G.map, o.d); if (Math.hypot(q.x - c.x, q.y - c.y) > R) continue;
+      const q = rpos(o); if (Math.hypot(q.x - c.x, q.y - c.y) > R) continue;
       x.strokeStyle = "rgba(217,184,255,0.9)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(hx, hy);
       for (let i = 1; i < 5; i++) x.lineTo(hx + (q.x - hx) * i / 5 + (Math.random() - 0.5) * 8, hy + (q.y - 6 - hy) * i / 5 + (Math.random() - 0.5) * 8);
       x.lineTo(q.x, q.y - 6); x.stroke();
@@ -2481,9 +2517,9 @@ function draw() {
   }
 
   // robots
-  const sorted = [...G.robots].sort((a, b) => posAt(G.map, a.d).y - posAt(G.map, b.d).y);
+  const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
-    const p = posAt(G.map, r.d), big = r.type === "boss";
+    const p = rpos(r), big = r.type === "boss";
     const sz = big ? 56 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0;
@@ -2532,7 +2568,7 @@ function draw() {
   drawFactory(x, G.map);
   drawSmoke(x, G.map, G.time);
   drawBase(x, G.map, G.takeover && G.takeover.done);
-  if (Math.sin(G.time * 6) > 0) { x.fillStyle = "#ff3b2f"; x.fillRect(G.map.gate.x * T + 54, G.map.gate.y * T + 18, 4, 4); }
+  if (Math.sin(G.time * 6) > 0) { x.fillStyle = "#ff3b2f"; for (const gt of G.map.gates) x.fillRect(gt.flip ? gt.x * T + 6 : gt.x * T + 54, gt.y * T + 18, 4, 4); }
 
   // frog tongues
   for (const tg of G.tongues) {
