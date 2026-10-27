@@ -1404,11 +1404,21 @@ function drawSoonMini(cv, look) {
     }
     px(i, j, col);
   }
-  // the robots' road
-  const ROAD = { basalt: ["#1d1b20", "#4a4652", "#57525f"], magma: ["#ff8a2a", "#3e353c", "#4a4048"], volcano: ["#140806", "#5a463e", "#6a544a"] }[look];
+  // the robots' road: old crumbling stone bricks, cracked, with chipped edges, rubble and a few holes
+  const ROAD = { basalt: ["#16141a", "#6e6a78", "#86818f", "#3a3742"], magma: ["#16141a", "#6e6268", "#857880", "#3a3238"], volcano: ["#140806", "#7a6254", "#927664", "#40302a"] }[look];
+  const holes = []; for (let k = 0; k < 4; k++) { const key = [...onRoad][R() * onRoad.size | 0]; holes.push(key.split(",").map(Number)); }
   for (const key of onRoad) { const [i, j] = key.split(",").map(Number); if (i < 0 || j < 0 || i >= W || j >= H) continue;
-    px(i, j, roadEdge(i, j) ? ROAD[0] : (i * 3 + j * 5) % 7 === 0 ? ROAD[2] : ROAD[1]); }
-  if (look === "magma") for (const key of onRoad) { const [i, j] = key.split(",").map(Number); if (roadEdge(i, j)) hot.push([i, j, 0.3]); }
+    const edge = roadEdge(i, j);
+    if (edge && R() < 0.35) continue;   // chunks broken off the edge
+    if (holes.some(([a, b]) => Math.abs(a - i) + Math.abs(b - j) < 2 && !edge)) { px(i, j, ROAD[0]); continue; }   // holes
+    if (edge) { px(i, j, ROAD[0]); continue; }
+    const row = Math.floor(j / 3), brick = Math.floor((i + (row % 2) * 2) / 4);   // bricks 4 wide, 3 tall, every other row shifted
+    const mortar = j % 3 === 0 || (i + (row % 2) * 2) % 4 === 0;
+    px(i, j, mortar ? ROAD[3] : j % 3 === 1 ? ROAD[2] : ROAD[1]);   // a light top on each brick
+    if (!mortar && R() < 0.08) px(i, j, ROAD[3]);   // cracks and chips in the bricks
+  }
+  for (const key of onRoad) { const [i, j] = key.split(",").map(Number);   // rubble: little stones fallen off the side
+    if (roadEdge(i, j) && R() < 0.12) { const a = i + (R() < 0.5 ? -1 : 1) * (1 + (R() * 2 | 0)), b = j + (R() < 0.5 ? -1 : 1); if (!onRoad.has(a + "," + b)) { px(a, b, ROAD[2]); px(a + 1, b, ROAD[0]); } } }
   if (look === "basalt") {
     [[22, 18], [44, 40], [64, 22], [4, 24], [38, 16], [76, 14]].forEach(([a, b], k) => {   // tall basalt pillars
       const h = 6 + (k * 3) % 7; px(a, b - h, "#0e0c10", 6, h + 2); px(a + 1, b - h + 1, "#36333d", 4, h); px(a + 1, b - h + 1, "#57525f", 1, h); px(a + 1, b - h, "#6c6878", 4, 2); px(a + 2, b - h, "#8a8596", 2, 1);
