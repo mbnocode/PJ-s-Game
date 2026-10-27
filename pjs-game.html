@@ -1360,29 +1360,28 @@ const SOON_PATHS = {
   magma:   [[0, 8], [66, 8], [66, 24], [14, 24], [14, 40], [80, 40]],
   volcano: [[0, 22], [18, 22], [18, 32], [40, 32], [40, 14], [62, 14], [62, 26], [80, 26]],
 };
-const MAGMA_TILE = ["dmmdddmd", "doodmmdd", "dmoyodmd", "ddmoodmm", "mdddmoom", "dmmdmyod", "ddmoodmd", "mdddmddd"];
-const MAGMA_COL = { d: ["#3e1006", "#461307"], m: ["#6a1c09", "#5e1808"], o: ["#e0520e", "#ff6a14"], y: ["#ffb12e", "#ffc94d"] };
-/* The Magma Fields preview, drawn at double detail (160 x 96) */
-function drawMagmaMini(cv) {
+/* "Coming soon" level pictures, drawn at double detail (160 x 96), blown up, then given a lava glow */
+function drawSoonMini(cv, look) {
   const W = 160, H = 96, sm = document.createElement("canvas"); sm.width = W; sm.height = H;
-  const x = sm.getContext("2d"); let sd = 4242; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const x = sm.getContext("2d"); let sd = 4242 + look.length * 31; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const hsh = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x5bd1e995; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   const img = []; const set = (i, j, c) => { if (i >= 0 && j >= 0 && i < W && j < H) img[j * W + i] = c; };
   const hot = [];
   // --- the road's shape (so scenery stays off it) ---
-  const P = SOON_PATHS.magma.map(([a, b]) => [a * 2, b * 2]), HW = 7;
+  const P = SOON_PATHS[look].map(([a, b]) => [a * 2, b * 2]), HW = 7;
   const segD = (i, j) => { let best = 1e9; for (let k = 0; k < P.length - 1; k++) { const [a, b] = P[k], [c, d] = P[k + 1];
     const ci = Math.max(Math.min(a, c), Math.min(Math.max(a, c), i)), cj = Math.max(Math.min(b, d), Math.min(Math.max(b, d), j));
     best = Math.min(best, Math.max(Math.abs(i - ci), Math.abs(j - cj))); } return best; };
   const bite = (i, j) => (hsh(i >> 1, j >> 1) < 0.35 ? 1 : 0) + (hsh(i >> 2, j >> 2) < 0.18 ? 1 : 0);   // crumbled edge
   const road = (i, j) => segD(i, j) <= HW - bite(i, j);
-  // --- the lava river winding down the map (passing under the road at three bridges) ---
-  const riverX = (j) => 114 + Math.sin(j / 9) * 7 + Math.sin(j / 3.7) * 1.5;
   // smooth noise for the glowing cracks (so they connect from block to block)
   const grid = {}, gv = (a, b) => grid[a + "," + b] ?? (grid[a + "," + b] = hsh(a + 50, b + 90));
   const smooth = (i, j, sz) => { const a = Math.floor(i / sz), b = Math.floor(j / sz), fu = i / sz - a, fv = j / sz - b, su = fu * fu * (3 - 2 * fu), sv = fv * fv * (3 - 2 * fv);
     return (gv(a, b) * (1 - su) + gv(a + 1, b) * su) * (1 - sv) + (gv(a, b + 1) * (1 - su) + gv(a + 1, b + 1) * su) * sv; };
   const noise = (i, j) => smooth(i, j, 14) * 0.7 + smooth(i + 300, j + 300, 5) * 0.3;
+  if (look === "magma") {
+  // --- the lava river winding down the map (passing under the road at three bridges) ---
+  const riverX = (j) => 114 + Math.sin(j / 9) * 7 + Math.sin(j / 3.7) * 1.5;
   // --- magma blocks: 16 x 16 tiles, each its own temperature and crack pattern ---
   const crustA = ["#2c0b05", "#3a0f06", "#45140a", "#521a0c"];
   for (let ty = 0; ty < H / 16; ty++) for (let tx = 0; tx < W / 16; tx++) {
@@ -1419,33 +1418,109 @@ function drawMagmaMini(cv) {
     if (road(a, b + 3) || road(a, b)) return;
     set(a, b + 4, "#c8400e"); set(a - 1, b + 3, "#ff6a14"); set(a, b + 3, "#ff9a2a"); set(a + 1, b + 3, "#ff6a14"); set(a, b + 2, "#ffc94d"); set(a, b + 1, "#ffc94d"); set(a + 1, b, "#fff0a8"); hot.push([a, b + 2, 1.2]);
   });
+  } else if (look === "basalt") {
+    // basalt columns seen from above: six-sided stone tops with dark seams; lava seeps through some seams
+    const seeds = [];
+    for (let r = -1; r < H / 9 + 1; r++) for (let q = -1; q < W / 11 + 1; q++) seeds.push([q * 11 + (r % 2 ? 5.5 : 0) + (hsh(q, r) - 0.5) * 3, r * 9.5 + (hsh(r, q) - 0.5) * 3, hsh(q + 9, r + 9)]);
+    const tops = ["#3c3944", "#46424e", "#34313b", "#504b58"];
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      let d1 = 1e9, d2 = 1e9, sd1 = null; for (const q of seeds) { const dd = Math.hypot(q[0] - i, q[1] - j); if (dd < d1) { d2 = d1; d1 = dd; sd1 = q; } else if (dd < d2) d2 = dd; }
+      const seam = d2 - d1, fissure = Math.abs(noise(i, j) - 0.5) < 0.05;
+      let c;
+      if (seam < 1.3) { if (fissure) { c = seam < 0.6 ? "#ffc94d" : "#ff6a14"; hot.push([i, j, 0.6]); } else c = "#0e0c12"; }
+      else if (seam < 2.2 && fissure) c = "#7a2a10";   // rock warmed by the lava next to it
+      else {
+        c = tops[sd1[2] * 4 | 0];
+        const toward = (i - sd1[0]) + (j - sd1[1]);
+        if (seam < 2.4) c = toward < 0 ? "#625e6c" : "#24222a";   // a lit top-left rim and a shadowed bottom-right rim on every column
+        else if (hsh(i, j) < 0.04) c = "#77727f";   // ash
+      }
+      set(i, j, c);
+    }
+    // bubbling lava pools
+    [[80, 30, 9, 6], [122, 64, 8, 6], [44, 89, 10, 5], [6, 48, 5, 7]].forEach(([a, b, rx, ry]) => {
+      for (let j = b - ry - 2; j <= b + ry + 2; j++) for (let i = a - rx - 2; i <= a + rx + 2; i++) {
+        const d = Math.hypot((i - a) / rx, (j - b) / ry) + (hsh(i, j) - 0.5) * 0.15; if (d > 1.15 || road(i, j)) continue;
+        const flow = Math.sin(i * 0.6 + j * 0.9) > 0.55;
+        set(i, j, d > 1 ? "#16121a" : d > 0.85 ? "#9a2a0a" : d > 0.6 ? "#ff6a14" : d > 0.3 ? (flow ? "#ffc94d" : "#ff9a2a") : (flow ? "#fff0a8" : "#ffd36b"));
+        if (d < 0.85) hot.push([i, j, 0.8]);
+      }
+      set(a + 3, b - 1, "#fff0a8"); set(a + 2, b - 1, "#ffb12e"); set(a + 4, b - 1, "#ffb12e");   // a bubble
+    });
+    // tall basalt pillars standing up out of the ground
+    [[34, 28, 14], [112, 26, 16], [72, 0, 14], [150, 4, 14], [36, 62, 12], [118, 80, 8], [84, 62, 10]].forEach(([a, b, h]) => {
+      for (let j = b; j < b + h + 4; j++) for (let i = a; i < a + 9; i++) if (road(i, j)) return;
+      for (let j = b + 3; j < b + h + 3; j++) for (let u = 0; u < 9; u++) set(a + u, j, u === 0 || u === 8 ? "#0a090c" : ["#5e5a68", "#56525f", "#4a4652", "#46424e", "#3c3944", "#34313b", "#2a2830"][u - 1]);
+      for (let k = 0; k < 4; k++) set(a + 1 + (k * 2) % 7, b + 6 + k * 4, "#24222a");   // cracks
+      const top = ["..kkkkk..", ".kLLLLLk.", "kLhhhhhLk", ".kLLLLLk.", "..kkkkk.."];
+      top.forEach((row, w) => [...row].forEach((ch, u) => { if (ch !== ".") set(a + u, b + w, { k: "#0a090c", L: "#6e6a78", h: "#8a8596" }[ch]); }));
+      for (let u = 1; u < 8; u++) set(a + u, b + h + 3, "#0a090c");
+    });
+  } else {
+    // inside the volcano: a rocky cave lit from below by a boiling lava lake
+    const ceil = (i) => 7 + Math.sin(i / 7) * 3 + hsh(i >> 2, 1) * 3;
+    const shore = (i) => 58 + Math.sin(i / 9) * 3 + Math.sin(i / 3.3);
+    const wallW = (j) => 5 + Math.sin(j / 6) * 3;
+    const rock = ["#1a0a07", "#2a120c", "#3a170d", "#4e1f0e", "#6a2a10", "#8a3a14"];
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const sh = shore(i), ce = ceil(i); let c;
+      if (j < ce || i < wallW(j) || i > W - 1 - wallW(j + 7)) c = j < ce - 2 || i < wallW(j) - 2 || i > W + 1 - wallW(j + 7) ? "#0a0403" : "#2a120c";
+      else if (j < sh) {
+        const lit = (j - ce) / (sh - ce), n = noise(i, j * 2);
+        c = rock[Math.max(0, Math.min(5, Math.round(lit * lit * 5 + (n - 0.5) * 2)))];
+        if (smooth(i + 900, j + 900, 4) > 0.74) c = rock[Math.min(5, rock.indexOf(c) + 1)];   // lumpy rocks catching the light
+        if (Math.abs(n - 0.5) < 0.02) c = "#120806";
+        if (j >= sh - 1) { c = "#ff9a2a"; hot.push([i, j, 0.6]); } else if (j >= sh - 2) c = "#c8400e";
+      } else {
+        const n2 = noise(i * 1.3 + 40, j * 2.6), cr = smooth(i + 500, j * 1.4 + 500, 6), crust = cr > 0.72;
+        if (crust) c = cr > 0.76 ? "#3a1a10" : "#7a2a10";
+        else { c = Math.abs(n2 - 0.5) < 0.022 ? "#fff0a8" : Math.abs(n2 - 0.5) < 0.06 ? "#ffc94d" : n2 > 0.5 ? "#ff8a24" : "#ff6a14"; hot.push([i, j, 0.4]); }
+      }
+      set(i, j, c);
+    }
+    // stalactites hanging from the ceiling, dripping lava
+    [[24, 9], [46, 12], [78, 8], [104, 13], [132, 10]].forEach(([a, len]) => { const top = Math.floor(ceil(a));
+      for (let k = 0; k < len; k++) { const w = Math.max(0, Math.round((len - k) / len * 3)); for (let u = -w; u <= w; u++) set(a + u, top + k, u === -w ? "#6a2a10" : u === w ? "#120806" : "#2a120c"); }
+      set(a, top + len, "#ff7a1a"); set(a, top + len + 2, "#ffc94d"); hot.push([a, top + len + 1, 1]); });
+    // lavafalls pouring down the walls into the lake
+    [[12, 18], [150, 30]].forEach(([a, b]) => { for (let j = b; j < shore(a) + 2; j++) for (let u = -1; u <= 1; u++) { set(a + u + Math.round(Math.sin(j / 4)), j, u === 0 ? "#fff0a8" : "#ff9a2a"); hot.push([a, j, 0.8]); }
+      const sj = Math.floor(shore(a)); [[-3, 0], [3, 0], [-2, -1], [2, -1], [0, -2]].forEach(([u, w]) => set(a + u, sj + w, "#ffc94d")); });
+    // stone pillars holding up the road where it crosses over the lava
+    for (let i = 4; i < W; i += 13) { let j = 0; while (j < H && !road(i, j)) j++; while (j < H && road(i, j)) j++;
+      if (j < H && j >= shore(i) - 2) for (let k = j; k < Math.min(H, shore(i) + 10); k++) for (let u = 0; u < 4; u++) set(i + u, k, u === 0 ? "#6a544a" : u === 3 ? "#140806" : k > shore(i) + 4 ? "#7a2a10" : "#4e3a32"); }
+  }
   // --- the crumbling stone road ---
-  const tones = ["#62575d", "#6e6268", "#7a6d72", "#857880"];
+  const RT = {   // stone colors: [bricks x4, lit top, shadowed bottom, lit left, mortar, soot, broken edge]
+    magma: ["#62575d", "#6e6268", "#7a6d72", "#857880", "#988b90", "#4e4449", "#8e8287", "#2e262c", "#4a4046", "#1e171b"],
+    basalt: ["#5e5c68", "#6a6874", "#76737f", "#82808c", "#9a97a4", "#46444e", "#8c8996", "#25232b", "#403e48", "#16141a"],
+    volcano: ["#6a5446", "#76604f", "#826a58", "#8e7562", "#a68a72", "#4e3c32", "#9a7f69", "#2a1c16", "#4a3a32", "#140806"] }[look];
+  const tones = RT.slice(0, 4);
   const shadowAt = new Set();
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     if (!road(i, j)) { if (road(i, j - 1) || road(i, j - 2) || road(i - 1, j)) shadowAt.add(i + "," + j); continue; }
     const d = segD(i, j), lim = HW - bite(i, j);
     const row = j >> 2, off = (row % 2) * 3, bu = (i + off) % 6, bw = j % 4, bid = Math.floor((i + off) / 6) * 31 + row * 17, bh = hsh(bid, 3);
     let c;
-    if (d > lim - 1) c = "#1e171b";   // dark broken edge
+    if (d > lim - 1) c = RT[9];   // dark broken edge
     else if (bh < 0.05 && d < lim - 2) { c = bw === 3 ? "#ff7a1a" : bw === 2 ? "#c8400e" : "#1a0e0c"; if (bw >= 2) hot.push([i, j, 0.6]); }   // a missing brick, lava glowing below
-    else if (bw === 0 || bu === 0) c = d > lim - 3 && hsh(i, j) < 0.25 ? "#c8400e" : "#2e262c";   // mortar (heat seeping through near the edges)
+    else if (bw === 0 || bu === 0) c = d > lim - 3 && hsh(i, j) < 0.25 ? "#c8400e" : RT[7];   // mortar (heat seeping through near the edges)
     else {
       c = tones[bh * 4 | 0];
-      if (bw === 1) c = "#988b90"; else if (bw === 3) c = "#4e4449";   // each brick has a lit top and a shadowed bottom
-      if (bu === 1 && bw !== 3) c = "#8e8287";
-      if (bh > 0.7 && (bu + bw) % 5 === 2) c = "#2e262c";   // cracks across some bricks
-      if (d > lim - 2.5 && hsh(i * 3, j * 5) < 0.4) c = "#4a4046";   // soot near the edges
+      if (bw === 1) c = RT[4]; else if (bw === 3) c = RT[5];   // each brick has a lit top and a shadowed bottom
+      if (bu === 1 && bw !== 3) c = RT[6];
+      if (bh > 0.7 && (bu + bw) % 5 === 2) c = RT[7];   // cracks across some bricks
+      if (d > lim - 2.5 && hsh(i * 3, j * 5) < 0.4) c = RT[8];   // soot near the edges
     }
     set(i, j, c);
   }
   // rubble that fell off the road
   for (let n = 0; n < 40; n++) { const i = R() * W | 0, j = R() * H | 0; const d = segD(i, j);
-    if (d > HW && d < HW + 3 && !road(i, j)) { set(i, j, "#7a6d72"); set(i + 1, j, "#4e4449"); set(i, j - 1, "#988b90"); } }
+    if (d > HW && d < HW + 3 && !road(i, j)) { set(i, j, RT[2]); set(i + 1, j, RT[5]); set(i, j - 1, RT[4]); } }
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (img[j * W + i]) { x.fillStyle = img[j * W + i]; x.fillRect(i, j, 1, 1); }
   x.fillStyle = "rgba(0,0,0,0.45)"; shadowAt.forEach((k) => { const [i, j] = k.split(",").map(Number); x.fillRect(i, j, 1, 1); });   // the road's shadow
   // smoke wisps rising from the hottest spots
-  [[30, 40], [100, 12], [150, 70], [62, 88]].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
+  ({ magma: [[30, 40], [100, 12], [150, 70], [62, 88]], basalt: [[80, 26], [122, 60], [44, 85]], volcano: [[30, 56], [90, 54], [130, 56], [12, 40]] })[look].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
+  if (look === "volcano") for (let n = 0; n < 40; n++) { const i = R() * W | 0, j = 12 + R() * 44 | 0; if (!road(i, j)) { x.fillStyle = R() < 0.5 ? "#ffc94d" : "#ff7a1a"; x.fillRect(i, j, 1, 1); hot.push([i, j, 0.5]); } }   // floating embers
   const c = cv.getContext("2d"), S = cv.width / W; c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
   c.globalCompositeOperation = "lighter";
   for (let n = 0; n < hot.length; n += 4) { const [i, j, a] = hot[n], gx = (i + 0.5) * S, gy = (j + 0.5) * S, r = S * 6;
@@ -1453,81 +1528,6 @@ function drawMagmaMini(cv) {
   c.globalCompositeOperation = "source-over";
   const v = c.createRadialGradient(cv.width / 2, cv.height / 2, cv.height * 0.35, cv.width / 2, cv.height / 2, cv.width * 0.62);   // darker corners
   v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(10,2,0,0.45)"); c.fillStyle = v; c.fillRect(0, 0, cv.width, cv.height);
-}
-function drawSoonMini(cv, look) {
-  if (look === "magma") return drawMagmaMini(cv);
-  const W = 80, H = 48, sm = document.createElement("canvas"); sm.width = W; sm.height = H;
-  const x = sm.getContext("2d"); let sd = look.length * 977 + 13; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  const px = (a, b, col, w = 1, h = 1) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
-  const LAVA = ["#5a0e04", "#9a1e06", "#d8400c", "#ff6a14", "#ff9a2a", "#ffc94d", "#fff0a8"];
-  const lava = (i, j, heat) => LAVA[Math.max(0, Math.min(6, Math.round(heat + Math.sin(i * 0.45 + Math.sin(j * 0.3) * 2) * 0.8 + (R() - 0.5) * 0.9)))];
-  // cracked plates (like a cooling lava crust): every pixel belongs to the nearest seed; the seams between plates glow
-  const seeds = []; for (let k = 0; k < 34; k++) seeds.push([R() * W, R() * H, R()]);
-  const plate = (i, j) => { let d1 = 1e9, d2 = 1e9, s1 = null; for (const q of seeds) { const d = Math.hypot(q[0] - i, (q[1] - j) * 1.15); if (d < d1) { d2 = d1; d1 = d; s1 = q; } else if (d < d2) d2 = d; } return { seam: d2 - d1, s: s1, d1 }; };
-  const hot = [];   // glowing spots for the glow pass
-  const path = SOON_PATHS[look], onRoad = new Set();
-  for (let k = 0; k < path.length - 1; k++) { const [a, b] = path[k], [c, d] = path[k + 1];
-    for (let i = Math.min(a, c) - 3; i <= Math.max(a, c) + 3; i++) for (let j = Math.min(b, d) - 3; j <= Math.max(b, d) + 3; j++) onRoad.add(i + "," + j); }
-  const roadEdge = (i, j) => onRoad.has(i + "," + j) && !(onRoad.has(i - 1 + "," + j) && onRoad.has(i + 1 + "," + j) && onRoad.has(i + "," + (j - 1)) && onRoad.has(i + "," + (j + 1)));
-  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-    const p = plate(i, j); let col;
-    if (look === "basalt") {
-      // hexagon-ish basalt column tops with dark seams; a few seams are filled with lava
-      const lavaSeam = p.s[2] < 0.22;
-      if (p.seam < 1.3) { col = lavaSeam ? lava(i, j, 4.5) : "#141216"; if (lavaSeam) hot.push([i, j, 0.5]); }
-      else { const sh = p.d1 < 2 ? 1 : 0; col = ["#3a3740", "#46424d", "#2f2c34"][(p.s[2] * 3 | 0)] ; if (sh && R() < 0.5) col = "#5a5664"; }
-    } else if (look === "magma") {
-      // blocky magma ground: a grid of square 8x8 blocks, each a dark crust with glowing cracks (turned and flipped so they don't all match)
-      const bi = i >> 3, bj = j >> 3, v = ((bi * 73 + bj * 151) ^ (bi * bj * 29)) & 7;
-      let u = i & 7, w = j & 7; if (v & 1) u = 7 - u; if (v & 2) w = 7 - w; if (v & 4) [u, w] = [w, u];
-      const ch = MAGMA_TILE[w][u];
-      col = MAGMA_COL[ch][(bi + bj + v) % 2];
-      if (ch === "y") hot.push([i, j, 0.9]); else if (ch === "o") hot.push([i, j, 0.3]);
-    } else {
-      // inside the volcano: a lava lake (with a few crusty plates) under rock walls
-      const wall = j < 5 + Math.sin(i / 5) * 2 + (i * 7 % 3) || i < 3 - Math.sin(j / 3) * 2 || i > W - 4 + Math.sin(j / 3) * 2;
-      const shore = 28 + Math.round(Math.sin(i / 6) * 2 + Math.sin(i / 2.3));
-      if (wall) col = j < 3 || i < 1 || i > W - 2 ? "#0e0605" : "#2a120c";
-      else if (j < shore) {   // cave rock, lit orange from the lava below
-        const lit = j / shore; col = p.seam < 1.1 ? "#120806" : ["#2a120c", "#3a170d", "#4e1f0e", "#6a2a10"][Math.min(3, Math.floor(lit * lit * 4 + R() * 0.5))];
-        if (j === shore - 1) col = "#ff9a2a";
-      }
-      else if (p.s[2] < 0.45 && p.seam > 1.4) col = p.seam < 2.4 ? "#7a2a10" : "#3a1a10";
-      else { col = lava(i, j, 1.6 + j / H * 3); if (j > H * 0.6) hot.push([i, j, 0.15]); }
-    }
-    px(i, j, col);
-  }
-  // the robots' road: old crumbling stone bricks, cracked, with chipped edges, rubble and a few holes
-  const ROAD = { basalt: ["#16141a", "#6e6a78", "#86818f", "#3a3742"], magma: ["#16141a", "#6e6268", "#857880", "#3a3238"], volcano: ["#140806", "#7a6254", "#927664", "#40302a"] }[look];
-  const holes = []; for (let k = 0; k < 4; k++) { const key = [...onRoad][R() * onRoad.size | 0]; holes.push(key.split(",").map(Number)); }
-  for (const key of onRoad) { const [i, j] = key.split(",").map(Number); if (i < 0 || j < 0 || i >= W || j >= H) continue;
-    const edge = roadEdge(i, j);
-    if (edge && R() < 0.35) continue;   // chunks broken off the edge
-    if (holes.some(([a, b]) => Math.abs(a - i) + Math.abs(b - j) < 2 && !edge)) { px(i, j, ROAD[0]); continue; }   // holes
-    if (edge) { px(i, j, ROAD[0]); continue; }
-    const row = Math.floor(j / 3), brick = Math.floor((i + (row % 2) * 2) / 4);   // bricks 4 wide, 3 tall, every other row shifted
-    const mortar = j % 3 === 0 || (i + (row % 2) * 2) % 4 === 0;
-    px(i, j, mortar ? ROAD[3] : j % 3 === 1 ? ROAD[2] : ROAD[1]);   // a light top on each brick
-    if (!mortar && R() < 0.08) px(i, j, ROAD[3]);   // cracks and chips in the bricks
-  }
-  for (const key of onRoad) { const [i, j] = key.split(",").map(Number);   // rubble: little stones fallen off the side
-    if (roadEdge(i, j) && R() < 0.12) { const a = i + (R() < 0.5 ? -1 : 1) * (1 + (R() * 2 | 0)), b = j + (R() < 0.5 ? -1 : 1); if (!onRoad.has(a + "," + b)) { px(a, b, ROAD[2]); px(a + 1, b, ROAD[0]); } } }
-  if (look === "basalt") {
-    [[22, 18], [44, 40], [64, 22], [4, 24], [38, 16], [76, 14]].forEach(([a, b], k) => {   // tall basalt pillars
-      const h = 6 + (k * 3) % 7; px(a, b - h, "#0e0c10", 6, h + 2); px(a + 1, b - h + 1, "#36333d", 4, h); px(a + 1, b - h + 1, "#57525f", 1, h); px(a + 1, b - h, "#6c6878", 4, 2); px(a + 2, b - h, "#8a8596", 2, 1);
-    });
-    [[4, 2], [58, 40], [36, 44]].forEach(([a, b]) => { px(a - 1, b, "#5a0e04", 9, 4); for (let i = 0; i < 7; i++) for (let j = 0; j < 3; j++) { px(a + i, b + j, lava(a + i, b + j, 5)); hot.push([a + i, b + j, 0.8]); } });   // lava pools
-  }
-  if (look === "volcano") {
-    [[10, 4], [28, 5], [50, 4], [70, 6]].forEach(([a, b]) => { for (let k = 0; k < 4; k++) px(a, b + k, LAVA[3 + (k > 2)]); px(a, b + 5, "#ffc94d"); hot.push([a, b + 3, 1]); });   // lava drips
-    for (let i = 0; i < 26; i++) { const a = R() * W | 0, b = 6 + R() * 30 | 0; if (!onRoad.has(a + "," + b)) px(a, b, R() < 0.5 ? "#ffc94d" : "#ff7a1a"); }   // embers
-  }
-  const c = cv.getContext("2d"), S = cv.width / W; c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
-  // glow: soft orange light over the lava so it looks hot and molten
-  c.globalCompositeOperation = "lighter";
-  for (let n = 0; n < hot.length; n += 3) { const [i, j, a] = hot[n], gx = (i + 0.5) * S, gy = (j + 0.5) * S, r = S * 3.2;
-    const g = c.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, `rgba(255,110,30,${0.07 * a})`); g.addColorStop(1, "rgba(255,80,20,0)"); c.fillStyle = g; c.fillRect(gx - r, gy - r, r * 2, r * 2); }
-  c.globalCompositeOperation = "source-over";
 }
 
 const setup = { level: "meadow", diff: "normal", tutorial: false, mode: "solo", hours: 24 };
