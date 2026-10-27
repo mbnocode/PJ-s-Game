@@ -1360,6 +1360,8 @@ const SOON_PATHS = {
   magma:   [[0, 8], [66, 8], [66, 24], [14, 24], [14, 40], [80, 40]],
   volcano: [[0, 22], [18, 22], [18, 32], [40, 32], [40, 14], [62, 14], [62, 26], [80, 26]],
 };
+const MAGMA_TILE = ["dmmdddmd", "doodmmdd", "dmoyodmd", "ddmoodmm", "mdddmoom", "dmmdmyod", "ddmoodmd", "mdddmddd"];
+const MAGMA_COL = { d: ["#3e1006", "#461307"], m: ["#6a1c09", "#5e1808"], o: ["#e0520e", "#ff6a14"], y: ["#ffb12e", "#ffc94d"] };
 function drawSoonMini(cv, look) {
   const W = 80, H = 48, sm = document.createElement("canvas"); sm.width = W; sm.height = H;
   const x = sm.getContext("2d"); let sd = look.length * 977 + 13; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
@@ -1382,9 +1384,12 @@ function drawSoonMini(cv, look) {
       if (p.seam < 1.3) { col = lavaSeam ? lava(i, j, 4.5) : "#141216"; if (lavaSeam) hot.push([i, j, 0.5]); }
       else { const sh = p.d1 < 2 ? 1 : 0; col = ["#3a3740", "#46424d", "#2f2c34"][(p.s[2] * 3 | 0)] ; if (sh && R() < 0.5) col = "#5a5664"; }
     } else if (look === "magma") {
-      // a sea of molten rock with dark crust plates floating on it
-      if (p.seam < 1.8 || p.s[2] < 0.08) { col = lava(i, j, 5 - p.seam * 1.8); hot.push([i, j, 0.25]); }
-      else { col = p.seam < 3 ? "#5a1c0c" : ["#2a1410", "#33180f", "#24110c"][(p.s[2] * 3 | 0)]; if (R() < 0.06) col = "#7a2a10"; }
+      // blocky magma ground: a grid of square 8x8 blocks, each a dark crust with glowing cracks (turned and flipped so they don't all match)
+      const bi = i >> 3, bj = j >> 3, v = ((bi * 73 + bj * 151) ^ (bi * bj * 29)) & 7;
+      let u = i & 7, w = j & 7; if (v & 1) u = 7 - u; if (v & 2) w = 7 - w; if (v & 4) [u, w] = [w, u];
+      const ch = MAGMA_TILE[w][u];
+      col = MAGMA_COL[ch][(bi + bj + v) % 2];
+      if (ch === "y") hot.push([i, j, 0.9]); else if (ch === "o") hot.push([i, j, 0.3]);
     } else {
       // inside the volcano: a lava lake (with a few crusty plates) under rock walls
       const wall = j < 5 + Math.sin(i / 5) * 2 + (i * 7 % 3) || i < 3 - Math.sin(j / 3) * 2 || i > W - 4 + Math.sin(j / 3) * 2;
@@ -1400,7 +1405,7 @@ function drawSoonMini(cv, look) {
     px(i, j, col);
   }
   // the robots' road
-  const ROAD = { basalt: ["#1d1b20", "#4a4652", "#57525f"], magma: ["#ffb347", "#3a2620", "#46302a"], volcano: ["#140806", "#5a463e", "#6a544a"] }[look];
+  const ROAD = { basalt: ["#1d1b20", "#4a4652", "#57525f"], magma: ["#ff8a2a", "#3e353c", "#4a4048"], volcano: ["#140806", "#5a463e", "#6a544a"] }[look];
   for (const key of onRoad) { const [i, j] = key.split(",").map(Number); if (i < 0 || j < 0 || i >= W || j >= H) continue;
     px(i, j, roadEdge(i, j) ? ROAD[0] : (i * 3 + j * 5) % 7 === 0 ? ROAD[2] : ROAD[1]); }
   if (look === "magma") for (const key of onRoad) { const [i, j] = key.split(",").map(Number); if (roadEdge(i, j)) hot.push([i, j, 0.3]); }
