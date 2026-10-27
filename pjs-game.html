@@ -1368,11 +1368,13 @@ function drawSoonMini(cv, look) {
   const img = []; const set = (i, j, c) => { if (i >= 0 && j >= 0 && i < W && j < H) img[j * W + i] = c; };
   const hot = [];
   // --- the road's shape (so scenery stays off it) ---
-  const P = SOON_PATHS[look].map(([a, b]) => [a * 2, b * 2]), HW = 7;
-  const segD = (i, j) => { let best = 1e9; for (let k = 0; k < P.length - 1; k++) { const [a, b] = P[k], [c, d] = P[k + 1];
+  // one square wide, like the real levels: the map is 20 squares across, so each square is 8 pixels here and the road runs through square centers
+  const snap = (v) => v <= 0 ? -4 : v >= 160 ? 164 : Math.round((v - 4) / 8) * 8 + 4;
+  const P = SOON_PATHS[look].map(([a, b]) => [snap(a * 2), snap(b * 2)]), HW = 4;
+  const segD = (i, j) => { let best = 1e9; i += 0.5; j += 0.5; for (let k = 0; k < P.length - 1; k++) { const [a, b] = P[k], [c, d] = P[k + 1];
     const ci = Math.max(Math.min(a, c), Math.min(Math.max(a, c), i)), cj = Math.max(Math.min(b, d), Math.min(Math.max(b, d), j));
     best = Math.min(best, Math.max(Math.abs(i - ci), Math.abs(j - cj))); } return best; };
-  const bite = (i, j) => (hsh(i >> 1, j >> 1) < 0.35 ? 1 : 0) + (hsh(i >> 2, j >> 2) < 0.18 ? 1 : 0);   // crumbled edge
+  const bite = (i, j) => (hsh(i >> 1, j >> 1) < 0.3 ? 1 : 0);   // crumbled edge
   const road = (i, j) => segD(i, j) <= HW - bite(i, j);
   // smooth noise for the glowing cracks (so they connect from block to block)
   const grid = {}, gv = (a, b) => grid[a + "," + b] ?? (grid[a + "," + b] = hsh(a + 50, b + 90));
