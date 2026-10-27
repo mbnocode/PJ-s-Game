@@ -176,6 +176,21 @@ const SETTINGS = {
     // Wizard's Elemental Sphere can hit it. baseHit = how hard it hits your Base.
     drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 8 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
+    // Lava-level robots: on the Enemies page as "Coming soon". They aren't in any waves yet.
+    // Magma Crawler: towers next to its burning trail can't attack for trailStopsTowers seconds.
+    crawler:  { name: "Magma Crawler", health: 110, speed: 2.0, leaves: 12, points: 35, trailStopsTowers: 2 },
+    // Obsidian Shell: takes half damage until one hit of crackHit or more cracks its shell.
+    obsidian: { name: "Obsidian Shell", health: 260, speed: 1.0, leaves: 18, points: 50, crackHit: 40 },
+    // Ember Bat: flies in swarms of swarm. Only Owls, Dragons, the Pegasus and the Wizard's Sphere can hit it.
+    emberbat: { name: "Ember Bat", health: 30, speed: 3.6, leaves: 6, points: 20, flying: true, baseHit: 5, swarm: 5 },
+    // Fire-Proof Bot: Fire Dragons do no damage, Water Frogs do waterTimes damage.
+    fireproof: { name: "Fire-Proof Bot", health: 140, speed: 1.8, leaves: 12, points: 35, waterTimes: 2 },
+    // Lava Diver: every diveEvery seconds it dives under the lava for diveSeconds and can't be hit.
+    diver:    { name: "Lava Diver", health: 120, speed: 2.2, leaves: 14, points: 40, diveEvery: 4, diveSeconds: 2 },
+    // Lava-level Bosses:
+    pillartitan:  { name: "Pillar Titan", health: 2200, speed: 0.7, leaves: 170, points: 600, baseHit: 45, isBoss: true, slamEvery: 8 },
+    magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2 },
+    volcanoheart: { name: "Volcano Heart", health: 3000, speed: 0.6, leaves: 250, points: 900, baseHit: 60, isBoss: true, healPerSecond: 25 },
   },
 
   // ---------------- ABILITIES ----------------

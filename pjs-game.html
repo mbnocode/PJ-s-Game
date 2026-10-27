@@ -522,9 +522,19 @@ const $ = (id) => document.getElementById(id);
 const PAL = {
   k: "#16191d", y: "#f2c230", Y: "#c98e12", w: "#ffffff", r: "#e0443a", R: "#9e2a22", g: "#7a8089", G: "#4a5059",
   o: "#ff8c1a", b: "#3d8fe0", B: "#1f5fa8", c: "#8fd3ff", n: "#7a4a24", N: "#4e2d14", l: "#5fbf4a", L: "#2f7d32",
+  a: "#24163a", A: "#3a2458", i: "#8a6ac0", d: "#5a1608", D: "#2a0a04", t: "#6a6676", T: "#3c3944", E: "#ffb12e",   // lava-level robots
   p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", j: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8", z: "#d9b8ff",
 };
 const ART = {
+  // lava-level robots (Enemies page only for now)
+  crawler: ["................", "................", "................", "................", "................", "......kkkkk.....", "....kkdoddokk...", "...kdoEodddodk..", "..kddddoEoddddk.", ".kdodddddoddwrk.", ".kddoddoddddkkk.", ".kkkkkkkkkkkk...", "o.kGk.kGk.kGk...", "oo.k..k...k.....", "fo..............", "................"],
+  obsidian: ["................", "................", ".....kkkkkk.....", "...kkaAiAaakk...", "..kaAiiAaaAak...", ".kaAAaaaAaaAak..", ".kaaAaaaaAaaak..", "kaAaaaaAaaaaAak.", "kkkkkkkkkkkkkkk.", ".kgggrkkgrggk...", ".kGgggggggggGk..", "..kkkkkkkkkkk...", "..kGk.kGk.kGk...", "..kk..kk..kk....", "................", "................"],
+  emberbat: ["................", "................", "k..............k", "ok............ko", "ook...k..k...koo", "Eook.kkkkkk.kooE", "kEookdfddfdkooEk", ".kEooddddddooEk.", "..kkoddddddokk..", "....kdkddkdk....", "....k.k..k.k....", "................", "................", "................", "................", "................"],
+  fireproof: ["................", ".....kkkkkk.....", "....kssxxssk....", "....ksooooosk...", "....kskkkkksk...", ".....kssssk.....", "...kkkkkkkkkk...", "..ksssrorsssk...", "..kssrofrsssk...", ".kskssrrsssksk..", ".kkksssssssskkk.", "...ksssssssk....", "...kGGk..kGGk...", "...kssk..kssk...", "..kkkkk..kkkkk..", "................"],
+  diver: ["................", "................", ".....kkkkkk.....", "....kggggggk....", "...kgkkkkkkgk...", "...kgkcUcckgk...", "...kgkcccckgk...", "...kgkkkkkkgk...", "....kggggggk....", "..kGkggrrggkGk..", "..kGkggggggkGk..", "...kkGGGGGGkk...", ".o..kgk..kgk..o.", "oEo.kkk..kkk.oEo", "ofooooooooooooof", "rrooooroooooroor"],
+  pillartitan: ["............ksssssssk...........", "............kTtTTTTTk...........", "............kTtTTTTTk...........", "............kTfETEfTk...........", "............kTtTTTTTk...........", "............kTtoooTTk...........", "...........kkkksssskkkk.........", "..........ktttttttottttk........", "..kkkk.kkkkTTTotttoTTTokkkkkkkk.", ".kTtTTkssssTTTotttoTTTossssTtTTk", ".kTtTTktttTTTTotttoTTTotttTTtTTk", ".kTtTTktttTTTTotttoTTTotttTTtTTk", ".kTtTTktooooooooooooooooooTTtTTk", ".kTtTTktttTTTTotttoTTTotttTTtTTk", ".kTtTTktttTTTTotffoTTTotttTTtTTk", ".kTtTTktttTTTTotEEoTTTotttTTtTTk", ".kTtTTktooooooooooooooooooTTtTTk", ".kTtTTktttTTTTotttoTTTotttTTtTTk", ".kTtTTktttTTTTotttoTTTotttTTtTTk", ".kTtTTktttTTTTotttoTTTotttTTtTTk", "ktttttttttTTTTotttoTTTottttttttt", "ktttttttttTTTTotttoTTTottttttttt", "ktTTTTtkkTtTTTkkkkTtTTTkkktTTTTt", "kttttttkkTtTTTk..kTtTTTk.ktttttt", ".kkkkkk.kTtTTTk..kTtTTTk..kkkkkk", "........kTtTTTk..kTtTTTk........", "........kTtoTTk..kTtoTTk........", "........kTtTTTk..kTtTTTk........", "........kTtTTTk..kTtTTTk........", "........kTtTTTk..kTtTTTk........", ".......kTTTTTTTkkTTTTTTTk.......", ".......kTTTTTTTkkTTTTTTTk......."],
+  magmaking: [".....kYk...kYk.kk.kYk...kYk.....", ".....kyk...kykkYYkkyk...kyk.....", ".....kyk...kykkyykkyk...kyk.....", ".....kykkkkkykkyykkykkkkkyk.....", ".....kyyyyyyyyyyyyyyyyyyyyk.....", ".....kyyyyyyyyyyyyyyyyyyyyk.....", ".....kyyyrryyyyrryyyyyrryyk.....", ".....kyyyyyyyyyyyyyyyyyyyyk.....", "...kkkYYYYYYYYYYYYYYYYYYYYkkk...", "..kRDDDDDDDDDDDDDDDDDDDDDDDDDk..", "..kRdddEEoEEodddddddddEEodddDk..", "..kRdddooooddddddddddddoodddDk..", "..kRdddddddddddddddddddoddddDk..", "..kRddddDDDDDddddddDDDDDddddDk..", "..kRdddddddddDddddDdddddddddDk..", "..kRdddddffffddddddffffdddddDk..", "..kRdddddfwwfddddddfwwfdddddDk..", "..kRdddddffffEdddddffffdddddDk..", "..kRdddddddddooodddddddEodddDk..", "..kRddddddEoEoEoddddddodEEddDk..", "..kRddddddddEoddddddddEEooEdDk..", "..kRddddddddEddddddddddEodddDk..", "..kRddddddDwDDwDDwDDwDddddddDk..", "..kRddddddDEEEEEEEEEEDddddddDk..", "..kRddddddDEEEEEEEEEEDddddddDk..", "..kRdddddoDDwDDwDDwDDwddddddDk..", "..kRdddddEdEddddddddddddddddDk..", "..kRddddddddddddddddddddddddDk..", "..kRddddddddddddddddddddddddDk..", "..kRddddddddddddddddddddddddDk..", "..kRddddddddddddddddddddddddDk..", "..kRddddddddddddddddddddddddDk.."],
+  volcanoheart: ["........kEk...kEk....kEk........", ".........kfk...kfk....kfk.......", "........kok...kok....kok........", "........kGGk..kGGk...kGGk.......", "........kGGkkkkGGkkk.kGGk.......", "........kGGkGGGGGGGGkkGGk.......", "........kGGGGGGGGGGGGGGGk.......", ".......kGGGddddRdddddGGGk.......", "....kkkGGddddddRdddddddGGkkk....", "...ksssssssddddodddddsssssssk...", "...kggggRgffdddoddddffgRggggk...", "...kggggRoffddooooddffoRggggk...", "...kggggggodoooooooodoggggggk...", "..kGgggggggoooEEEEooogggggggGk..", "..kGddddddoooEEEEEEoooddddddGk..", "..kGddddddooEEffffEEooddddddGk..", "..kGddddddooEEfwwfEEooddddddGk..", ".kGGRdRdoooEEffffffEEoododRdGGk.", "..kGddddddooEEffffEEooddddddGk..", "..ksssssddooEEffffEEooddsssssk..", "..kgggggddoooEEEEEEoooddgggggk..", "..kgggggdddoooEEEEooodddgggggk..", "..kgggggddodoooooooododdgggggk..", "..kgggggRoddddooooddddoRgggggk..", "..kgggggRdddddddoddddddRgggggk..", "..kgggggddddddddodddddddgggggk..", "...kkkkGGdssssssRsssssdGGkkkk...", ".......kGGggggggRgggggGGk.......", ".......kkkggggggggggggkkk.......", "......kGGGGGggggggggGGGGGk......", "......kGGGGGkkkkkkkkGGGGGk......", "......kGGGGGk......kGGGGGk......"],
   clanker: ["................","........r.......",".......k........","........k.......","...kkkkkkkkkk...","..kyyyyyyyyyyk..","..kyYkkkyyyyyk..","..kyYkwkyyeyyk..","..kyYkkkyyyyyk..","..kyyyyyYYyyyk..","..kyyGyyyyyGyk..","..kkkkkkkkkkkk..","..GG.GG..GG.GG..",".kggkggkkggkggk.",".kGGkGGkkGGkGGk.","..kk.kk..kk.kk.."],
   scout:   ["................","................","................","................",".......kk.......","......kcck......",".....kssssk.....","....kssbbssk....","....kscwwcsk....","....kssssssk....",".....kssssk.....","......kGGk......",".....kG..Gk.....","....kG....Gk....","...kk......kk...","................"],
   walker:  ["................",".....kkkkkk.....","....kssssssk....","....ksrsrssk....","....kssssssk....",".....kkGGkk.....","...kkggggggkk...","..kgkggggggkgk..","..kgkgGooGgkgk..","..kk.gggggg.kk..",".....kggggk.....",".....kgkkgk.....",".....kgk.kgk....","....kGGk.kGGk...","....kkkk.kkkk...","................"],
@@ -2095,9 +2105,10 @@ function renderPerks() {
   });
 }
 /* ---------- enemies page (per save slot) ---------- */
-const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy"];
-const NEW_FOES = new Set([]);
-const BOSS_FOES = new Set(["boss", "sandboss"]);   // robots on the Enemies page that aren't in any waves yet
+const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES];
+const NEW_FOES = new Set(LAVA_FOES);   // robots on the Enemies page that aren't in any waves yet
+const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -2111,6 +2122,14 @@ const FOE_ABOUT = {
   repair: "A little medic bot with a wrench. It keeps the robots around it patched up.",
   drone: "A flying robot with propellers. It ignores the path and flies straight for your treehouse.",
   tesla: "A walking power plant. Electricity crackles from its coil and supercharges the robots around it.",
+  crawler: "A low, glowing bot that scuttles along on hot little legs, leaving a trail of burning ground behind it.",
+  obsidian: "A slow bot hiding under a shell of shiny black volcanic glass.",
+  emberbat: "A small flying bot with glowing ember wings. It never comes alone.",
+  fireproof: "A bot in a silver heat suit. Fire can't touch it, but water makes it fizzle.",
+  diver: "A diving-suit bot that swims through lava like it's a pool.",
+  pillartitan: "A towering giant built from basalt columns, with lava glowing between the stones and burning eyes.",
+  magmaking: "A huge, angry block of magma wearing a golden crown. It rules the Magma Fields.",
+  volcanoheart: "The molten heart of the volcano, wrapped in armor plates, with fire roaring out of its vents. The final boss.",
 };
 function renderEnemies() {
   const s = slot(); s.defeated = s.defeated || {};
@@ -2136,6 +2155,14 @@ function renderEnemies() {
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
       : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
+      : k === "crawler" ? `Special: leaves a burning trail. Towers next to the trail can't attack for ${r.trailStopsTowers} seconds. Coming to The Magma Fields.`
+      : k === "obsidian" ? `Special: its shell makes it take half damage until one hit of ${r.crackHit} or more cracks it open. After that it's weak! Coming to The Basalt Delta.`
+      : k === "emberbat" ? `Special: flies in swarms of ${r.swarm}, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Coming Inside the Volcano.`
+      : k === "fireproof" ? `Special: Fire Dragons do no damage to it, but Water Frogs do ${r.waterTimes} times damage. Coming to The Magma Fields.`
+      : k === "diver" ? `Special: every ${r.diveEvery} seconds it dives under the lava for ${r.diveSeconds} seconds. Nothing can hit it while it's under, and it pops up farther along the road. Coming to The Basalt Delta.`
+      : k === "pillartitan" ? `Special: every ${r.slamEvery} seconds it slams the ground and a basalt pillar shoots up on a tower square, blocking it for the rest of the wave. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Basalt Delta.`
+      : k === "magmaking" ? `Special: when destroyed it splits into ${r.splitInto} Magma Cubes, and each of those splits into ${r.splitInto} small ones. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Magma Fields.`
+      : k === "volcanoheart" ? `Special: heals ${r.healPerSecond} health every second while it's on lava. Freeze it to stop the healing! Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss, Inside the Volcano.`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.filter((o) => !BOSS_FOES.has(o)).map(f));   // the Boss would squash everyone else's bars
