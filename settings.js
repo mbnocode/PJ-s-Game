@@ -146,6 +146,9 @@ const SETTINGS = {
     // The Super Tower. It only shows up in the shop after you buy it on the Upgrades page.
     pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 30, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
               about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders." },
+    // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads bites a different robot.
+    hydra:    { name: "Hydra", cost: 180, range: 2.2, damage: 18, attacksPerSecond: 1.1, targets: 3, serpentUnlock: "hydra",
+              about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once." },
   },
   upgradeCost: [0.7, 1.0, 1.5],   // price of Upgrade 1, 2 and 3, times the Tower's price
   upgradeDamage: 0.45,            // each Upgrade adds this much damage (0.45 = +45%)
@@ -216,7 +219,7 @@ const SETTINGS = {
   //   dragonScale: { name: "Dragon Scale", cost: 50, about: "A shiny scale. Something might need it someday." },
   serpentShop: {
     // unlock: true = you buy it once and keep it. picture = which picture shows on the shelf. shelf = which shelf it sits on.
-    hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower. Coming soon!" },
+    hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head bites a different robot." },
   },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 

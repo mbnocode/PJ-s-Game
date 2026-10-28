@@ -515,7 +515,7 @@ const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
-const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus"];
+const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra"];
 const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
@@ -2179,6 +2179,7 @@ const TUT_TOWER = {
   squirrel: "<b>Squirrel:</b> it doesn't attack, but it gathers extra Maple Leaves for you after every wave. Build it early!",
   crab: "<b>Crab:</b> hurls seashells that splash and hurt every robot nearby. Great against big groups.",
   pegasus: "<b>Pegasus:</b> the Super Tower! It shoots golden stars at 3 robots at once.",
+  hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads bites a different robot.",
 };
 function tutorialEvent(ev, kind) {
   if (!G.tutorial) return;
@@ -2204,7 +2205,11 @@ function perkLevel(key) { const s = slot(); return (s && s.perks && s.perks[key]
 function perkValue(key) { return perkLevel(key) * ((SETTINGS.permanentUpgrades || {})[key] || {}).per || 0; }
 function wizardDiscount() { let d = 0; if (G) for (const t of G.towers) if (t.kind === "wizard") d += towerStatsBase(t).discount || 0; return d; }
 function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - Math.min(0.5, (G && G.cheaper || 0) + wizardDiscount()))); }
-function towerUnlocked(k) { return !SETTINGS.towers[k].superTower || perkLevel("superTower") > 0; }
+function towerUnlocked(k) {
+  const tw = SETTINGS.towers[k], s = slot();
+  if (tw.serpentUnlock) return !!(s && s.materials && s.materials[tw.serpentUnlock]);   // bought in the Serpent's Shop
+  return !tw.superTower || perkLevel("superTower") > 0;
+}
 function renderPerks() {
   const s = slot(); s.perks = s.perks || {}; s.acorns = s.acorns || 0;
   $("acorn-num").textContent = s.acorns;
@@ -2305,6 +2310,7 @@ const TOWER_INFO = {
   plant: "A hulking tree. Thorny vines burst out of the ground and grab robots, holding them in place.",
   crab: "A beach crab that hurls seashells. Each shell splashes and hurts every robot nearby.",
   pegasus: "The Super Tower! A winged horse that shoots golden stars at 3 robots at once. It can see Hiders and hit flying robots.",
+  hydra: "A three-headed serpent from the Serpent's Shop. Each head lunges out and bites a different robot.",
 };
 function renderTowersInfo() {
   const s = slot(), TW = SETTINGS.towers;
@@ -2326,7 +2332,9 @@ function renderTowersInfo() {
     const t = TW[k], d = document.createElement("div"), locked = !towerUnlocked(k);
     d.className = "foe" + (t.superTower ? " boss" : "");
     if (locked) {
-      d.innerHTML = `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Super Tower</div><div class="s">Unlock it on the Upgrades page with Golden Acorns to find out what it is!</div></div></div>`;
+      d.innerHTML = t.serpentUnlock
+        ? `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Tower</div><div class="s">Somebody hiding on the save slot screen sells this one for Golden Acorns…</div></div></div>`
+        : `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Super Tower</div><div class="s">Unlock it on the Upgrades page with Golden Acorns to find out what it is!</div></div></div>`;
       const c = document.createElement("canvas"); c.width = c.height = 32; const cx = c.getContext("2d"); cx.fillStyle = "#16191d"; cx.fillRect(0, 0, 32, 32); cx.fillStyle = "#ffd34d"; cx.font = "bold 22px sans-serif"; cx.textAlign = "center"; cx.fillText("?", 16, 24);
       d.querySelector(".pic").replaceWith(c); box.appendChild(d); continue;
     }
@@ -2534,7 +2542,7 @@ function openPanel(t) {
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
-  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : "Grabs"} ${s.targets} robots at once`);
+  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : "Grabs"} ${s.targets} robots at once`);
   if (s.pushBack && spec.upgradeChoices) lines.push(`Pushes robots back ${s.pushBack.toFixed(1)} squares`);
   if (s.holdSeconds && t.kind === "plant" && spec.upgradeChoices) lines.push(`Holds robots for ${s.holdSeconds.toFixed(1)}s`);
   if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
@@ -2928,6 +2936,13 @@ function fire(t, s, target) {
     }
     if (s.splash) G.shake = Math.max(G.shake, 0.08);
     Sound.play("plant");
+  } else if (t.kind === "hydra") {
+    // Each of the Hydra's heads lunges out and bites a different robot.
+    const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
+    const bites = [target, ...G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && Math.hypot(rpos(r).x - cx, rpos(r).y - cy) <= R)
+      .sort((a, b) => b.d - a.d).slice(0, (s.targets || 3) - 1)];
+    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : [1, 0, 2][i], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
+    Sound.play("tongue");
   } else if (t.kind === "water") {
     // The frog's tongue shoots out, smacks the robot, and snaps back.
     G.tongues.push({ tower: t, target, s, t: 0, dur: 0.3, hit: false, end: null });
@@ -3051,6 +3066,30 @@ function vinePoints(f, now) {
   }
   return { pts, reach };
 }
+// The Hydra: one head stretches out on its long neck, bites, and pulls back.
+const HYDRA_HEADS = [[5, 8], [16, 6], [27, 8]];   // where the 3 heads are in its 32 x 32 picture
+function drawBite(x, f) {
+  const t = f.tower, sz = 32 * towerScale(t), cx = t.x * T + 16, by = t.y * T + 30, [ax, ay] = HYDRA_HEADS[f.head];
+  const hx = cx + (ax - 16) * sz / 32, hy = by - sz + ay * sz / 32;
+  if (!f.robot.dead) { const q = rpos(f.robot); f.tx = q.x; f.ty = q.y - 6; }
+  if (f.tx === undefined) return;
+  const age = f.dur - f.t, k = age < 0.12 ? age / 0.12 : age < 0.18 ? 1 : Math.max(0, f.t / (f.dur - 0.18));
+  const ex = hx + (f.tx - hx) * k, ey = hy + (f.ty - hy) * k, mx = (hx + ex) / 2, my = Math.min(hy, ey) - 10 * k;
+  x.lineCap = "round";
+  for (const [col, w] of [["#16191d", 7], ["#1f7a62", 5], ["#3fbf9a", 2.5]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
+  // the head with its jaws: open on the way out, snapped shut when it bites
+  const ang = Math.atan2(ey - my, ex - mx), open = age < 0.12 ? 0.6 : 0.08;
+  x.save(); x.translate(ex, ey); x.rotate(ang);
+  for (const sgn of [-1, 1]) {
+    x.save(); x.rotate(sgn * open);
+    x.fillStyle = "#16191d"; x.fillRect(-2, sgn > 0 ? 0 : -4, 10, 4);
+    x.fillStyle = "#3fbf9a"; x.fillRect(-1, sgn > 0 ? 0.5 : -3.5, 8, 3);
+    x.fillStyle = "#ffffff"; for (let i = 1; i < 7; i += 2) x.fillRect(i, sgn > 0 ? 0 : -1, 1, 1);   // teeth
+    x.restore();
+  }
+  x.fillStyle = "#ffd34d"; x.fillRect(-1, -3, 2, 2);   // eye
+  x.restore(); x.lineCap = "butt";
+}
 function drawVine(x, f, now) {
   const { pts, reach } = vinePoints(f, now);
   if (reach <= 0.02) return;
@@ -3141,6 +3180,7 @@ function towerScale(t) {
   if (t.kind === "healer") return [1.0, 1.06, 1.12, 1.2][t.level];
   if (t.kind === "squirrel") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "pegasus") return [1.0, 1.07, 1.14, 1.22][t.level];
+  if (t.kind === "hydra") return [0.95, 1.03, 1.11, 1.2][t.level];
   if (t.kind === "fire" || t.kind === "wizard") return [0.95, 1.03, 1.11, 1.2][t.level];
   if (t.kind === "water") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "crab") return [0.85, 0.95, 1.05, 1.15][t.level];
@@ -3231,6 +3271,10 @@ function lavaPowers(dt) {
 }
 function update(dt) {
   G.time += dt;
+  for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
+    f.hit = true; const r = f.robot;
+    if (!r.dead) { hurt(r, f.dmg, f.vision, false, "hydra"); const q = rpos(r); burst(q.x, q.y - 4, "#7fe0c8", 6); burst(q.x, q.y - 4, "#ffffff", 3); }
+  }
   for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;
   for (const m of G.meteors || []) { m.t += dt; if (m.t >= m.dur && !m.hit) { m.hit = true; landFireball(m); } }
   if (G.meteors) G.meteors = G.meteors.filter((m) => !m.hit);
@@ -3730,6 +3774,7 @@ function draw() {
   for (const f of G.fx) {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
+    else if (f.kind === "bite") drawBite(x, f);
     if (f.kind === "zap") drawZap(x, f);
     if (f.kind === "scorch") {   // a crater with glowing embers that cool down
       const a = Math.min(1, f.t / 1);
