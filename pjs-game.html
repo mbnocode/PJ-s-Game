@@ -526,6 +526,7 @@ const PAL = {
   p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", j: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8", z: "#d9b8ff",
 };
 const ART = {
+  hydra: ["..............k...k.............", ".............khkkkhk............", ".............klllllk............", "..k...k.....kllylyllk.....k...k.", ".khkkkhk....klllllllk....khkkkhk", ".klllllk....klllllllk....klllllk", "kllylyllk....kllrllk....kllylyll", "klllllllk.....krlrk.....klllllll", "klllllllk.....kllLk.....klllllll", ".kllrllk......kllLk......kllrllk", "..krlrLk......kllLk......klrLrk.", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLLk.....kllLk.....klllLk..", "....kllLk.....kllLk.....kllLk...", "....kllLLk....kllLk....klllLk...", ".....kllLk....kllLk....kllLk....", "......kllLk...kllLk...kllLk.....", "......kllLLkkkkllLkkkklllLk.....", ".......kllLLlllllLlllLllLk......", ".......kLllLlllllllllllLLk......", "......kLLlllllllllllllllLLk.....", "......kLlllllllllllllllllLk.....", ".....kLLLlllllllllllllllLLLk....", "......kLLLlllllllllllllLLLk.....", "......kLLhLLhllhllhllhLLLLk.....", ".......kLLLLLLLLLLLLLLLLLk......", "........kkLLLLLLLLLLLLLkk.......", "..........kkkkkkLkkkkkk........."],   // the Hydra (Serpent's Shop)
   // lava-level robots
   magmacube: ["................", "..kkkkkkkkkkkk..", "..kdddoddddddk..", ".kddoofdddoddDk.", ".kdddodddddodDk.", ".kdfffdddfffdDk.", ".kdfwfdddfwfdDk.", ".kdddddoddddoDk.", ".kddoddddoddddk.", ".kdddkkkkkkdddk.", ".kdddkEEEEkdoDk.", ".kddoddddddddDk.", ".kdDDDDDDDDDDDk.", "..kkkkkkkkkkkk..", "..kk.......kk...", "................"],
   magmasmall: ["................", "................", "................", "................", "................", "....kkkkkkkk....", "...kddoddoddk...", "...kdfwddfwdk...", "...kddddoddDk...", "...kdokkkkdDk...", "...kddEEEdDDk...", "...kDDDDDDDDk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
@@ -611,6 +612,7 @@ SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a
 SPR.air = makeSprite(ART.air, false, { m: "#a8743e", n: "#6e4220", N: "#4e2d14", e: "#f4e2c0", E: "#ead2a6", y: "#ffd34d", w: "#ffffff", o: "#ff9a2a", O: "#c96a12" });   // 32 x 32 owl
 SPR.plant = makeSprite(ART.plant, false, { n: "#7a4a24", N: "#4e2d14", m: "#9a6434", L: "#2f7d32", l: "#5fbf4a", f: "#ffe066" });   // 32 x 32 tree giant
 SPR.crab = makeSprite(ART.crab, false, { r: "#e8553a", R: "#a8321e", o: "#ff9a6a" });   // 32 x 32 crab
+SPR.hydra = makeSprite(ART.hydra, false, { l: "#3fbf9a", L: "#1f7a62", h: "#c8fff4", y: "#ffd34d", r: "#e0443a" });   // 32 x 32 Hydra
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 // Smooth (non-pixel) Pegasus drawn with canvas paths onto a 128 x 128 canvas, facing right.
 function makePegasusArt() {
@@ -1192,10 +1194,13 @@ function renderSerpentShop() {
   const shop = $("serp-shop"); shop.innerHTML = "";
   const items = Object.entries(SETTINGS.serpentShop || {});
   items.forEach(([key, it]) => {
-    const own = (s && s.materials && s.materials[key]) || 0;
-    const d = document.createElement("div"); d.className = "perk";
-    d.innerHTML = `<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>${own ? `<span class="owned">You have ${own}</span>` : ""}
-      <button class="go" id="serp-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>Buy <span class="cost">${it.cost}</span></button>`;
+    const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0;
+    const d = document.createElement("div"); d.className = "perk" + (done ? " maxed" : "");
+    d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
+      ${done ? '<span class="owned">Unlocked!</span>' : `${own ? `<span class="owned">You have ${own}</span>` : ""}
+      <button class="go" id="serp-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
+    if (it.picture && SPR[it.picture]) { const pc = spriteCanvas(it.picture, 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc); }
+    if (done) { shop.appendChild(d); return; }
     d.querySelector("button").onclick = () => {
       if (!s || (s.acorns || 0) < it.cost) return;
       s.acorns -= it.cost; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + 1;
