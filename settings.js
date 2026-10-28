@@ -215,8 +215,8 @@ const SETTINGS = {
   // Each item costs Golden Acorns. Add items like this (they don't do anything in the game yet):
   //   dragonScale: { name: "Dragon Scale", cost: 50, about: "A shiny scale. Something might need it someday." },
   serpentShop: {
-    // unlock: true = you buy it once and keep it. picture = which picture shows on the shelf.
-    hydra: { name: "Hydra", cost: 300, unlock: true, picture: "hydra", about: "A three-headed serpent tower. Coming soon!" },
+    // unlock: true = you buy it once and keep it. picture = which picture shows on the shelf. shelf = which shelf it sits on.
+    hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower. Coming soon!" },
   },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 

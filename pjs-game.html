@@ -1192,8 +1192,18 @@ function renderSerpentShop() {
   const s = slots[serpSlot];
   $("serp-acorns-row").hidden = !s; if (s) $("serp-acorns").textContent = s.acorns || 0;
   const shop = $("serp-shop"); shop.innerHTML = "";
-  const items = Object.entries(SETTINGS.serpentShop || {});
-  items.forEach(([key, it]) => {
+  // Each shelf holds one item; an item can pick its shelf (shelf: 3 = the third one). Empty shelves say "Coming soon".
+  const shelves = Array(Math.max(SETTINGS.serpentShopSlots || 3, Object.keys(SETTINGS.serpentShop || {}).length)).fill(null);
+  const all = Object.entries(SETTINGS.serpentShop || {});
+  all.filter(([, it]) => it.shelf && !shelves[it.shelf - 1]).forEach((e) => { shelves[e[1].shelf - 1] = e; });
+  all.filter((e) => !shelves.includes(e)).forEach((e) => { const n = shelves.indexOf(null); if (n >= 0) shelves[n] = e; });
+  shelves.forEach((entry) => {
+    if (!entry) {
+      const d = document.createElement("div"); d.className = "perk soon";
+      d.innerHTML = `<span class="k">???</span><span class="s">Coming soon. The serpent is still gathering its treasures…</span>`;
+      shop.appendChild(d); return;
+    }
+    const [key, it] = entry;
     const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0;
     const d = document.createElement("div"); d.className = "perk" + (done ? " maxed" : "");
     d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
@@ -1208,11 +1218,6 @@ function renderSerpentShop() {
     };
     shop.appendChild(d);
   });
-  for (let n = items.length; n < (SETTINGS.serpentShopSlots || 3); n++) {
-    const d = document.createElement("div"); d.className = "perk soon";
-    d.innerHTML = `<span class="k">???</span><span class="s">Coming soon. The serpent is still gathering its treasures…</span>`;
-    shop.appendChild(d);
-  }
 }
 function serpPortrait(now) {
   if ($("s-serpent").hidden) { serpAnim = null; return; }
