@@ -512,7 +512,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus"];
@@ -526,7 +526,9 @@ const PAL = {
   p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", j: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8", z: "#d9b8ff",
 };
 const ART = {
-  // lava-level robots (Enemies page only for now)
+  // lava-level robots
+  magmacube: ["................", "..kkkkkkkkkkkk..", "..kdddoddddddk..", ".kddoofdddoddDk.", ".kdddodddddodDk.", ".kdfffdddfffdDk.", ".kdfwfdddfwfdDk.", ".kdddddoddddoDk.", ".kddoddddoddddk.", ".kdddkkkkkkdddk.", ".kdddkEEEEkdoDk.", ".kddoddddddddDk.", ".kdDDDDDDDDDDDk.", "..kkkkkkkkkkkk..", "..kk.......kk...", "................"],
+  magmasmall: ["................", "................", "................", "................", "................", "....kkkkkkkk....", "...kddoddoddk...", "...kdfwddfwdk...", "...kddddoddDk...", "...kdokkkkdDk...", "...kddEEEdDDk...", "...kDDDDDDDDk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   crawler: ["................", "................", "................", "................", "................", "......kkkkk.....", "....kkdoddokk...", "...kdoEodddodk..", "..kddddoEoddddk.", ".kdodddddoddwrk.", ".kddoddoddddkkk.", ".kkkkkkkkkkkk...", "o.kGk.kGk.kGk...", "oo.k..k...k.....", "fo..............", "................"],
   obsidian: ["................", "................", ".....kkkkkk.....", "...kkaAiAaakk...", "..kaAiiAaaAak...", ".kaAAaaaAaaAak..", ".kaaAaaaaAaaak..", "kaAaaaaAaaaaAak.", "kkkkkkkkkkkkkkk.", ".kgggrkkgrggk...", ".kGgggggggggGk..", "..kkkkkkkkkkk...", "..kGk.kGk.kGk...", "..kk..kk..kk....", "................", "................"],
   emberbat: ["................", "................", "k..............k", "ok............ko", "ook...k..k...koo", "Eook.kkkkkk.kooE", "kEookdfddfdkooEk", ".kEooddddddooEk.", "..kkoddddddokk..", "....kdkddkdk....", "....k.k..k.k....", "................", "................", "................", "................", "................"],
@@ -755,6 +757,35 @@ function makeTile(kind) {
     for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#f2e0ae" : "#d9bf82", rnd() * 16 | 0, rnd() * 16 | 0);
     if (rnd() < 0.18) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#fff6e6", i, j); px("#f0b8a8", i + 1, j); }   // a tiny shell
     if (rnd() < 0.15) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#b8a070", i, j); }                           // a pebble
+  } else if (kind === "basalt") {
+    // the tops of basalt columns: a six-sided stone with a lit rim and dark seams (some seams glow with lava)
+    const lavaSeam = rnd() < 0.12, tops = ["#3c3944", "#46424e", "#403d48"];
+    x.fillStyle = tops[rnd() * 3 | 0]; x.fillRect(0, 0, 16, 16);
+    for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
+      const dx = Math.abs(i - 7.5), dy = Math.abs(j - 7.5), h = Math.max(dx * 0.87 + dy * 0.5, dy);
+      if (h > 7.4) px(lavaSeam && (i + j) % 3 ? "#ff6a14" : "#16141a", i, j);
+      else if (h > 6.4) px(i + j < 15 ? "#625e6c" : "#2a2830", i, j);
+      else if (rnd() < 0.08) px(rnd() < 0.5 ? "#504b58" : "#34313b", i, j);
+    }
+    if (rnd() < 0.15) { const i = 4 + rnd() * 7 | 0, j = 4 + rnd() * 7 | 0; px("#77727f", i, j); }   // a speck of ash
+  } else if (kind === "magma") {
+    // a magma block: dark crust with glowing cracks (a bright middle with a dim red rim)
+    x.fillStyle = "#3a0f06"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 44; n++) px(["#45140a", "#2c0b05", "#521a0c"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    const core = [];
+    for (let c = 0, m = 1 + (rnd() < 0.5 ? 1 : 0); c < m; c++) {
+      let i = rnd() * 16 | 0, j = rnd() * 16 | 0, di = rnd() < 0.5 ? 1 : -1, dj = rnd() < 0.5 ? 1 : 0;
+      for (let k = 0; k < 13; k++) { core.push([i, j]); if (rnd() < 0.35) di = [-1, 0, 1][rnd() * 3 | 0]; if (rnd() < 0.35) dj = [-1, 0, 1][rnd() * 3 | 0]; if (!di && !dj) di = 1; i = (i + di + 16) % 16; j = (j + dj + 16) % 16; }
+    }
+    for (const [i, j] of core) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) px("#9a2608", (i + a + 16) % 16, (j + b + 16) % 16);
+    core.forEach(([i, j], k) => px(k % 5 === 2 ? "#ffc94d" : "#ff7a1a", i, j));
+  } else if (kind === "volcano") {
+    // cave rock inside the volcano, warm from the lava below
+    x.fillStyle = "#2e140c"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 34; n++) px(["#3a170d", "#24100a", "#4e1f0e"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    for (let n = 0, m = 1 + (rnd() * 2 | 0); n < m; n++) { const i = 1 + rnd() * 11 | 0, j = 1 + rnd() * 11 | 0; x.fillStyle = "#16080505"; x.fillStyle = "#1e0c07"; x.fillRect(i, j + 2, 4, 1); x.fillStyle = "#4e1f0e"; x.fillRect(i, j, 4, 2); px("#7a3214", i, j); px("#6a2a10", i + 1, j); }   // lumpy rocks
+    if (rnd() < 0.15) { const i = 1 + rnd() * 13 | 0; for (let j = 0; j < 16; j += 1) if (rnd() < 0.7) px("#1a0a06", i + (j % 5 === 0 ? 1 : 0), j); }   // a crack in the rock
+    if (rnd() < 0.3) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ff7a1a", i, j); }   // an ember
   } else if (kind === "path") {
     x.fillStyle = "#b88a55"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 18; n++) px(rnd() < 0.5 ? "#a37647" : "#c99a64", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -860,6 +891,27 @@ const SAND = Array.from({ length: 8 }, () => makeTile("sand"));
 const FOREST_FLOOR = Array.from({ length: 8 }, () => makeTile("forestfloor"));
 const DESERT = Array.from({ length: 8 }, () => makeTile("desert"));
 const SANDSTONE = Array.from({ length: 8 }, () => makeTile("sandstone"));
+const BASALT = Array.from({ length: 8 }, () => makeTile("basalt"));
+const MAGMA = Array.from({ length: 8 }, () => makeTile("magma"));
+const VOLCANO_ROCK = Array.from({ length: 8 }, () => makeTile("volcano"));
+// Lava-level scenery
+{
+  const LAVA_ART = {
+    basaltpillar: ["................", ".....kkkkkk.....", "....kLLLLLLk....", "....kMLLLLMk....", "....kDMMMMDk....", "....kMLMMDDk....", "....kMLMMDDk....", "..kkkMLMMDDkkk..", ".kLLkMLMMDDkLLk.", ".kMMkMLMMDDkMDk.", ".kMMkMLMoDDkMDk.", ".kMMkMLMMDDkMDk.", ".kDDkMLMMDDkDDk.", ".kkkkkkkkkkkkkk.", "................", "................"],
+    lavapool: ["................", "................", "................", "................", "................", "................", "....kkkkkkk.....", "..kkoooooookk...", ".koooffoooooook.", ".kooofffooofook.", ".koooooffoooook.", "..kkooooooookk..", "....kkkkkkkk....", "................", "................", "................"],
+    obsidianrock: ["................", "................", "................", "................", "................", "................", "................", "......kkk.......", "....kkaAik......", "...kaAAiAkk.....", "..kaaAAAaAakk...", "..kaaaaaaaaAak..", "..kkkkkkkkkkkk..", "................", "................", "................"],
+    magmarock: ["................", "................", "................", "...kkkkkkkkkk...", "...kdddodddDk...", "...kdoofdddDk...", "...kddoodddDk...", "...kdddddofDk...", "...kdoddddoDk...", "...kddfoddddk...", "...kddddoddDk...", "...kDDDDDDDDk...", "...kkkkkkkkkk...", "................", "................", "................"],
+    flamevent: ["................", "................", "................", ".......f........", "......fEf.......", "......EoE.......", ".....EoooE......", ".....oorrro.....", "......orro......", ".......rr.......", "....kkkrkkk.....", "...kdddDdddk....", "...kddDDDddk....", "....kkkkkkk.....", "................", "................"],
+    stalagmite: [".......k........", "......kMk.......", "......kMk.......", ".....kLMDk......", ".....kLMDk......", "....kLMMDk......", "....kLMoDDk.....", "....kLMMDDk.....", "...kLLMoMDDk....", "...kLMMMMDDk....", "..kLLMMMMMDDk...", "..kLMMMMMMDDk...", ".kLLMMMMMMMDDk..", ".kkkkkkkkkkkkk..", "................", "................"],
+  };
+  const C = { o: "#ff6a14", f: "#ffc94d", E: "#ffb12e", r: "#c8400e", d: "#3a0f06", D: "#220804" };
+  SPR.basaltpillar = makeSprite(LAVA_ART.basaltpillar, false, { ...C, L: "#8a8596", M: "#5a5664", D: "#34313b" });
+  SPR.lavapool = makeSprite(LAVA_ART.lavapool, false, C);
+  SPR.obsidianrock = makeSprite(LAVA_ART.obsidianrock, false, { a: "#24163a", A: "#3a2458", i: "#8a6ac0" });
+  SPR.magmarock = makeSprite(LAVA_ART.magmarock, false, C);
+  SPR.flamevent = makeSprite(LAVA_ART.flamevent, false, C);
+  SPR.stalagmite = makeSprite(LAVA_ART.stalagmite, false, { ...C, L: "#8a3a14", M: "#4e1f0e", D: "#2a120c" });
+}
 SPR.column = makeSprite(ART.column, false, { e: "#ead09a", m: "#c9a866" });
 SPR.obelisk = makeSprite(ART.obelisk, false, { e: "#ead09a", m: "#b8955a", f: "#ffd36b" });
 SPR.papyrus = makeSprite(ART.cattail, false, { j: "#7fbf4a", L: "#4f8a2a", h: "#a8d86a" });
@@ -869,7 +921,8 @@ SPR.tumbleweed = makeSprite(ART.tumbleweed, false, { j: "#8a5a2a", m: "#c9a060" 
 SPR.brownshroom = makeSprite(ART.mushroom, false, { r: "#9a5a2a", w: "#e8c98a" });
 SPR.dunegrass = makeSprite(ART.tallgrass, false, { h: "#e6e48a", L: "#7a9a3a" });
 // What each kind of scenery looks like in each kind of level.
-const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" }, pyramid: { tree: "column", mushroom: "obelisk", tallgrass: "papyrus" } };
+const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" }, pyramid: { tree: "column", mushroom: "obelisk", tallgrass: "papyrus" },
+  basalt: { tree: "basaltpillar", mushroom: "lavapool", tallgrass: "obsidianrock" }, magma: { tree: "magmarock", mushroom: "flamevent", tallgrass: "obsidianrock" }, volcano: { tree: "stalagmite", mushroom: "flamevent", tallgrass: "obsidianrock" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -1783,8 +1836,9 @@ function buildMap(L) {
   // A big landmark (like the pyramid) covers several squares: nothing can be built there.
   if (lv.landmark) for (let j = 0; j < lv.landmark.h; j++) for (let i = 0; i < lv.landmark.w; i++) { const cx = lv.landmark.x + i, cy = lv.landmark.y + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }
   const quick = new Set((lv.quicksand || []).map(([qx, qy]) => qx + "," + qy));   // quicksand squares on the road
+  const lava = new Set((lv.lava || []).map(([qx, qy]) => qx + "," + qy));   // glowing lava squares on the road
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { landmark: lv.landmark, quick, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { landmark: lv.landmark, quick, lava, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 // Where a robot is right now (robots on a two-factory level each follow their own path).
 function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
@@ -1792,7 +1846,7 @@ function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 1
 function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
 // Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus (and the Wizard's Elemental Sphere).
 const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard"]);
-const canHit = (kind, r) => !r.flying || AIR_HUNTERS.has(kind);
+const canHit = (kind, r) => !r.under && (!r.flying || AIR_HUNTERS.has(kind));   // Lava Divers under the lava can't be hit at all
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
   for (const s of map.segs) if (d <= s.start + s.len) { const f = (d - s.start) / s.len; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
@@ -1800,7 +1854,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
@@ -1826,6 +1880,7 @@ function paintGround(x, map, factoryCount) {
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
   for (const key of map.quick || []) drawQuicksand(x, ...key.split(",").map(Number));
+  for (const key of map.lava || []) drawLavaSquare(x, ...key.split(",").map(Number));
   if (map.landmark) drawPyramid(x, map.landmark, map.grassOrder.slice(0, factoryCount).some((c) => c.x >= map.landmark.x && c.x < map.landmark.x + map.landmark.w && c.y >= map.landmark.y && c.y < map.landmark.y + map.landmark.h));
   for (const key in map.scenery) {
     if (map.scenery[key] === "landmark") continue;
@@ -1836,6 +1891,15 @@ function paintGround(x, map, factoryCount) {
   }
   drawFactory(x, map);
   drawBase(x, map, false);
+}
+// A road square of glowing lava (the Volcano Heart heals while it's on one)
+function drawLavaSquare(x, tx, ty) {
+  let sd = tx * 31 + ty * 17 + 5; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const X = tx * T, Y = ty * T;
+  for (let j = 2; j < 30; j += 2) for (let i = 2; i < 30; i += 2) {
+    const d = Math.hypot(i - 16, j - 16) + R() * 3; if (d > 14) continue;
+    x.fillStyle = d > 12 ? "#7a2a10" : d > 9 ? "#e0520e" : R() < 0.3 ? "#ffd36b" : "#ff8a24"; x.fillRect(X + i, Y + j, 2, 2);
+  }
 }
 // The dirt path, drawn as one bumpy, curvy strip instead of square tiles.
 function makePathLayer(map) {
@@ -1869,8 +1933,15 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid";
-  const C = pyramid
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano"].includes(map.theme);
+  const C = map.theme === "basalt"
+    // an old crumbling stone road (the lava levels)
+    ? { rim: hex("#16141a"), dirt: hex("#6a6874"), dark: hex("#56535f"), light: hex("#7e7b88"), edge: hex("#46444e"), stone: hex("#9a97a4"), rut: hex("#5a5764"), tuft: hex("#3c3944"), tuft2: hex("#2f2c34"), mortar: hex("#25232b") }
+    : map.theme === "magma"
+    ? { rim: hex("#1e171b"), dirt: hex("#6e6268"), dark: hex("#5a5056"), light: hex("#857880"), edge: hex("#4e4449"), stone: hex("#988b90"), rut: hex("#62575d"), tuft: hex("#3a0f06"), tuft2: hex("#5a1608"), mortar: hex("#2e262c") }
+    : map.theme === "volcano"
+    ? { rim: hex("#140806"), dirt: hex("#76604f"), dark: hex("#5e4a3e"), light: hex("#8e7562"), edge: hex("#4e3c32"), stone: hex("#a68a72"), rut: hex("#6a5446"), tuft: hex("#2a120c"), tuft2: hex("#3a170d"), mortar: hex("#2a1c16") }
+    : pyramid
     // an ancient paved road of worn stone slabs
     ? { rim: hex("#b8955a"), dirt: hex("#c8b08a"), dark: hex("#b29a74"), light: hex("#d8c29c"), edge: hex("#9c8460"), stone: hex("#8a7250"), rut: hex("#a8906a"), tuft: hex("#e2c486"), tuft2: hex("#d2b072") }
     : desert
@@ -1893,6 +1964,11 @@ function makePathLayer(map) {
     if (m === 3) { put(i, R() < 0.5 ? C.tuft : C.tuft2); continue; }
     const nearEdge = mask[i - 1] === 1 || mask[i + 1] === 1 || mask[i - W] === 1 || mask[i + W] === 1;
     const r = R();
+    if (lavaLand && !nearEdge) {   // stone bricks with mortar between them
+      const px = i % W, py = (i / W) | 0, row = py >> 2;
+      if (py % 4 === 0 || (px + (row % 2) * 3) % 6 === 0) { put(i, C.mortar); continue; }
+      if (py % 4 === 1) { put(i, C.light); continue; }
+    }
     put(i, nearEdge ? C.edge : r < 0.12 ? C.dark : r < 0.24 ? C.light : C.dirt);
   }
   for (const [rx, ry] of ruts) { const i = Math.round(ry) * W + Math.round(rx); if (mask[i] === 2 && R() < 0.35) put(i, C.rut); }
@@ -1915,7 +1991,7 @@ function makePathLayer(map) {
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
 function makeGrandTree(theme) {
-  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach;   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
+  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || ["basalt", "magma", "volcano"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
   const forest = theme === "forest";
   const leafCols = forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -2142,7 +2218,7 @@ function renderPerks() {
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES];
-const NEW_FOES = new Set(LAVA_FOES);   // robots on the Enemies page that aren't in any waves yet
+const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
 const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
@@ -2190,14 +2266,14 @@ function renderEnemies() {
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
       : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
-      : k === "crawler" ? `Special: leaves a burning trail. Towers next to the trail can't attack for ${r.trailStopsTowers} seconds. Coming to The Magma Fields.`
-      : k === "obsidian" ? `Special: its shell makes it take half damage until one hit of ${r.crackHit} or more cracks it open. After that it's weak! Coming to The Basalt Delta.`
-      : k === "emberbat" ? `Special: flies in swarms of ${r.swarm}, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Coming Inside the Volcano.`
-      : k === "fireproof" ? `Special: Fire Dragons do no damage to it, but Water Frogs do ${r.waterTimes} times damage. Coming to The Magma Fields.`
-      : k === "diver" ? `Special: every ${r.diveEvery} seconds it dives under the lava for ${r.diveSeconds} seconds. Nothing can hit it while it's under, and it pops up farther along the road. Coming to The Basalt Delta.`
-      : k === "pillartitan" ? `Special: every ${r.slamEvery} seconds it slams the ground and a basalt pillar shoots up on a tower square, blocking it for the rest of the wave. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Basalt Delta.`
-      : k === "magmaking" ? `Special: when destroyed it splits into ${r.splitInto} Magma Cubes, and each of those splits into ${r.splitInto} small ones. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Magma Fields.`
-      : k === "volcanoheart" ? `Special: heals ${r.healPerSecond} health every second while it's on lava. Freeze it to stop the healing! Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss, Inside the Volcano.`
+      : k === "crawler" ? `Special: leaves a burning trail. Towers next to the trail can't attack for ${r.trailStopsTowers} seconds. Shows up on The Magma Fields and Inside the Volcano.`
+      : k === "obsidian" ? `Special: its shell makes it take half damage until one hit of ${r.crackHit} or more cracks it open. After that it's weak! Shows up on all three lava levels.`
+      : k === "emberbat" ? `Special: flies in swarms of ${r.swarm}, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on all three lava levels.`
+      : k === "fireproof" ? `Special: Fire Dragons do no damage to it, but Water Frogs do ${r.waterTimes} times damage. Shows up on all three lava levels.`
+      : k === "diver" ? `Special: every ${r.diveEvery} seconds it dives under the lava for ${r.diveSeconds} seconds. Nothing can hit it while it's under, and it pops up farther along the road. Shows up on all three lava levels.`
+      : k === "pillartitan" ? `Special: every ${r.slamEvery} seconds it slams the ground and a basalt pillar shoots up on a tower square, blocking it for the rest of the wave. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Basalt Delta (also Inside the Volcano).`
+      : k === "magmaking" ? `Special: when destroyed it splits into ${r.splitInto} Magma Cubes, and each of those splits into ${r.splitInto} small ones. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Magma Fields (also Inside the Volcano).`
+      : k === "volcanoheart" ? `Special: heals ${r.healPerSecond} health every second while it's on a glowing lava square. Freeze it to stop the healing! Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss, Inside the Volcano.`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col]) => { const v = f(k), max = Math.max(...MAIN_FOES.filter((o) => !BOSS_FOES.has(o)).map(f));   // the Boss would squash everyone else's bars
@@ -2688,6 +2764,18 @@ function startWave() {
   else if (hasRepair && !G.seenRepair) tip("Repair Bots are here! Every few seconds they heal the robots around them. Take them out first!", undefined, "Heads up");
   else if (hasTesla && !G.seenTesla) tip(`Tesla Coils are here! Robots near a Tesla Coil move ${SETTINGS.robots.tesla.boostSpeed} times faster. Take them out first!`, undefined, "Heads up");
   else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
+  const LAVA_TIPS = {
+    crawler: "Magma Crawlers set the road on fire! Towers right next to the burning trail get too hot to attack for a moment.",
+    obsidian: "Obsidian Shells take half damage until one big hit cracks their shell. Upgraded towers crack them!",
+    emberbat: "Ember Bats fly in swarms straight at your treehouse. Only Owls, Dragons, the Pegasus and the Wizard's Sphere can hit them.",
+    fireproof: "Fire-Proof Bots! Dragon fire does nothing to them, but Water Frogs do double damage.",
+    diver: "Lava Divers dive under the lava, where nothing can hit them, and pop back up farther along the road.",
+    pillartitan: "The Pillar Titan is coming! Every few seconds it slams the ground and traps the closest tower under a basalt pillar until the wave ends.",
+    magmaking: "The Magma Cube King is coming! When you destroy it, it splits into Magma Cubes, and those split into small cubes!",
+    volcanoheart: "The Volcano Heart is coming! It heals while it's on the glowing lava squares. Freeze it there to stop the healing!",
+  };
+  G.seenLava = G.seenLava || {};
+  for (const k in LAVA_TIPS) if (!G.seenLava[k] && G.queue.some((q) => q.type === k)) { G.seenLava[k] = true; tip(LAVA_TIPS[k], undefined, "Heads up"); }
   if (hasMummy) G.seenMummy = true; if (hasGolem) G.seenGolem = true; if (hasDrone) G.seenDrone = true; if (hasSplit) G.seenSplit = true; if (hasRepair) G.seenRepair = true; if (hasTesla) G.seenTesla = true; if (hasHider) G.seenHider = true; if (hasBoss) G.seenBoss = true;
   sendProgress(true);
   updateHud();
@@ -2709,6 +2797,8 @@ function spawn(q) {
 }
 function endWave() {
   G.waveActive = false;
+  G.towers.forEach((t) => { if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#5a5664", 12); } });   // basalt pillars crumble away
+  G.burns = [];
   if (G.slotDirty) { saveSlots(slots); G.slotDirty = false; }   // keep the "Defeated" counts
   const bonus = SETTINGS.waveBonusLeaves + 2 * G.wave;
   G.leaves += bonus;
@@ -2734,9 +2824,19 @@ function endWave() {
 }
 
 /* ---------- combat ---------- */
-function hurt(r, amt, vision, isBurn) {
+function hurt(r, amt, vision, isBurn, kind) {
   if (r.dead) return;
   if (r.hideT > 0 && !vision) return;
+  if (r.under) return;   // a Lava Diver under the lava can't be hit
+  const RB = SETTINGS.robots[r.type] || {};
+  if (RB.waterTimes) {   // Fire-Proof Bot: Dragon fire does nothing, Frogs hit extra hard
+    if (kind === "fire" || isBurn) { if (!isBurn && Math.random() < 0.3) { const q = rpos(r); floatText(q.x, q.y - 16, "Fire-proof!", "#c9ced6", 0.6); } return; }
+    if (kind === "water") amt *= RB.waterTimes;
+  }
+  if (RB.crackHit && !r.cracked) {   // Obsidian Shell: half damage until one big hit cracks it
+    if (amt >= RB.crackHit) { r.cracked = true; const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
+    else amt *= 0.5;
+  }
   r.hp -= amt; r.hitT = 0.12;
   if (r.hp <= 0) { kill(r); return; }
   if (r.type === "hider" && r.hideT <= 0 && !isBurn) r.hideT = SETTINGS.robots.hider.hideSeconds;
@@ -2813,7 +2913,7 @@ function fire(t, s, target) {
         }
         G.fx.push({ kind: "splash", x: p.x, y: p.y, r: s.splash * T, t: 0.3, col: "150,110,60" });
       }
-      hurt(r, s.damage, s.vision);
+      hurt(r, s.damage, s.vision, false, "plant");
       if (!r.dead) r.rootT = isHeavy(r) ? 0.2 : s.holdSeconds;
     }
     if (s.splash) G.shake = Math.max(G.shake, 0.08);
@@ -2843,16 +2943,16 @@ function landShot(sh) {
     for (const o of G.robots) {
       if (o === r || o.dead || (o.hideT > 0 && !s.vision) || !canHit(sh.kind, o)) continue;
       const q = rpos(o);
-      if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
-        if (!o.dead && sh.kind === "fire") { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
+      if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision, false, sh.kind); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
+        if (!o.dead && sh.kind === "fire" && !(SETTINGS.robots[o.type] || {}).waterTimes) { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
         if (!o.dead && sh.kind === "air" && !isHeavy(o)) o.knock = (o.knock || 0) + s.pushBack * T * 0.6; }
     }
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : sh.kind === "crab" ? "255,150,110" : "120,200,255" });
     if (sh.kind === "crab") { burst(c.x, c.y, "#ffb08a", 10); burst(c.x, c.y, "#e8f6ff", 8); G.shake = Math.max(G.shake, 0.05); }
   }
-  hurt(r, s.damage, s.vision);
+  hurt(r, s.damage, s.vision, false, sh.kind);
   if (r.dead) return;
-  if (sh.kind === "fire") { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
+  if (sh.kind === "fire" && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
   if (sh.kind === "air" && !isHeavy(r)) r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
   const p = rpos(r);
@@ -3080,6 +3180,45 @@ function burst(x, y, col, n) {
 function floatText(x, y, text, col, life = 1.1) { G.fx.push({ kind: "text", x, y, text, col, t: life, life }); }
 
 /* ---------- update ---------- */
+/* ---------- lava-level robot powers ---------- */
+function lavaPowers(dt) {
+  const RS = SETTINGS.robots;
+  // burning trail squares cool down
+  G.burns = (G.burns || []).filter((b) => (b.t -= dt) > 0);
+  for (const r of G.robots) {
+    if (r.dead) continue;
+    const q = rpos(r), tx = Math.floor(q.x / T), ty = Math.floor(q.y / T);
+    if (r.type === "crawler") {   // Magma Crawler: sets the road on fire; towers next to a fresh burning square overheat
+      if (r.lastBurn !== tx + "," + ty) {
+        r.lastBurn = tx + "," + ty;
+        if (!G.burns.some((b) => b.x === tx && b.y === ty)) {
+          G.burns.push({ x: tx, y: ty, t: 3 });
+          r.heated = r.heated || new Set();   // each crawler can only overheat a tower once
+          for (const t of G.towers) if (Math.abs(t.x - tx) <= 1 && Math.abs(t.y - ty) <= 1 && !(t.stunT > 0) && !r.heated.has(t)) { r.heated.add(t); t.stunT = RS.crawler.trailStopsTowers; floatText(t.x * T + 16, t.y * T - 2, "Too hot!", "#ff9a3c", 0.8); }
+        }
+      }
+    } else if (r.type === "diver") {   // Lava Diver: dives under for a bit, then pops back up farther along
+      r.diveT = (r.diveT ?? RS.diver.diveEvery) - dt;
+      if (!r.under && r.diveT <= 0) { r.under = true; r.diveT = RS.diver.diveSeconds; burst(q.x, q.y, "#ff8a24", 10); }
+      else if (r.under && r.diveT <= 0) { r.under = false; r.diveT = RS.diver.diveEvery; burst(q.x, q.y, "#ff8a24", 12); burst(q.x, q.y, "#ffd36b", 6); }
+    } else if (r.type === "pillartitan") {   // Pillar Titan: slams the ground and a pillar traps the nearest tower until the wave ends
+      r.slamT = (r.slamT ?? RS.pillartitan.slamEvery * 0.6) - dt;
+      if (r.slamT <= 0) {
+        r.slamT = RS.pillartitan.slamEvery;
+        const t = G.towers.filter((t) => !t.pillar && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= 3.5 * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - q.y) - Math.hypot(b.x * T - q.x, b.y * T - q.y))[0];
+        G.fx.push({ kind: "splash", x: q.x, y: q.y, r: 1.6 * T, t: 0.35, col: "110,105,120" }); G.shake = Math.max(G.shake, 0.2); Sound.play("smash");
+        if (t) { t.pillar = 1; floatText(t.x * T + 16, t.y * T - 4, "Trapped!", "#c9c4d6"); burst(t.x * T + 16, t.y * T + 24, "#5a5664", 16); }
+        floatText(q.x, q.y - 34, "SLAM!", "#c9c4d6");
+      }
+    } else if (r.type === "volcanoheart") {   // Volcano Heart: heals while on a lava square (unless it's frozen)
+      if (G.map.lava && G.map.lava.has(tx + "," + ty) && !(r.freezeT > 0) && r.hp < r.maxHp) {
+        r.hp = Math.min(r.maxHp, r.hp + RS.volcanoheart.healPerSecond * (SETTINGS.levels[G.level].robotHealth || 1) * G.diff.robotHealth * dt);
+        if (Math.random() < 0.3) G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 30, y: q.y, vx: 0, vy: -40, t: 0, life: 0.6, col: Math.random() < 0.5 ? "#ffd36b" : "#ff8a24" });
+        r.healing = true;
+      } else r.healing = false;
+    }
+  }
+}
 function update(dt) {
   G.time += dt;
   for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;
@@ -3122,6 +3261,7 @@ function update(dt) {
     for (let i = 0; i < 30; i++) { const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 90; G.particles.push({ kind: "spark", x: c.x, y: c.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#e0b06a" : "#c28a52" }); }
     floatText(c.x, c.y - 30, "Sandstorm!", "#f2c27a"); G.shake = Math.max(G.shake, 0.15); Sound.play("smash");
   }
+  lavaPowers(dt);
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
   const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => rpos(r));
   for (const r of G.robots) {
@@ -3136,6 +3276,7 @@ function update(dt) {
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
+    if (r.under) sp *= 1.5;   // Lava Divers swim fast under the lava
     if (G.map.quick && G.map.quick.size && !r.flying) { const q = rpos(r); r.sinking = G.map.quick.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sinking) sp *= 1 - (SETTINGS.quicksandSlow ?? 0.5); }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
     if (r.knock > 0) {
@@ -3184,6 +3325,7 @@ function update(dt) {
       }
     }
     if (t.stunT > 0) { t.stunT -= dt; continue; }   // caught in a sandstorm: can't attack
+    if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
     if (es && s.sphere && G.waveActive) {
@@ -3298,6 +3440,21 @@ function draw() {
     x.globalAlpha = 1;
   }
 
+  // burning trails left by Magma Crawlers
+  for (const b of G.burns || []) {
+    const k = Math.min(1, b.t / 1.5), X = b.x * T, Y = b.y * T;
+    x.fillStyle = `rgba(255,90,20,${0.25 * k})`; x.fillRect(X + 2, Y + 2, T - 4, T - 4);
+    for (let i = 0; i < 4; i++) { const fx = X + 5 + i * 7, fh = (5 + Math.sin(G.time * 12 + i * 2 + b.x) * 2) * k;
+      x.fillStyle = `rgba(255,140,40,${0.8 * k})`; x.fillRect(fx, Y + 24 - fh, 3, fh); x.fillStyle = `rgba(255,220,110,${0.9 * k})`; x.fillRect(fx + 1, Y + 24 - fh * 0.6, 1, fh * 0.6); }
+  }
+  // the lava squares bubble
+  for (const key of G.map.lava || []) {
+    const [lx, ly] = key.split(",").map(Number);
+    for (let i = 0; i < 3; i++) { const ph = (G.time * 0.8 + i * 0.33 + lx * 0.1) % 1; x.globalAlpha = Math.sin(ph * Math.PI); x.fillStyle = "#ffd36b";
+      x.fillRect(lx * T + 8 + i * 7, ly * T + 20 - ph * 10, 2, 2); }
+    x.globalAlpha = 1;
+  }
+
   // placement preview / selected range
   const showRange = (tx, ty, range, ok) => {
     x.beginPath(); x.arc(tx * T + 16, ty * T + 16, range * T, 0, Math.PI * 2);
@@ -3386,6 +3543,15 @@ function draw() {
   }
 
   drawNutWalls(x);
+  // basalt pillars trapping towers (from the Pillar Titan)
+  for (const t of G.towers) {
+    if (!t.pillar) continue;
+    const X = t.x * T + 6, Y = t.y * T - 6;
+    x.fillStyle = "#0a090c"; x.fillRect(X - 1, Y - 1, 22, 38);
+    x.fillStyle = "#3c3944"; x.fillRect(X, Y + 4, 20, 32); x.fillStyle = "#5a5664"; x.fillRect(X, Y + 4, 6, 32); x.fillStyle = "#2a2830"; x.fillRect(X + 15, Y + 4, 5, 32);
+    x.fillStyle = "#8a8596"; x.fillRect(X, Y, 20, 5); x.fillStyle = "#a9a4b6"; x.fillRect(X + 4, Y + 1, 12, 2);
+    x.fillStyle = "#24222a"; x.fillRect(X + 8, Y + 12, 1, 6); x.fillRect(X + 11, Y + 22, 1, 5);
+  }
   // Wizard Time Warp: a slowly turning clock ring; robots inside move slower
   for (const t of G.towers) {
     if (t.kind !== "wizard") continue; const ws = towerStatsBase(t); if (!ws.slowAura) continue;
@@ -3416,9 +3582,14 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "sandboss" ? 60 : big ? 56 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
+    const sz = r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" ? 60 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
-    const hidden = r.hideT > 0;
+    const hidden = r.hideT > 0 || r.under;
+    if (r.under) {   // a Lava Diver swimming under the lava: only bubbles and a ripple show
+      x.strokeStyle = "rgba(255,150,50,0.8)"; x.lineWidth = 1.5; const wv = Math.sin(G.time * 8 + r.wob) * 2;
+      x.beginPath(); x.ellipse(p.x, p.y + 6, 9 + wv, 3, 0, 0, Math.PI * 2); x.stroke();
+      x.fillStyle = "#ffd36b"; x.fillRect(p.x - 3 + Math.sin(G.time * 9) * 4, p.y + 2 - ((G.time * 20) % 8), 2, 2);
+    }
     if (G.map.theme === "beach" && !hidden) {   // robots splash through the water, leaving a little white wake
       x.strokeStyle = "rgba(240,250,255,0.75)"; x.lineWidth = 1.5; const wv = Math.sin(G.time * 6 + r.wob) * 1.5;
       x.beginPath(); x.ellipse(p.x, p.y + sz * 0.32, sz * 0.42 + wv, 3, 0, 0, Math.PI * 2); x.stroke();
@@ -3431,7 +3602,7 @@ function draw() {
     }
     if (r.flying) { x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.ellipse(p.x, p.y + 18, sz * 0.32, 3, 0, 0, Math.PI * 2); x.fill(); }   // shadow on the ground below
     else { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4); }
-    x.globalAlpha = hidden ? 0.16 + 0.08 * Math.sin(G.time * 20) : 1;
+    x.globalAlpha = r.under ? 0 : hidden ? 0.16 + 0.08 * Math.sin(G.time * 20) : 1;
     const img = (p.dx < 0 ? SPRF : SPR)[r.type];
     x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0));   // robots sink a little in quicksand
     if (r.type === "clanker") x.rotate(Math.sin(r.wob * 0.5) * 0.08);
@@ -3446,6 +3617,12 @@ function draw() {
       }
       if (!G.paused && Math.random() < 0.25) G.particles.push({ kind: "spark", x: p.x + (Math.random() - 0.5) * sz * 0.5, y: p.y + sz * 0.3, vx: (Math.random() - 0.5) * 10, vy: 15, t: 0, life: 0.5, col: "#c28a52" });   // sand trickling off
     }
+    if ((r.type === "volcanoheart" || r.type === "magmaking" || r.type === "magmacube") && !hidden) {   // molten cores throb
+      const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 4 + r.wob), gr = x.createRadialGradient(0, 2 * k, 0, 0, 2 * k, 12 * k);
+      gr.addColorStop(0, `rgba(255,${r.healing ? 220 : 140},40,${0.45 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,100,20,0)");
+      x.fillStyle = gr; x.beginPath(); x.arc(0, 2 * k, 12 * k, 0, Math.PI * 2); x.fill();
+    }
+    if (r.type === "obsidian" && r.cracked) { x.strokeStyle = "#e8dcff"; x.lineWidth = 1; x.beginPath(); x.moveTo(-6, -8); x.lineTo(-1, -3); x.lineTo(-4, 1); x.moveTo(-1, -3); x.lineTo(5, -5); x.stroke(); }
     if (r.type === "boss" && !hidden) {
       // the Boss's visor and reactor core glow and pulse
       const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 5 + r.wob);

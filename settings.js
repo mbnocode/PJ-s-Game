@@ -176,9 +176,9 @@ const SETTINGS = {
     // Wizard's Elemental Sphere can hit it. baseHit = how hard it hits your Base.
     drone:    { name: "Sky Drone", health: 45, speed: 2.8, leaves: 10, points: 30, flying: true, baseHit: 8 },
     boss:    { name: "Boss",    health: 900, speed: 0.9, leaves: 120, points: 400 },
-    // Lava-level robots: on the Enemies page as "Coming soon". They aren't in any waves yet.
+    // Lava-level robots (The Basalt Delta, The Magma Fields and Inside the Volcano).
     // Magma Crawler: towers next to its burning trail can't attack for trailStopsTowers seconds.
-    crawler:  { name: "Magma Crawler", health: 110, speed: 2.0, leaves: 12, points: 35, trailStopsTowers: 2 },
+    crawler:  { name: "Magma Crawler", health: 110, speed: 2.0, leaves: 12, points: 35, trailStopsTowers: 1 },
     // Obsidian Shell: takes half damage until one hit of crackHit or more cracks its shell.
     obsidian: { name: "Obsidian Shell", health: 260, speed: 1.0, leaves: 18, points: 50, crackHit: 40 },
     // Ember Bat: flies in swarms of swarm. Only Owls, Dragons, the Pegasus and the Wizard's Sphere can hit it.
@@ -189,8 +189,10 @@ const SETTINGS = {
     diver:    { name: "Lava Diver", health: 120, speed: 2.2, leaves: 14, points: 40, diveEvery: 4, diveSeconds: 2 },
     // Lava-level Bosses:
     pillartitan:  { name: "Pillar Titan", health: 2200, speed: 0.7, leaves: 170, points: 600, baseHit: 45, isBoss: true, slamEvery: 8 },
-    magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2 },
-    volcanoheart: { name: "Volcano Heart", health: 3000, speed: 0.6, leaves: 250, points: 900, baseHit: 60, isBoss: true, healPerSecond: 25 },
+    magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2, splitType: "magmacube" },
+    magmacube:    { name: "Magma Cube", health: 300, speed: 1.2, leaves: 20, points: 60, baseHit: 15, splitInto: 2, splitType: "magmasmall" },   // what the King splits into
+    magmasmall:   { name: "Small Magma Cube", health: 70, speed: 1.9, leaves: 5, points: 15 },
+    volcanoheart: { name: "Volcano Heart", health: 3000, speed: 0.6, leaves: 250, points: 900, baseHit: 60, isBoss: true, healPerSecond: 25 },   // heals on the lava squares of the road
   },
 
   // ---------------- ABILITIES ----------------
@@ -205,9 +207,6 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "The Basalt Delta", look: "basalt", about: "Tall black basalt pillars and bubbling lava pools. Watch your step!" },
-    { name: "The Magma Fields", look: "magma",  about: "The ground is cracked, and glowing magma flows underneath." },
-    { name: "Inside the Volcano", look: "volcano", about: "Deep inside the mountain, above a boiling lava lake. The hottest level yet!" },
     { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },
   ],
 
@@ -396,6 +395,112 @@ const SETTINGS = {
                 [[["splitter", "mummy", "repair"], 18, 0.6]],                           // 18
                 [["sandboss", 2, 5], [["mummy", "drone"], 14, 0.6]],                    // 19
                 [[["tank", "mummy", "repair", "tesla"], 20, 0.6], ["boss", 2, 4, 4000], ["sandboss", 1, 0]],  // 20: the big finish
+              ] },
+
+    // ---------------- THE LAVA LEVELS ----------------
+    // Fire Dragons do 2 times damage on all three (towerBoosts). Lava-level robots: see the robots section.
+    basalt: { name: "The Basalt Delta", acornDropChance: 0.05, about: "Tall basalt pillars and bubbling lava pools. Obsidian Shells, Lava Divers and the Pillar Titan! Fire Dragons do 2x damage. Scores are worth 2.25x.", theme: "basalt",
+              robotHealth: 1.0,
+              scoreTimes: 2.25,
+              towerBoosts: { fire: { damageTimes: 2 } },
+              path: [[0, 10], [2, 10], [2, 2], [7, 2], [7, 7], [12, 7], [12, 2], [17, 2], [17, 10], [19, 10]],
+              // Trees are basalt pillars, mushrooms are lava pools, tall grass is obsidian rocks.
+              trees:     [[4, 5], [9, 4], [14, 5], [10, 10], [5, 0], [19, 5], [0, 4]],
+              mushrooms: [[4, 9], [15, 8], [10, 1], [19, 0]],
+              tallGrass: [[1, 6], [9, 9], [14, 0], [6, 11], [18, 7]],
+              waves: [
+                [["magmasmall", 6, 1.3]],                                               // 1
+                [["obsidian", 2, 2.5], ["magmasmall", 5, 1.0]],                         // 2: Obsidian Shells
+                [["diver", 3, 1.8], ["magmasmall", 5, 1.0]],                            // 3: Lava Divers
+                [["crawler", 3, 1.8], [["obsidian", "diver"], 4, 1.4]],                 // 4: Magma Crawlers
+                [["emberbat", 4, 0.6], ["obsidian", 3, 1.8], ["crawler", 2, 1.5]],      // 5
+                [[["crawler", "diver", "magmasmall"], 9, 1.1]],                         // 6
+                [["fireproof", 5, 1.3], ["obsidian", 4, 1.5]],                          // 7
+                [[["diver", "obsidian", "emberbat"], 12, 0.9]],                         // 8
+                [["emberbat", 10, 0.4], [["crawler", "fireproof"], 8, 1.0]],            // 9
+                [["pillartitan", 1, 0], [["obsidian", "diver"], 8, 1.0]],               // 10: the Pillar Titan
+                [[["crawler", "crawler", "diver"], 15, 0.7]],                           // 11
+                [["obsidian", 8, 1.0], ["emberbat", 8, 0.4]],                           // 12
+                [[["fireproof", "diver", "obsidian"], 15, 0.8]],                        // 13
+                [["pillartitan", 1, 0], ["emberbat", 10, 0.35], ["crawler", 6, 0.8]],   // 14
+                [[["obsidian", "obsidian", "crawler"], 18, 0.7]],                       // 15
+                [[["diver", "fireproof", "emberbat"], 18, 0.6]],                        // 16
+                [["pillartitan", 2, 6], [["obsidian", "diver"], 12, 0.8]],              // 17
+                [[["crawler", "obsidian", "diver", "emberbat"], 22, 0.55]],             // 18
+                [["emberbat", 15, 0.3], [["fireproof", "obsidian"], 14, 0.7]],          // 19
+                [["pillartitan", 1, 0], [["diver", "crawler", "obsidian"], 20, 0.55]],  // 20
+                [[["obsidian", "fireproof", "diver", "crawler"], 24, 0.5]],             // 21
+                [["pillartitan", 2, 5], ["emberbat", 12, 0.3], [["obsidian", "diver"], 14, 0.6]],   // 22
+                [["pillartitan", 3, 6], [["obsidian", "diver", "crawler", "fireproof", "emberbat"], 30, 0.45]],   // 23: the big finish
+              ] },
+    magma: { name: "The Magma Fields", acornDropChance: 0.05, about: "Cracked magma ground with flames bursting out. Fire-Proof Bots, Magma Crawlers and the Magma Cube King! Fire Dragons do 2x damage. Scores are worth 2.5x.", theme: "magma",
+              robotHealth: 1.1,
+              scoreTimes: 2.5,
+              towerBoosts: { fire: { damageTimes: 2 } },
+              path: [[0, 2], [16, 2], [16, 6], [3, 6], [3, 10], [19, 10]],
+              // Trees are magma rocks, mushrooms are flame vents, tall grass is obsidian rocks.
+              trees:     [[1, 4], [8, 4], [12, 8], [18, 4], [7, 0], [14, 11]],
+              mushrooms: [[5, 4], [15, 8], [11, 0], [1, 8]],
+              tallGrass: [[19, 0], [9, 8], [6, 11], [17, 7], [0, 11]],
+              waves: [
+                [["magmasmall", 6, 1.2]],                                               // 1
+                [["crawler", 3, 1.5], ["magmasmall", 4, 1.0]],                          // 2
+                [["fireproof", 2, 2.0], ["magmasmall", 5, 1.0]],                        // 3: Fire-Proof Bots (use Frogs!)
+                [[["magmasmall", "crawler"], 6, 1.1]],                                  // 4
+                [["magmacube", 2, 2.4], ["emberbat", 5, 0.5]],                          // 5
+                [["magmasmall", 6, 1.0], ["fireproof", 2, 1.8]],                        // 6
+                [["obsidian", 3, 1.8], ["fireproof", 2, 1.6]],                          // 7
+                [["magmacube", 3, 1.8], [["crawler", "emberbat"], 6, 1.0]],             // 8
+                [[["fireproof", "fireproof", "crawler"], 14, 0.8]],                     // 9
+                [["emberbat", 12, 0.35], ["magmacube", 4, 1.4]],                        // 10
+                [[["crawler", "obsidian", "magmasmall"], 15, 0.7]],                     // 11
+                [["magmaking", 1, 0], [["crawler", "fireproof"], 10, 0.9]],             // 12: the Magma Cube King
+                [[["fireproof", "emberbat", "crawler"], 16, 0.6]],                      // 13
+                [["magmacube", 6, 1.1], ["diver", 6, 1.0]],                             // 14
+                [[["obsidian", "fireproof", "crawler"], 18, 0.65]],                     // 15
+                [["emberbat", 16, 0.3], [["magmacube", "crawler"], 10, 0.9]],           // 16
+                [["magmaking", 1, 0], [["fireproof", "diver"], 12, 0.8]],               // 17
+                [[["crawler", "crawler", "fireproof", "emberbat"], 22, 0.5]],           // 18
+                [["magmacube", 8, 0.9], [["obsidian", "fireproof"], 12, 0.7]],          // 19
+                [["magmaking", 2, 6], [["crawler", "emberbat"], 14, 0.5]],              // 20
+                [[["fireproof", "obsidian", "crawler", "diver"], 24, 0.5]],             // 21
+                [["magmaking", 1, 0], ["emberbat", 14, 0.3], [["magmacube", "fireproof"], 12, 0.7]],   // 22
+                [["magmaking", 3, 6], [["fireproof", "crawler", "obsidian", "emberbat", "magmacube"], 30, 0.45]],   // 23: the big finish
+              ] },
+    volcano: { name: "Inside the Volcano", acornDropChance: 0.05, about: "Deep inside the mountain, where lava bubbles up through the road. Every lava robot, and the Volcano Heart heals on the lava! Fire Dragons do 2x damage. Scores are worth 3x.", theme: "volcano",
+              robotHealth: 1.35,
+              scoreTimes: 3,
+              towerBoosts: { fire: { damageTimes: 2 } },
+              path: [[0, 5], [4, 5], [4, 8], [10, 8], [10, 3], [15, 3], [15, 6], [19, 6]],
+              lava: [[5, 8], [8, 8], [10, 5], [13, 3], [15, 5]],   // road squares of glowing lava (the Volcano Heart heals on these)
+              // Trees are stalagmites, mushrooms are flame vents, tall grass is obsidian rocks.
+              trees:     [[1, 1], [7, 5], [12, 6], [17, 1], [3, 10], [17, 9]],
+              mushrooms: [[7, 10], [12, 1], [1, 8], [18, 3]],
+              tallGrass: [[5, 2], [13, 10], [9, 5], [0, 10], [19, 9]],
+              waves: [
+                [["magmasmall", 6, 1.2]],                                               // 1
+                [["emberbat", 4, 0.7], ["magmasmall", 4, 1.0]],                         // 2
+                [["obsidian", 2, 2.2], ["crawler", 2, 1.6]],                            // 3
+                [[["diver", "magmasmall"], 6, 1.2]],                                    // 4
+                [["magmacube", 3, 2.0], ["emberbat", 6, 0.5]],                          // 5
+                [[["fireproof", "magmasmall", "emberbat"], 9, 0.9]],                    // 6
+                [["magmacube", 3, 1.8], [["diver", "magmasmall"], 6, 1.1]],             // 7
+                [["emberbat", 14, 0.3], ["obsidian", 5, 1.2]],                          // 8
+                [[["fireproof", "diver", "crawler", "obsidian"], 16, 0.7]],             // 9
+                [["magmaking", 1, 0], ["emberbat", 10, 0.35], ["fireproof", 6, 1.0]],   // 10
+                [[["obsidian", "obsidian", "diver"], 16, 0.65]],                        // 11
+                [["volcanoheart", 1, 0], [["crawler", "emberbat"], 12, 0.6]],           // 12: the Volcano Heart
+                [[["fireproof", "magmacube", "diver"], 16, 0.7]],                       // 13
+                [["pillartitan", 2, 6], ["emberbat", 14, 0.3]],                         // 14
+                [[["crawler", "obsidian", "fireproof", "emberbat"], 22, 0.5]],          // 15
+                [["magmaking", 2, 6], [["diver", "obsidian"], 14, 0.6]],                // 16
+                [["emberbat", 22, 0.25], [["fireproof", "crawler"], 14, 0.6]],          // 17
+                [["volcanoheart", 1, 0], ["pillartitan", 1, 0], [["obsidian", "diver"], 14, 0.6]],   // 18
+                [[["fireproof", "obsidian", "diver", "crawler", "magmacube"], 26, 0.45]],   // 19
+                [["magmaking", 1, 0], ["pillartitan", 1, 0], ["emberbat", 16, 0.3]],    // 20
+                [[["obsidian", "fireproof", "diver", "crawler", "emberbat"], 30, 0.4]], // 21
+                [["volcanoheart", 2, 8], [["obsidian", "magmacube", "fireproof"], 18, 0.5]],   // 22
+                [["volcanoheart", 2, 10], ["magmaking", 1, 0], [["obsidian", "diver", "crawler", "fireproof", "emberbat"], 26, 0.45]],   // 23: the final battle
               ] },
   },
 };
