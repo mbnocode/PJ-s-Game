@@ -782,12 +782,12 @@ function makeTile(kind) {
     for (const [i, j] of core) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) px("#9a2608", (i + a + 16) % 16, (j + b + 16) % 16);
     core.forEach(([i, j], k) => px(k % 5 === 2 ? "#ffc94d" : "#ff7a1a", i, j));
   } else if (kind === "volcano") {
-    // cave rock inside the volcano, warm from the lava below
-    x.fillStyle = "#2e140c"; x.fillRect(0, 0, 16, 16);
-    for (let n = 0; n < 34; n++) px(["#3a170d", "#24100a", "#4e1f0e"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
-    for (let n = 0, m = 1 + (rnd() * 2 | 0); n < m; n++) { const i = 1 + rnd() * 11 | 0, j = 1 + rnd() * 11 | 0; x.fillStyle = "#16080505"; x.fillStyle = "#1e0c07"; x.fillRect(i, j + 2, 4, 1); x.fillStyle = "#4e1f0e"; x.fillRect(i, j, 4, 2); px("#7a3214", i, j); px("#6a2a10", i + 1, j); }   // lumpy rocks
-    if (rnd() < 0.15) { const i = 1 + rnd() * 13 | 0; for (let j = 0; j < 16; j += 1) if (rnd() < 0.7) px("#1a0a06", i + (j % 5 === 0 ? 1 : 0), j); }   // a crack in the rock
-    if (rnd() < 0.3) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ff7a1a", i, j); }   // an ember
+    // scorched, near-black volcanic rock (the glowing lava cracks are drawn across the whole map on top)
+    x.fillStyle = "#1c0b07"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 40; n++) px(["#26100a", "#140705", "#2e140c", "#1a0806"][rnd() * 4 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    for (let n = 0, m = rnd() * 2 | 0; n < m; n++) { const i = 1 + rnd() * 11 | 0, j = 1 + rnd() * 11 | 0; x.fillStyle = "#0e0504"; x.fillRect(i, j + 2, 4, 1); x.fillStyle = "#30150c"; x.fillRect(i, j, 4, 2); px("#4a1c0e", i, j); }   // jagged rocks
+    if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ff7a1a", i, j); }   // an ember
+    if (rnd() < 0.12) { const i = 2 + rnd() * 11 | 0, j = 2 + rnd() * 11 | 0; px("#2a1a3a", i, j); px("#5a4078", i + 1, j); }   // an obsidian shard
   } else if (kind === "path") {
     x.fillStyle = "#b88a55"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 18; n++) px(rnd() < 0.5 ? "#a37647" : "#c99a64", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -1887,6 +1887,11 @@ function paintGround(x, map, factoryCount) {
       else for (let k = 0; k < eh; k += 8) x.fillRect(ex + 1, ey + k, ew - 2, 4);
     }
   }
+  if (map.theme === "volcano") {   // glowing lava cracks across the cave floor (factory squares stay factory)
+    if (!map.veins) makeVolcanoVeins(map);
+    x.drawImage(map.veins, 0, 0, 640, 384);
+    for (const key of fset) { const [i, y] = key.split(",").map(Number); x.drawImage(FACTORY_TILES[factoryTileAt(i, y)], i * T, y * T, T, T); }
+  }
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
   for (const key of map.quick || []) drawQuicksand(x, ...key.split(",").map(Number));
@@ -1901,6 +1906,27 @@ function paintGround(x, map, factoryCount) {
   }
   drawFactory(x, map);
   drawBase(x, map, false);
+}
+// Inside the Volcano: a web of glowing lava cracks across the floor, plus a soft blurry glow layer for the heat shimmer
+function makeVolcanoVeins(map) {
+  const W = 320, H = 192, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
+  const hsh = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x5bd1e995; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const smooth = (i, j, sz) => { const a = Math.floor(i / sz), b = Math.floor(j / sz), fu = i / sz - a, fv = j / sz - b, su = fu * fu * (3 - 2 * fu), sv = fv * fv * (3 - 2 * fv);
+    return (hsh(a, b) * (1 - su) + hsh(a + 1, b) * su) * (1 - sv) + (hsh(a, b + 1) * (1 - su) + hsh(a + 1, b + 1) * su) * sv; };
+  const small = document.createElement("canvas"); small.width = 80; small.height = 48; const sx = small.getContext("2d");
+  const col = { core: [255, 190, 70], hot: [255, 110, 25], mid: [190, 50, 12], rim: [80, 14, 6] };
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const n = smooth(i, j, 22) * 0.65 + smooth(i + 400, j + 400, 8) * 0.35, v = Math.abs(n - 0.5);
+    const c = v < 0.012 ? col.core : v < 0.024 ? col.hot : v < 0.036 ? col.mid : v < 0.05 ? col.rim : null;
+    if (!c) continue;
+    const k = (j * W + i) * 4; D[k] = c[0]; D[k + 1] = c[1]; D[k + 2] = c[2]; D[k + 3] = c === col.rim ? 150 : 255;
+    if (v < 0.024) { sx.fillStyle = "rgba(255,90,20,0.12)"; sx.fillRect(i / 4, j / 4, 1, 1); }
+  }
+  x.putImageData(img, 0, 0);
+  const glow = document.createElement("canvas"); glow.width = 640; glow.height = 384; const gx = glow.getContext("2d");
+  gx.imageSmoothingEnabled = true; gx.drawImage(small, 0, 0, 640, 384);
+  map.veins = cv; map.veinGlow = glow;
 }
 // A road square of glowing lava (the Volcano Heart heals while it's on one)
 function drawLavaSquare(x, tx, ty) {
@@ -3464,6 +3490,18 @@ function draw() {
   x.save();
   if (G.shake > 0) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
   x.drawImage(G.ground, 0, 0);
+  if (G.map.theme === "volcano" && G.map.veinGlow) {   // the lava cracks throb with heat, embers float up, and the cave edges glow dark red
+    x.globalCompositeOperation = "lighter"; x.globalAlpha = 0.4 + 0.3 * Math.sin(G.time * 1.8);
+    x.drawImage(G.map.veinGlow, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
+    for (let i = 0; i < 28; i++) {
+      const ph = (G.time * (0.12 + (i % 5) * 0.02) + i * 0.137) % 1, ex = ((i * 97.31) % 1) * 640 + Math.sin(G.time * 1.3 + i) * 10, ey = 390 - ph * 420;
+      x.globalAlpha = Math.sin(ph * Math.PI) * 0.9; x.fillStyle = i % 3 ? "#ff8a24" : "#ffd36b"; x.fillRect(ex, ey, i % 4 ? 2 : 3, i % 4 ? 2 : 3);
+    }
+    x.globalAlpha = 1;
+    if (!G.map.vignette) { const v = document.createElement("canvas"); v.width = 640; v.height = 384; const vx = v.getContext("2d");
+      const g = vx.createRadialGradient(320, 192, 150, 320, 192, 400); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(40,0,0,0.6)"); vx.fillStyle = g; vx.fillRect(0, 0, 640, 384); G.map.vignette = v; }
+    x.drawImage(G.map.vignette, 0, 0);
+  }
   for (const f of G.flashTiles) { x.fillStyle = `rgba(${f.col},${Math.min(0.6, f.t)})`; x.fillRect(f.x * T, f.y * T, T, T); }
 
   // bubbles and ripples drifting on the swamp water
