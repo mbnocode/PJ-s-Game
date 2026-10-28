@@ -195,7 +195,9 @@ const SETTINGS = {
     magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2, splitType: "magmacube" },
     magmacube:    { name: "Magma Cube", health: 300, speed: 1.2, leaves: 20, points: 60, baseHit: 15, splitInto: 2, splitType: "magmasmall" },   // what the King splits into
     magmasmall:   { name: "Small Magma Cube", health: 70, speed: 1.9, leaves: 5, points: 15 },
-    volcanoheart: { name: "Volcano Heart", health: 10000, speed: 0.6, leaves: 250, points: 900, baseHit: 60, isBoss: true, healPerSecond: 25 },   // heals on the lava squares of the road
+    volcanoheart: { name: "Volcano Heart", health: 10000, speed: 0.6, leaves: 250, points: 900, baseHit: 60, isBoss: true, healPerSecond: 25,   // heals on the lava squares of the road
+                    noSlow: true,             // Wizard Time Warps and Water Frog slows don't affect it (Freeze still does)
+                    finalQuakeSeconds: 1 },   // on the final wave, the screen shakes this long before it rises
   },
 
   // ---------------- ABILITIES ----------------
