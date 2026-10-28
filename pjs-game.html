@@ -1378,6 +1378,7 @@ const SOON_PATHS = {
   basalt:  [[0, 40], [10, 40], [10, 8], [30, 8], [30, 28], [50, 28], [50, 8], [70, 8], [70, 40], [80, 40]],
   magma:   [[0, 8], [66, 8], [66, 24], [14, 24], [14, 40], [80, 40]],
   volcano: [[0, 22], [18, 22], [18, 32], [40, 32], [40, 14], [62, 14], [62, 26], [80, 26]],
+  fortress: [[0, 10], [70, 10], [70, 18], [10, 18], [10, 26], [70, 26], [70, 34], [10, 34], [10, 42], [80, 42]],   // a long zigzag for 100 waves
 };
 /* "Coming soon" level pictures, drawn at double detail (160 x 96), blown up, then given a lava glow */
 function drawSoonMini(cv, look) {
@@ -1394,7 +1395,7 @@ function drawSoonMini(cv, look) {
     const ci = Math.max(Math.min(a, c), Math.min(Math.max(a, c), i)), cj = Math.max(Math.min(b, d), Math.min(Math.max(b, d), j));
     best = Math.min(best, Math.max(Math.abs(i - ci), Math.abs(j - cj))); } return best; };
   const bite = (i, j) => (hsh(i >> 1, j >> 1) < 0.3 ? 1 : 0);   // crumbled edge
-  const road = (i, j) => segD(i, j) <= HW - bite(i, j);
+  const road = (i, j) => segD(i, j) <= HW - (look === "fortress" ? 0 : bite(i, j));   // iron doesn't crumble
   // smooth noise for the glowing cracks (so they connect from block to block)
   const grid = {}, gv = (a, b) => grid[a + "," + b] ?? (grid[a + "," + b] = hsh(a + 50, b + 90));
   const smooth = (i, j, sz) => { const a = Math.floor(i / sz), b = Math.floor(j / sz), fu = i / sz - a, fv = j / sz - b, su = fu * fu * (3 - 2 * fu), sv = fv * fv * (3 - 2 * fv);
@@ -1477,6 +1478,37 @@ function drawSoonMini(cv, look) {
       top.forEach((row, w) => [...row].forEach((ch, u) => { if (ch !== ".") set(a + u, b + w, { k: "#0a090c", L: "#6e6a78", h: "#8a8596" }[ch]); }));
       for (let u = 1; u < 8; u++) set(a + u, b + h + 3, "#0a090c");
     });
+  } else if (look === "fortress") {
+    // the Iron Fortress: riveted iron floor plates, rust, grates, and a battlement wall with turrets along the top
+    for (let ty = 0; ty < H / 16; ty++) for (let tx = 0; tx < W / 16; tx++) {
+      const kind = hsh(tx + 3, ty + 5), rusty = kind < 0.3, grate = kind > 0.9;
+      for (let w = 0; w < 16; w++) for (let u = 0; u < 16; u++) {
+        const i = tx * 16 + u, j = ty * 16 + w; let c = ["#4a5059", "#525963", "#454b54"][hsh(i, j) * 3 | 0];
+        if (rusty && smooth(i + 70, j + 70, 5) > 0.58) c = smooth(i + 70, j + 70, 5) > 0.68 ? "#a85a24" : "#7a4a2a";   // rust patches
+        if (grate && u > 2 && u < 13 && w > 2 && w < 13) c = w % 2 ? "#1a1d22" : "#6a717c";   // a floor grate
+        if (u === 0 || w === 0) c = "#6e7682"; else if (u === 15 || w === 15) c = "#24282e";   // plate edges: lit top-left, dark bottom-right
+        if ((u === 2 || u === 13) && (w === 2 || w === 13)) c = "#a9b1bc"; else if ((u === 3 || u === 14) && (w === 3 || w === 14)) c = "#24282e";   // rivets
+        set(i, j, c);
+      }
+    }
+    // the battlement wall along the top, with turrets glowing from furnace windows
+    for (let i = 0; i < W; i++) {
+      const merlon = (i >> 3) % 2 === 0;
+      for (let j = 0; j < (merlon ? 14 : 8); j++) set(i, j, j === 0 || (j === 8 && !merlon) ? "#8a929e" : i % 8 === 0 ? "#24282e" : j % 4 === 3 ? "#3a3f47" : "#5a616c");
+      set(i, merlon ? 14 : 8, "#16191d"); set(i, merlon ? 15 : 9, "#2e3238");   // the wall's shadow on the floor
+    }
+    [[22, 0], [128, 0]].forEach(([a]) => {   // turrets
+      for (let j = 0; j < 15; j++) for (let u = 0; u < 12; u++) set(a + u, j, u === 0 || u === 11 || j === 14 ? "#16191d" : u < 3 ? "#7a828e" : u > 8 ? "#3a3f47" : "#5a616c");
+      for (let u = 0; u < 12; u += 3) set(a + u, 0, "#16191d");
+      for (const wy of [4, 9]) { set(a + 5, wy, "#ff9a2a"); set(a + 6, wy, "#ffc94d"); set(a + 5, wy + 1, "#c8400e"); set(a + 6, wy + 1, "#ff6a14"); hot.push([a + 5, wy, 1.2]); }
+      set(a + 6, -1, "#e0443a");
+    });
+    // big gears turning in the floor, and steam vents
+    const gear = (cx, cy, r) => { for (let j = -r - 2; j <= r + 2; j++) for (let i = -r - 2; i <= r + 2; i++) { const d = Math.hypot(i, j), a = Math.atan2(j, i);
+      const tooth = Math.cos(a * 8) > 0.3 ? 2 : 0;
+      if (d <= r + tooth && !road(cx + i, cy + j)) set(cx + i, cy + j, d < 2 ? "#16191d" : d < 3.5 ? "#a9b1bc" : d > r + tooth - 1 ? "#4a3410" : (i + j) < 0 ? "#d8b060" : "#a07a34"); } };   // brass gears
+    gear(154, 46, 5); gear(7, 62, 5); gear(7, 30, 4);
+    [[44, 92], [118, 92], [150, 60]].forEach(([a, b]) => { if (!road(a, b)) { for (let u = -2; u <= 2; u++) set(a + u, b, u % 2 ? "#16191d" : "#6a717c"); } });
   } else {
     // inside the volcano: a rocky cave lit from below by a boiling lava lake
     const ceil = (i) => 7 + Math.sin(i / 7) * 3 + hsh(i >> 2, 1) * 3;
@@ -1514,17 +1546,20 @@ function drawSoonMini(cv, look) {
   const RT = {   // stone colors: [bricks x4, lit top, shadowed bottom, lit left, mortar, soot, broken edge]
     magma: ["#62575d", "#6e6268", "#7a6d72", "#857880", "#988b90", "#4e4449", "#8e8287", "#2e262c", "#4a4046", "#1e171b"],
     basalt: ["#5e5c68", "#6a6874", "#76737f", "#82808c", "#9a97a4", "#46444e", "#8c8996", "#25232b", "#403e48", "#16141a"],
-    volcano: ["#6a5446", "#76604f", "#826a58", "#8e7562", "#a68a72", "#4e3c32", "#9a7f69", "#2a1c16", "#4a3a32", "#140806"] }[look];
+    volcano: ["#6a5446", "#76604f", "#826a58", "#8e7562", "#a68a72", "#4e3c32", "#9a7f69", "#2a1c16", "#4a3a32", "#140806"],
+    fortress: ["#30343b", "#363b42", "#3c4149", "#42474f", "#5e6570", "#22262b", "#525963", "#16181c", "#2a2e34", "#0e0f12"] }[look];
+  const lavaUnder = look !== "fortress";   // the fortress has no lava under its road
   const tones = RT.slice(0, 4);
   const shadowAt = new Set();
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     if (!road(i, j)) { if (road(i, j - 1) || road(i, j - 2) || road(i - 1, j)) shadowAt.add(i + "," + j); continue; }
-    const d = segD(i, j), lim = HW - bite(i, j);
+    const d = segD(i, j), lim = HW - (look === "fortress" ? 0 : bite(i, j));
     const row = j >> 2, off = (row % 2) * 3, bu = (i + off) % 6, bw = j % 4, bid = Math.floor((i + off) / 6) * 31 + row * 17, bh = hsh(bid, 3);
     let c;
-    if (d > lim - 1) c = RT[9];   // dark broken edge
-    else if (bh < 0.05 && d < lim - 2) { c = bw === 3 ? "#ff7a1a" : bw === 2 ? "#c8400e" : "#1a0e0c"; if (bw >= 2) hot.push([i, j, 0.6]); }   // a missing brick, lava glowing below
-    else if (bw === 0 || bu === 0) c = d > lim - 3 && hsh(i, j) < 0.25 ? "#c8400e" : RT[7];   // mortar (heat seeping through near the edges)
+    if (look === "fortress" && d > lim - 1.6) c = d > lim - 0.6 ? "#0e0f12" : ((i + j) >> 1) % 2 ? "#e8b820" : "#16181c";   // yellow and black hazard stripes on the walkway edges
+    else if (d > lim - 1) c = RT[9];   // dark broken edge
+    else if (bh < 0.05 && d < lim - 2) { c = !lavaUnder ? "#0e0f12" : bw === 3 ? "#ff7a1a" : bw === 2 ? "#c8400e" : "#1a0e0c"; if (lavaUnder && bw >= 2) hot.push([i, j, 0.6]); }   // a missing brick, lava glowing below
+    else if (bw === 0 || bu === 0) c = lavaUnder && d > lim - 3 && hsh(i, j) < 0.25 ? "#c8400e" : RT[7];   // mortar (heat seeping through near the edges)
     else {
       c = tones[bh * 4 | 0];
       if (bw === 1) c = RT[4]; else if (bw === 3) c = RT[5];   // each brick has a lit top and a shadowed bottom
@@ -1536,11 +1571,11 @@ function drawSoonMini(cv, look) {
   }
   // rubble that fell off the road
   for (let n = 0; n < 40; n++) { const i = R() * W | 0, j = R() * H | 0; const d = segD(i, j);
-    if (d > HW && d < HW + 3 && !road(i, j)) { set(i, j, RT[2]); set(i + 1, j, RT[5]); set(i, j - 1, RT[4]); } }
+    if (look !== "fortress" && d > HW && d < HW + 3 && !road(i, j)) { set(i, j, RT[2]); set(i + 1, j, RT[5]); set(i, j - 1, RT[4]); } }
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (img[j * W + i]) { x.fillStyle = img[j * W + i]; x.fillRect(i, j, 1, 1); }
   x.fillStyle = "rgba(0,0,0,0.45)"; shadowAt.forEach((k) => { const [i, j] = k.split(",").map(Number); x.fillRect(i, j, 1, 1); });   // the road's shadow
   // smoke wisps rising from the hottest spots
-  ({ magma: [[30, 40], [100, 12], [150, 70], [62, 88]], basalt: [[80, 26], [122, 60], [44, 85]], volcano: [[30, 56], [90, 54], [130, 56], [12, 40]] })[look].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
+  ({ magma: [[30, 40], [100, 12], [150, 70], [62, 88]], basalt: [[80, 26], [122, 60], [44, 85]], volcano: [[30, 56], [90, 54], [130, 56], [12, 40]], fortress: [[44, 90], [118, 90], [150, 58]] })[look].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
   if (look === "volcano") for (let n = 0; n < 40; n++) { const i = R() * W | 0, j = 12 + R() * 44 | 0; if (!road(i, j)) { x.fillStyle = R() < 0.5 ? "#ffc94d" : "#ff7a1a"; x.fillRect(i, j, 1, 1); hot.push([i, j, 0.5]); } }   // floating embers
   const c = cv.getContext("2d"), S = cv.width / W; c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
   c.globalCompositeOperation = "lighter";

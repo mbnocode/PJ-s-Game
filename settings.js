@@ -208,6 +208,7 @@ const SETTINGS = {
     { name: "The Basalt Delta", look: "basalt", about: "Tall black basalt pillars and bubbling lava pools. Watch your step!" },
     { name: "The Magma Fields", look: "magma",  about: "The ground is cracked, and glowing magma flows underneath." },
     { name: "Inside the Volcano", look: "volcano", about: "Deep inside the mountain, above a boiling lava lake. The hottest level yet!" },
+    { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },
   ],
 
   // ---------------- THE SERPENT'S SHOP ----------------
