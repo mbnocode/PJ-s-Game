@@ -1441,6 +1441,9 @@ const SOON_PATHS = {
   basalt:  [[0, 40], [10, 40], [10, 8], [30, 8], [30, 28], [50, 28], [50, 8], [70, 8], [70, 40], [80, 40]],
   magma:   [[0, 8], [66, 8], [66, 24], [14, 24], [14, 40], [80, 40]],
   volcano: [[0, 22], [18, 22], [18, 32], [40, 32], [40, 14], [62, 14], [62, 26], [80, 26]],
+  tundra:   [[0, 18], [22, 18], [22, 38], [46, 38], [46, 10], [66, 10], [66, 30], [80, 30]],
+  glacier:  [[0, 42], [14, 42], [14, 26], [34, 26], [34, 6], [54, 6], [54, 42], [74, 42], [74, 18], [80, 18]],
+  blizzard: [[0, 6], [30, 6], [30, 18], [10, 18], [10, 34], [50, 34], [50, 14], [70, 14], [70, 42], [80, 42]],
   fortress: [[0, 10], [70, 10], [70, 18], [10, 18], [10, 26], [70, 26], [70, 34], [10, 34], [10, 42], [80, 42]],   // a long zigzag for 100 waves
 };
 /* "Coming soon" level pictures, drawn at double detail (160 x 96), blown up, then given a lava glow */
@@ -1541,6 +1544,54 @@ function drawSoonMini(cv, look) {
       top.forEach((row, w) => [...row].forEach((ch, u) => { if (ch !== ".") set(a + u, b + w, { k: "#0a090c", L: "#6e6a78", h: "#8a8596" }[ch]); }));
       for (let u = 1; u < 8; u++) set(a + u, b + h + 3, "#0a090c");
     });
+  } else if (look === "tundra") {
+    // The Frozen Tundra: deep snow with soft blue shadows, a frozen lake, snowy pines and rocks
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const n = smooth(i, j, 12), drift = smooth(i + 200, j + 200, 6);
+      let c = n > 0.62 ? "#ffffff" : n > 0.42 ? "#eef4fb" : n > 0.3 ? "#dde8f4" : "#c9d9ec";
+      if (drift > 0.7 && n < 0.5) c = "#b8cce4";   // shadowy hollows
+      if (hsh(i, j) < 0.02) c = "#ffffff";   // sparkles in the snow
+      const lake = ((i - 104) / 30) ** 2 + ((j - 70) / 16) ** 2 + (smooth(i, j, 5) - 0.5) * 0.3;
+      if (lake < 1) {   // the frozen lake
+        c = lake > 0.86 ? "#e6f2fb" : smooth(i * 2, j, 7) > 0.55 ? "#a8d6f0" : "#8cc4e6";
+        if (Math.abs(smooth(i + 50, j + 90, 9) - 0.5) < 0.02) c = "#ffffff";   // cracks in the ice
+        if ((i + j * 2) % 23 === 0 && lake < 0.7) c = "#d6eefb";   // shine
+      }
+      set(i, j, c);
+    }
+    const pine = (a, b, h) => { if (road(a, b + h) || road(a, b)) return;
+      for (let k = 0; k < h; k++) { const w = Math.round(1 + k * 0.45); for (let u = -w; u <= w; u++) set(a + u, b + k, u === -w || u === w ? "#123826" : k % 4 === 0 && Math.abs(u) < w ? "#ffffff" : u < 0 ? "#2f6a46" : "#1e4a32"); }
+      set(a, b + h, "#4e2d14"); set(a, b + h + 1, "#4e2d14"); for (let u = -3; u <= 3; u++) set(a + u, b + h + 2, "#c9d9ec"); };
+    [[8, 2, 10], [30, 4, 9], [74, 22, 11], [120, 4, 9], [150, 38, 10], [12, 56, 11], [36, 82, 8], [140, 82, 9], [82, 54, 8], [128, 26, 8]].forEach(([a, b, h]) => pine(a, b, h));
+    [[58, 50], [150, 70], [4, 86], [92, 6]].forEach(([a, b]) => { if (road(a + 2, b)) return; for (let u = 0; u < 7; u++) for (let w = 0; w < 4; w++) set(a + u, b + w, w === 0 || (w === 1 && u > 0 && u < 6) ? "#ffffff" : u < 3 ? "#7a8494" : "#5a6474"); });   // snowy rocks
+  } else if (look === "glacier") {
+    // The Glacier Caves: walls of blue glacier ice in faceted chunks, icicles, and glowing ice crystals
+    const seeds = []; for (let k = 0; k < 40; k++) seeds.push([hsh(k, 1) * W, hsh(k, 2) * H, hsh(k, 3)]);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      let d1 = 1e9, d2 = 1e9, s1 = null; for (const q of seeds) { const dd = Math.hypot(q[0] - i, q[1] - j); if (dd < d1) { d2 = d1; d1 = dd; s1 = q; } else if (dd < d2) d2 = dd; }
+      const seam = d2 - d1, shades = ["#5aa8d8", "#6cb8e2", "#4a96c8", "#7cc4ea", "#3e86ba"];
+      let c = shades[s1[2] * 5 | 0];
+      if (seam < 1) c = "#2a5e8a"; else if (seam < 2 && (i - s1[0]) + (j - s1[1]) < 0) c = "#bfe6fa";   // dark cracks and bright lit edges on each ice chunk
+      if (hsh(i, j) < 0.015) c = "#ffffff";
+      const depth = j < 8 ? 1 : 0; if (depth) c = "#1c4a72";   // the cave ceiling
+      set(i, j, c);
+    }
+    for (let i = 0; i < W; i += 1) { const len = hsh(i >> 1, 7) < 0.35 ? 3 + (hsh(i >> 1, 8) * 9 | 0) : 0; for (let k = 0; k < len; k++) if (Math.abs((i % 2) - 0.5) < 1 && k < len - (i % 2) * 2) set(i, 8 + k, k === len - 1 ? "#ffffff" : i % 2 ? "#bfe6fa" : "#e6f6ff"); }   // icicles
+    [[24, 60], [70, 30], [100, 70], [140, 30], [8, 20], [120, 88], [64, 84]].forEach(([a, b]) => {   // glowing ice crystals
+      if (road(a, b) || road(a, b + 4)) return;
+      for (const [u, h] of [[-2, 5], [0, 9], [2, 6]]) for (let k = 0; k < h; k++) { set(a + u, b + 6 - k, k === h - 1 ? "#ffffff" : "#9fe8ff"); set(a + u + 1, b + 6 - k, "#5ad0ff"); }
+      hot.push([a, b + 2, 1.4]);
+    });
+  } else if (look === "blizzard") {
+    // Blizzard Peak: a snowy mountaintop with gray rock poking through, a cliff edge, and snow blowing sideways
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const n = smooth(i, j, 10) * 0.7 + smooth(i + 99, j + 99, 4) * 0.3;
+      let c = n > 0.58 ? "#d4dce8" : n > 0.46 ? "#bcc7d5" : n > 0.38 ? "#a2aebe" : n > 0.3 ? "#6e7888" : "#565f6e";   // stormy gray snow, dark rock showing through
+      if (n <= 0.38 && hsh(i, j) < 0.1) c = "#5a6270";
+      if (j > 84 + Math.sin(i / 6) * 3) c = j > 90 + Math.sin(i / 6) * 3 ? "#2a3240" : "#4a5260";   // the cliff edge falling away
+      set(i, j, c);
+    }
+    [[34, 50], [112, 48], [148, 2], [76, 66]].forEach(([a, b]) => { if (road(a + 3, b + 3)) return; for (let u = 0; u < 9; u++) for (let w = 0; w < 6; w++) if (Math.abs(u - 4) + w < 8) set(a + u, b + w, w < 2 ? "#ffffff" : u < 4 ? "#7a8494" : "#4e5664"); });   // big snowy boulders
   } else if (look === "fortress") {
     // the Iron Fortress: riveted iron floor plates, rust, grates, and a battlement wall with turrets along the top
     for (let ty = 0; ty < H / 16; ty++) for (let tx = 0; tx < W / 16; tx++) {
@@ -1610,8 +1661,12 @@ function drawSoonMini(cv, look) {
     magma: ["#62575d", "#6e6268", "#7a6d72", "#857880", "#988b90", "#4e4449", "#8e8287", "#2e262c", "#4a4046", "#1e171b"],
     basalt: ["#5e5c68", "#6a6874", "#76737f", "#82808c", "#9a97a4", "#46444e", "#8c8996", "#25232b", "#403e48", "#16141a"],
     volcano: ["#6a5446", "#76604f", "#826a58", "#8e7562", "#a68a72", "#4e3c32", "#9a7f69", "#2a1c16", "#4a3a32", "#140806"],
+    tundra: ["#7a8494", "#86909f", "#929cab", "#9ea8b6", "#c8d4e2", "#5a6474", "#b4bfcd", "#3a4250", "#6a7484", "#1e2430"],
+    glacier: ["#6a7c90", "#76889c", "#8294a8", "#8ea0b4", "#c4dcf0", "#4e6074", "#b0c8de", "#2e3e50", "#5a6c80", "#16202c"],
+    blizzard: ["#6e7480", "#7a808c", "#868c98", "#9298a4", "#c0c6d0", "#525864", "#aab0bc", "#30343c", "#5e646e", "#1a1d22"],
     fortress: ["#30343b", "#363b42", "#3c4149", "#42474f", "#5e6570", "#22262b", "#525963", "#16181c", "#2a2e34", "#0e0f12"] }[look];
-  const lavaUnder = look !== "fortress";   // the fortress has no lava under its road
+  const frozen = ["tundra", "glacier", "blizzard"].includes(look);
+  const lavaUnder = look !== "fortress" && !frozen;   // the fortress and the frozen levels have no lava under their roads
   const tones = RT.slice(0, 4);
   const shadowAt = new Set();
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
@@ -1629,6 +1684,7 @@ function drawSoonMini(cv, look) {
       if (bu === 1 && bw !== 3) c = RT[6];
       if (bh > 0.7 && (bu + bw) % 5 === 2) c = RT[7];   // cracks across some bricks
       if (d > lim - 2.5 && hsh(i * 3, j * 5) < 0.4) c = RT[8];   // soot near the edges
+      if (frozen && bw === 1 && hsh(i, j * 3) < 0.55) c = "#f4f8ff";   // snow resting on the bricks
     }
     set(i, j, c);
   }
@@ -1638,15 +1694,22 @@ function drawSoonMini(cv, look) {
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (img[j * W + i]) { x.fillStyle = img[j * W + i]; x.fillRect(i, j, 1, 1); }
   x.fillStyle = "rgba(0,0,0,0.45)"; shadowAt.forEach((k) => { const [i, j] = k.split(",").map(Number); x.fillRect(i, j, 1, 1); });   // the road's shadow
   // smoke wisps rising from the hottest spots
-  ({ magma: [[30, 40], [100, 12], [150, 70], [62, 88]], basalt: [[80, 26], [122, 60], [44, 85]], volcano: [[30, 56], [90, 54], [130, 56], [12, 40]], fortress: [[44, 90], [118, 90], [150, 58]] })[look].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
+  ({ magma: [[30, 40], [100, 12], [150, 70], [62, 88]], basalt: [[80, 26], [122, 60], [44, 85]], volcano: [[30, 56], [90, 54], [130, 56], [12, 40]], fortress: [[44, 90], [118, 90], [150, 58]], tundra: [], glacier: [], blizzard: [] })[look].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
   if (look === "volcano") for (let n = 0; n < 40; n++) { const i = R() * W | 0, j = 12 + R() * 44 | 0; if (!road(i, j)) { x.fillStyle = R() < 0.5 ? "#ffc94d" : "#ff7a1a"; x.fillRect(i, j, 1, 1); hot.push([i, j, 0.5]); } }   // floating embers
   const c = cv.getContext("2d"), S = cv.width / W; c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
   c.globalCompositeOperation = "lighter";
   for (let n = 0; n < hot.length; n += 4) { const [i, j, a] = hot[n], gx = (i + 0.5) * S, gy = (j + 0.5) * S, r = S * 6;
-    const g = c.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, `rgba(255,110,30,${0.06 * a})`); g.addColorStop(1, "rgba(255,80,20,0)"); c.fillStyle = g; c.fillRect(gx - r, gy - r, r * 2, r * 2); }
+    const g = c.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, frozen ? `rgba(120,220,255,${0.12 * a})` : `rgba(255,110,30,${0.06 * a})`); g.addColorStop(1, frozen ? "rgba(120,220,255,0)" : "rgba(255,80,20,0)"); c.fillStyle = g; c.fillRect(gx - r, gy - r, r * 2, r * 2); }
   c.globalCompositeOperation = "source-over";
+  if (frozen) {   // snowflakes (blowing sideways in the blizzard)
+    let fs = 77; const F = () => (fs = (fs * 16807) % 2147483647) / 2147483647;
+    for (let n = 0; n < (look === "blizzard" ? 140 : 60); n++) { const fx = F() * cv.width, fy = F() * cv.height;
+      c.fillStyle = `rgba(255,255,255,${0.5 + F() * 0.5})`;
+      if (look === "blizzard") { const len = 8 + F() * 14; c.save(); c.translate(fx, fy); c.rotate(0.25); c.fillRect(0, 0, len, 2); c.restore(); } else c.fillRect(fx, fy, 2, 2); }
+    if (look === "blizzard") { c.fillStyle = "rgba(220,230,245,0.18)"; c.fillRect(0, 0, cv.width, cv.height); }   // a whiteout haze
+  }
   const v = c.createRadialGradient(cv.width / 2, cv.height / 2, cv.height * 0.35, cv.width / 2, cv.height / 2, cv.width * 0.62);   // darker corners
-  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(10,2,0,0.45)"); c.fillStyle = v; c.fillRect(0, 0, cv.width, cv.height);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, frozen ? "rgba(10,30,60,0.4)" : "rgba(10,2,0,0.45)"); c.fillStyle = v; c.fillRect(0, 0, cv.width, cv.height);
 }
 
 const setup = { level: "meadow", diff: "normal", tutorial: false, mode: "solo", hours: 24 };
