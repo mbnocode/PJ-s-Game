@@ -3585,8 +3585,10 @@ function draw() {
     let img = towerSprite(t.kind);
     if (t.kind === "fire" && t.level >= 3) img = [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid][Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
+    if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";   // trapped by a Pillar Titan: grayed out, but still visible
     if (face < 0) { x.save(); x.translate(cx, 0); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
     else x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
+    x.filter = "none";
     if (t.kind === "hydra") {   // the Hydra's red eyes glow and throb
       const pulse = 0.55 + 0.45 * Math.sin(G.time * 4 + t.x * 1.7), k = s2 / 32;
       for (const [ex, ey] of HYDRA_EYES) {
@@ -3610,11 +3612,16 @@ function draw() {
   // basalt pillars trapping towers (from the Pillar Titan)
   for (const t of G.towers) {
     if (!t.pillar) continue;
-    const X = t.x * T + 6, Y = t.y * T - 6;
-    x.fillStyle = "#0a090c"; x.fillRect(X - 1, Y - 1, 22, 38);
-    x.fillStyle = "#3c3944"; x.fillRect(X, Y + 4, 20, 32); x.fillStyle = "#5a5664"; x.fillRect(X, Y + 4, 6, 32); x.fillStyle = "#2a2830"; x.fillRect(X + 15, Y + 4, 5, 32);
-    x.fillStyle = "#8a8596"; x.fillRect(X, Y, 20, 5); x.fillStyle = "#a9a4b6"; x.fillRect(X + 4, Y + 1, 12, 2);
-    x.fillStyle = "#24222a"; x.fillRect(X + 8, Y + 12, 1, 6); x.fillRect(X + 11, Y + 22, 1, 5);
+    // two short basalt columns on either side and rubble at its feet, so you can still see the tower
+    const X = t.x * T, Y = t.y * T;
+    for (const [cx, h] of [[X, 20], [X + T - 7, 16]]) {
+      const top = Y + T - h;
+      x.fillStyle = "#0a090c"; x.fillRect(cx - 1, top - 1, 9, h + 1);
+      x.fillStyle = "#3c3944"; x.fillRect(cx, top + 2, 7, h - 2); x.fillStyle = "#5a5664"; x.fillRect(cx, top + 2, 2, h - 2); x.fillStyle = "#2a2830"; x.fillRect(cx + 5, top + 2, 2, h - 2);
+      x.fillStyle = "#8a8596"; x.fillRect(cx, top, 7, 3); x.fillStyle = "#a9a4b6"; x.fillRect(cx + 2, top, 3, 1);
+    }
+    x.fillStyle = "#0a090c"; x.fillRect(X + 6, Y + T - 5, T - 12, 5);
+    for (let i = 0; i < 5; i++) { x.fillStyle = i % 2 ? "#5a5664" : "#46424e"; x.fillRect(X + 7 + i * 4, Y + T - 4 - (i % 2), 4, 3 + (i % 2)); }
   }
   // Wizard Time Warp: a slowly turning clock ring; robots inside move slower
   for (const t of G.towers) {
