@@ -403,11 +403,11 @@ const SETTINGS = {
               ] },
 
     // ---------------- THE LAVA LEVELS ----------------
-    // Fire Dragons do 2 times damage on all three (towerBoosts). Lava-level robots: see the robots section.
-    basalt: { name: "The Basalt Delta", acornDropChance: 0.05, about: "Tall basalt pillars and bubbling lava pools. Obsidian Shells, Lava Divers and the Pillar Titan! Fire Dragons do 2x damage. Scores are worth 2.25x.", theme: "basalt",
+    // Fire Dragons do 1.5 times damage on all three (towerBoosts). Lava-level robots: see the robots section.
+    basalt: { name: "The Basalt Delta", acornDropChance: 0.05, about: "Tall basalt pillars and bubbling lava pools. Obsidian Shells, Lava Divers and the Pillar Titan! Fire Dragons do 1.5x damage. Scores are worth 2.25x.", theme: "basalt",
               robotHealth: 1.0,
               scoreTimes: 2.25,
-              towerBoosts: { fire: { damageTimes: 2 } },
+              towerBoosts: { fire: { damageTimes: 1.5 } },
               path: [[0, 10], [2, 10], [2, 2], [7, 2], [7, 7], [12, 7], [12, 2], [17, 2], [17, 10], [19, 10]],
               // Trees are basalt pillars, mushrooms are lava pools, tall grass is obsidian rocks.
               trees:     [[4, 5], [9, 4], [14, 5], [10, 10], [5, 0], [19, 5], [0, 4]],
@@ -438,10 +438,10 @@ const SETTINGS = {
                 [["pillartitan", 2, 5], ["emberbat", 12, 0.3], [["obsidian", "diver"], 14, 0.6]],   // 22
                 [["pillartitan", 3, 6], [["obsidian", "diver", "crawler", "fireproof", "emberbat"], 30, 0.45]],   // 23: the big finish
               ] },
-    magma: { name: "The Magma Fields", acornDropChance: 0.05, about: "Cracked magma ground with flames bursting out. Fire-Proof Bots, Magma Crawlers and the Magma Cube King! Fire Dragons do 2x damage. Scores are worth 2.5x.", theme: "magma",
+    magma: { name: "The Magma Fields", acornDropChance: 0.05, about: "Cracked magma ground with flames bursting out. Fire-Proof Bots, Magma Crawlers and the Magma Cube King! Fire Dragons do 1.5x damage. Scores are worth 2.5x.", theme: "magma",
               robotHealth: 1.1,
               scoreTimes: 2.5,
-              towerBoosts: { fire: { damageTimes: 2 } },
+              towerBoosts: { fire: { damageTimes: 1.5 } },
               path: [[0, 2], [16, 2], [16, 6], [3, 6], [3, 10], [19, 10]],
               // Trees are magma rocks, mushrooms are flame vents, tall grass is obsidian rocks.
               trees:     [[1, 4], [8, 4], [12, 8], [18, 4], [7, 0], [14, 11]],
@@ -473,10 +473,10 @@ const SETTINGS = {
                 [["magmaking", 3, 6], [["fireproof", "crawler", "obsidian", "emberbat", "magmacube"], 30, 0.45]],   // 23: the big finish
               ] },
     volcano: { name: "Inside the Volcano", acornDropChance: 0.07,   // 7% Golden Acorn chance per robot (after wave 5)
-              about: "Deep inside the mountain, where lava bubbles up through the road. Every lava robot, and the Volcano Heart heals on the lava! Fire Dragons do 2x damage. Scores are worth 3x.", theme: "volcano",
+              about: "Deep inside the mountain, where lava bubbles up through the road. Every lava robot, and the Volcano Heart heals on the lava! Fire Dragons do 1.5x damage. Scores are worth 3x.", theme: "volcano",
               robotHealth: 1.35,
               scoreTimes: 3,
-              towerBoosts: { fire: { damageTimes: 2 } },
+              towerBoosts: { fire: { damageTimes: 1.5 } },
               path: [[0, 5], [4, 5], [4, 8], [10, 8], [10, 3], [15, 3], [15, 6], [19, 6]],
               lava: [[5, 8], [8, 8], [10, 5], [13, 3], [15, 5]],   // road squares of glowing lava (the Volcano Heart heals on these)
               // Trees are stalagmites, mushrooms are flame vents, tall grass is obsidian rocks.
