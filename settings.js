@@ -497,18 +497,18 @@ const SETTINGS = {
                 [[["fireproof", "diver", "crawler", "obsidian"], 16, 0.7]],             // 9
                 [["magmaking", 1, 0], ["emberbat", 10, 0.35], ["fireproof", 6, 1.0]],   // 10
                 [[["obsidian", "obsidian", "diver"], 16, 0.65]],                        // 11
-                [["volcanoheart", 1, 0], [["crawler", "emberbat"], 12, 0.6]],           // 12: the Volcano Heart
+                [["pillartitan", 1, 0], [["crawler", "emberbat"], 12, 0.6]],            // 12
                 [[["fireproof", "magmacube", "diver"], 16, 0.7]],                       // 13
                 [["pillartitan", 2, 6], ["emberbat", 14, 0.3]],                         // 14
                 [[["crawler", "obsidian", "fireproof", "emberbat"], 22, 0.5]],          // 15
                 [["magmaking", 2, 6], [["diver", "obsidian"], 14, 0.6]],                // 16
                 [["emberbat", 22, 0.25], [["fireproof", "crawler"], 14, 0.6]],          // 17
-                [["volcanoheart", 1, 0], ["pillartitan", 1, 0], [["obsidian", "diver"], 14, 0.6]],   // 18
+                [["magmaking", 1, 0], ["pillartitan", 1, 0], [["obsidian", "diver"], 14, 0.6]],   // 18
                 [[["fireproof", "obsidian", "diver", "crawler", "magmacube"], 26, 0.45]],   // 19
                 [["magmaking", 1, 0], ["pillartitan", 1, 0], ["emberbat", 16, 0.3]],    // 20
                 [[["obsidian", "fireproof", "diver", "crawler", "emberbat"], 30, 0.4]], // 21
-                [["volcanoheart", 2, 8], [["obsidian", "magmacube", "fireproof"], 18, 0.5]],   // 22
-                [["volcanoheart", 2, 10], ["magmaking", 1, 0], [["obsidian", "diver", "crawler", "fireproof", "emberbat"], 26, 0.45]],   // 23: the final battle
+                [["magmaking", 1, 0], ["pillartitan", 1, 0], [["obsidian", "magmacube", "fireproof"], 18, 0.5]],   // 22
+                [["volcanoheart", 1, 0], ["magmaking", 1, 0], [["obsidian", "diver", "crawler", "fireproof", "emberbat"], 26, 0.45]],   // 23: the final battle (the Volcano Heart only appears here)
               ] },
   },
 };
