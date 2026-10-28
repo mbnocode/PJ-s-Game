@@ -526,7 +526,7 @@ const PAL = {
   p: "#9a5fd6", h: "#8fd45f", v: "#5a7a35", V: "#3a5524", q: "#a3b18a", u: "#4fd1b8", U: "#c8fff4", j: "#8a5a2a", P: "#5e3399", s: "#c9ced6", f: "#ffd36b", e: "#f4e2c0", m: "#a8743e", x: "#e8e8e8", z: "#d9b8ff",
 };
 const ART = {
-  hydra: ["..............k...k.............", ".............khkkkhk............", ".............klllllk............", "..k...k.....kllylyllk.....k...k.", ".khkkkhk....klllllllk....khkkkhk", ".klllllk....klllllllk....klllllk", "kllylyllk....kllrllk....kllylyll", "klllllllk.....krlrk.....klllllll", "klllllllk.....kllLk.....klllllll", ".kllrllk......kllLk......kllrllk", "..krlrLk......kllLk......klrLrk.", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLk......kllLk......kllLk..", "...kllLLk.....kllLk.....klllLk..", "....kllLk.....kllLk.....kllLk...", "....kllLLk....kllLk....klllLk...", ".....kllLk....kllLk....kllLk....", "......kllLk...kllLk...kllLk.....", "......kllLLkkkkllLkkkklllLk.....", ".......kllLLlllllLlllLllLk......", ".......kLllLlllllllllllLLk......", "......kLLlllllllllllllllLLk.....", "......kLlllllllllllllllllLk.....", ".....kLLLlllllllllllllllLLLk....", "......kLLLlllllllllllllLLLk.....", "......kLLhLLhllhllhllhLLLLk.....", ".......kLLLLLLLLLLLLLLLLLk......", "........kkLLLLLLLLLLLLLkk.......", "..........kkkkkkLkkkkkk........."],   // the Hydra (Serpent's Shop)
+  hydra: ["................................", "............k.......k...........", "...........kvk.kkk.kvk..........", "...........kvvkLLLkvvk..........", "............kLLlllLLk...........", "...........kLlyylyylLk..........", "........kk.kLlllllllLkkk........", ".....kkkvvk.kLwrrrwLkkvvkkk.....", "...kkLLLvk...kLLLLLk..kvLLLkk...", ".kkLLlllLLk..klllllk.kLLlllLLkk.", "kLLLlyyllLk..kllLllk.kLllyylLLLk", "lLlllllllLk..klllllk.kLlllllllLl", "kkrwrrrwLLk..kllLllk.kLLwrrrwrkk", "..klLLLLLk...klllllk..kLLLLLllk.", ".kllLllkk....kllLllk...kkkllLllk", ".kllLllk.....klllllk.....kllLllk", ".klllllk.....klllllk.....klllllk", "..klLlllk.k..kllLllk..k.klllLlk.", "..klllllkkvkkvlllllvkkvkklllllk.", "..klllLlllvvkvllLllvvkvlllLlllk.", "...klllLlllLLLlllllLLLlllLlllk..", "....klllllllLLlllllLLlllllllk...", ".....kllllllLLlllllLLllllllk....", ".....kLlllllLLLlllLLLlllllLk....", "....kLLLlllLLLLLLLLLLLlllLLLk...", "....kLLLLLLLLhhhhhhhLLLLLLLLk...", "....kLLLLLLhhhLhhhLhhhLLLLLLk...", ".....kLLLhhhLhhhLhhhLhhhLLLk....", "......kLLhhhhhhhhhhhhhhhLLk.....", ".......kLLhhhhhhhhhhhhhLLk......", "......kLLLLLkkkkkkkkkLLLLLk.....", "......kwkwkwk.......kwkwkwk....."],   // the Hydra (Serpent's Shop)
   // lava-level robots
   magmacube: ["................", "..kkkkkkkkkkkk..", "..kdddoddddddk..", ".kddoofdddoddDk.", ".kdddodddddodDk.", ".kdfffdddfffdDk.", ".kdfwfdddfwfdDk.", ".kdddddoddddoDk.", ".kddoddddoddddk.", ".kdddkkkkkkdddk.", ".kdddkEEEEkdoDk.", ".kddoddddddddDk.", ".kdDDDDDDDDDDDk.", "..kkkkkkkkkkkk..", "..kk.......kk...", "................"],
   magmasmall: ["................", "................", "................", "................", "................", "....kkkkkkkk....", "...kddoddoddk...", "...kdfwddfwdk...", "...kddddoddDk...", "...kdokkkkdDk...", "...kddEEEdDDk...", "...kDDDDDDDDk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
@@ -612,7 +612,7 @@ SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a
 SPR.air = makeSprite(ART.air, false, { m: "#a8743e", n: "#6e4220", N: "#4e2d14", e: "#f4e2c0", E: "#ead2a6", y: "#ffd34d", w: "#ffffff", o: "#ff9a2a", O: "#c96a12" });   // 32 x 32 owl
 SPR.plant = makeSprite(ART.plant, false, { n: "#7a4a24", N: "#4e2d14", m: "#9a6434", L: "#2f7d32", l: "#5fbf4a", f: "#ffe066" });   // 32 x 32 tree giant
 SPR.crab = makeSprite(ART.crab, false, { r: "#e8553a", R: "#a8321e", o: "#ff9a6a" });   // 32 x 32 crab
-SPR.hydra = makeSprite(ART.hydra, false, { l: "#3fbf9a", L: "#1f7a62", h: "#c8fff4", y: "#ffd34d", r: "#e0443a" });   // 32 x 32 Hydra
+SPR.hydra = makeSprite(ART.hydra, false, { L: "#163e36", l: "#2a6e5a", h: "#9cbc8c", v: "#e8dcc0", y: "#ff2a1a", r: "#5a0a0a", w: "#f4f0e0" });   // 32 x 32 three-headed Hydra with glowing red eyes
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 // Smooth (non-pixel) Pegasus drawn with canvas paths onto a 128 x 128 canvas, facing right.
 function makePegasusArt() {
@@ -3067,7 +3067,8 @@ function vinePoints(f, now) {
   return { pts, reach };
 }
 // The Hydra: one head stretches out on its long neck, bites, and pulls back.
-const HYDRA_HEADS = [[5, 8], [16, 6], [27, 8]];   // where the 3 heads are in its 32 x 32 picture
+const HYDRA_HEADS = [[4, 11], [16, 6], [28, 11]];   // where the 3 heads' mouths are in its 32 x 32 picture
+const HYDRA_EYES = [[5.5, 10.5], [14.5, 5.5], [17.5, 5.5], [25.5, 10.5]];   // its glowing eyes
 function drawBite(x, f) {
   const t = f.tower, sz = 32 * towerScale(t), cx = t.x * T + 16, by = t.y * T + 30, [ax, ay] = HYDRA_HEADS[f.head];
   const hx = cx + (ax - 16) * sz / 32, hy = by - sz + ay * sz / 32;
@@ -3076,18 +3077,19 @@ function drawBite(x, f) {
   const age = f.dur - f.t, k = age < 0.12 ? age / 0.12 : age < 0.18 ? 1 : Math.max(0, f.t / (f.dur - 0.18));
   const ex = hx + (f.tx - hx) * k, ey = hy + (f.ty - hy) * k, mx = (hx + ex) / 2, my = Math.min(hy, ey) - 10 * k;
   x.lineCap = "round";
-  for (const [col, w] of [["#16191d", 7], ["#1f7a62", 5], ["#3fbf9a", 2.5]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
+  for (const [col, w] of [["#16191d", 7], ["#163e36", 5], ["#2a6e5a", 2.5]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
   // the head with its jaws: open on the way out, snapped shut when it bites
   const ang = Math.atan2(ey - my, ex - mx), open = age < 0.12 ? 0.6 : 0.08;
   x.save(); x.translate(ex, ey); x.rotate(ang);
   for (const sgn of [-1, 1]) {
     x.save(); x.rotate(sgn * open);
     x.fillStyle = "#16191d"; x.fillRect(-2, sgn > 0 ? 0 : -4, 10, 4);
-    x.fillStyle = "#3fbf9a"; x.fillRect(-1, sgn > 0 ? 0.5 : -3.5, 8, 3);
+    x.fillStyle = "#2a6e5a"; x.fillRect(-1, sgn > 0 ? 0.5 : -3.5, 8, 3);
     x.fillStyle = "#ffffff"; for (let i = 1; i < 7; i += 2) x.fillRect(i, sgn > 0 ? 0 : -1, 1, 1);   // teeth
     x.restore();
   }
-  x.fillStyle = "#ffd34d"; x.fillRect(-1, -3, 2, 2);   // eye
+  { const gr = x.createRadialGradient(0, -2, 0, 0, -2, 5); gr.addColorStop(0, "rgba(255,40,20,0.9)"); gr.addColorStop(1, "rgba(255,0,0,0)"); x.fillStyle = gr; x.fillRect(-5, -7, 10, 10); }
+  x.fillStyle = "#ff2a1a"; x.fillRect(-1, -3, 2, 2);   // glowing red eye
   x.restore(); x.lineCap = "butt";
 }
 function drawVine(x, f, now) {
@@ -3585,6 +3587,14 @@ function draw() {
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (face < 0) { x.save(); x.translate(cx, 0); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
     else x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
+    if (t.kind === "hydra") {   // the Hydra's red eyes glow and throb
+      const pulse = 0.55 + 0.45 * Math.sin(G.time * 4 + t.x * 1.7), k = s2 / 32;
+      for (const [ex, ey] of HYDRA_EYES) {
+        const gx = cx + (ex - 16) * k, gy = by - s2 - rc + ey * k, gr = x.createRadialGradient(gx, gy, 0, gx, gy, 4.5 * k + pulse * 1.5);
+        gr.addColorStop(0, `rgba(255,40,20,${0.55 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,0,0,0)");
+        x.fillStyle = gr; x.fillRect(gx - 8, gy - 8, 16, 16);
+      }
+    }
     x.imageSmoothingEnabled = false;
 
     if (t.stunT > 0) {   // swirling sand: this tower can't attack right now
