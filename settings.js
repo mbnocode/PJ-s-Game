@@ -467,7 +467,8 @@ const SETTINGS = {
                 [["magmaking", 1, 0], ["emberbat", 14, 0.3], [["magmacube", "fireproof"], 12, 0.7]],   // 22
                 [["magmaking", 3, 6], [["fireproof", "crawler", "obsidian", "emberbat", "magmacube"], 30, 0.45]],   // 23: the big finish
               ] },
-    volcano: { name: "Inside the Volcano", acornDropChance: 0.05, about: "Deep inside the mountain, where lava bubbles up through the road. Every lava robot, and the Volcano Heart heals on the lava! Fire Dragons do 2x damage. Scores are worth 3x.", theme: "volcano",
+    volcano: { name: "Inside the Volcano", acornDropChance: 0.07,   // 7% Golden Acorn chance per robot (after wave 5)
+              about: "Deep inside the mountain, where lava bubbles up through the road. Every lava robot, and the Volcano Heart heals on the lava! Fire Dragons do 2x damage. Scores are worth 3x.", theme: "volcano",
               robotHealth: 1.35,
               scoreTimes: 3,
               towerBoosts: { fire: { damageTimes: 2 } },
