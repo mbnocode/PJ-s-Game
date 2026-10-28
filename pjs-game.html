@@ -856,31 +856,32 @@ function drawFactoryFloor(x, px, kind) {
   }
 }
 // The robots' factory: 2 x 2 squares, drawn at 32 x 32 pixels. doorRow 1 = door in the bottom half.
-// A makeshift factory the robots built like a castle out of scrap: patched rusty metal towers with battlements, a tattered flag,
-// plank patches, snow on top, and a portcullis gate on the right where the robots march out.
+// The robots' second factory on the Frozen Tundra, built like a castle: neat stone-brick towers with battlements,
+// a flag, glowing windows, snow on top, and a portcullis gate on the right where the robots march out.
 function makeMakeshiftFactory(doorRow) {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d");
   const r = (col, i, j, w, h) => { x.fillStyle = col; x.fillRect(i, j, w, h); };
-  const metal = (i, j, w, h, col) => { r("#16191d", i - 1, j - 1, w + 2, h + 2); r(col, i, j, w, h); r("rgba(255,255,255,0.14)", i, j, w, 1); for (let k = i + 1; k < i + w; k += 2) r("rgba(0,0,0,0.18)", k, j + 1, 1, h - 1); };
-  const battlements = (i, j, w) => { for (let k = 0; k < w; k += 3) { r("#16191d", i + k - 1, j - 3, 3, 4); r("#7b828c", i + k, j - 2, 1, 2); r("#ffffff", i + k, j - 3, 1, 1); } };
-  // a tattered flag on the left tower
-  r("#16191d", 5, 0, 1, 9); r("#e0443a", 6, 1, 5, 3); r("#9e2a22", 6, 3, 4, 1); r("#e0443a", 10, 2, 1, 1); r("#16191d", 8, 2, 1, 1);
-  // left tower (rusty)
-  metal(2, 9, 8, 22, "#8a4a2a"); battlements(2, 9, 9);
-  r("#ffb347", 5, 14, 2, 3); r("#16191d", 4, 13, 4, 1);   // an arrow-slit window glowing orange
-  r("#c9a25a", 3, 22, 6, 1); r("#a87a3a", 5, 23, 1, 3);   // a plank patch
-  // middle wall (gray, patched)
-  metal(11, 15, 10, 16, "#6e7682"); battlements(11, 15, 10);
-  r("#a85a24", 13, 19, 4, 4); r("rgba(0,0,0,0.25)", 13, 22, 4, 1);   // a rusty patch
-  for (const [i, j] of [[12, 17], [19, 17], [12, 27], [19, 27], [16, 25]]) r("#2b2f35", i, j, 1, 1);   // bolts
-  // right gatehouse with the portcullis (the robots come out here)
-  metal(22, 11, 9, 20, "#7a4a2a"); battlements(22, 11, 9);
+  const stone = (i, j, w, h) => {   // a block of neat stone bricks, lit on the left, shaded on the right
+    r("#16191d", i - 1, j - 1, w + 2, h + 2); r("#8a929e", i, j, w, h);
+    for (let y = j; y < j + h; y++) for (let k = i; k < i + w; k++) {
+      const row = (y - j) >> 1, mortar = (y - j) % 2 === 1 || ((k - i) + (row % 2) * 2) % 4 === 3;
+      if (mortar) r("#5a616b", k, y, 1, 1); else if (k === i) r("#a9b1bc", k, y, 1, 1); else if (k === i + w - 1) r("#6e7682", k, y, 1, 1);
+    }
+  };
+  const battlements = (i, j, w) => { for (let k = 0; k < w; k += 3) { r("#16191d", i + k - 1, j - 3, 3, 4); r("#8a929e", i + k, j - 2, 1, 2); r("#ffffff", i + k, j - 3, 1, 1); } };
+  // a flag on the left tower
+  r("#16191d", 5, 0, 1, 9); r("#16191d", 6, 0, 6, 5); r("#2f6fc4", 6, 1, 5, 3); r("#ffd34d", 8, 2, 1, 1);
+  stone(2, 9, 8, 22); battlements(2, 9, 9);
+  r("#16191d", 4, 13, 4, 5); r("#ffb347", 5, 14, 2, 3); r("#ffd36b", 5, 14, 1, 1);   // a glowing arch window
+  stone(11, 15, 10, 16); battlements(11, 15, 10);
+  r("#16191d", 14, 20, 4, 4); r("#ffb347", 15, 21, 2, 2);   // another window
+  stone(22, 11, 9, 20); battlements(22, 11, 9);
+  // the portcullis gate where the robots come out
   const dy = doorRow === 1 ? 19 : 14;
   r("#16191d", 22, dy, 10, 31 - dy); r("#0c0e10", 23, dy + 1, 9, 30 - dy);
-  for (let i = 24; i < 32; i += 2) r("#5a616b", i, dy + 1, 1, 30 - dy);   // portcullis bars
-  for (let j = dy + 3; j < 31; j += 3) r("#5a616b", 23, j, 9, 1);
+  for (let i = 24; i < 32; i += 2) r("#7b828c", i, dy + 1, 1, 30 - dy);
+  for (let j = dy + 3; j < 31; j += 3) r("#7b828c", 23, j, 9, 1);
   r("#e0443a", 27, dy + 3, 2, 1);   // a red robot eye peeking through
-  r("#f2c230", 22, dy - 1, 10, 1); for (let i = 22; i < 32; i += 2) r("#16191d", i, dy - 1, 1, 1);   // hazard stripe over the gate
   r("#16191d", 0, 31, 32, 1); r("#e6f2fb", 0, 30, 3, 1); r("#e6f2fb", 18, 30, 3, 1);   // snow on the ground
   return c;
 }
