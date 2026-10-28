@@ -212,7 +212,7 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "The Frozen Tundra", look: "tundra", about: "Deep snow, snowy pines and a frozen lake. Robots slide on the ice!" },
+    { name: "The Frozen Tundra", look: "tundra", about: "Deep snow, snowy pines and a frozen lake. Robots slide on the ice, and they've built a second, makeshift factory!" },
     { name: "The Glacier Caves", look: "glacier", about: "Tunnels of glowing blue glacier ice, with icicles hanging overhead." },
     { name: "Blizzard Peak", look: "blizzard", about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff!" },
     { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },

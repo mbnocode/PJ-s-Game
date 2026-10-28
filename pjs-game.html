@@ -856,6 +856,35 @@ function drawFactoryFloor(x, px, kind) {
   }
 }
 // The robots' factory: 2 x 2 squares, drawn at 32 x 32 pixels. doorRow 1 = door in the bottom half.
+// A makeshift factory the robots threw together from scrap: patched rusty sheets, a tarp roof, a crooked pipe chimney and wooden planks.
+function makeMakeshiftFactory(doorRow) {
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d");
+  const r = (col, i, j, w, h) => { x.fillStyle = col; x.fillRect(i, j, w, h); };
+  // a crooked stovepipe chimney with smoke
+  r("#16191d", 5, 1, 4, 13); r("#7b828c", 6, 2, 2, 12); r("#16191d", 4, 1, 6, 2); r("#5a616b", 5, 1, 4, 1);
+  r("#16191d", 7, 0, 5, 2); r("#7b828c", 8, 0, 3, 1);   // it bends over at the top
+  r("rgba(200,205,215,0.7)", 12, 0, 3, 2); r("rgba(200,205,215,0.45)", 15, 0, 2, 1);
+  // a droopy blue tarp roof, tied down at the corners
+  r("#16191d", 1, 11, 30, 4);
+  for (let i = 2; i < 30; i++) r(i % 7 < 3 ? "#3d6fa8" : "#4f86c4", i, 12 + (i > 8 && i < 22 ? 1 : 0), 1, 2);
+  r("#c9a25a", 2, 15, 1, 2); r("#c9a25a", 29, 15, 1, 2);   // rope ties
+  // walls: mismatched sheets of rusty and gray metal, patched together
+  r("#16191d", 1, 15, 30, 17);
+  const sheets = [["#8a4a2a", 2, 16, 7, 8], ["#6e7682", 9, 16, 6, 6], ["#a85a24", 15, 16, 5, 9], ["#5a616b", 2, 24, 9, 7], ["#7a4a2a", 11, 22, 9, 9]];
+  for (const [col, i, j, w, h] of sheets) { r(col, i, j, w, h); r("rgba(255,255,255,0.12)", i, j, w, 1); for (let k = i + 1; k < i + w; k += 2) r("rgba(0,0,0,0.18)", k, j + 1, 1, h - 1); }   // corrugated ridges
+  for (const [i, j] of [[3, 17], [8, 17], [10, 17], [14, 21], [16, 17], [3, 25], [10, 25], [12, 23], [19, 23]]) r("#2b2f35", i, j, 1, 1);   // rivets and bolts
+  r("#c9a25a", 4, 20, 4, 1); r("#c9a25a", 12, 27, 6, 1); r("#a87a3a", 13, 28, 1, 2);   // wooden plank patches
+  r("#ffb347", 10, 19, 3, 2); r("#16191d", 9, 18, 5, 1);   // a little glowing window
+  // the door on the right where robots come out, held up with hazard tape
+  const dy = doorRow === 1 ? 18 : 15;
+  r("#16191d", 21, dy, 11, 32 - dy - 1); r("#0c0e10", 23, dy + 3, 8, 32 - dy - 5);
+  for (let i = 0; i < 11; i++) r(i % 3 ? "#f2c230" : "#16191d", 21 + i, dy + (i % 2), 1, 2);   // crooked hazard tape
+  r("#e0443a", 26, dy + 5, 2, 1);
+  r("#16191d", 0, 31, 32, 1);
+  // snow piled on the tarp and the ground
+  r("#ffffff", 3, 11, 6, 1); r("#ffffff", 18, 11, 8, 1); r("#e6f2fb", 1, 30, 6, 1);
+  return c;
+}
 function makeFactory(doorRow) {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d");
   const r = (col, i, j, w, h) => { x.fillStyle = col; x.fillRect(i, j, w, h); };
@@ -1437,6 +1466,11 @@ function renderLevels() {
   });
 }
 /* little pixel pictures for the "Coming soon" levels: drawn small (80 x 48), blown up, then given a lava glow */
+// Extra roads for "Coming soon" pictures, in their 160 x 96 picture pixels (each square is 8 pixels; square centers are at 4, 12, 20, ...).
+// The Frozen Tundra has a second, makeshift factory whose road joins the main road a few squares from the start.
+const SOON_SPURS = { tundra: [[[-4, 68], [44, 68]]] };
+// Factories drawn on "Coming soon" pictures: [square across, square down of the top-left, door row (0 = top half, 1 = bottom half), makeshift?]
+const SOON_FACTORIES = { tundra: [[0, 3, 1, false], [0, 7, 1, true]] };
 const SOON_PATHS = {
   basalt:  [[0, 40], [10, 40], [10, 8], [30, 8], [30, 28], [50, 28], [50, 8], [70, 8], [70, 40], [80, 40]],
   magma:   [[0, 8], [66, 8], [66, 24], [14, 24], [14, 40], [80, 40]],
@@ -1457,7 +1491,8 @@ function drawSoonMini(cv, look) {
   // one square wide, like the real levels: the map is 20 squares across, so each square is 8 pixels here and the road runs through square centers
   const snap = (v) => v <= 0 ? -4 : v >= 160 ? 164 : Math.round((v - 4) / 8) * 8 + 4;
   const P = SOON_PATHS[look].map(([a, b]) => [snap(a * 2), snap(b * 2)]), HW = 4;
-  const segD = (i, j) => { let best = 1e9; i += 0.5; j += 0.5; for (let k = 0; k < P.length - 1; k++) { const [a, b] = P[k], [c, d] = P[k + 1];
+  const LINES = [P, ...(SOON_SPURS[look] || [])];   // the main road plus any extra roads
+  const segD = (i, j) => { let best = 1e9; i += 0.5; j += 0.5; for (const L of LINES) for (let k = 0; k < L.length - 1; k++) { const [a, b] = L[k], [c, d] = L[k + 1];
     const ci = Math.max(Math.min(a, c), Math.min(Math.max(a, c), i)), cj = Math.max(Math.min(b, d), Math.min(Math.max(b, d), j));
     best = Math.min(best, Math.max(Math.abs(i - ci), Math.abs(j - cj))); } return best; };
   const bite = (i, j) => (hsh(i >> 1, j >> 1) < 0.3 ? 1 : 0);   // crumbled edge
@@ -1697,6 +1732,9 @@ function drawSoonMini(cv, look) {
   ({ magma: [[30, 40], [100, 12], [150, 70], [62, 88]], basalt: [[80, 26], [122, 60], [44, 85]], volcano: [[30, 56], [90, 54], [130, 56], [12, 40]], fortress: [[44, 90], [118, 90], [150, 58]], tundra: [], glacier: [], blizzard: [] })[look].forEach(([a, b]) => { for (let k = 0; k < 9; k++) { x.fillStyle = `rgba(120,110,110,${0.35 - k * 0.035})`; x.fillRect(a + Math.round(Math.sin(k / 1.6) * 2), b - k * 1.5, 2, 2); } });
   if (look === "volcano") for (let n = 0; n < 40; n++) { const i = R() * W | 0, j = 12 + R() * 44 | 0; if (!road(i, j)) { x.fillStyle = R() < 0.5 ? "#ffc94d" : "#ff7a1a"; x.fillRect(i, j, 1, 1); hot.push([i, j, 0.5]); } }   // floating embers
   const c = cv.getContext("2d"), S = cv.width / W; c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
+  for (const [fx, fy, door, scrap] of SOON_FACTORIES[look] || []) {   // the robots' factories (2 x 2 squares)
+    const sq = 8 * S; c.drawImage(scrap ? makeMakeshiftFactory(door) : makeFactory(door), fx * sq, fy * sq, sq * 2, sq * 2);
+  }
   c.globalCompositeOperation = "lighter";
   for (let n = 0; n < hot.length; n += 4) { const [i, j, a] = hot[n], gx = (i + 0.5) * S, gy = (j + 0.5) * S, r = S * 6;
     const g = c.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, frozen ? `rgba(120,220,255,${0.12 * a})` : `rgba(255,110,30,${0.06 * a})`); g.addColorStop(1, frozen ? "rgba(120,220,255,0)" : "rgba(255,80,20,0)"); c.fillStyle = g; c.fillRect(gx - r, gy - r, r * 2, r * 2); }
