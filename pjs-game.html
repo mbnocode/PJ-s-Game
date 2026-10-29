@@ -214,6 +214,11 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .nextwave .nf .n { font-family: var(--body); font-weight: 700; font-size: 13px; }
 .nextwave .nf .c { font-family: var(--body); font-size: 12px; color: #c9ced6; }
 .nextwave .nf.boss .n { color: #ff8a7a; }
+.nextwave.side { position: relative; left: auto; bottom: auto; transform: none; width: 82px; padding: 18px 4px 8px; }
+.nextwave.side .t { font-size: 11px; line-height: 1.2; margin-bottom: 4px; }
+.nextwave.side .foes { flex-direction: column; gap: 6px; }
+.nextwave.side .nf { min-width: 0; }
+.nextwave.side .nf .n { font-size: 11px; text-align: center; line-height: 1.1; }
 .nextwave .x { position: absolute; top: 2px; right: 4px; background: none; border: 0; color: #c9ced6; font-size: 16px; padding: 2px 6px; box-shadow: none; }
 @media (max-width: 760px) { .nextwave { bottom: auto; top: 4px; padding: 6px 8px; } .nextwave .nf { min-width: 52px; } .nextwave .nf canvas { width: 30px; height: 30px; } .nextwave .nf .n { font-size: 11px; } }
 .banner .who { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #8a4a12; display: block; }
@@ -3165,6 +3170,10 @@ function showNextWave() {
   box.innerHTML = `<button class="x" id="nw-x" aria-label="Close">×</button><div class="t">Coming next · Wave ${G.wave + 1}</div><div class="foes">${top.map((k) =>
     `<div class="nf${heavy(k) ? " boss" : ""}"><span class="pic" data-k="${k}"></span><span class="n">${SETTINGS.robots[k].name}</span><span class="c">× ${count[k]}</span></div>`).join("")}</div>`;
   box.querySelectorAll(".pic").forEach((el) => el.replaceWith(spriteCanvas(el.dataset.k, 32)));
+  // on a computer it sits under the Freeze button beside the board; on a phone it floats above the board
+  const side = window.innerWidth > 760;
+  box.classList.toggle("side", side);
+  const home = side ? $("abilities") : $("stage"); if (box.parentNode !== home) home.appendChild(box);
   box.hidden = false;
   $("nw-x").onclick = () => { box.hidden = true; };
 }
