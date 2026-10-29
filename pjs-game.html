@@ -2702,7 +2702,7 @@ function renderTowersInfo() {
     if (k === "air") sp.push("At Upgrade 3: hovers on a swirling wind platform");
     if (k === "fire") sp.push("At Upgrade 3: takes off and flies");
     const ups = (t.upgradeChoices || []).map((pair, i) => `<span><b>Upgrade ${i + 1}:</b> ${pair.map((c) => c.name).join(" or ")}</span>`).join("");
-    d.innerHTML = `<div class="top"><span class="pic"></span><div><div class="k">${t.name}</div><div class="s">${TOWER_INFO[k] || t.about}</div></div></div>
+    d.innerHTML = `<div class="top"><span class="pic"></span><div><div class="k">${t.name}</div><div class="s">${t.serpentUnlock ? "Sold at a secret shop." : TOWER_INFO[k] || t.about}</div></div></div>
       ${stats.map(([label, f, col, unit]) => { const v = f(k), max = Math.max(...TOWER_ORDER.map(f));
         return `<div class="stat"><span>${label}</span><span class="bar"><i style="width:${v ? Math.max(6, (v / max) * 100) : 0}%;background:${col}"></i></span><b>${v || "—"}${v && unit === " leaves" ? "" : ""}</b></div>`; }).join("")}
       ${sp.length ? `<div class="power">${sp.join("<br>")}</div>` : ""}
