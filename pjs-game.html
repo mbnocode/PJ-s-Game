@@ -2680,7 +2680,7 @@ function renderTowersInfo() {
     d.className = "foe" + (t.superTower ? " boss" : "");
     if (locked) {
       d.innerHTML = t.serpentUnlock
-        ? `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Tower</div><div class="s">Somebody hiding on the save slot screen sells this one for Golden Acorns…</div></div></div>`
+        ? `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Tower</div><div class="s">Sold at a secret shop.</div></div></div>`
         : `<div class="top"><span class="pic"></span><div><span class="new">Locked</span><div class="k">Mystery Super Tower</div><div class="s">Unlock it on the Upgrades page with Golden Acorns to find out what it is!</div></div></div>`;
       const c = document.createElement("canvas"); c.width = c.height = 32; const cx = c.getContext("2d"); cx.fillStyle = "#16191d"; cx.fillRect(0, 0, 32, 32); cx.fillStyle = "#ffd34d"; cx.font = "bold 22px sans-serif"; cx.textAlign = "center"; cx.fillText("?", 16, 24);
       d.querySelector(".pic").replaceWith(c); box.appendChild(d); continue;
