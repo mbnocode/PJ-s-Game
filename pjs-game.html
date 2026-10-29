@@ -104,6 +104,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .dadcheck .box { max-width: 440px; background: var(--panel); border: 3px solid var(--gold); border-radius: 10px; padding: 22px; text-align: center; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
 .dadcheck .dad-icon { font-size: 44px; line-height: 1; }
 .dadcheck .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+#trophy { width: 128px; height: 128px; image-rendering: pixelated; }
+.soon-big { font-family: var(--display); font-size: 28px; color: var(--gold); }
 #s-slots #b-serpent { position: fixed; z-index: 2; background: transparent; border: 0; box-shadow: none; padding: 0; min-height: 0; cursor: pointer; border-radius: 10px; }
 #s-slots #b-serpent:focus-visible { outline: 3px solid var(--gold); }
 #serp-portrait { width: min(384px, 90vw); image-rendering: pixelated; }
@@ -382,7 +384,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
+    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
     <button class="link" id="b-levels-back">Back to save slots</button>
   </section>
 
@@ -447,6 +449,15 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       </div>
     </div>
   </div>
+
+  <!-- Achievements (coming soon) -->
+  <section class="screen menu" id="s-achievements" hidden>
+    <h2>Achievements</h2>
+    <canvas id="trophy" width="32" height="32" aria-hidden="true"></canvas>
+    <p class="soon-big">Coming soon!</p>
+    <p class="muted">Badges for beating levels, defeating bosses, and pulling off amazing wins are on their way.</p>
+    <button class="link" id="b-achievements-back">Back to levels</button>
+  </section>
 
   <!-- The Serpent's Shop: a secret shop reached by tapping the serpent on the save slot screen -->
   <section class="screen menu" id="s-serpent" hidden>
@@ -1246,7 +1257,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-achievements", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -2660,6 +2671,14 @@ function renderTowersInfo() {
   }
 }
 $("b-towers").onclick = () => { Sound.init(); renderTowersInfo(); show("s-towers"); };
+// Achievements page (coming soon): a golden trophy picture
+$("b-achievements").onclick = () => {
+  const c = $("trophy").getContext("2d"); c.imageSmoothingEnabled = false; c.clearRect(0, 0, 32, 32);
+  const rows = ["................................", "................................", "......kkkkkkkkkkkkkkkkkkkk......", "...kkkkyyyyyyyyyyyyyyyyyykkkk...", "..kyyk.kyfyyyyyyyyyyyyyyk.kyyk..", "..kyk..kyfyyyyyyyyyyyyyYk..kyk..", "..kyk..kyfyyyyyyyyyyyyyYk..kyk..", "..kyk..kyfyyyyyyyyyyyyyYk..kyk..", "..kyyk.kyfyyyyyyyyyyyyyYk.kyyk..", "...kyykkyyyyyyyyyyyyyyyYkkyyk...", "....kyyyyyyyyyyyyyyyyyyYyyyk....", ".....kkkyyyyyyyyyyyyyyYYkkk.....", "........kyyyyyyyyyyyyYYk........", ".........kyyyyyyyyyyYYk.........", "..........kkyyyyyyYYkk..........", "............kkyyYYkk............", "..............kYYk..............", "..............kyYk..............", "..............kyYk..............", ".............kkyYkk.............", "...........kkyyyyYYkk...........", "..........kyyyyyyyyYYk..........", "..........kkkkkkkkkkkk..........", ".........knnnnnnnnnnnnk.........", ".........knNNNNNNNNNNnk.........", ".........knNNNNNNNNNNnk.........", ".........knnnnnnnnnnnnk.........", ".........kkkkkkkkkkkkkk.........", "................................", "................................", "................................", "................................"];
+  c.drawImage(makeSprite(rows, false, { y: "#ffd34d", Y: "#c98e12", f: "#fff3b0", n: "#7a4a24", N: "#4e2d14" }), 0, 0);
+  show("s-achievements");
+};
+$("b-achievements-back").onclick = () => { renderLevels(); show("s-levels"); };
 $("b-towers-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"); };
