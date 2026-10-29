@@ -172,6 +172,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .perk.mystery .coll .ci b { font-weight: 400; opacity: .7; text-align: right; }
 .perk.mystery .coll .ci.got { color: #f4efe0; }
 .perk.mystery .coll .ci.got b { color: var(--gold); opacity: 1; }
+.bnote { display: block; font-family: var(--body); font-size: 13px; color: var(--muted); text-transform: none; letter-spacing: 0; margin-top: 2px; }
 .achtoast { position: fixed; z-index: 80; top: 14px; left: 50%; transform: translateX(-50%); background: #23301e; border: 3px solid var(--gold); border-radius: 8px; padding: 10px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.4); animation: achpop .35s ease-out; }
 .achtoast canvas { width: 40px; height: 40px; image-rendering: pixelated; }
 .achtoast .t { font-family: var(--display); font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
@@ -2111,6 +2112,18 @@ function resultText(p) {
   if (p.status === "lost") return `Lost on wave ${p.wave}`;
   return `Playing wave ${p.wave}`;
 }
+// A level's Top 10, keeping only each player's best few games (by nickname), so one player can't fill the whole board.
+const BOARD_PER_PLAYER = 5;
+async function levelTop(level, fields) {
+  const rows = await sb(`players?level=eq.${level}&status=in.(won,lost)&select=${fields}&order=score.desc&limit=1000`);
+  const seen = {}, out = [];
+  for (const p of rows) {
+    const who = String(p.nickname || "").trim().toLowerCase();
+    if ((seen[who] = (seen[who] || 0) + 1) > BOARD_PER_PLAYER) continue;
+    out.push(p); if (out.length >= 10) break;
+  }
+  return out;
+}
 async function renderBoards(code) {
   const tabs = $("board-tabs"); tabs.innerHTML = "";
   LEVEL_ORDER.forEach((L) => {
@@ -2123,8 +2136,8 @@ async function renderBoards(code) {
   try {
     const rows = code
       ? await sb(`players?challenge_code=eq.${encodeURIComponent(code)}&select=nickname,difficulty,score,stars,wave,status&order=score.desc&limit=50`)
-      : await sb(`players?level=eq.${boardLevel}&status=in.(won,lost)&select=nickname,difficulty,score,stars,wave,status&order=score.desc&limit=10`);
-    const title = code ? `Challenge ${esc(code)}` : `Top 10 · ${SETTINGS.levels[boardLevel].name}`;
+      : await levelTop(boardLevel, "nickname,difficulty,score,stars,wave,status");
+    const title = code ? `Challenge ${esc(code)}` : `Top 10 · ${SETTINGS.levels[boardLevel].name}<small class="bnote">Only each player's best ${BOARD_PER_PLAYER} games count.</small>`;
     list.innerHTML = `<div class="bt">${title}</div>` + (rows.length
       ? `<table><thead><tr><th>#</th><th>Player</th><th>Score</th><th>Difficulty</th><th>Result</th></tr></thead><tbody>${rows.map((p, i) =>
           `<tr><td class="r">${i + 1}</td><td class="nm">${esc(p.nickname)}</td><td class="sc">${p.score.toLocaleString()}</td><td>${esc((SETTINGS.difficulties[p.difficulty] || {}).name || p.difficulty)}</td><td>${resultText(p)}</td></tr>`).join("")}</tbody></table>`
@@ -4692,7 +4705,7 @@ async function askForBoard(g, won, score, stars) {
   if (!won) {
     box.innerHTML = `<p class="muted">Checking the leaderboard…</p>`;
     let top = null;
-    try { top = await sb(`players?level=eq.${g.level}&status=in.(won,lost)&select=score&order=score.desc&limit=10`); } catch (e) {}
+    try { top = await levelTop(g.level, "nickname,score"); } catch (e) {}
     if (!$("o-ask")) return;
     if (!top) { box.innerHTML = `<p class="muted">Couldn't reach the leaderboard.</p>`; return; }
     if (top.length >= 10 && score <= top[9].score) { box.innerHTML = `<p class="muted">Get into the Top 10 to put your score on the leaderboard.</p>`; return; }
