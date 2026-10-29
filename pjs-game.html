@@ -1391,13 +1391,13 @@ function renderSerpentShop() {
       shop.appendChild(d); return;
     }
     const [key, it] = entry;
-    const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0;
+    const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0, holding = it.oneAtATime && own > 0;
     const d = document.createElement("div"); d.className = "perk" + (done ? " maxed" : "");
     d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
-      ${done ? '<span class="owned">Unlocked!</span>' : `${own ? `<span class="owned">You have ${own}</span>` : ""}
+      ${done ? '<span class="owned">Unlocked!</span>' : holding ? '<span class="owned">You have one! Use it on the Mystery Box (Upgrades page).</span>' : `${own ? `<span class="owned">You have ${own}</span>` : ""}
       <button class="go" id="serp-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
     if (it.picture && SPR[it.picture]) { const pc = spriteCanvas(it.picture, 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc); }
-    if (done) { shop.appendChild(d); return; }
+    if (done || holding) { shop.appendChild(d); return; }
     d.querySelector("button").onclick = () => {
       if (!s || (s.acorns || 0) < it.cost) return;
       s.acorns -= it.cost; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + 1;
@@ -2567,7 +2567,7 @@ function renderPerks() {
   });
   // The Mystery Box: it only opens with the Mystery Key from the Serpent's Shop.
   const mb = SETTINGS.mysteryBox; if (!mb) return;
-  const hasKey = !!(s.materials && s.materials.mysterykey), opened = !!s.boxOpened;
+  const hasKey = !!(s.materials && s.materials.mysterykey), opened = !!s.boxOpened && !hasKey;   // with a new key it's ready to open again
   const d = document.createElement("div"); d.className = "perk mystery" + (opened ? " maxed" : "");
   d.innerHTML = `<span class="pic"></span><span class="k">${mb.name}</span>
     <span class="s">${opened ? mb.openedAbout : hasKey ? "Your Mystery Key fits the lock… Open it!" : mb.about}</span>
@@ -2575,7 +2575,9 @@ function renderPerks() {
   const pc = spriteCanvas(opened ? "mysteryboxopen" : "mysterybox", 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc);
   box.appendChild(d);
   const ob = d.querySelector("button");
-  if (ob && hasKey) ob.onclick = () => { s.boxOpened = Date.now(); saveSlots(slots); Sound.play("upgrade"); renderPerks(); };
+  if (ob && hasKey) ob.onclick = () => {   // the key gets used up, so the Serpent's Shop sells another
+    s.materials.mysterykey -= 1; s.boxOpened = (s.boxOpened || 0) + 1; saveSlots(slots); Sound.play("upgrade"); renderPerks();
+  };
 }
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];

@@ -254,12 +254,13 @@ const SETTINGS = {
     // unlock: true = you buy it once and keep it. picture = which picture shows on the shelf. shelf = which shelf it sits on.
     // acornTimes: once you own it, every Golden Acorn that drops counts this many times.
     acorndoubler: { name: "Golden Acorn Doubler", cost: 150, unlock: true, shelf: 1, picture: "acorndoubler", acornTimes: 2, about: "Every Golden Acorn that drops counts twice: you get 2 instead of 1! Works on every level, for this save slot." },
-    mysterykey: { name: "Mystery Key", cost: 400, unlock: true, shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…" },
+    // oneAtATime: you can hold only one. Opening the Mystery Box uses it up, then you can buy another.
+    mysterykey: { name: "Mystery Key", cost: 400, oneAtATime: true, shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…" },
     hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head bites a different robot." },
   },
   // The Mystery Box on the Upgrades page. It needs the Mystery Key from the Serpent's Shop.
   mysteryBox: { name: "Mystery Box", about: "Locked tight. Only a Mystery Key can open it. Maybe someone hiding nearby sells one…",
-                openedAbout: "The box creaked open and light poured out… What's inside is coming soon!" },
+                openedAbout: "The box creaked open and light poured out… What's inside is coming soon! Buy another Mystery Key to open it again." },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
   // ---------------- PERMANENT UPGRADES ----------------
