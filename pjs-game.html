@@ -2716,17 +2716,42 @@ const ACHIEVEMENTS = [
   { id: "maxed", name: "Maxed Out", about: "Fully upgrade a tower.", pic: "fire" },
   { id: "untouchable", name: "Untouchable", about: "Win a level without losing any health.", pic: "air" },
   { id: "deer", name: "Oh Deer!", about: "Buy a Healer Deer.", pic: "healer" },
+  // grass-level achievements
+  { id: "bareminimum", name: "Bare Minimum", about: "Beat the Meadow using only 3 towers.", pic: "mushroom" },
+  { id: "leafsaver", name: "Leaf Saver", about: "Finish the Meadow with 300 or more leaves left over.", pic: "squirrel" },
+  { id: "oneofeach", name: "One of Each", about: "Place every tower you have unlocked in one game.", pic: "wizard" },
+  { id: "dragontamer", name: "Dragon Tamer", about: "Beat the Forest using only Fire Dragons.", pic: "fire_mid" },
+  { id: "bossbuster", name: "Boss Buster", about: "In the Forest, defeat a Boss before it gets halfway down the road.", pic: "tank" },
+  { id: "frogpond", name: "Frog Pond", about: "Beat the Swamp using only Water Frogs.", pic: "water_swamp" },
+  { id: "swampsurvivor", name: "Swamp Survivor", about: "Beat the Swamp on Hard (or Nightmare).", pic: "cattail", check: (s) => beat(s, "swamp", "hard") || beat(s, "swamp", "nightmare") },
+  { id: "cleansweep", name: "Clean Sweep", about: "Beat the Swamp on Nightmare without losing any health.", pic: "glowshroom" },
+  { id: "herd", name: "Herd of Deer", about: "Have 3 Healer Deer on the board at the same time.", pic: "healer" },
+  { id: "recycler", name: "Robot Recycler", about: "Destroy 1,000 robots on the grass levels.", pic: "clanker", goal: ["grassKills", 1000] },
+  { id: "acornhunter", name: "Acorn Hunter", about: "Collect 25 Golden Acorns on the grass levels.", pic: "acorndoubler", goal: ["grassAcorns", 25] },
+  { id: "leaftapper", name: "Leaf Tapper", about: "Tap 500 big maple leaves on the grass levels.", pic: "leaf", goal: ["grassTaps", 500] },
+  { id: "grassperfect", name: "Grass Perfect", about: "Beat all 3 grass levels without losing any health.", pic: "tallgrass", check: (s) => GRASS_LEVELS.every((L) => s.perfect && s.perfect[L]) },
 ];
+// Counts that build up over many games (kept in the save slot), for achievements like Robot Recycler
+function addStat(key, n) {
+  const s = slot(); if (!s || !GRASS_LEVELS.includes(G.level)) return;
+  s.stats = s.stats || {}; s.stats[key] = (s.stats[key] || 0) + n; G.slotDirty = true;
+  for (const a of ACHIEVEMENTS) if (a.goal && a.goal[0] === key && s.stats[key] >= a.goal[1]) earnAch(a.id);
+}
 const ACH_BOXES = 30;   // the page shows this many boxes; the extra ones are waiting for future achievements
 function hasAch(id) { const s = slot(); return !!(s && s.achievements && s.achievements[id]); }
 function earnAch(id) {
   const s = slot(); if (!s) return; s.achievements = s.achievements || {};
   if (s.achievements[id]) return;
   s.achievements[id] = Date.now(); saveSlots(slots);
+  earnAch.queue = earnAch.queue || []; earnAch.queue.push(id);
+  if (earnAch.queue.length === 1) showAchToast();
+}
+function showAchToast() {   // one pop-up at a time, so earning two at once shows both
+  const id = earnAch.queue[0]; if (!id) return;
   const a = ACHIEVEMENTS.find((x) => x.id === id), box = $("achtoast");
   box.innerHTML = `<span class="pic"></span><div><div class="t">Achievement unlocked!</div><div class="n">${a.name}</div></div>`;
   box.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32)); box.hidden = false; Sound.play("upgrade");
-  clearTimeout(earnAch.timer); earnAch.timer = setTimeout(() => { box.hidden = true; }, 3500);
+  clearTimeout(earnAch.timer); earnAch.timer = setTimeout(() => { box.hidden = true; earnAch.queue.shift(); if (earnAch.queue.length) setTimeout(showAchToast, 250); }, 3500);
 }
 function checkAchievements() { const s = slot(); if (!s) return; for (const a of ACHIEVEMENTS) if (a.check && a.check(s)) earnAch(a.id); }
 function renderAchievements() {
@@ -2741,7 +2766,7 @@ function renderAchievements() {
       d.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32));
     } else if (a) {
       d.className = "ach locked"; d.innerHTML = `<span class="q">?</span>`; d.title = a.about;
-      d.onclick = () => { grid.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel")); d.classList.add("sel"); const h = $("ach-hint"); h.textContent = "Hint: " + a.about; h.hidden = false; };
+      d.onclick = () => { grid.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel")); d.classList.add("sel"); const h = $("ach-hint"), st = (slot().stats || {}); h.textContent = "Hint: " + a.about + (a.goal ? ` (so far: ${(st[a.goal[0]] || 0).toLocaleString()} / ${a.goal[1].toLocaleString()})` : ""); h.hidden = false; };
     } else d.className = "ach";
     grid.appendChild(d);
   }
@@ -3120,6 +3145,9 @@ board.addEventListener("pointerdown", (e) => {
     G.leaves -= price;
     G.towers.push({ kind: G.pick, x: c.x, y: c.y, face: pathFacing(c.x, c.y), level: 0, cool: 0.2, spent: price, born: G.time, boosted: false });
     if (G.pick === "healer") earnAch("deer");
+    G.placedN = (G.placedN || 0) + 1; (G.placedKinds = G.placedKinds || {})[G.pick] = true;
+    if (G.towers.filter((o) => o.kind === "healer").length >= 3) earnAch("herd");
+    if (TOWER_ORDER.filter(towerUnlocked).every((k) => G.placedKinds[k])) earnAch("oneofeach");
     Sound.play("place"); burst(c.x * T + 16, c.y * T + 16, "#9be28a", 10);
     tutorialEvent("placed", G.pick); updateHud();
     if (G.leaves < price) { G.pick = null; updateShelf(); }
@@ -3329,13 +3357,15 @@ function kill(r) {
   }
   G.leaves += r.leaves; G.killPoints += r.points;
   { const s = slot(); if (s) { s.defeated = s.defeated || {}; s.defeated[r.type] = (s.defeated[r.type] || 0) + 1; G.slotDirty = true; } }
+  addStat("grassKills", 1);
+  if (isHeavy(r) && G.level === "forest" && r.d < (r.path || G.map).total / 2) earnAch("bossbuster");
   const p = rpos(r);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
   // Every Boss always drops a Golden Acorn (on any level, any wave).
   const bossDrop = isHeavy(r) && SETTINGS.bossDropsAcorn;
   if (bossDrop || (chance && Math.random() < chance)) {
-    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got;
+    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got; addStat("grassAcorns", got);
     floatText(p.x, p.y - 18, got > 1 ? `+${got} Golden Acorns!` : "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
     burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
@@ -3481,7 +3511,7 @@ function tickBonusLeaf(dt) {
 }
 function collectBonusLeaf() {
   const b = G.bonus, amt = b.amt || SETTINGS.bonusLeaf.leaves; G.bonus = null;
-  G.leaves += amt; updateHud();
+  G.leaves += amt; updateHud(); addStat("grassTaps", 1);
   const px = b.x * T + 16, py = b.y * T + 14;
   floatText(px, py - 6, "+" + amt, "#ffd34d");
   for (let i = 0; i < 4; i++) G.particles.push({ kind: "leaf", x: px + (Math.random() - 0.5) * 14, y: py, t: 0, life: 0.55 + Math.random() * 0.2, sx: px, sy: py });
@@ -4436,7 +4466,14 @@ function finish(won) {
       s.best[G.level][G.diffKey] = { stars: Math.max(stars, prev ? prev.stars : 0), score: Math.max(score, prev ? prev.score : 0) };
       best = !prev || score > prev.score;
     }
-    saveSlots(slots);
+    { const L = G.level, kinds = Object.keys(G.placedKinds || {});
+      if (!G.hurtBase && GRASS_LEVELS.includes(L)) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect
+      saveSlots(slots);
+      if (L === "meadow" && (G.placedN || 0) <= 3) earnAch("bareminimum");
+      if (L === "meadow" && G.leaves >= 300) earnAch("leafsaver");
+      if (L === "forest" && kinds.length && kinds.every((k) => k === "fire")) earnAch("dragontamer");
+      if (L === "swamp" && kinds.length && kinds.every((k) => k === "water")) earnAch("frogpond");
+      if (L === "swamp" && G.diffKey === "nightmare" && !G.hurtBase) earnAch("cleansweep"); }
     if (!G.hurtBase) earnAch("untouchable");
     checkAchievements();
   }
