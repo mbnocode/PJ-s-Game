@@ -201,6 +201,17 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   display: flex; gap: 12px; align-items: center; box-shadow: 0 5px 0 rgba(0,0,0,.4);
 }
 .banner p { flex: 1; font-size: 16px; }
+/* the "Coming next" card shown between waves */
+.nextwave { position: absolute; z-index: 5; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(14, 22, 18, 0.92); border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px 10px; color: #f4efe0; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.nextwave .t { font-family: var(--display); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 6px; }
+.nextwave .foes { display: flex; gap: 14px; justify-content: center; width: auto; }
+.nextwave .nf { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; }
+.nextwave .nf canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+.nextwave .nf .n { font-family: var(--body); font-weight: 700; font-size: 13px; }
+.nextwave .nf .c { font-family: var(--body); font-size: 12px; color: #c9ced6; }
+.nextwave .nf.boss .n { color: #ff8a7a; }
+.nextwave .x { position: absolute; top: 2px; right: 4px; background: none; border: 0; color: #c9ced6; font-size: 16px; padding: 2px 6px; box-shadow: none; }
+@media (max-width: 760px) { .nextwave { bottom: auto; top: 4px; padding: 6px 8px; } .nextwave .nf { min-width: 52px; } .nextwave .nf canvas { width: 30px; height: 30px; } .nextwave .nf .n { font-size: 11px; } }
 .banner .who { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #8a4a12; display: block; }
 .banner button { font-size: 15px; padding: 7px 12px; flex: none; }
 
@@ -526,6 +537,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="panel" id="tpanel" hidden></div>
       <div class="friends" id="friends" hidden></div>
       <div class="banner" id="banner" hidden><p id="banner-text"></p><button id="banner-ok">Got it</button></div>
+      <div class="nextwave" id="nextwave" hidden></div>
       <div class="overlay" id="overlay" hidden><div class="box" id="overlay-box"></div></div>
     </div>
     <div class="shelf" id="shelf"></div>
@@ -2395,6 +2407,7 @@ function startGame(L, d, tutorial, online) {
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
   tipQueue.length = 0;
+  setTimeout(() => { if (G && G.level === L && G.wave === 0) showNextWave(); }, 0);
   if (SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts hit harder and slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
   if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`The castle sends out EXTRA robots! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer extras. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
   if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
@@ -3044,7 +3057,7 @@ function levelWaves(L) { const lv = SETTINGS.levels[L] || {}; return (lv.waves |
 function startWave() {
   if (!G || G.waveActive || G.over || G.wave >= levelWaves(G.level).length) return;
   Sound.init();
-  G.wave++; G.waveActive = true; G.waveClock = 0; G.queue = [];
+  G.wave++; G.waveActive = true; G.waveClock = 0; G.queue = []; $("nextwave").hidden = true;
   let t = 0;
   for (const [type, count, gap, hp] of levelWaves(G.level)[G.wave - 1]) {
     for (let i = 0; i < count; i++) {
@@ -3128,6 +3141,20 @@ function spawn(q) {
     slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0,
   });
 }
+/* ---------- "Coming next": the 3 main robots in the next wave ---------- */
+function showNextWave() {
+  const box = $("nextwave"), waves = levelWaves(G.level);
+  if (!G || G.over || G.wave >= waves.length) { box.hidden = true; return; }
+  const count = {};
+  for (const [type, n] of waves[G.wave]) for (let i = 0; i < n; i++) { const t = Array.isArray(type) ? type[i % type.length] : type; count[t] = (count[t] || 0) + 1; }
+  const heavy = (k) => k === "boss" || !!(SETTINGS.robots[k] || {}).isBoss;
+  const top = Object.keys(count).sort((a, b) => (heavy(b) - heavy(a)) || (count[b] - count[a])).slice(0, 3);   // Bosses first, then the most common
+  box.innerHTML = `<button class="x" id="nw-x" aria-label="Close">×</button><div class="t">Coming next · Wave ${G.wave + 1}</div><div class="foes">${top.map((k) =>
+    `<div class="nf${heavy(k) ? " boss" : ""}"><span class="pic" data-k="${k}"></span><span class="n">${SETTINGS.robots[k].name}</span><span class="c">× ${count[k]}</span></div>`).join("")}</div>`;
+  box.querySelectorAll(".pic").forEach((el) => el.replaceWith(spriteCanvas(el.dataset.k, 32)));
+  box.hidden = false;
+  $("nw-x").onclick = () => { box.hidden = true; };
+}
 function endWave() {
   G.waveActive = false;
   G.towers.forEach((t) => { if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#5a5664", 12); } });   // basalt pillars crumble away
@@ -3152,7 +3179,7 @@ function endWave() {
   }
   floatText(320, 40, `Wave ${G.wave} cleared! +${bonus} leaves`, "#ffd34d", 2.2);
   if (G.tutorial) tutorialEvent("end" + G.wave);
-  if (G.wave >= levelWaves(G.level).length) finish(true); else sendProgress(true);
+  if (G.wave >= levelWaves(G.level).length) finish(true); else { sendProgress(true); showNextWave(); }
   updateHud();
 }
 
