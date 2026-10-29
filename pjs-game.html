@@ -118,7 +118,11 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ach { aspect-ratio: 1; border: 2px dashed #3a5244; border-radius: 8px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px; text-align: center; }
 .ach.locked { cursor: pointer; border-style: solid; border-color: #4a6252; }
 .ach.locked .q { font-family: var(--display); font-size: 28px; color: #4a6252; }
-.ach.locked.sel { border-color: var(--gold); }
+.ach.locked.sel { border-color: var(--gold); background: rgba(255, 211, 77, 0.06); }
+.ach.locked .d { display: none; font-family: var(--body); font-size: 11px; color: var(--gold); line-height: 1.25; }
+.ach.locked .d .so { display: block; margin-top: 4px; color: #c9ced6; }
+.ach.locked.sel .d { display: block; }   /* the task shows inside the box you tapped */
+.ach.locked.sel .q { font-size: 18px; }
 .ach.got { border: 3px solid var(--gold); background: linear-gradient(180deg, #2c3a22, #1e2a1c); box-shadow: 0 0 14px rgba(255, 211, 77, 0.25); }
 .ach.got canvas { width: 48px; height: 48px; image-rendering: pixelated; }
 .ach.got .n { font-family: var(--display); font-size: 13px; color: var(--gold); line-height: 1.15; }
@@ -131,6 +135,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   .ach.got .n { font-size: 18px; }
   .ach.got .d { font-size: 14px; }
   .ach.locked .q { font-size: 44px; }
+  .ach.locked .d { font-size: 14px; }
+  .ach.locked.sel .q { font-size: 26px; }
 }
 .achtoast { position: fixed; z-index: 60; top: 14px; left: 50%; transform: translateX(-50%); background: #23301e; border: 3px solid var(--gold); border-radius: 8px; padding: 10px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.4); animation: achpop .35s ease-out; }
 .achtoast canvas { width: 40px; height: 40px; image-rendering: pixelated; }
@@ -488,7 +494,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-achievements" hidden>
     <h2>Achievements</h2>
     <div class="ach-count" id="ach-count"></div>
-    <p class="muted">Earn achievements to fill the boxes. Tap an empty box for a hint. More are coming soon!</p>
+    <p class="muted">Earn achievements to fill the boxes. Tap a ? box to see what to do. More are coming soon!</p>
     <div class="ach-grid" id="ach-grid"></div>
     <p class="ach-hint" id="ach-hint" hidden></p>
     <button class="link" id="b-achievements-back">Back to levels</button>
@@ -2765,8 +2771,10 @@ function renderAchievements() {
       d.className = "ach got"; d.innerHTML = `<span class="pic"></span><span class="n">${a.name}</span><span class="d">${a.about}</span>`;
       d.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32));
     } else if (a) {
-      d.className = "ach locked"; d.innerHTML = `<span class="q">?</span>`; d.title = a.about;
-      d.onclick = () => { grid.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel")); d.classList.add("sel"); const h = $("ach-hint"), st = (slot().stats || {}); h.textContent = "Hint: " + a.about + (a.goal ? ` (so far: ${(st[a.goal[0]] || 0).toLocaleString()} / ${a.goal[1].toLocaleString()})` : ""); h.hidden = false; };
+      const st = (slot().stats || {});
+      d.className = "ach locked"; d.title = a.about;
+      d.innerHTML = `<span class="q">?</span><span class="d">${a.about}${a.goal ? `<span class="so">So far: ${(st[a.goal[0]] || 0).toLocaleString()} / ${a.goal[1].toLocaleString()}</span>` : ""}</span>`;
+      d.onclick = () => { const open = d.classList.contains("sel"); grid.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel")); if (!open) d.classList.add("sel"); };   // tap again to close
     } else d.className = "ach";
     grid.appendChild(d);
   }
