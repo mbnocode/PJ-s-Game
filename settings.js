@@ -212,7 +212,6 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "The Frozen Tundra", look: "tundra", about: "Deep snow, snowy pines and a frozen lake. Robots slide on the ice, and they've built a second, makeshift factory!" },
     { name: "The Glacier Caves", look: "glacier", about: "Tunnels of glowing blue glacier ice, with icicles hanging overhead." },
     { name: "Blizzard Peak", look: "blizzard", about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff!" },
     { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },
@@ -512,6 +511,49 @@ const SETTINGS = {
                 [[["obsidian", "fireproof", "diver", "crawler", "emberbat"], 30, 0.4]], // 21
                 [["magmaking", 1, 0], ["pillartitan", 1, 0], [["obsidian", "magmacube", "fireproof"], 18, 0.5]],   // 22
                 [["volcanoheart", 1, 0], ["magmaking", 1, 0], [["obsidian", "diver", "crawler", "fireproof", "emberbat"], 26, 0.45]],   // 23: the final battle (the Volcano Heart only appears here)
+              ] },
+
+    // ---------------- THE FROZEN TUNDRA ----------------
+    tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. Robots also march out of a castle: tap it to overgrow it with plants! Scores are worth 3.5x.", theme: "tundra",
+              robotHealth: 1.15,
+              scoreTimes: 3.5,
+              path: [[0, 4], [5, 4], [5, 9], [11, 9], [11, 2], [16, 2], [16, 7], [19, 7]],
+              // The robots' castle: a second factory whose road joins the main road (this road ends where it meets it).
+              extraPaths: [[[0, 8], [5, 8]]],
+              castle: {
+                every: 3,              // every 3rd robot in a wave comes out of the castle
+                overgrowCost: 150,     // leaves to overgrow the castle once
+                overgrowSteps: 4,      // overgrow it this many times to cover it completely
+                // each overgrow stops 1 out of every 4 castle robots; fully overgrown, the castle sends none
+              },
+              ice: [[6, 9], [8, 9], [10, 9], [11, 7], [11, 5]],   // icy road squares on the frozen lake: robots slide 1.4x faster
+              iceSpeed: 1.4,
+              lake: { x: 8.5, y: 8, w: 4.5, h: 3 },   // the frozen lake (center and size, in squares)
+              // Trees are snowy pines, mushrooms are snowy rocks, tall grass is ice crystals.
+              trees:     [[2, 1], [8, 1], [14, 5], [18, 10], [3, 11], [8, 5], [13, 10], [19, 1]],
+              mushrooms: [[3, 6], [9, 11], [17, 4], [13, 0]],
+              tallGrass: [[1, 10], [7, 3], [15, 10], [18, 3]],
+              waves: [
+                [["clanker", 8, 1.0]],                                                  // 1
+                [["walker", 4, 1.2], ["scout", 3, 1.0]],                                // 2
+                [[["walker", "clanker"], 7, 1.1]],                                      // 3
+                [["tank", 2, 2.0], ["scout", 5, 0.8], ["hider", 2, 1.4]],               // 4
+                [["mummy", 3, 1.6], ["boss", 1, 0, 1200]],                              // 5
+                [[["splitter", "walker"], 10, 0.9]],                                    // 6
+                [["drone", 6, 0.9], ["tank", 4, 1.4]],                                  // 7
+                [[["tesla", "walker", "scout"], 12, 0.8]],                              // 8
+                [[["hider", "repair", "walker"], 14, 0.7]],                             // 9
+                [["sandboss", 1, 0], [["tank", "scout"], 10, 0.8]],                     // 10
+                [[["mummy", "splitter"], 14, 0.7]],                                     // 11
+                [["drone", 10, 0.6], [["tank", "tesla"], 10, 0.9]],                     // 12
+                [[["obsidian", "walker", "hider"], 15, 0.7]],                           // 13
+                [["boss", 2, 6, 3000], [["scout", "repair"], 12, 0.6]],                 // 14
+                [[["tank", "mummy", "tesla", "hider"], 20, 0.6]],                       // 15
+                [["pillartitan", 1, 0], [["splitter", "drone"], 14, 0.6]],              // 16
+                [[["tank", "repair", "mummy", "scout"], 22, 0.55]],                     // 17
+                [["sandboss", 2, 6], [["hider", "tesla", "walker"], 16, 0.6]],          // 18
+                [[["obsidian", "tank", "drone", "mummy"], 24, 0.5]],                    // 19
+                [["boss", 2, 5, 4500], ["pillartitan", 1, 0], [["tank", "tesla", "repair", "hider", "scout"], 26, 0.45]],   // 20: the big finish
               ] },
   },
 };

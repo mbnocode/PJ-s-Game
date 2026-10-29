@@ -512,7 +512,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra"];
@@ -788,6 +788,12 @@ function makeTile(kind) {
     for (let n = 0, m = rnd() * 2 | 0; n < m; n++) { const i = 1 + rnd() * 11 | 0, j = 1 + rnd() * 11 | 0; x.fillStyle = "#0e0504"; x.fillRect(i, j + 2, 4, 1); x.fillStyle = "#30150c"; x.fillRect(i, j, 4, 2); px("#4a1c0e", i, j); }   // jagged rocks
     if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ff7a1a", i, j); }   // an ember
     if (rnd() < 0.12) { const i = 2 + rnd() * 11 | 0, j = 2 + rnd() * 11 | 0; px("#2a1a3a", i, j); px("#5a4078", i + 1, j); }   // an obsidian shard
+  } else if (kind === "tundra") {
+    // deep snow with soft blue shadows and sparkles
+    x.fillStyle = "#eaf1f9"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(["#ffffff", "#dde8f4", "#f4f8fc"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.35) { const i = 1 + rnd() * 10 | 0, j = 2 + rnd() * 11 | 0; x.fillStyle = "#d2e0ef"; x.fillRect(i, j, 5, 1); x.fillRect(i + 1, j + 1, 3, 1); }   // a little drift shadow
+    if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ffffff", i, j); px("#bfe0f6", i + 1, j); }   // a sparkle
   } else if (kind === "path") {
     x.fillStyle = "#b88a55"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 18; n++) px(rnd() < 0.5 ? "#a37647" : "#c99a64", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -885,6 +891,26 @@ function makeMakeshiftFactory(doorRow) {
   r("#16191d", 0, 31, 32, 1); r("#e6f2fb", 0, 30, 3, 1); r("#e6f2fb", 18, 30, 3, 1);   // snow on the ground
   return c;
 }
+// The castle with plants growing over it: stage 0 = clean, 4 = completely overgrown (vines climb from the bottom up).
+const CASTLE_CACHE = {};
+function castleImage(door, stage) {
+  const key = door + ":" + stage; if (CASTLE_CACHE[key]) return CASTLE_CACHE[key];
+  const c = makeMakeshiftFactory(door), x = c.getContext("2d"), img = x.getImageData(0, 0, 32, 32), D = img.data, steps = 4;
+  const hsh = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x2f1d; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const leaf = [[63, 138, 40], [95, 191, 74], [47, 110, 30], [79, 165, 46]];
+  for (let j = 0; j < 32; j++) for (let i = 0; i < 32; i++) {
+    const k = (j * 32 + i) * 4; if (!D[k + 3]) continue;
+    const score = hsh(i, j) * 0.55 + (j / 32) * 0.45;   // the bottom gets covered first
+    if (score < 1 - stage / steps * 0.97) continue;
+    let col = leaf[(hsh(i * 3, j * 7) * 4) | 0];
+    if (stage >= 2 && hsh(i * 11, j * 5) < 0.06) col = hsh(i, j * 2) < 0.5 ? [255, 159, 191] : [255, 224, 102];   // flowers
+    D[k] = col[0]; D[k + 1] = col[1]; D[k + 2] = col[2]; D[k + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  if (stage >= 2) for (const vx of [3, 9, 14, 19, 25, 29]) { const len = stage * 4 + (vx % 3) * 2; for (let j = 0; j < len && j < 30; j++) { x.fillStyle = j % 3 ? "#2f6e1e" : "#5fbf4a"; x.fillRect(vx + (j % 4 === 0 ? 1 : 0), 8 + j, 1, 1); } }   // vines hanging down
+  if (stage >= 4) { x.fillStyle = "#2f6e1e"; x.fillRect(5, 0, 1, 9); x.fillStyle = "#5fbf4a"; x.fillRect(3, 1, 5, 3); x.fillStyle = "#ff9fbf"; x.fillRect(4, 2, 1, 1); x.fillRect(7, 1, 1, 1); }   // the flag pole is a flowering vine
+  return (CASTLE_CACHE[key] = c);
+}
 function makeFactory(doorRow) {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d");
   const r = (col, i, j, w, h) => { x.fillStyle = col; x.fillRect(i, j, w, h); };
@@ -925,6 +951,17 @@ const SANDSTONE = Array.from({ length: 8 }, () => makeTile("sandstone"));
 const BASALT = Array.from({ length: 8 }, () => makeTile("basalt"));
 const MAGMA = Array.from({ length: 8 }, () => makeTile("magma"));
 const VOLCANO_ROCK = Array.from({ length: 8 }, () => makeTile("volcano"));
+const SNOW = Array.from({ length: 8 }, () => makeTile("tundra"));
+{ // Frozen Tundra scenery: snowy pines, snowy rocks and ice crystals
+  const ICE_ART = {
+    snowpine: [".......k........", "......kwk.......", ".....kwLwk......", ".....kLLLk......", "....kwwLwwk.....", "....kLLLLLk.....", "...kwwLLLwwk....", "...kLLLLLLLk....", "..kwwwLLLwwwk...", "..kLLLLLLLLLk...", ".kwwLLLLLLLwwk..", ".kkkkkkNkkkkkk..", "......kNk.......", "......kNk.......", "....wwwwwww.....", "................"],
+    snowrock: ["................", "................", "................", "................", "................", ".....kkkkk......", "....kwwwwwk.....", "...kwwwwwwwk....", "...kgwwwwggGk...", "..kggggggggGGk..", "..kgggggGGGGGk..", "..kGGGGGGGGGGk..", "...kkkkkkkkkk...", "..wwwwwwwwwwww..", "................", "................"],
+    icecrystal: ["................", "................", "................", ".......k........", "......kUk.......", "......kUck..k...", "..k...kUck.kUk..", ".kUk..kUck.kUck.", ".kUck.kUck.kUck.", ".kUck.kUck.kUck.", ".kUckkkUckkkUck.", "..kkcccccccckk..", "...kkkkkkkkkk...", "..wwwwwwwwwwww..", "................", "................"],
+  };
+  SPR.snowpine = makeSprite(ICE_ART.snowpine, false, { L: "#2f6a46", w: "#ffffff", N: "#4e2d14" });
+  SPR.snowrock = makeSprite(ICE_ART.snowrock, false, { w: "#ffffff", g: "#7a8494", G: "#5a6474" });
+  SPR.icecrystal = makeSprite(ICE_ART.icecrystal, false, { U: "#e0f8ff", c: "#7cd4ff", w: "#ffffff" });
+}
 // Lava-level scenery
 {
   const LAVA_ART = {
@@ -953,7 +990,8 @@ SPR.brownshroom = makeSprite(ART.mushroom, false, { r: "#9a5a2a", w: "#e8c98a" }
 SPR.dunegrass = makeSprite(ART.tallgrass, false, { h: "#e6e48a", L: "#7a9a3a" });
 // What each kind of scenery looks like in each kind of level.
 const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" }, pyramid: { tree: "column", mushroom: "obelisk", tallgrass: "papyrus" },
-  basalt: { tree: "basaltpillar", mushroom: "lavapool", tallgrass: "obsidianrock" }, magma: { tree: "magmarock", mushroom: "flamevent", tallgrass: "obsidianrock" }, volcano: { tree: "stalagmite", mushroom: "flamevent", tallgrass: "obsidianrock" } };
+  basalt: { tree: "basaltpillar", mushroom: "lavapool", tallgrass: "obsidianrock" }, magma: { tree: "magmarock", mushroom: "flamevent", tallgrass: "obsidianrock" }, volcano: { tree: "stalagmite", mushroom: "flamevent", tallgrass: "obsidianrock" },
+  tundra: { tree: "snowpine", mushroom: "snowrock", tallgrass: "icecrystal" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -1906,7 +1944,12 @@ function buildMap(L) {
   const lv = SETTINGS.levels[L];
   // mirror: true copies the path and scenery onto the right half, with a second factory on the right.
   const mirror = (pts) => (pts || []).map(([x, y]) => [COLS - 1 - x, y]);
-  const wps = lv.mirror ? [lv.path, mirror(lv.path)] : [lv.path];
+  // extraPaths: more factories whose roads join the main road; each one continues along the main road from where it joins
+  const joinMain = (sp) => { const [jx, jy] = sp[sp.length - 1], P = lv.path;
+    for (let k = 0; k < P.length - 1; k++) { const [a, b] = P[k], [c, d] = P[k + 1];
+      if (jx >= Math.min(a, c) && jx <= Math.max(a, c) && jy >= Math.min(b, d) && jy <= Math.max(b, d)) return [...sp, ...P.slice(k + 1)]; }
+    return sp; };
+  const wps = lv.mirror ? [lv.path, mirror(lv.path)] : [lv.path, ...(lv.extraPaths || []).map(joinMain)];
   const cells = Array.from({ length: ROWS }, () => Array(COLS).fill("grass"));
   for (const wp of wps) for (let i = 0; i < wp.length - 1; i++) {
     let [x, y] = wp[i]; const [x2, y2] = wp[i + 1];
@@ -1919,6 +1962,7 @@ function buildMap(L) {
     for (let j = gTop; j < gTop + 2; j++) for (let i = 0; i < 2; i++) cells[j][right ? COLS - 2 + i : i] = "gate";
     return { x: right ? COLS - 2 : 0, y: gTop, gx, gy, flip: right, img: makeFactory(gy - gTop) };
   });
+  if (lv.castle && gates[1]) { gates[1].castle = true; gates[1].door = gates[1].gy - gates[1].y; gates[1].img = castleImage(gates[1].door, 0); }   // the robots' castle
   const [bx, by] = wps[0][wps[0].length - 1];
   const [bLeft, bTop] = lv.base || [bx > 0 ? bx - 1 : bx, by > 0 ? by - 1 : by];
   for (let j = bTop; j < bTop + 2; j++) for (let i = bLeft; i < bLeft + 2; i++) cells[j][i] = "base";
@@ -1948,8 +1992,9 @@ function buildMap(L) {
   if (lv.landmark) for (let j = 0; j < lv.landmark.h; j++) for (let i = 0; i < lv.landmark.w; i++) { const cx = lv.landmark.x + i, cy = lv.landmark.y + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }
   const quick = new Set((lv.quicksand || []).map(([qx, qy]) => qx + "," + qy));   // quicksand squares on the road
   const lava = new Set((lv.lava || []).map(([qx, qy]) => qx + "," + qy));   // glowing lava squares on the road
+  const ice = new Set((lv.ice || []).map(([qx, qy]) => qx + "," + qy));   // icy road squares on the frozen lake
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { landmark: lv.landmark, quick, lava, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { landmark: lv.landmark, quick, lava, ice, lake: lv.lake, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 // Where a robot is right now (robots on a two-factory level each follow their own path).
 function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
@@ -1965,7 +2010,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
@@ -1993,10 +2038,12 @@ function paintGround(x, map, factoryCount) {
     x.drawImage(map.veins, 0, 0, 640, 384);
     for (const key of fset) { const [i, y] = key.split(",").map(Number); x.drawImage(FACTORY_TILES[factoryTileAt(i, y)], i * T, y * T, T, T); }
   }
+  if (map.lake) drawFrozenLake(x, map, fset);
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
   for (const key of map.quick || []) drawQuicksand(x, ...key.split(",").map(Number));
   for (const key of map.lava || []) drawLavaSquare(x, ...key.split(",").map(Number));
+  for (const key of map.ice || []) drawIceSquare(x, ...key.split(",").map(Number));
   if (map.landmark) drawPyramid(x, map.landmark, map.grassOrder.slice(0, factoryCount).some((c) => c.x >= map.landmark.x && c.x < map.landmark.x + map.landmark.w && c.y >= map.landmark.y && c.y < map.landmark.y + map.landmark.h));
   for (const key in map.scenery) {
     if (map.scenery[key] === "landmark") continue;
@@ -2028,6 +2075,27 @@ function makeVolcanoVeins(map) {
   const glow = document.createElement("canvas"); glow.width = 640; glow.height = 384; const gx = glow.getContext("2d");
   gx.imageSmoothingEnabled = true; gx.drawImage(small, 0, 0, 640, 384);
   map.veins = cv; map.veinGlow = glow;
+}
+// The Frozen Tundra's lake: smooth blue ice with white cracks and shine
+function drawFrozenLake(x, map, fset) {
+  const L = map.lake; let sd = 31; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let j = 0; j < 384; j += 2) for (let i = 0; i < 640; i += 2) {
+    const d = ((i / T - L.x) / L.w) ** 2 + ((j / T - L.y) / L.h) ** 2 + (Math.sin(i * 0.09) + Math.cos(j * 0.11)) * 0.04;
+    if (d > 1 || fset.has(Math.floor(i / T) + "," + Math.floor(j / T))) continue;
+    x.fillStyle = d > 0.9 ? "#e6f2fb" : (Math.sin(i * 0.05 + j * 0.02) > 0.6 ? "#a8d6f0" : "#8cc4e6");
+    if (R() < 0.01) x.fillStyle = "#ffffff";
+    x.fillRect(i, j, 2, 2);
+  }
+  x.strokeStyle = "rgba(255,255,255,0.75)"; x.lineWidth = 1;
+  for (let k = 0; k < 6; k++) { let px = (L.x + (R() - 0.5) * L.w * 1.2) * T, py = (L.y + (R() - 0.5) * L.h * 1.2) * T; x.beginPath(); x.moveTo(px, py);
+    for (let s = 0; s < 4; s++) { px += (R() - 0.5) * 30; py += (R() - 0.5) * 20; x.lineTo(px, py); } x.stroke(); }   // cracks in the ice
+}
+// An icy road square: robots slide faster across it
+function drawIceSquare(x, tx, ty) {
+  const X = tx * T, Y = ty * T;
+  x.fillStyle = "rgba(170,220,250,0.75)"; x.fillRect(X + 3, Y + 3, T - 6, T - 6);
+  x.fillStyle = "rgba(255,255,255,0.9)"; x.fillRect(X + 6, Y + 7, 10, 2); x.fillRect(X + 18, Y + 18, 7, 2);   // shine
+  x.strokeStyle = "rgba(255,255,255,0.8)"; x.lineWidth = 1; x.beginPath(); x.moveTo(X + 5, Y + 24); x.lineTo(X + 14, Y + 16); x.lineTo(X + 12, Y + 10); x.stroke();
 }
 // A road square of glowing lava (the Volcano Heart heals while it's on one)
 function drawLavaSquare(x, tx, ty) {
@@ -2070,12 +2138,14 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano"].includes(map.theme);
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra"].includes(map.theme);
   const C = map.theme === "basalt"
     // an old crumbling stone road (the lava levels)
     ? { rim: hex("#16141a"), dirt: hex("#6a6874"), dark: hex("#56535f"), light: hex("#7e7b88"), edge: hex("#46444e"), stone: hex("#9a97a4"), rut: hex("#5a5764"), tuft: hex("#3c3944"), tuft2: hex("#2f2c34"), mortar: hex("#25232b") }
     : map.theme === "magma"
     ? { rim: hex("#1e171b"), dirt: hex("#6e6268"), dark: hex("#5a5056"), light: hex("#857880"), edge: hex("#4e4449"), stone: hex("#988b90"), rut: hex("#62575d"), tuft: hex("#3a0f06"), tuft2: hex("#5a1608"), mortar: hex("#2e262c") }
+    : map.theme === "tundra"
+    ? { rim: hex("#1e2430"), dirt: hex("#86909f"), dark: hex("#727c8c"), light: hex("#f4f8ff"), edge: hex("#5a6474"), stone: hex("#b4bfcd"), rut: hex("#7a8494"), tuft: hex("#eaf1f9"), tuft2: hex("#ffffff"), mortar: hex("#3a4250") }
     : map.theme === "volcano"
     ? { rim: hex("#140806"), dirt: hex("#76604f"), dark: hex("#5e4a3e"), light: hex("#8e7562"), edge: hex("#4e3c32"), stone: hex("#a68a72"), rut: hex("#6a5446"), tuft: hex("#2a120c"), tuft2: hex("#3a170d"), mortar: hex("#2a1c16") }
     : pyramid
@@ -2128,7 +2198,7 @@ function makePathLayer(map) {
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
 function makeGrandTree(theme) {
-  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || ["basalt", "magma", "volcano"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
+  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || ["basalt", "magma", "volcano", "tundra"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
   const forest = theme === "forest";
   const leafCols = forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -2236,7 +2306,7 @@ function drawFactory(x, map) {
   }
 }
 function drawSmoke(x, map, time) {
-  for (const gt of map.gates || [map.gate]) [4, 11, 18].forEach((sx, i) => {
+  for (const gt of (map.gates || [map.gate]).filter((g) => !g.castle)) [4, 11, 18].forEach((sx, i) => {
     for (let k = 0; k < 4; k++) {
       const ph = (time * 0.5 + k / 4 + i * 0.37) % 1;
       const off = (sx + 2) * 2 + Math.sin(time * 2 + k + i) * 3 + ph * 10;
@@ -2274,6 +2344,7 @@ function startGame(L, d, tutorial, online) {
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
   tipQueue.length = 0;
+  if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`Robots also march out of the castle! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer robots. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
   if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
   $("code-chip").hidden = true; $("friends").hidden = true;
   onlineStart(G);
@@ -2835,6 +2906,8 @@ board.addEventListener("pointerdown", (e) => {
   const c = tileFromEvent(e); if (!c) return;
   G.hover = c;
   if (G.bonus && G.bonus.x === c.x && G.bonus.y === c.y) { collectBonusLeaf(); return; }
+  { const cg = G.map.gates.find((g) => g.castle);   // tap the robots' castle to overgrow it with plants
+    if (cg && c.x >= cg.x && c.x < cg.x + 2 && c.y >= cg.y && c.y < cg.y + 2) { overgrowCastle(cg); return; } }
   const t = towerAt(c.x, c.y);
   if (t) { openPanel(t); return; }
   if (G.pick) {
@@ -2854,6 +2927,16 @@ board.addEventListener("pointerdown", (e) => {
   G.sel = null; $("tpanel").hidden = true;
 });
 
+function overgrowCastle(cg) {
+  const cs = SETTINGS.levels[G.level].castle, n = G.overgrow || 0, px = cg.x * T + 32, py = cg.y * T + 10;
+  if (n >= cs.overgrowSteps) { floatText(px, py, "Already overgrown!", "#b6f59a"); return; }
+  if (G.leaves < cs.overgrowCost) { Sound.play("nope"); floatText(px, py, "Need " + cs.overgrowCost, "#ff8a7a"); return; }
+  G.leaves -= cs.overgrowCost; G.overgrow = n + 1;
+  cg.img = castleImage(cg.door, G.overgrow);
+  for (let i = 0; i < 24; i++) { const a = Math.random() * Math.PI * 2, v = 30 + Math.random() * 60; G.particles.push({ kind: "spark", x: px, y: py + 12, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0, life: 0.7, col: Math.random() < 0.7 ? "#5fbf4a" : "#ff9fbf" }); }
+  floatText(px, py - 8, G.overgrow >= cs.overgrowSteps ? "Fully overgrown!" : `Overgrown ${G.overgrow}/${cs.overgrowSteps}`, "#b6f59a", 1.4);
+  Sound.play("upgrade"); updateHud();
+}
 $("b-wave").onclick = () => startWave();
 $("b-speed").onclick = () => { G.speed = G.speed === 3 ? 1 : G.speed + 1; $("b-speed").textContent = G.speed + "×"; };
 $("b-pause").onclick = () => { if (G.over) return; G.paused ? resume() : pause(); };
@@ -2934,6 +3017,16 @@ function startWave() {
 }
 function spawn(q) {
   const base = SETTINGS.robots[q.type], d = G.diff;
+  // The Frozen Tundra's castle: every few robots one comes out of the castle; each overgrow stops 1 of every 4 of those.
+  const cs = SETTINGS.levels[G.level].castle, ci = G.map.gates.findIndex((g) => g.castle);
+  if (cs && ci > 0 && !q.path) {
+    G.spawnN = (G.spawnN || 0) + 1;
+    if (G.spawnN % cs.every === 0) {
+      G.castleN = (G.castleN || 0) + 1;
+      if ((G.castleN - 1) % cs.overgrowSteps < (G.overgrow || 0)) return;   // the plants keep this one inside
+      q = { ...q, path: (base.flying ? G.map.flights : G.map.paths)[ci] };
+    } else q = { ...q, path: (base.flying ? G.map.flights : G.map.paths)[0] };
+  }
   let aura = 0;
   const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
   if (cap > 0 && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
@@ -3469,6 +3562,7 @@ function update(dt) {
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
     if (r.under) sp *= 1.5;   // Lava Divers swim fast under the lava
+    if (G.map.ice && G.map.ice.size && !r.flying) { const q = rpos(r); r.sliding = G.map.ice.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sliding) sp *= SETTINGS.levels[G.level].iceSpeed || 1.4; }   // sliding on the ice
     if (G.map.quick && G.map.quick.size && !r.flying) { const q = rpos(r); r.sinking = G.map.quick.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sinking) sp *= 1 - (SETTINGS.quicksandSlow ?? 0.5); }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
     if (r.knock > 0) {
@@ -3878,8 +3972,18 @@ function draw() {
   // the robots' factory sits on top, so robots walk out of its door
   drawFactory(x, G.map);
   drawSmoke(x, G.map, G.time);
+  { const cg = G.map.gates.find((g) => g.castle), cs = SETTINGS.levels[G.level].castle;   // "tap to overgrow" sign over the castle
+    if (cg && (G.overgrow || 0) < cs.overgrowSteps) {
+      const ok = G.leaves >= cs.overgrowCost; let bx = cg.x * T + 32; const by = cg.y * T - 10 + Math.sin(G.time * 3) * 2;
+      x.font = "bold 11px " + getComputedStyle(document.body).fontFamily; x.textAlign = "center";
+      const label = `Overgrow ${(G.overgrow || 0)}/${cs.overgrowSteps}: ${cs.overgrowCost}`, w = x.measureText(label).width + 10;
+      bx = Math.max(w / 2 + 2, Math.min(640 - w / 2 - 2, bx));   // keep the sign on the board
+      x.fillStyle = ok ? "rgba(30,80,30,0.9)" : "rgba(30,30,30,0.75)"; x.fillRect(bx - w / 2, by - 11, w, 15);
+      x.fillStyle = ok ? "#b6f59a" : "#c9ced6"; x.fillText(label, bx, by); x.textAlign = "left";
+    }
+  }
   drawBase(x, G.map, G.takeover && G.takeover.done);
-  if (Math.sin(G.time * 6) > 0) { x.fillStyle = "#ff3b2f"; for (const gt of G.map.gates) x.fillRect(gt.flip ? gt.x * T + 6 : gt.x * T + 54, gt.y * T + 18, 4, 4); }
+  if (Math.sin(G.time * 6) > 0) { x.fillStyle = "#ff3b2f"; for (const gt of G.map.gates.filter((g) => !g.castle)) x.fillRect(gt.flip ? gt.x * T + 6 : gt.x * T + 54, gt.y * T + 18, 4, 4); }
 
   // frog tongues
   for (const tg of G.tongues) {
