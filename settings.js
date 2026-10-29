@@ -158,6 +158,19 @@ const SETTINGS = {
                   { name: "Supernova",      about: "Hits twice as hard.", damageTimes: 2 } ],
               ] },
     // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads bites a different robot.
+    // The Phoenix: the jackpot prize from the Mystery Box. Its fire feathers burn robots, and nothing can freeze, stun or trap it:
+    // it bursts into flames instead ("rebirth") and scorches robots within rebirth.radius squares.
+    phoenix:  { name: "Phoenix", cost: 220, range: 2.8, damage: 20, attacksPerSecond: 1.3, burnDamagePerSecond: 8, burnSeconds: 2.5, boxUnlock: "phoenix",
+              rebirth: { radius: 1.5, damage: 40 },
+              about: "Found in the Mystery Box. Shoots blazing feathers that burn robots. It can't be frozen or trapped: it bursts into flames instead.",
+              upgradeChoices: [
+                [ { name: "Blazing Feathers", about: "Burns 6 more damage a second.", burnPlus: 6 },
+                  { name: "Wide Wings",       about: "Reaches 1 more square.", rangePlus: 1 } ],
+                [ { name: "Firestorm",        about: "Attacks 50% faster.", speedTimes: 1.5 },
+                  { name: "Twin Flames",      about: "Shoots 2 robots at once.", targetsPlus: 1 } ],
+                [ { name: "Sun Fire",         about: "Hits twice as hard.", damageTimes: 2 },
+                  { name: "Phoenix Eyes",     about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
+              ] },
     hydra:    { name: "Hydra", cost: 180, range: 2.2, damage: 18, attacksPerSecond: 1.1, targets: 3, serpentUnlock: "hydra",
               about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once.",
               // Pick ONE choice at each upgrade.
@@ -260,7 +273,15 @@ const SETTINGS = {
   },
   // The Mystery Box on the Upgrades page. It needs the Mystery Key from the Serpent's Shop.
   mysteryBox: { name: "Mystery Box", about: "Locked tight. Only a Mystery Key can open it. Maybe someone hiding nearby sells one…",
-                openedAbout: "The box creaked open and light poured out… What's inside is coming soon! Buy another Mystery Key to open it again." },
+                openedAbout: "The box creaked open and light poured out! Buy another Mystery Key to open it again.",
+                // What can come out of the box. chance = how likely each one is (they don't have to add up to 100).
+                prizes: {
+                  acorns:    { chance: 45, min: 200, max: 600 },   // Acorn Pouch: a random pile of Golden Acorns
+                  leafboost: { chance: 25, leaves: 200 },           // Leaf Boost: extra Maple Leaves at the start of your next game
+                  golden:    { chance: 15 },                        // Golden Tower: one of your towers turns shiny gold (just for looks)
+                  upgrade:   { chance: 10 },                        // Mystery Upgrade: a free level of a permanent upgrade
+                  phoenix:   { chance: 5 },                         // JACKPOT: the Phoenix tower (only once)
+                } },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
   // ---------------- PERMANENT UPGRADES ----------------
