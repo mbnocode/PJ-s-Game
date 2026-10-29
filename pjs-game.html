@@ -113,7 +113,22 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .dadcheck .box { max-width: 440px; background: var(--panel); border: 3px solid var(--gold); border-radius: 10px; padding: 22px; text-align: center; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
 .dadcheck .dad-icon { font-size: 44px; line-height: 1; }
 .dadcheck .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
-#trophy { width: 128px; height: 128px; image-rendering: pixelated; }
+.ach-count { font-family: var(--body); font-weight: 700; font-size: 24px; color: var(--gold); }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; width: min(900px, 100%); }
+.ach { aspect-ratio: 1; border: 2px dashed #3a5244; border-radius: 8px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px; text-align: center; }
+.ach.locked { cursor: pointer; border-style: solid; border-color: #4a6252; }
+.ach.locked .q { font-family: var(--display); font-size: 28px; color: #4a6252; }
+.ach.locked.sel { border-color: var(--gold); }
+.ach.got { border: 3px solid var(--gold); background: linear-gradient(180deg, #2c3a22, #1e2a1c); box-shadow: 0 0 14px rgba(255, 211, 77, 0.25); }
+.ach.got canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+.ach.got .n { font-family: var(--display); font-size: 13px; color: var(--gold); line-height: 1.15; }
+.ach.got .d { font-family: var(--body); font-size: 11px; color: #c9ced6; line-height: 1.2; }
+.ach-hint { font-family: var(--body); color: var(--gold); text-align: center; }
+.achtoast { position: fixed; z-index: 60; top: 14px; left: 50%; transform: translateX(-50%); background: #23301e; border: 3px solid var(--gold); border-radius: 8px; padding: 10px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.4); animation: achpop .35s ease-out; }
+.achtoast canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+.achtoast .t { font-family: var(--display); font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
+.achtoast .n { font-family: var(--body); font-weight: 700; font-size: 16px; color: #f4efe0; }
+@keyframes achpop { from { transform: translate(-50%, -30px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 .soon-big { font-family: var(--display); font-size: 28px; color: var(--gold); }
 #s-slots #b-serpent { position: fixed; z-index: 2; background: transparent; border: 0; box-shadow: none; padding: 0; min-height: 0; cursor: pointer; border-radius: 10px; }
 #s-slots #b-serpent:focus-visible { outline: 3px solid var(--gold); }
@@ -441,6 +456,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="link" id="b-perks-back">Back to levels</button>
   </section>
 
+  <div class="achtoast" id="achtoast" hidden></div>
+
   <!-- Dadbot's "are you sure?" screen -->
   <div class="dadcheck" id="dadcheck" hidden role="dialog" aria-modal="true" aria-labelledby="dad-title">
     <div class="box">
@@ -462,9 +479,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- Achievements (coming soon) -->
   <section class="screen menu" id="s-achievements" hidden>
     <h2>Achievements</h2>
-    <canvas id="trophy" width="32" height="32" aria-hidden="true"></canvas>
-    <p class="soon-big">Coming soon!</p>
-    <p class="muted">Badges for beating levels, defeating bosses, and pulling off amazing wins are on their way.</p>
+    <div class="ach-count" id="ach-count"></div>
+    <p class="muted">Earn achievements to fill the boxes. Tap an empty box for a hint. More are coming soon!</p>
+    <div class="ach-grid" id="ach-grid"></div>
+    <p class="ach-hint" id="ach-hint" hidden></p>
     <button class="link" id="b-achievements-back">Back to levels</button>
   </section>
 
@@ -2680,13 +2698,47 @@ function renderTowersInfo() {
   }
 }
 $("b-towers").onclick = () => { Sound.init(); renderTowersInfo(); show("s-towers"); };
-// Achievements page (coming soon): a golden trophy picture
-$("b-achievements").onclick = () => {
-  const c = $("trophy").getContext("2d"); c.imageSmoothingEnabled = false; c.clearRect(0, 0, 32, 32);
-  const rows = ["................................", "................................", "......kkkkkkkkkkkkkkkkkkkk......", "...kkkkyyyyyyyyyyyyyyyyyykkkk...", "..kyyk.kyfyyyyyyyyyyyyyyk.kyyk..", "..kyk..kyfyyyyyyyyyyyyyYk..kyk..", "..kyk..kyfyyyyyyyyyyyyyYk..kyk..", "..kyk..kyfyyyyyyyyyyyyyYk..kyk..", "..kyyk.kyfyyyyyyyyyyyyyYk.kyyk..", "...kyykkyyyyyyyyyyyyyyyYkkyyk...", "....kyyyyyyyyyyyyyyyyyyYyyyk....", ".....kkkyyyyyyyyyyyyyyYYkkk.....", "........kyyyyyyyyyyyyYYk........", ".........kyyyyyyyyyyYYk.........", "..........kkyyyyyyYYkk..........", "............kkyyYYkk............", "..............kYYk..............", "..............kyYk..............", "..............kyYk..............", ".............kkyYkk.............", "...........kkyyyyYYkk...........", "..........kyyyyyyyyYYk..........", "..........kkkkkkkkkkkk..........", ".........knnnnnnnnnnnnk.........", ".........knNNNNNNNNNNnk.........", ".........knNNNNNNNNNNnk.........", ".........knnnnnnnnnnnnk.........", ".........kkkkkkkkkkkkkk.........", "................................", "................................", "................................", "................................"];
-  c.drawImage(makeSprite(rows, false, { y: "#ffd34d", Y: "#c98e12", f: "#fff3b0", n: "#7a4a24", N: "#4e2d14" }), 0, 0);
-  show("s-achievements");
-};
+/* ---------- achievements (per save slot) ---------- */
+const GRASS_LEVELS = ["meadow", "forest", "swamp"];
+const beat = (s, L, d) => !!(s.best && s.best[L] && (d ? s.best[L][d] : Object.keys(s.best[L]).length));
+const ACHIEVEMENTS = [
+  { id: "firststeps", name: "First Steps", about: "Beat the Meadow.", pic: "tree", check: (s) => beat(s, "meadow") },
+  { id: "grassland", name: "Green Champion", about: "Beat all 3 grass levels: the Meadow, the Forest and the Swamp.", pic: "pine", check: (s) => GRASS_LEVELS.every((L) => beat(s, L)) },
+  { id: "grassnightmare", name: "Nightmare Gardener", about: "Beat all 3 grass levels on Nightmare.", pic: "boss", check: (s) => GRASS_LEVELS.every((L) => beat(s, L, "nightmare")) },
+  { id: "maxed", name: "Maxed Out", about: "Fully upgrade a tower.", pic: "fire" },
+  { id: "untouchable", name: "Untouchable", about: "Win a level without losing any health.", pic: "air" },
+  { id: "deer", name: "Oh Deer!", about: "Buy a Healer Deer.", pic: "healer" },
+];
+const ACH_BOXES = 30;   // the page shows this many boxes; the extra ones are waiting for future achievements
+function hasAch(id) { const s = slot(); return !!(s && s.achievements && s.achievements[id]); }
+function earnAch(id) {
+  const s = slot(); if (!s) return; s.achievements = s.achievements || {};
+  if (s.achievements[id]) return;
+  s.achievements[id] = Date.now(); saveSlots(slots);
+  const a = ACHIEVEMENTS.find((x) => x.id === id), box = $("achtoast");
+  box.innerHTML = `<span class="pic"></span><div><div class="t">Achievement unlocked!</div><div class="n">${a.name}</div></div>`;
+  box.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32)); box.hidden = false; Sound.play("upgrade");
+  clearTimeout(earnAch.timer); earnAch.timer = setTimeout(() => { box.hidden = true; }, 3500);
+}
+function checkAchievements() { const s = slot(); if (!s) return; for (const a of ACHIEVEMENTS) if (a.check && a.check(s)) earnAch(a.id); }
+function renderAchievements() {
+  checkAchievements();   // levels beaten before achievements existed count too
+  const grid = $("ach-grid"); grid.innerHTML = ""; $("ach-hint").hidden = true;
+  const got = ACHIEVEMENTS.filter((a) => hasAch(a.id)).length;
+  $("ach-count").textContent = `🏆 ${got} / ${ACHIEVEMENTS.length} achievements`;
+  for (let i = 0; i < ACH_BOXES; i++) {
+    const a = ACHIEVEMENTS[i], d = document.createElement("div");
+    if (a && hasAch(a.id)) {
+      d.className = "ach got"; d.innerHTML = `<span class="pic"></span><span class="n">${a.name}</span><span class="d">${a.about}</span>`;
+      d.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32));
+    } else if (a) {
+      d.className = "ach locked"; d.innerHTML = `<span class="q">?</span>`; d.title = a.about;
+      d.onclick = () => { grid.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel")); d.classList.add("sel"); const h = $("ach-hint"); h.textContent = "Hint: " + a.about; h.hidden = false; };
+    } else d.className = "ach";
+    grid.appendChild(d);
+  }
+}
+$("b-achievements").onclick = () => { renderAchievements(); show("s-achievements"); };
 $("b-achievements-back").onclick = () => { renderLevels(); show("s-levels"); };
 $("b-towers-back").onclick = () => { renderLevels(); show("s-levels"); };
 
@@ -2901,6 +2953,7 @@ function openPanel(t) {
     const pr = upgradePrice(t); if (pr === null || G.leaves < pr) return;
     if (ci !== undefined) t.picks = [...(t.picks || []), ci];
     G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade");
+    if (t.level >= 3) earnAch("maxed");
     burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); updateShelf(); openPanel(t);
   };
   if ($("p-up")) $("p-up").onclick = () => doUpgrade();
@@ -3058,6 +3111,7 @@ board.addEventListener("pointerdown", (e) => {
     if (G.leaves < price) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, "Need " + price, "#ff8a7a"); return; }
     G.leaves -= price;
     G.towers.push({ kind: G.pick, x: c.x, y: c.y, face: pathFacing(c.x, c.y), level: 0, cool: 0.2, spent: price, born: G.time, boosted: false });
+    if (G.pick === "healer") earnAch("deer");
     Sound.play("place"); burst(c.x * T + 16, c.y * T + 16, "#9be28a", 10);
     tutorialEvent("placed", G.pick); updateHud();
     if (G.leaves < price) { G.pick = null; updateShelf(); }
@@ -3287,7 +3341,7 @@ function kill(r) {
   updateHud();
 }
 function reachBase(r) {
-  r.dead = true;
+  r.dead = true; G.hurtBase = true;   // (for the Untouchable achievement)
   const dmg = (SETTINGS.robots[r.type] || {}).baseHit || Math.min(SETTINGS.maxHitPerRobot, Math.max(1, Math.ceil(r.hp * SETTINGS.robotHitRatio)));
   G.health = Math.max(0, G.health - dmg);
   G.shake = 0.3; Sound.play("hit");
@@ -4375,6 +4429,8 @@ function finish(won) {
       best = !prev || score > prev.score;
     }
     saveSlots(slots);
+    if (!G.hurtBase) earnAch("untouchable");
+    checkAchievements();
   }
   const g = G;
   const showResult = () => {
