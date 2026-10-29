@@ -124,6 +124,14 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ach.got .n { font-family: var(--display); font-size: 13px; color: var(--gold); line-height: 1.15; }
 .ach.got .d { font-family: var(--body); font-size: 11px; color: #c9ced6; line-height: 1.2; }
 .ach-hint { font-family: var(--body); color: var(--gold); text-align: center; }
+@media (min-width: 761px) {   /* bigger boxes on a computer; the page scrolls to show them all */
+  .ach-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; width: min(1180px, calc(100% - 40px)); }
+  .ach { padding: 14px; gap: 8px; }
+  .ach.got canvas { width: 80px; height: 80px; }
+  .ach.got .n { font-size: 18px; }
+  .ach.got .d { font-size: 14px; }
+  .ach.locked .q { font-size: 44px; }
+}
 .achtoast { position: fixed; z-index: 60; top: 14px; left: 50%; transform: translateX(-50%); background: #23301e; border: 3px solid var(--gold); border-radius: 8px; padding: 10px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.4); animation: achpop .35s ease-out; }
 .achtoast canvas { width: 40px; height: 40px; image-rendering: pixelated; }
 .achtoast .t { font-family: var(--display); font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
