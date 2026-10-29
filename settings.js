@@ -234,6 +234,8 @@ const SETTINGS = {
   //   dragonScale: { name: "Dragon Scale", cost: 50, about: "A shiny scale. Something might need it someday." },
   serpentShop: {
     // unlock: true = you buy it once and keep it. picture = which picture shows on the shelf. shelf = which shelf it sits on.
+    // acornTimes: once you own it, every Golden Acorn that drops counts this many times.
+    acorndoubler: { name: "Golden Acorn Doubler", cost: 150, unlock: true, shelf: 1, picture: "acorndoubler", acornTimes: 2, about: "Every Golden Acorn that drops counts twice: you get 2 instead of 1! Works on every level, for this save slot." },
     hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head bites a different robot." },
   },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")

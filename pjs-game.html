@@ -663,6 +663,12 @@ SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a
 SPR.air = makeSprite(ART.air, false, { m: "#a8743e", n: "#6e4220", N: "#4e2d14", e: "#f4e2c0", E: "#ead2a6", y: "#ffd34d", w: "#ffffff", o: "#ff9a2a", O: "#c96a12" });   // 32 x 32 owl
 SPR.plant = makeSprite(ART.plant, false, { n: "#7a4a24", N: "#4e2d14", m: "#9a6434", L: "#2f7d32", l: "#5fbf4a", f: "#ffe066" });   // 32 x 32 tree giant
 SPR.crab = makeSprite(ART.crab, false, { r: "#e8553a", R: "#a8321e", o: "#ff9a6a" });   // 32 x 32 crab
+{ // the Golden Acorn Doubler's shelf picture: two golden acorns
+  const A = ["................", ".......kk.......", "......knnk......", "....kkkkkkkk....", "...kNNNNNNNNk...", "..kNnNnNnNnNNk..", "..kNNNNNNNNNNk..", "...kkkkkkkkkk...", "...kyyyyyyyyk...", "...kyfyyyyyYk...", "...kyfyyyyyYk...", "....kyyyyyYk....", ".....kyyyYk.....", "......kYYk......", ".......kk.......", "................"];
+  const one = makeSprite(A, false, { y: "#ffd34d", Y: "#c98e12", f: "#fff3b0" }), c = document.createElement("canvas"); c.width = c.height = 32;
+  const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(one, 0, 4, 22, 22); x.drawImage(one, 10, 8, 22, 22);
+  SPR.acorndoubler = c;
+}
 SPR.hydra = makeSprite(ART.hydra, false, { L: "#163e36", l: "#2a6e5a", h: "#9cbc8c", v: "#e8dcc0", y: "#ff2a1a", r: "#5a0a0a", w: "#f4f0e0" });   // 32 x 32 three-headed Hydra with glowing red eyes
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 // Smooth (non-pixel) Pegasus drawn with canvas paths onto a 128 x 128 canvas, facing right.
@@ -3212,6 +3218,8 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (r.hp <= 0) { kill(r); return; }
   if (r.type === "hider" && r.hideT <= 0 && !isBurn) r.hideT = SETTINGS.robots.hider.hideSeconds;
 }
+// Serpent's Shop items like the Golden Acorn Doubler make each acorn drop count more
+function acornTimes(s) { let n = 1; for (const [key, it] of Object.entries(SETTINGS.serpentShop || {})) if (it.acornTimes && s && s.materials && s.materials[key]) n = Math.max(n, it.acornTimes); return n; }
 function kill(r) {
   r.dead = true;
   // Junk Splitter: bursts into Mini-Clankers that keep marching from where it fell
@@ -3228,8 +3236,8 @@ function kill(r) {
   // Every Boss always drops a Golden Acorn (on any level, any wave).
   const bossDrop = isHeavy(r) && SETTINGS.bossDropsAcorn;
   if (bossDrop || (chance && Math.random() < chance)) {
-    const s = slot(); s.acorns = (s.acorns || 0) + 1; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + 1;
-    floatText(p.x, p.y - 18, "+1 Golden Acorn!", "#ffd34d", 1.6);
+    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got;
+    floatText(p.x, p.y - 18, got > 1 ? `+${got} Golden Acorns!` : "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
     burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
     const el = $("hud-acorns"); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
