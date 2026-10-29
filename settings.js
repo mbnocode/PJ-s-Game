@@ -527,10 +527,10 @@ const SETTINGS = {
               ] },
 
     // ---------------- THE FROZEN TUNDRA ----------------
-    tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. A castle sends out extra robots: tap it to overgrow it with plants! Scores are worth 3.5x.", theme: "tundra",
+    tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. A castle sends out extra robots: tap it to overgrow it with plants! Scores are worth 3.25x.", theme: "tundra",
               robotHealth: 1.3,
               lateToughness: { fromWave: 12, perWave: 0.03 },   // after wave 12, robots get 3% tougher every wave (wave 25 = 1.39x)
-              scoreTimes: 3.5,
+              scoreTimes: 3.25,
               path: [[0, 4], [5, 4], [5, 9], [11, 9], [11, 2], [16, 2], [16, 7], [19, 7]],
               // The robots' castle: a second factory whose road joins the main road (this road ends where it meets it).
               extraPaths: [[[0, 8], [5, 8]]],
