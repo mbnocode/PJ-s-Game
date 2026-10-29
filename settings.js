@@ -514,17 +514,18 @@ const SETTINGS = {
               ] },
 
     // ---------------- THE FROZEN TUNDRA ----------------
-    tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. Robots also march out of a castle: tap it to overgrow it with plants! Scores are worth 3.5x.", theme: "tundra",
+    tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. A castle sends out extra robots: tap it to overgrow it with plants! Scores are worth 3.5x.", theme: "tundra",
               robotHealth: 1.15,
               scoreTimes: 3.5,
               path: [[0, 4], [5, 4], [5, 9], [11, 9], [11, 2], [16, 2], [16, 7], [19, 7]],
               // The robots' castle: a second factory whose road joins the main road (this road ends where it meets it).
               extraPaths: [[[0, 8], [5, 8]]],
               castle: {
-                every: 3,              // every 3rd robot in a wave comes out of the castle
+                every: 3,              // for every 3rd robot in a wave, the castle sends out an extra one (never a Boss)
+                fromWave: 4,           // the castle starts sending extras on this wave
                 overgrowCost: 150,     // leaves to overgrow the castle once
                 overgrowSteps: 4,      // overgrow it this many times to cover it completely
-                // each overgrow stops 1 out of every 4 castle robots; fully overgrown, the castle sends none
+                // each overgrow stops 1 out of every 4 castle extras; fully overgrown, the castle sends none
               },
               ice: [[6, 9], [8, 9], [10, 9], [11, 7], [11, 5]],   // icy road squares on the frozen lake: robots slide 1.4x faster
               iceSpeed: 1.4,
@@ -538,7 +539,7 @@ const SETTINGS = {
                 [["walker", 4, 1.2], ["scout", 3, 1.0]],                                // 2
                 [[["walker", "clanker"], 7, 1.1]],                                      // 3
                 [["tank", 2, 2.0], ["scout", 5, 0.8], ["hider", 2, 1.4]],               // 4
-                [["mummy", 3, 1.6], ["boss", 1, 0, 1200]],                              // 5
+                [["mummy", 3, 1.6], ["boss", 1, 0, 900]],                               // 5
                 [[["splitter", "walker"], 10, 0.9]],                                    // 6
                 [["drone", 6, 0.9], ["tank", 4, 1.4]],                                  // 7
                 [[["tesla", "walker", "scout"], 12, 0.8]],                              // 8

@@ -2344,7 +2344,7 @@ function startGame(L, d, tutorial, online) {
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
   tipQueue.length = 0;
-  if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`Robots also march out of the castle! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer robots. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
+  if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`The castle sends out EXTRA robots! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer extras. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
   if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
   $("code-chip").hidden = true; $("friends").hidden = true;
   onlineStart(G);
@@ -3017,15 +3017,16 @@ function startWave() {
 }
 function spawn(q) {
   const base = SETTINGS.robots[q.type], d = G.diff;
-  // The Frozen Tundra's castle: every few robots one comes out of the castle; each overgrow stops 1 of every 4 of those.
+  // The Frozen Tundra's castle: every few robots, the castle sends out an EXTRA copy (never a Boss).
+  // Each overgrow stops 1 of every 4 of those extras; fully overgrown, the castle sends none.
   const cs = SETTINGS.levels[G.level].castle, ci = G.map.gates.findIndex((g) => g.castle);
   if (cs && ci > 0 && !q.path) {
+    q = { ...q, path: (base.flying ? G.map.flights : G.map.paths)[0] };   // the wave itself comes from the main factory
     G.spawnN = (G.spawnN || 0) + 1;
-    if (G.spawnN % cs.every === 0) {
+    if (G.spawnN % cs.every === 0 && !base.isBoss && q.type !== "boss" && G.wave >= (cs.fromWave || 1)) {
       G.castleN = (G.castleN || 0) + 1;
-      if ((G.castleN - 1) % cs.overgrowSteps < (G.overgrow || 0)) return;   // the plants keep this one inside
-      q = { ...q, path: (base.flying ? G.map.flights : G.map.paths)[ci] };
-    } else q = { ...q, path: (base.flying ? G.map.flights : G.map.paths)[0] };
+      if ((G.castleN - 1) % cs.overgrowSteps >= (G.overgrow || 0)) spawn({ ...q, path: (base.flying ? G.map.flights : G.map.paths)[ci] });   // unless the plants keep it inside
+    }
   }
   let aura = 0;
   const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
