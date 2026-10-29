@@ -94,6 +94,11 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #slot-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; image-rendering: pixelated; z-index: 0; pointer-events: none; }
 #s-slots { position: relative; }
 #s-slots > *:not(.slot-layout), .slot-layout > *:not(#slot-scene), .slot-layout #slot-cards > * { position: relative; z-index: 1; }
+.dadcheck { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 10, 12, 0.8); }
+.dadcheck[hidden] { display: none; }
+.dadcheck .box { max-width: 440px; background: var(--panel); border: 3px solid var(--gold); border-radius: 10px; padding: 22px; text-align: center; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+.dadcheck .dad-icon { font-size: 44px; line-height: 1; }
+.dadcheck .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
 #s-slots #b-serpent { position: fixed; z-index: 2; background: transparent; border: 0; box-shadow: none; padding: 0; min-height: 0; cursor: pointer; border-radius: 10px; }
 #s-slots #b-serpent:focus-visible { outline: 3px solid var(--gold); }
 #serp-portrait { width: min(384px, 90vw); image-rendering: pixelated; }
@@ -403,6 +408,17 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <button class="go" id="b-gift">Use code</button><p class="muted" id="gift-msg" hidden></p></div>
     <button class="link" id="b-perks-back">Back to levels</button>
   </section>
+
+  <!-- Dadbot's "are you sure?" screen -->
+  <div class="dadcheck" id="dadcheck" hidden role="dialog" aria-modal="true" aria-labelledby="dad-title">
+    <div class="box">
+      <div class="dad-icon" aria-hidden="true">📋</div>
+      <h2 id="dad-title">Are you sure you want to continue?</h2>
+      <p>Dadbot, you have <b>a lot of work to do!</b> Emails to answer, meetings to go to, and chores to finish.</p>
+      <p class="muted">Maybe finish your work first, then come back and defend the treehouse.</p>
+      <div class="row"><button class="go" id="dad-no">Back to work</button><button id="dad-yes">Play anyway</button></div>
+    </div>
+  </div>
 
   <!-- The Serpent's Shop: a secret shop reached by tapping the serpent on the save slot screen -->
   <section class="screen menu" id="s-serpent" hidden>
@@ -1826,7 +1842,16 @@ $("mode-challenge").onclick = () => { setup.mode = "challenge"; renderSetup(); }
 [1, 24, 168].forEach((h) => ($("len-" + h).onclick = () => { setup.hours = h; renderSetup(); }));
 $("tut-yes").onclick = () => { setup.tutorial = true; renderSetup(); };
 $("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
-$("b-start").onclick = async () => {
+/* A special message for Dadbot: before any level starts, make sure the work is done first! */
+const WORK_NICKS = ["dadbot"];
+function dadCheck(nick, go) {
+  if (!WORK_NICKS.includes((nick || "").trim().toLowerCase())) { go(); return; }
+  $("dadcheck").hidden = false; $("dad-no").focus();
+  $("dad-yes").onclick = () => { $("dadcheck").hidden = true; go(); };
+  $("dad-no").onclick = () => { $("dadcheck").hidden = true; };
+}
+$("b-start").onclick = () => dadCheck($("nick").value, startLevel);
+const startLevel = async () => {
   const nick = $("nick").value.trim(); rememberNick(nick);
   $("setup-err").hidden = true;
   if (setup.mode !== "challenge") { startGame(setup.level, setup.diff, setup.tutorial, nick ? { code: null, nick } : null); return; }
@@ -1844,7 +1869,8 @@ $("b-start").onclick = async () => {
 /* join a challenge */
 $("b-join").onclick = () => { if (!$("join-nick").value) $("join-nick").value = savedNick(); $("join-err").hidden = true; show("s-join"); $("join-code").focus(); };
 $("b-join-back").onclick = () => { renderLevels(); show("s-levels"); };
-$("b-join-go").onclick = async () => {
+$("b-join-go").onclick = () => dadCheck($("join-nick").value, joinChallenge);
+const joinChallenge = async () => {
   const code = $("join-code").value.trim().toUpperCase(), nick = $("join-nick").value.trim();
   $("join-err").hidden = true;
   if (!code) return showErr("join-err", "Type the challenge code your friend gave you.");
