@@ -285,6 +285,13 @@ const SETTINGS = {
                 } },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
+  // Leaderboard resets: a level's leaderboard only counts scores from after this time (UTC).
+  // The old scores aren't deleted. Remove a line to bring that level's old scores back.
+  leaderboardResets: {
+    meadow: "2026-10-29T22:58:28Z",
+    forest: "2026-10-29T22:58:28Z",
+  },
+
   // ---------------- PERMANENT UPGRADES ----------------
   // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
   acornsFromWave: 6,   // robots only drop Golden Acorns from this wave on (6 = after wave 5)

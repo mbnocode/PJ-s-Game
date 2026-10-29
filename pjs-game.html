@@ -2115,7 +2115,8 @@ function resultText(p) {
 // A level's Top 10, keeping only each player's best few games (by nickname), so one player can't fill the whole board.
 const BOARD_PER_PLAYER = 5;
 async function levelTop(level, fields) {
-  const rows = await sb(`players?level=eq.${level}&status=in.(won,lost)&select=${fields}&order=score.desc&limit=1000`);
+  const since = (SETTINGS.leaderboardResets || {})[level];   // a reset board only counts scores from after the reset
+  const rows = await sb(`players?level=eq.${level}&status=in.(won,lost)${since ? `&created_at=gte.${encodeURIComponent(since)}` : ""}&select=${fields}&order=score.desc&limit=1000`);
   const seen = {}, out = [];
   for (const p of rows) {
     const who = String(p.nickname || "").trim().toLowerCase();
