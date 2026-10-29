@@ -624,6 +624,10 @@ const PAL = {
 };
 const ART = {
   hydra: ["................................", "............k.......k...........", "...........kvk.kkk.kvk..........", "...........kvvkLLLkvvk..........", "............kLLlllLLk...........", "...........kLlyylyylLk..........", "........kk.kLlllllllLkkk........", ".....kkkvvk.kLwrrrwLkkvvkkk.....", "...kkLLLvk...kLLLLLk..kvLLLkk...", ".kkLLlllLLk..klllllk.kLLlllLLkk.", "kLLLlyyllLk..kllLllk.kLllyylLLLk", "lLlllllllLk..klllllk.kLlllllllLl", "kkrwrrrwLLk..kllLllk.kLLwrrrwrkk", "..klLLLLLk...klllllk..kLLLLLllk.", ".kllLllkk....kllLllk...kkkllLllk", ".kllLllk.....klllllk.....kllLllk", ".klllllk.....klllllk.....klllllk", "..klLlllk.k..kllLllk..k.klllLlk.", "..klllllkkvkkvlllllvkkvkklllllk.", "..klllLlllvvkvllLllvvkvlllLlllk.", "...klllLlllLLLlllllLLLlllLlllk..", "....klllllllLLlllllLLlllllllk...", ".....kllllllLLlllllLLllllllk....", ".....kLlllllLLLlllLLLlllllLk....", "....kLLLlllLLLLLLLLLLLlllLLLk...", "....kLLLLLLLLhhhhhhhLLLLLLLLk...", "....kLLLLLLhhhLhhhLhhhLLLLLLk...", ".....kLLLhhhLhhhLhhhLhhhLLLk....", "......kLLhhhhhhhhhhhhhhhLLk.....", ".......kLLhhhhhhhhhhhhhLLk......", "......kLLLLLkkkkkkkkkLLLLLk.....", "......kwkwkwk.......kwkwkwk....."],   // the Hydra (Serpent's Shop)
+  // the Mystery Key (Serpent's Shop) and the Mystery Box (Upgrades page)
+  mysterykey: ["................",".z..............","...kkkk..f......","..kffffk........",".kfyyyyYkkkkkk..",".kfyzpyYffffffk.",".kfypPyYYYYYYYk.",".kfyyyyYkkkykyk.","..kYYYYYk.kykYk.","...kkkkk..kYkk..","f..........k..z.","................","................","................","................","................"],
+  mysterybox: ["................","z.kkkkkkkkkkkk..",".kpfppppppppfpk.","kppYppppppppYppk","kPPYPPPPPPPPYPak","kPPYPPPffPPPYPak","kPPYPPPyyPPPYPak","kppYpppkkpppYppk","kpPYPPPyyPPPYPak","kpPYPPPyYPPPYPak","kfYYYYYYYYYYYYYk","kpPYPPPzzPPPYPak","kpPYPPPPzPPPYPak","kpPYPPPzPPPPYPak","kpaYaaaaaaaaYaak",".kkkkkkkkkkkkkk."],
+  mysteryboxopen: [".kpYppppppppYpk.",".kPYPPPPPPPPYPk.",".kPYPPPPPPPPYPk.","..kkkkkwzkkkkk..","f.kkwwwwwwwwkk..",".kUUUUUUUUUUUUkz",".kUUUUUUUUUUUUk.","kppYppppppppYppk","kpPYPPPPPPPPYPak","kpPYPPPPPPPPYPak","kfYYYYYYYYYYYYYk","kpPYPPPPPPPPYPak","kpPYPPPffPPPYPak","kpPYPPPPPPPPYPak","kpaYaaaaaaaaYaak",".kkkkkkkkkkkkkk."],
   // snow robots
   icechunk: ["................", "................", "................", "................", ".....kkkkkk.....", "....kUUUUUck....", "...kUccccccbk...", "...kUcwccwcbk...", "...kUcrccrcbk...", "...kUccccccbk...", "...kUcccwccbk...", "...kbbbbbbbbk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   snowplow: [".....k..........","....kfk........x","...kkoEkk.......","..kssssssk...kkw","..ksgUwcck..kfYk","..ksgccrbk.kGkYk",".kksggggGkkkGfk.","ksssssssssssgfYk","ksgGGGGGGggGGkYk","ksggyYgyYggGGfk.","ksGGGGGGGGGGGfYk","kkkkkkkkkkkkkfYk","kGsgGsgGsgGGkkkw","kGgTGgTGgTGGk.wx",".kkkkkkkkkkk....","................"],
@@ -2561,6 +2565,17 @@ function renderPerks() {
       s.acorns -= cost; s.perks[key] = lvl + 1; saveSlots(slots); Sound.play("upgrade"); renderPerks();
     };
   });
+  // The Mystery Box: it only opens with the Mystery Key from the Serpent's Shop.
+  const mb = SETTINGS.mysteryBox; if (!mb) return;
+  const hasKey = !!(s.materials && s.materials.mysterykey), opened = !!s.boxOpened;
+  const d = document.createElement("div"); d.className = "perk mystery" + (opened ? " maxed" : "");
+  d.innerHTML = `<span class="pic"></span><span class="k">${mb.name}</span>
+    <span class="s">${opened ? mb.openedAbout : hasKey ? "Your Mystery Key fits the lock… Open it!" : mb.about}</span>
+    ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? "Open with Mystery Key" : "🔒 Needs a Mystery Key"}</button>`}`;
+  const pc = spriteCanvas(opened ? "mysteryboxopen" : "mysterybox", 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc);
+  box.appendChild(d);
+  const ob = d.querySelector("button");
+  if (ob && hasKey) ob.onclick = () => { s.boxOpened = Date.now(); saveSlots(slots); Sound.play("upgrade"); renderPerks(); };
 }
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
