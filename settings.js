@@ -190,6 +190,14 @@ const SETTINGS = {
     fireproof: { name: "Fire-Proof Bot", health: 140, speed: 1.8, leaves: 12, points: 35, waterTimes: 2 },
     // Lava Diver: every diveEvery seconds it dives under the lava for diveSeconds and can't be hit.
     diver:    { name: "Lava Diver", health: 120, speed: 2.2, leaves: 14, points: 40, diveEvery: 4, diveSeconds: 2 },
+    // Snow robots: on the Enemies page as "Coming soon". They aren't in any waves yet.
+    snowplow:  { name: "Snowplow Bot", health: 220, speed: 1.4, leaves: 16, points: 45, frontArmor: 0.5 },   // takes half damage from towers in front of it
+    snowball:  { name: "Snowball Roller", health: 40, speed: 2.0, leaves: 10, points: 30, growPerSquare: 8 },   // gains health for every square it rolls
+    penguin:   { name: "Penguin Bot", health: 50, speed: 1.6, leaves: 8, points: 20, iceSpeed: 3 },   // slides this many times faster on ice
+    snowdrone: { name: "Snow Drone", health: 55, speed: 2.6, leaves: 12, points: 30, flying: true, baseHit: 8, dropEvery: 5, freezeSeconds: 2 },
+    yetimech:     { name: "Yeti Mech", health: 2600, speed: 0.7, leaves: 180, points: 650, baseHit: 50, isBoss: true, roarEvery: 7, freezeRadius: 2, freezeSeconds: 3 },
+    glaciergolem: { name: "Glacier Golem", health: 2400, speed: 0.75, leaves: 170, points: 600, baseHit: 45, isBoss: true, chunkEvery: 400 },
+    blizzardking: { name: "Blizzard King", health: 4000, speed: 0.6, leaves: 260, points: 950, baseHit: 60, isBoss: true, rangeShrink: 0.3 },
     // Lava-level Bosses:
     pillartitan:  { name: "Pillar Titan", health: 2200, speed: 0.7, leaves: 170, points: 600, baseHit: 45, isBoss: true, slamEvery: 8 },
     magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2, splitType: "magmacube" },
