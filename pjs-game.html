@@ -2395,7 +2395,7 @@ function startGame(L, d, tutorial, online) {
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
   tipQueue.length = 0;
-  if (SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
+  if (SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts hit harder and slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
   if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`The castle sends out EXTRA robots! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer extras. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
   if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
   $("code-chip").hidden = true; $("friends").hidden = true;
@@ -2717,6 +2717,7 @@ function towerStats(t) {
   }
   if (t.ice) {   // Ice Dragon: slows instead of burning
     const ic = SETTINGS.towers.fire.iceDragon; out.name = "Ice Dragon"; out.slowBy = ic.slowBy; out.slowSeconds = ic.slowSeconds; out.burnDamagePerSecond = 0; out.burnSeconds = 0;
+    if (ic.damageTimes && out.damage) out.damage *= ic.damageTimes;
   }
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
   return out;
@@ -2824,7 +2825,7 @@ function openPanel(t) {
     <span class="s">${lines.join("<br>")}</span>
     ${choices ? `<span class="s">Pick an upgrade · ${price} leaves</span><div class="pick">${choices.map((c, i) =>
       `<button class="go" id="p-pick-${i}" ${G.leaves < price ? "disabled" : ""}><b>${c.name}</b><small>${c.about}</small></button>`).join("")}</div>` : ""}
-    ${iceOK ? `<button class="go wallbtn icebtn" id="p-ice" ${G.leaves < ice.cost ? "disabled" : ""}>Turn into Ice Dragon · ${ice.cost}<small>Its icy blasts slow robots like a Water Frog (instead of burning them).</small></button>` : ""}
+    ${iceOK ? `<button class="go wallbtn icebtn" id="p-ice" ${G.leaves < ice.cost ? "disabled" : ""}>Turn into Ice Dragon · ${ice.cost}<small>Its icy blasts hit ${Math.round(((ice.damageTimes || 1) - 1) * 100)}% harder and slow robots like a Water Frog (instead of burning them).</small></button>` : ""}
     ${s.nutWall ? `<button class="go wallbtn" id="p-wall">Build Nut Wall<small>The squirrel jumps onto the nearest path and blocks robots. It's gone for good.</small></button>` : ""}
     <div class="row">
       ${choices ? "" : `<button class="go" id="p-up" ${price === null || G.leaves < price ? "disabled" : ""}>${price === null ? "Max" : "Upgrade " + price}</button>`}
