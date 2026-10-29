@@ -88,7 +88,7 @@ button.big { font-size: 26px; padding: 14px 34px; }
 button.link { background: none; border: none; box-shadow: none; color: var(--muted); font-family: var(--body); font-weight: 400; font-size: 15px; text-decoration: underline; padding: 6px; }
 
 .lineup { display: flex; align-items: flex-end; gap: clamp(4px, 2vw, 16px); }
-.lineup canvas { width: clamp(44px, 9vw, 72px); height: auto; image-rendering: pixelated; }
+.lineup canvas { width: clamp(52px, 11vw, 96px); height: auto; image-rendering: pixelated; }
 .lineup .vs { font-family: var(--display); color: var(--muted); font-size: 22px; padding: 0 8px 14px; }
 
 .cards { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; width: 100%; max-width: 760px; }
@@ -1273,9 +1273,9 @@ function spriteCanvas(name, size = 16) {
   const c = document.createElement("canvas"); c.width = size; c.height = size;
   const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR[name], 0, 0, size, size); return c;
 }
-["plant", "air", "fire", "water"].forEach((n) => $("lineup").appendChild(spriteCanvas(n)));
+["plant", "air", "fire", "water"].forEach((n) => $("lineup").appendChild(spriteCanvas(n, 32)));   // full detail, the same pictures as in the game
 const vs = document.createElement("span"); vs.className = "vs"; vs.textContent = "vs"; $("lineup").appendChild(vs);
-$("lineup").appendChild(spriteCanvas("clanker"));
+$("lineup").appendChild(spriteCanvas("clanker", 32));
 
 $("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); startSlotScene(); };
 addEventListener("resize", () => { if (slotScene && $("s-slots")) $("slot-scene").dataset.r = Date.now(); });
