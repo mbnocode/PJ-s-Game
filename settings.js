@@ -134,7 +134,7 @@ const SETTINGS = {
               ],
               // How fast robots chew through a Nut Wall (health per second). Tanks chew 2x, Bosses 5x.
               wallChewPerSecond: 25 },
-    crab:   { name: "Crab",        cost: 95,  range: 2.0, damage: 14, attacksPerSecond: 0.9, splash: 1,
+    crab:   { name: "Crab",        cost: 85,  range: 2.0, damage: 14, attacksPerSecond: 0.9, splash: 1,
               about: "Hurls seashells that splash every robot within 1 square.",
               // Pick ONE choice at each upgrade (splash = how many squares around the hit robot also get hurt; they take half damage).
               upgradeChoices: [
