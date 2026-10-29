@@ -524,14 +524,15 @@ const SETTINGS = {
 
     // ---------------- THE FROZEN TUNDRA ----------------
     tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. A castle sends out extra robots: tap it to overgrow it with plants! Scores are worth 3.5x.", theme: "tundra",
-              robotHealth: 1.0,
+              robotHealth: 1.3,
+              lateToughness: { fromWave: 12, perWave: 0.03 },   // after wave 12, robots get 3% tougher every wave (wave 25 = 1.39x)
               scoreTimes: 3.5,
               path: [[0, 4], [5, 4], [5, 9], [11, 9], [11, 2], [16, 2], [16, 7], [19, 7]],
               // The robots' castle: a second factory whose road joins the main road (this road ends where it meets it).
               extraPaths: [[[0, 8], [5, 8]]],
               castle: {
                 every: 3,              // for every 3rd robot in a wave, the castle sends out an extra one (never a Boss)
-                fromWave: 4,           // the castle starts sending extras on this wave
+                fromWave: 2,           // the castle starts sending extras on this wave
                 overgrowCost: 150,     // leaves to overgrow the castle once
                 overgrowSteps: 4,      // overgrow it this many times to cover it completely
                 // each overgrow stops 1 out of every 4 castle extras; fully overgrown, the castle sends none
@@ -547,10 +548,10 @@ const SETTINGS = {
               waves: [
                 [["penguin", 6, 1.2]],                                                  // 1: Penguin Bots
                 [["snowball", 2, 2.0], ["clanker", 5, 1.0]],                            // 2: Snowball Rollers
-                [["penguin", 5, 1.0], ["walker", 3, 1.2]],                              // 3
+                [["penguin", 4, 1.1], ["walker", 2, 1.3]],                              // 3
                 [["snowplow", 1, 0], ["snowball", 3, 1.6]],                             // 4: Snowplow Bots
-                [["snowdrone", 3, 1.2], [["penguin", "walker"], 5, 1.1]],               // 5: Snow Drones
-                [[["snowplow", "snowball", "penguin"], 9, 1.0]],                        // 6
+                [["snowdrone", 2, 1.4], [["penguin", "walker"], 4, 1.2]],               // 5: Snow Drones
+                [["snowball", 3, 1.4], ["penguin", 5, 1.0]],                            // 6
                 [["boss", 1, 0, 1200], ["penguin", 6, 0.8]],                            // 7
                 [[["snowplow", "hider", "snowball"], 9, 1.0]],                          // 8
                 [[["snowdrone", "penguin"], 10, 0.8]],                                  // 9
@@ -562,14 +563,14 @@ const SETTINGS = {
                 [[["snowplow", "snowball", "repair"], 16, 0.7]],                        // 15
                 [["glaciergolem", 1, 0], [["penguin", "snowdrone"], 12, 0.6]],          // 16: the Glacier Golem visits
                 [[["snowplow", "tank", "snowball"], 16, 0.7]],                          // 17
-                [["yetimech", 1, 0], ["boss", 1, 0, 3000], ["penguin", 10, 0.5]],       // 18
+                [["yetimech", 1, 0], ["boss", 1, 0, 3000], ["penguin", 12, 0.5]],       // 18
                 [[["snowdrone", "snowball", "hider", "penguin"], 20, 0.55]],            // 19
-                [["glaciergolem", 1, 0], [["snowplow", "snowball"], 14, 0.6]],          // 20
-                [[["snowplow", "penguin", "snowdrone", "tank"], 22, 0.5]],              // 21
-                [["yetimech", 2, 8], [["snowball", "repair"], 14, 0.6]],                // 22
-                [[["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 26, 0.45]],   // 23
-                [["glaciergolem", 1, 0], ["yetimech", 1, 0], [["penguin", "snowdrone"], 16, 0.5]],   // 24
-                [["yetimech", 2, 8], ["glaciergolem", 1, 0], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 30, 0.4]],   // 25: the big finish
+                [["glaciergolem", 1, 0], ["yetimech", 1, 0], [["snowplow", "snowball"], 18, 0.5]],   // 20
+                [[["snowplow", "penguin", "snowdrone", "tank"], 28, 0.45]],             // 21
+                [["yetimech", 2, 8], [["snowball", "repair", "snowplow"], 18, 0.5]],     // 22
+                [["yetimech", 1, 0], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 32, 0.4]],   // 23
+                [["glaciergolem", 1, 0], ["yetimech", 2, 8], [["penguin", "snowdrone", "snowplow"], 20, 0.45]],   // 24
+                [["yetimech", 2, 8], ["glaciergolem", 2, 10], ["boss", 1, 0, 4500], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 40, 0.35]],   // 25: the big finish
               ] },
   },
 };

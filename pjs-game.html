@@ -3101,7 +3101,8 @@ function spawn(q) {
   const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
   if (cap > 0 && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
   const A = SETTINGS.auras[aura];
-  const hp = (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * (A ? A.health : 1);
+  const lt = SETTINGS.levels[G.level].lateToughness, late = lt ? 1 + Math.max(0, G.wave - lt.fromWave) * lt.perWave : 1;   // some levels' robots get tougher in the late waves
+  const hp = (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * late * (A ? A.health : 1);
   G.robots.push({
     type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: q.d || 0,
     flying: !!base.flying,
