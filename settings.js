@@ -190,13 +190,14 @@ const SETTINGS = {
     fireproof: { name: "Fire-Proof Bot", health: 140, speed: 1.8, leaves: 12, points: 35, waterTimes: 2 },
     // Lava Diver: every diveEvery seconds it dives under the lava for diveSeconds and can't be hit.
     diver:    { name: "Lava Diver", health: 120, speed: 2.2, leaves: 14, points: 40, diveEvery: 4, diveSeconds: 2 },
-    // Snow robots: on the Enemies page as "Coming soon". They aren't in any waves yet.
+    // Snow robots (The Frozen Tundra). The Blizzard King waits for Blizzard Peak.
     snowplow:  { name: "Snowplow Bot", health: 220, speed: 1.4, leaves: 16, points: 45, frontArmor: 0.5 },   // takes half damage from towers in front of it
-    snowball:  { name: "Snowball Roller", health: 40, speed: 2.0, leaves: 10, points: 30, growPerSquare: 8 },   // gains health for every square it rolls
+    snowball:  { name: "Snowball Roller", health: 40, speed: 2.0, leaves: 10, points: 30, growPerSquare: 3, baseHit: 8 },   // gains health for every square it rolls
     penguin:   { name: "Penguin Bot", health: 50, speed: 1.6, leaves: 8, points: 20, iceSpeed: 3 },   // slides this many times faster on ice
     snowdrone: { name: "Snow Drone", health: 55, speed: 2.6, leaves: 12, points: 30, flying: true, baseHit: 8, dropEvery: 5, freezeSeconds: 2 },
-    yetimech:     { name: "Yeti Mech", health: 2600, speed: 0.7, leaves: 180, points: 650, baseHit: 50, isBoss: true, roarEvery: 7, freezeRadius: 2, freezeSeconds: 3 },
-    glaciergolem: { name: "Glacier Golem", health: 2400, speed: 0.75, leaves: 170, points: 600, baseHit: 45, isBoss: true, chunkEvery: 400 },
+    yetimech:     { name: "Yeti Mech", health: 2600, speed: 0.7, leaves: 180, points: 650, baseHit: 50, isBoss: true, roarEvery: 7, freezeRadius: 1.5, freezeSeconds: 2 },
+    glaciergolem: { name: "Glacier Golem", health: 2400, speed: 0.75, leaves: 170, points: 600, baseHit: 45, isBoss: true, chunkEvery: 400 },   // drops an Ice Chunk every chunkEvery damage
+    icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     blizzardking: { name: "Blizzard King", health: 4000, speed: 0.6, leaves: 260, points: 950, baseHit: 60, isBoss: true, rangeShrink: 0.3 },
     // Lava-level Bosses:
     pillartitan:  { name: "Pillar Titan", health: 2200, speed: 0.7, leaves: 170, points: 600, baseHit: 45, isBoss: true, slamEvery: 8 },
@@ -523,7 +524,7 @@ const SETTINGS = {
 
     // ---------------- THE FROZEN TUNDRA ----------------
     tundra: { name: "The Frozen Tundra", acornDropChance: 0.06, about: "Deep snow and a frozen lake where robots slide faster. A castle sends out extra robots: tap it to overgrow it with plants! Scores are worth 3.5x.", theme: "tundra",
-              robotHealth: 1.15,
+              robotHealth: 1.0,
               scoreTimes: 3.5,
               path: [[0, 4], [5, 4], [5, 9], [11, 9], [11, 2], [16, 2], [16, 7], [19, 7]],
               // The robots' castle: a second factory whose road joins the main road (this road ends where it meets it).
@@ -542,27 +543,33 @@ const SETTINGS = {
               trees:     [[2, 1], [8, 1], [14, 5], [18, 10], [3, 11], [8, 5], [13, 10], [19, 1]],
               mushrooms: [[3, 6], [9, 11], [17, 4], [13, 0]],
               tallGrass: [[1, 10], [7, 3], [15, 10], [18, 3]],
+              // The Frozen Tundra's own 25 waves, with the snow robots (the Blizzard King waits for Blizzard Peak).
               waves: [
-                [["clanker", 8, 1.0]],                                                  // 1
-                [["walker", 4, 1.2], ["scout", 3, 1.0]],                                // 2
-                [[["walker", "clanker"], 7, 1.1]],                                      // 3
-                [["tank", 2, 2.0], ["scout", 5, 0.8], ["hider", 2, 1.4]],               // 4
-                [["mummy", 3, 1.6], ["boss", 1, 0, 900]],                               // 5
-                [[["splitter", "walker"], 10, 0.9]],                                    // 6
-                [["drone", 6, 0.9], ["tank", 4, 1.4]],                                  // 7
-                [[["tesla", "walker", "scout"], 12, 0.8]],                              // 8
-                [[["hider", "repair", "walker"], 14, 0.7]],                             // 9
-                [["sandboss", 1, 0], [["tank", "scout"], 10, 0.8]],                     // 10
-                [[["mummy", "splitter"], 14, 0.7]],                                     // 11
-                [["drone", 10, 0.6], [["tank", "tesla"], 10, 0.9]],                     // 12
-                [[["obsidian", "walker", "hider"], 15, 0.7]],                           // 13
-                [["boss", 2, 6, 3000], [["scout", "repair"], 12, 0.6]],                 // 14
-                [[["tank", "mummy", "tesla", "hider"], 20, 0.6]],                       // 15
-                [["pillartitan", 1, 0], [["splitter", "drone"], 14, 0.6]],              // 16
-                [[["tank", "repair", "mummy", "scout"], 22, 0.55]],                     // 17
-                [["sandboss", 2, 6], [["hider", "tesla", "walker"], 16, 0.6]],          // 18
-                [[["obsidian", "tank", "drone", "mummy"], 24, 0.5]],                    // 19
-                [["boss", 2, 5, 4500], ["pillartitan", 1, 0], [["tank", "tesla", "repair", "hider", "scout"], 26, 0.45]],   // 20: the big finish
+                [["penguin", 6, 1.2]],                                                  // 1: Penguin Bots
+                [["snowball", 2, 2.0], ["clanker", 5, 1.0]],                            // 2: Snowball Rollers
+                [["penguin", 5, 1.0], ["walker", 3, 1.2]],                              // 3
+                [["snowplow", 1, 0], ["snowball", 3, 1.6]],                             // 4: Snowplow Bots
+                [["snowdrone", 3, 1.2], [["penguin", "walker"], 5, 1.1]],               // 5: Snow Drones
+                [[["snowplow", "snowball", "penguin"], 9, 1.0]],                        // 6
+                [["boss", 1, 0, 1200], ["penguin", 6, 0.8]],                            // 7
+                [[["snowplow", "hider", "snowball"], 9, 1.0]],                          // 8
+                [[["snowdrone", "penguin"], 10, 0.8]],                                  // 9
+                [["yetimech", 1, 0], ["snowball", 5, 1.0]],                             // 10: the Yeti Mech
+                [["tank", 4, 1.4], ["snowdrone", 6, 0.7]],                              // 11
+                [[["snowball", "snowball", "penguin"], 15, 0.6]],                       // 12
+                [["yetimech", 1, 0], [["snowplow", "walker"], 10, 0.9]],                // 13
+                [[["snowdrone", "tesla", "penguin"], 14, 0.7]],                         // 14
+                [[["snowplow", "snowball", "repair"], 16, 0.7]],                        // 15
+                [["glaciergolem", 1, 0], [["penguin", "snowdrone"], 12, 0.6]],          // 16: the Glacier Golem visits
+                [[["snowplow", "tank", "snowball"], 16, 0.7]],                          // 17
+                [["yetimech", 1, 0], ["boss", 1, 0, 3000], ["penguin", 10, 0.5]],       // 18
+                [[["snowdrone", "snowball", "hider", "penguin"], 20, 0.55]],            // 19
+                [["glaciergolem", 1, 0], [["snowplow", "snowball"], 14, 0.6]],          // 20
+                [[["snowplow", "penguin", "snowdrone", "tank"], 22, 0.5]],              // 21
+                [["yetimech", 2, 8], [["snowball", "repair"], 14, 0.6]],                // 22
+                [[["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 26, 0.45]],   // 23
+                [["glaciergolem", 1, 0], ["yetimech", 1, 0], [["penguin", "snowdrone"], 16, 0.5]],   // 24
+                [["yetimech", 2, 8], ["glaciergolem", 1, 0], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 30, 0.4]],   // 25: the big finish
               ] },
   },
 };

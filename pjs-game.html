@@ -550,7 +550,8 @@ const PAL = {
 };
 const ART = {
   hydra: ["................................", "............k.......k...........", "...........kvk.kkk.kvk..........", "...........kvvkLLLkvvk..........", "............kLLlllLLk...........", "...........kLlyylyylLk..........", "........kk.kLlllllllLkkk........", ".....kkkvvk.kLwrrrwLkkvvkkk.....", "...kkLLLvk...kLLLLLk..kvLLLkk...", ".kkLLlllLLk..klllllk.kLLlllLLkk.", "kLLLlyyllLk..kllLllk.kLllyylLLLk", "lLlllllllLk..klllllk.kLlllllllLl", "kkrwrrrwLLk..kllLllk.kLLwrrrwrkk", "..klLLLLLk...klllllk..kLLLLLllk.", ".kllLllkk....kllLllk...kkkllLllk", ".kllLllk.....klllllk.....kllLllk", ".klllllk.....klllllk.....klllllk", "..klLlllk.k..kllLllk..k.klllLlk.", "..klllllkkvkkvlllllvkkvkklllllk.", "..klllLlllvvkvllLllvvkvlllLlllk.", "...klllLlllLLLlllllLLLlllLlllk..", "....klllllllLLlllllLLlllllllk...", ".....kllllllLLlllllLLllllllk....", ".....kLlllllLLLlllLLLlllllLk....", "....kLLLlllLLLLLLLLLLLlllLLLk...", "....kLLLLLLLLhhhhhhhLLLLLLLLk...", "....kLLLLLLhhhLhhhLhhhLLLLLLk...", ".....kLLLhhhLhhhLhhhLhhhLLLk....", "......kLLhhhhhhhhhhhhhhhLLk.....", ".......kLLhhhhhhhhhhhhhLLk......", "......kLLLLLkkkkkkkkkLLLLLk.....", "......kwkwkwk.......kwkwkwk....."],   // the Hydra (Serpent's Shop)
-  // snow robots (Enemies page only for now)
+  // snow robots
+  icechunk: ["................", "................", "................", "................", ".....kkkkkk.....", "....kUUUUUck....", "...kUccccccbk...", "...kUcwccwcbk...", "...kUcrccrcbk...", "...kUccccccbk...", "...kUcccwccbk...", "...kbbbbbbbbk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   snowplow: ["................", "................", "....kkkkk.......", "...kgggggk......", "...kgcccgk......", "...kgcccgk...kk.", ".kkkgggggkkkkYk.", ".kGgggggggggkYyk", ".kGgggrgggggkYyk", ".kGgggggggggkYyk", ".kGGGGGGGGGGkYyk", ".kkkkkkkkkkkkYk.", "kGkGkGkGkGkGkkk.", "kgGgGgGgGgGgGk..", ".kkkkkkkkkkkkk..", "................"],
   snowball: ["................", ".....kkkkkk.....", "...kkwwwwwwkk...", "..kwwwxwwwwswk..", ".kwwwwwwwwwwssk.", ".kwwxwkkkkwwwsk.", "kwwwwkgrgrkwwssk", "kwwwwkkkkkkwwssk", "kwxwwwwwwwwwwssk", "kwwwwwwwxwwwsssk", ".kwwwwwwwwwwssk.", ".kswwwwwwwwsssk.", "..ksswwwwsssskk.", "...kkssssssk....", ".....kkkkkk.....", "................"],
   penguin: ["................", "......kkkk......", ".....kkkkkk.....", "....kkrkkrkk....", "....kkkkkkkoo...", "....kkkkkkkk....", "...kkwwwwwwkk...", "..kkkwwwwwwkkk..", ".kGkkwwgwwwkkGk.", ".kGkkwwwwwwkkGk.", "...kkwwgwwwkk...", "...kkwwwwwwkk...", "....kkwwwwkk....", "....kkkkkkkk....", "....oo....oo....", "................"],
@@ -2479,7 +2480,7 @@ function renderPerks() {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "blizzardking"];
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES];
-const NEW_FOES = new Set(SNOW_FOES);   // robots on the Enemies page that aren't in any waves yet
+const NEW_FOES = new Set(["blizzardking"]);   // robots on the Enemies page that aren't in any waves yet
 const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "blizzardking"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
@@ -2542,12 +2543,12 @@ function renderEnemies() {
       : k === "pillartitan" ? `Special: every ${r.slamEvery} seconds it slams the ground and a basalt pillar shoots up on a tower square, blocking it for the rest of the wave. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Basalt Delta (also Inside the Volcano).`
       : k === "magmaking" ? `Special: when destroyed it splits into ${r.splitInto} Magma Cubes, and each of those splits into ${r.splitInto} small ones. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Magma Fields (also Inside the Volcano).`
       : k === "volcanoheart" ? `Special: heals ${r.healPerSecond} health every second while it's on a glowing lava square. Freeze it to stop the healing! Wizard Time Warps and Frog slows don't work on it. Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss, Inside the Volcano.`
-      : k === "snowplow" ? `Special: its plow blocks ${Math.round((1 - r.frontArmor) * 100)}% of the damage from towers in front of it, and it shoves Nut Walls off the road. Coming to the snowy levels.`
-      : k === "snowball" ? `Special: the farther it rolls, the bigger it gets: +${r.growPerSquare} health for every square. Stop it early! Coming to the snowy levels.`
-      : k === "penguin" ? `Special: it belly-slides ${r.iceSpeed} times faster on icy road squares, then waddles slowly everywhere else. Coming to The Frozen Tundra.`
-      : k === "snowdrone" ? `Special: flies straight to your treehouse and every ${r.dropEvery} seconds drops a snowball that freezes a tower for ${r.freezeSeconds} seconds. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Coming to the snowy levels.`
+      : k === "snowplow" ? `Special: its plow blocks ${Math.round((1 - r.frontArmor) * 100)}% of the damage from towers in front of it, and it shoves Nut Walls off the road. Shows up on The Frozen Tundra.`
+      : k === "snowball" ? `Special: the farther it rolls, the bigger it gets: +${r.growPerSquare} health for every square. Stop it early! Shows up on The Frozen Tundra.`
+      : k === "penguin" ? `Special: it belly-slides ${r.iceSpeed} times faster on icy road squares, then waddles slowly everywhere else. Shows up on The Frozen Tundra.`
+      : k === "snowdrone" ? `Special: flies straight to your treehouse and every ${r.dropEvery} seconds drops a snowball that freezes a tower for ${r.freezeSeconds} seconds. Only the Owl, the Dragon, the Pegasus and the Wizard's Elemental Sphere can hit it. Shows up on The Frozen Tundra.`
       : k === "yetimech" ? `Special: every ${r.roarEvery} seconds it roars and throws a giant snowball that freezes every tower within ${r.freezeRadius} squares for ${r.freezeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Frozen Tundra.`
-      : k === "glaciergolem" ? `Special: every time it takes ${r.chunkEvery} damage, a chunk of ice breaks off and keeps marching toward your treehouse. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Glacier Caves.`
+      : k === "glaciergolem" ? `Special: every time it takes ${r.chunkEvery} damage, a chunk of ice breaks off and keeps marching toward your treehouse. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Glacier Caves (and it visits The Frozen Tundra).`
       : k === "blizzardking" ? `Special: it brings a howling blizzard with it. Until it's destroyed, every tower's range shrinks by ${Math.round(r.rangeShrink * 100)}%. Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss of Blizzard Peak.`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
@@ -3062,6 +3063,12 @@ function startWave() {
   else if (hasTesla && !G.seenTesla) tip(`Tesla Coils are here! Robots near a Tesla Coil move ${SETTINGS.robots.tesla.boostSpeed} times faster. Take them out first!`, undefined, "Heads up");
   else if (hasBoss && !G.seenBoss) tip("A Boss is coming! It has tons of health. If it reaches your treehouse, it hits hard.", undefined, "Heads up");
   const LAVA_TIPS = {
+    penguin: "Penguin Bots waddle slowly, but they belly-slide super fast across the icy road squares!",
+    snowball: "Snowball Rollers get bigger and tougher with every square they roll. Stop them early!",
+    snowplow: "Snowplow Bots block half the damage from towers in front of them. Build towers behind them too!",
+    snowdrone: "Snow Drones fly over your towers and drop snowballs that freeze them for a moment. Only Owls, Dragons, the Pegasus and the Wizard's Sphere can hit them.",
+    yetimech: "The Yeti Mech is coming! Every few seconds it roars and throws a giant snowball that freezes every tower near it.",
+    glaciergolem: "The Glacier Golem is coming! As you damage it, chunks of ice break off and keep marching.",
     crawler: "Magma Crawlers set the road on fire! Towers right next to the burning trail get too hot to attack for a moment.",
     obsidian: "Obsidian Shells take half damage until one big hit cracks their shell. Upgraded towers crack them!",
     emberbat: "Ember Bats fly in swarms straight at your treehouse. Only Owls, Dragons, the Pegasus and the Wizard's Sphere can hit them.",
@@ -3140,6 +3147,10 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (RB.waterTimes) {   // Fire-Proof Bot: Dragon fire does nothing, Frogs hit extra hard
     if (kind === "fire" || isBurn) { if (!isBurn && Math.random() < 0.3) { const q = rpos(r); floatText(q.x, q.y - 16, "Fire-proof!", "#c9ced6", 0.6); } return; }
     if (kind === "water") amt *= RB.waterTimes;
+  }
+  if (RB.chunkEvery && !isBurn) {   // Glacier Golem: every so much damage, an ice chunk breaks off and keeps marching
+    r.chunkDmg = (r.chunkDmg || 0) + amt;
+    while (r.chunkDmg >= RB.chunkEvery) { r.chunkDmg -= RB.chunkEvery; spawn({ type: "icechunk", d: Math.max(0, r.d - 10), path: r.path }); const q = rpos(r); burst(q.x, q.y, "#bfe6fa", 12); floatText(q.x, q.y - 30, "Crack!", "#bfe6fa", 0.8); }
   }
   if (RB.crackHit && !r.cracked) {   // Obsidian Shell: half damage until one big hit cracks it
     if (amt >= RB.crackHit) { r.cracked = true; const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
@@ -3221,7 +3232,7 @@ function fire(t, s, target) {
         }
         G.fx.push({ kind: "splash", x: p.x, y: p.y, r: s.splash * T, t: 0.3, col: "150,110,60" });
       }
-      hurt(r, s.damage, s.vision, false, "plant");
+      hurt(r, s.damage * plowMul(r, t.x * T + 16, t.y * T + 16), s.vision, false, "plant");
       if (!r.dead) r.rootT = isHeavy(r) ? 0.2 : s.holdSeconds;
     }
     if (s.splash) G.shake = Math.max(G.shake, 0.08);
@@ -3238,13 +3249,13 @@ function fire(t, s, target) {
     G.tongues.push({ tower: t, target, s, t: 0, dur: 0.3, hit: false, end: null });
     Sound.play("tongue");
   } else {
-    G.shots.push({ kind: t.kind, x: sx, y: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
+    G.shots.push({ kind: t.kind, x: sx, y: sy, ox: sx, oy: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
     // Twin Gusts / Feather Storm: extra gusts at the next robots in range.
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
       G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
         .sort((a, b) => b.d - a.d).slice(0, s.targets - 1)
-        .forEach((r) => G.shots.push({ kind: t.kind, x: sx, y: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
+        .forEach((r) => G.shots.push({ kind: t.kind, x: sx, y: sy, ox: sx, oy: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
     }
     Sound.play(t.kind);
   }
@@ -3265,7 +3276,7 @@ function landShot(sh) {
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : sh.kind === "crab" ? "255,150,110" : "120,200,255" });
     if (sh.kind === "crab") { burst(c.x, c.y, "#ffb08a", 10); burst(c.x, c.y, "#e8f6ff", 8); G.shake = Math.max(G.shake, 0.05); }
   }
-  hurt(r, s.damage, s.vision, false, sh.kind);
+  hurt(r, s.damage * plowMul(r, sh.ox, sh.oy), s.vision, false, sh.kind);
   if (r.dead) return;
   if (sh.kind === "fire" && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
@@ -3522,6 +3533,17 @@ function burst(x, y, col, n) {
 function floatText(x, y, text, col, life = 1.1) { G.fx.push({ kind: "text", x, y, text, col, t: life, life }); }
 
 /* ---------- update ---------- */
+/* ---------- snow robot powers ---------- */
+// Snowplow Bot: its plow blocks some damage from towers in front of it (ahead of it on the road).
+function plowMul(r, ox, oy) {
+  const fa = (SETTINGS.robots[r.type] || {}).frontArmor; if (!fa || ox == null) return 1;
+  const a = posAt(r.path || G.map, r.d), b = posAt(r.path || G.map, r.d + 8), dx = b.x - a.x, dy = b.y - a.y;
+  if ((ox - a.x) * dx + (oy - a.y) * dy <= 0) return 1;
+  if (Math.random() < 0.15) floatText(a.x, a.y - 18, "Blocked!", "#f2c230", 0.6);
+  return fa;
+}
+// Snow Drones and the Yeti Mech freeze towers: they can't attack, and they're covered in ice
+function freezeTower(t, sec) { t.stunT = Math.max(t.stunT || 0, sec); t.iceT = Math.max(t.iceT || 0, sec); burst(t.x * T + 16, t.y * T + 12, "#e6f6ff", 10); }
 /* ---------- lava-level robot powers ---------- */
 function lavaPowers(dt) {
   const RS = SETTINGS.robots;
@@ -3552,6 +3574,22 @@ function lavaPowers(dt) {
         if (t) { t.pillar = 1; floatText(t.x * T + 16, t.y * T - 4, "Trapped!", "#c9c4d6"); burst(t.x * T + 16, t.y * T + 24, "#5a5664", 16); }
         floatText(q.x, q.y - 34, "SLAM!", "#c9c4d6");
       }
+    } else if (r.type === "snowdrone") {   // Snow Drone: drops a snowball that freezes a tower below it
+      r.dropT = (r.dropT ?? RS.snowdrone.dropEvery * 0.6) - dt;
+      if (r.dropT <= 0) {
+        const gy = q.y + 14, t = G.towers.filter((t) => Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - gy) <= 3 * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - gy) - Math.hypot(b.x * T - q.x, b.y * T - gy))[0];
+        if (t) { r.dropT = RS.snowdrone.dropEvery; freezeTower(t, RS.snowdrone.freezeSeconds); floatText(t.x * T + 16, t.y * T - 4, "Frozen!", "#bfe6fa", 0.8); G.fx.push({ kind: "splash", x: t.x * T + 16, y: t.y * T + 16, r: 0.7 * T, t: 0.3, col: "230,246,255" }); }
+        else r.dropT = 0.3;
+      }
+    } else if (r.type === "yetimech") {   // Yeti Mech: roars and throws a giant snowball that freezes towers around it
+      r.roarT = (r.roarT ?? RS.yetimech.roarEvery * 0.5) - dt;
+      if (r.roarT <= 0) {
+        r.roarT = RS.yetimech.roarEvery; const R = RS.yetimech.freezeRadius * T;
+        for (const t of G.towers) if (Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= R) freezeTower(t, RS.yetimech.freezeSeconds);
+        G.fx.push({ kind: "splash", x: q.x, y: q.y, r: R, t: 0.4, col: "230,246,255" }); G.fx.push({ kind: "splash", x: q.x, y: q.y, r: R * 0.6, t: 0.4, col: "190,230,255" });
+        for (let i = 0; i < 26; i++) { const a = Math.random() * Math.PI * 2, v = 50 + Math.random() * 90; G.particles.push({ kind: "spark", x: q.x, y: q.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6 - 30, t: 0, life: 0.6, col: Math.random() < 0.6 ? "#ffffff" : "#bfe6fa" }); }
+        floatText(q.x, q.y - 34, "ROAR!", "#e6f6ff"); G.shake = Math.max(G.shake, 0.2); Sound.play("smash");
+      }
     } else if (r.type === "volcanoheart") {   // Volcano Heart: heals while on a lava square (unless it's frozen)
       if (G.map.lava && G.map.lava.has(tx + "," + ty) && !(r.freezeT > 0) && r.hp < r.maxHp) {
         r.hp = Math.min(r.maxHp, r.hp + RS.volcanoheart.healPerSecond * (SETTINGS.levels[G.level].robotHealth || 1) * G.diff.robotHealth * dt);
@@ -3565,7 +3603,7 @@ function update(dt) {
   G.time += dt;
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
-    if (!r.dead) { hurt(r, f.dmg, f.vision, false, "hydra"); const q = rpos(r); burst(q.x, q.y - 4, "#7fe0c8", 6); burst(q.x, q.y - 4, "#ffffff", 3); }
+    if (!r.dead) { hurt(r, f.dmg * plowMul(r, f.tower.x * T + 16, f.tower.y * T + 16), f.vision, false, "hydra"); const q = rpos(r); burst(q.x, q.y - 4, "#7fe0c8", 6); burst(q.x, q.y - 4, "#ffffff", 3); }
   }
   for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;
   for (const m of G.meteors || []) { m.t += dt; if (m.t >= m.dur && !m.hit) { m.hit = true; landFireball(m); } }
@@ -3625,7 +3663,7 @@ function update(dt) {
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
     if (r.under) sp *= 1.5;   // Lava Divers swim fast under the lava
-    if (G.map.ice && G.map.ice.size && !r.flying) { const q = rpos(r); r.sliding = G.map.ice.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sliding) sp *= SETTINGS.levels[G.level].iceSpeed || 1.4; }   // sliding on the ice
+    if (G.map.ice && G.map.ice.size && !r.flying) { const q = rpos(r); r.sliding = G.map.ice.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sliding) sp *= (SETTINGS.robots[r.type] || {}).iceSpeed || SETTINGS.levels[G.level].iceSpeed || 1.4; }   // sliding on the ice (Penguin Bots belly-slide extra fast)
     if (G.map.quick && G.map.quick.size && !r.flying) { const q = rpos(r); r.sinking = G.map.quick.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sinking) sp *= 1 - (SETTINGS.quicksandSlow ?? 0.5); }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
     if (r.knock > 0) {
@@ -3642,6 +3680,10 @@ function update(dt) {
       if (wall.hp <= 0) breakNutWall(wall);
     }
     r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
+    if (r.type === "snowball") {   // Snowball Roller: gets bigger and tougher with every square it rolls
+      r.rolled = (r.rolled || 0) + sp * dt;
+      while (r.rolled >= 1) { r.rolled -= 1; const g = SETTINGS.robots.snowball.growPerSquare * G.diff.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1); r.maxHp += g; r.hp += g; r.grown = (r.grown || 0) + 1; }
+    }
     if (r.d >= (r.path || G.map).total) reachBase(r);
     if (G.over) return;
   }
@@ -3673,6 +3715,7 @@ function update(dt) {
         G.shake = Math.max(G.shake, 0.18); Sound.play("smash");
       }
     }
+    if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech
     if (t.stunT > 0) { t.stunT -= dt; continue; }   // caught in a sandstorm: can't attack
     if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
@@ -3732,7 +3775,7 @@ function update(dt) {
     if (!r.dead && canSee) { const p = rpos(r); tg.end = { x: p.x, y: p.y - 4 }; }
     if (!tg.hit && tg.t >= tg.dur * 0.45) {
       tg.hit = true;
-      if (!r.dead && canSee) { landShot({ kind: "water", target: r, s: tg.s }); Sound.play("water"); }
+      if (!r.dead && canSee) { landShot({ kind: "water", target: r, s: tg.s, ox: tg.tower.x * T + 16, oy: tg.tower.y * T + 16 }); Sound.play("water"); }
     }
   }
   G.tongues = G.tongues.filter((tg) => tg.t < tg.dur && G.towers.includes(tg.tower));
@@ -3891,10 +3934,17 @@ function draw() {
     let img = towerSprite(t.kind);
     if (t.kind === "fire" && t.level >= 3) img = [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid][Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
-    if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";   // trapped by a Pillar Titan: grayed out, but still visible
+    if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
+    else if (t.iceT > 0) x.filter = "saturate(0.4) brightness(1.15) hue-rotate(160deg)";   // frozen: icy blue   // trapped by a Pillar Titan: grayed out, but still visible
     if (face < 0) { x.save(); x.translate(cx, 0); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
     else x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
     x.filter = "none";
+    if (t.iceT > 0) {   // a block of ice around a frozen tower
+      const k = Math.min(1, t.iceT), bw = sz * 0.9, bh = sz * 0.95, bx = cx - bw / 2, byy = by - bh;
+      x.fillStyle = `rgba(170,225,255,${0.4 * k})`; x.fillRect(bx, byy, bw, bh);
+      x.strokeStyle = `rgba(240,250,255,${0.9 * k})`; x.lineWidth = 1.5; x.strokeRect(bx, byy, bw, bh);
+      x.fillStyle = `rgba(255,255,255,${0.8 * k})`; x.fillRect(bx + 2, byy + 2, bw * 0.3, 2); x.fillRect(bx + 2, byy + 2, 2, bh * 0.35);
+    }
     if (t.kind === "hydra") {   // the Hydra's red eyes glow and throb
       const pulse = 0.55 + 0.45 * Math.sin(G.time * 4 + t.x * 1.7), k = s2 / 32;
       for (const [ex, ey] of HYDRA_EYES) {
@@ -3959,7 +4009,8 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" ? 60 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
+    const sz = r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" ? 60 :
+      r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
     if (r.under) {   // a Lava Diver swimming under the lava: only bubbles and a ripple show
