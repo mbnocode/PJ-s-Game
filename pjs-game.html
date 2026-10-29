@@ -75,6 +75,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 button:disabled { opacity: .45; cursor: not-allowed; }
 button.go { background: var(--leaf); border-color: var(--leaf-dark); color: #1b1006; box-shadow: 0 3px 0 var(--leaf-dark); }
 button.go:hover { background: #f58b42; }
+/* the level picker's buttons each get their own color */
+#s-levels #b-perks, #s-levels #b-towers, #s-levels #b-enemies, #s-levels #b-achievements, #s-levels #b-join, #s-levels #b-boards { color: var(--btn-ink, #1b1006); background: var(--btn); border-color: var(--btn-dark); box-shadow: 0 3px 0 var(--btn-dark); }
+#s-levels #b-perks:hover, #s-levels #b-towers:hover, #s-levels #b-enemies:hover, #s-levels #b-achievements:hover, #s-levels #b-join:hover, #s-levels #b-boards:hover { filter: brightness(1.12); }
+#s-levels #b-perks { --btn: #f2c230; --btn-dark: #9a7212; }          /* Upgrades: gold */
+#s-levels #b-towers { --btn: #6cc24a; --btn-dark: #2f7d32; }         /* Towers: green */
+#s-levels #b-enemies { --btn: #e8574a; --btn-dark: #8e2a22; --btn-ink: #fff4ee; }   /* Enemies: red */
+#s-levels #b-achievements { --btn: #a77ce0; --btn-dark: #5e3399; --btn-ink: #fff8ff; }   /* Achievements: purple */
+#s-levels #b-join { --btn: #4a9ae0; --btn-dark: #1f5fa8; --btn-ink: #f4faff; }   /* Join a friend's challenge: blue */
+#s-levels #b-boards { --btn: #3fc4a8; --btn-dark: #1f7a68; }         /* Leaderboards: teal */
 button.big { font-size: 26px; padding: 14px 34px; }
 button.link { background: none; border: none; box-shadow: none; color: var(--muted); font-family: var(--body); font-weight: 400; font-size: 15px; text-decoration: underline; padding: 6px; }
 
