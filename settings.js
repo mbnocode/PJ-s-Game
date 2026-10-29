@@ -165,9 +165,9 @@ const SETTINGS = {
                 [ { name: "Long Necks",     about: "Reaches 1 more square.", rangePlus: 1 },
                   { name: "Sharp Fangs",    about: "Bites 50% harder.", damageTimes: 1.5 } ],
                 [ { name: "Hungry Heads",   about: "Bites 50% faster.", speedTimes: 1.5 },
-                  { name: "Extra Bite",     about: "Bites 1 more robot each time (4 at once).", targetsPlus: 1 } ],
-                [ { name: "Hydra's Fury",   about: "Bites twice as hard.", damageTimes: 2 },
                   { name: "Serpent Eyes",   about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
+                [ { name: "Hydra's Fury",   about: "Bites twice as hard.", damageTimes: 2 },
+                  { name: "Extra Bite",     about: "Bites 1 more robot each time (4 at once).", targetsPlus: 1 } ],
               ] },
   },
   upgradeCost: [0.7, 1.0, 1.5],   // price of Upgrade 1, 2 and 3, times the Tower's price
