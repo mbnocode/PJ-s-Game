@@ -94,6 +94,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #slot-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; image-rendering: pixelated; z-index: 0; pointer-events: none; }
 #s-slots { position: relative; }
 #s-slots > *:not(.slot-layout), .slot-layout > *:not(#slot-scene), .slot-layout #slot-cards > * { position: relative; z-index: 1; }
+#tpanel .aims { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 2px 0 6px; }
+#tpanel .aims button { font-size: 12px; padding: 5px 2px; min-height: 0; }
+#tpanel .aims button[aria-pressed="true"] { background: var(--gold); color: #23180c; border-color: #fff3c4; }
+#tpanel .aim-t { font-family: var(--display); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
 #tpanel .icebtn { background: #3a86c4; border-color: #bfe6fa; color: #f0fbff; }
 .dadcheck { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 10, 12, 0.8); }
 .dadcheck[hidden] { display: none; }
@@ -202,7 +206,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 }
 .banner p { flex: 1; font-size: 16px; }
 /* the "Coming next" card shown between waves */
-.nextwave { position: absolute; z-index: 5; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(14, 22, 18, 0.92); border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px 10px; color: #f4efe0; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.nextwave { position: absolute; z-index: 3; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(14, 22, 18, 0.92); border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px 10px; color: #f4efe0; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
 .nextwave .t { font-family: var(--display); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 6px; }
 .nextwave .foes { display: flex; gap: 14px; justify-content: center; width: auto; }
 .nextwave .nf { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; }
@@ -2821,6 +2825,7 @@ function openPanel(t) {
   }
   if (s.onFactory) lines.push(`On Factory: ${SETTINGS.factoryWeakness} less damage`);
   const spec = SETTINGS.towers[t.kind];
+  const aims = s.damage > 0 && t.kind !== "wizard" && t.kind !== "squirrel";   // towers that attack can choose their target
   const ice = spec.iceDragon, iceOK = ice && !t.ice && ice.themes.includes(G.map.theme);   // snowy levels: the Ice Dragon upgrade
   if (t.ice) lines.push(`Ice Dragon: slows robots ${Math.round(s.slowBy * 100)}% for ${s.slowSeconds.toFixed(1)}s`);
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
@@ -2836,6 +2841,7 @@ function openPanel(t) {
     <span class="stars">${"■".repeat(t.level + 1)}${"□".repeat(3 - t.level)} Upgrade ${t.level}/3</span>
     ${picked.length ? `<span class="s picked">${picked.map((c) => "✓ " + c.name).join("<br>")}</span>` : ""}
     <span class="s">${lines.join("<br>")}</span>
+    ${aims ? `<span class="s aim-t">Target</span><div class="aims">${TARGET_MODES.map(([k, label]) => `<button id="p-aim-${k}" aria-pressed="${(t.target || "first") === k}">${label}</button>`).join("")}</div>` : ""}
     ${choices ? `<span class="s">Pick an upgrade · ${price} leaves</span><div class="pick">${choices.map((c, i) =>
       `<button class="go" id="p-pick-${i}" ${G.leaves < price ? "disabled" : ""}><b>${c.name}</b><small>${c.about}</small></button>`).join("")}</div>` : ""}
     ${iceOK ? `<button class="go wallbtn icebtn" id="p-ice" ${G.leaves < ice.cost ? "disabled" : ""}>Turn into Ice Dragon · ${ice.cost}<small>Its icy blasts hit ${Math.round(((ice.damageTimes || 1) - 1) * 100)}% harder and slow robots like a Water Frog (instead of burning them).</small></button>` : ""}
@@ -2860,6 +2866,7 @@ function openPanel(t) {
   };
   if ($("p-up")) $("p-up").onclick = () => doUpgrade();
   (choices || []).forEach((c, i) => ($("p-pick-" + i).onclick = () => doUpgrade(i)));
+  if (aims) TARGET_MODES.forEach(([k]) => ($("p-aim-" + k).onclick = () => { t.target = k; Sound.play("place"); openPanel(t); }));
   if ($("p-wall")) $("p-wall").onclick = () => { buildNutWall(t, s.nutWall); p.hidden = true; G.sel = null; updateHud(); };
   if ($("p-ice")) $("p-ice").onclick = () => {
     if (G.leaves < ice.cost) return;
@@ -3243,13 +3250,22 @@ function reachBase(r) {
   redrawGround(); updateHud();
   if (G.health <= 0) finish(false); else { sendProgress(false); renderFriends(); }
 }
+// Each tower picks which robot to attack: first in line (closest to your treehouse), last in line, the strongest, or Bosses first.
+const TARGET_MODES = [["first", "First"], ["last", "Last"], ["strong", "Strongest"], ["boss", "Bosses"]];
+function targetRank(t) {   // a score for each robot: the tower attacks the highest
+  const m = t.target || "first";
+  if (m === "last") return (r) => -r.d;
+  if (m === "strong") return (r) => r.hp * 1000 + r.d;
+  if (m === "boss") return (r) => (isHeavy(r) ? 1e7 : 0) + r.d;   // no Boss in range: first in line
+  return (r) => r.d;
+}
 function findTarget(t, s) {
-  const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
-  let best = null, bestD = -1;
+  const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T, rank = targetRank(t);
+  let best = null, bestV = -Infinity;
   for (const r of G.robots) {
     if (r.dead || (r.hideT > 0 && !s.vision) || !canHit(t.kind, r)) continue;
     const p = rpos(r);
-    if (Math.hypot(p.x - cx, p.y - cy) <= R && r.d > bestD) { best = r; bestD = r.d; }
+    if (Math.hypot(p.x - cx, p.y - cy) <= R) { const v = rank(r); if (v > bestV) { best = r; bestV = v; } }
   }
   return best;
 }
@@ -3261,7 +3277,7 @@ function fire(t, s, target) {
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
       G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
-        .sort((a, b) => b.d - a.d).slice(0, s.targets - 1).forEach((r) => grabs.push(r));
+        .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, s.targets - 1).forEach((r) => grabs.push(r));
     }
     for (const r of grabs) {
       const p = rpos(r);
@@ -3286,7 +3302,7 @@ function fire(t, s, target) {
     // Each of the Hydra's heads lunges out and bites a different robot.
     const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
     const bites = [target, ...G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && Math.hypot(rpos(r).x - cx, rpos(r).y - cy) <= R)
-      .sort((a, b) => b.d - a.d).slice(0, (s.targets || 3) - 1)];
+      .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, (s.targets || 3) - 1)];
     bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : [1, 0, 2][i], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
     Sound.play("tongue");
   } else if (t.kind === "water") {
@@ -3299,7 +3315,7 @@ function fire(t, s, target) {
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
       G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
-        .sort((a, b) => b.d - a.d).slice(0, s.targets - 1)
+        .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, s.targets - 1)
         .forEach((r) => G.shots.push({ kind: t.kind, ice: !!t.ice, x: sx, y: sy, ox: sx, oy: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
     }
     Sound.play(t.kind);
