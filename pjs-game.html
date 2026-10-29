@@ -2666,7 +2666,7 @@ $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 // Gift codes add Golden Acorns to the save slot you're in (once per slot).
-const GIFT_CODES = { "PJ250": 250 };
+const GIFT_CODES = { "PJ250": 250, "PJ1050": 1050 };
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
