@@ -94,6 +94,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #slot-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; image-rendering: pixelated; z-index: 0; pointer-events: none; }
 #s-slots { position: relative; }
 #s-slots > *:not(.slot-layout), .slot-layout > *:not(#slot-scene), .slot-layout #slot-cards > * { position: relative; z-index: 1; }
+#tpanel .icebtn { background: #3a86c4; border-color: #bfe6fa; color: #f0fbff; }
 .dadcheck { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 10, 12, 0.8); }
 .dadcheck[hidden] { display: none; }
 .dadcheck .box { max-width: 440px; background: var(--panel); border: 3px solid var(--gold); border-radius: 10px; padding: 22px; text-align: center; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
@@ -639,6 +640,8 @@ SPR.fire = makeSprite(ART.fire, false, DRAGON_COLORS);   // 32 x 32 dragon
 SPR.wizard = makeSprite(ART.wizard, false, { P: "#4b2f9e", p: "#6d4fd0", y: "#f2c230", e: "#f1c9a0", R: "#e58a8a", o: "#d9a074", w: "#f4f4f4", g: "#c9ced6", n: "#8a5a2c", N: "#4e2d14", u: "#4fd1e8", U: "#e0fbff" });   // 32 x 32 wizard
 SPR.fire_mid = makeSprite(ART.fire_mid, false, DRAGON_COLORS);    // wing level (for flapping)
 SPR.fire_down = makeSprite(ART.fire_down, false, DRAGON_COLORS);  // wing down (for flapping)
+const ICE_DRAGON_COLORS = { r: "#5ab8e8", R: "#2a78b8", W: "#8fd8ff", M: "#d6f4ff", y: "#bfe6fa", f: "#f0fbff" };   // the Ice Dragon: blue scales, frosty wings
+SPR.fire_ice = makeSprite(ART.fire, false, ICE_DRAGON_COLORS); SPR.fire_mid_ice = makeSprite(ART.fire_mid, false, ICE_DRAGON_COLORS); SPR.fire_down_ice = makeSprite(ART.fire_down, false, ICE_DRAGON_COLORS);
 SPR.healer = makeSprite(ART.healer, false, { m: "#b8834a", M: "#d29a5c", n: "#8a5a2c", N: "#3a2410", e: "#f6ead2", y: "#ffb347" });
 // In the Swamp, the Water Frog is a muddy brown swamp frog. Everywhere else it stays blue.
 SPR.air = makeSprite(ART.air, false, { m: "#a8743e", n: "#6e4220", N: "#4e2d14", e: "#f4e2c0", E: "#ead2a6", y: "#ffd34d", w: "#ffffff", o: "#ff9a2a", O: "#c96a12" });   // 32 x 32 owl
@@ -2392,6 +2395,7 @@ function startGame(L, d, tutorial, online) {
   renderShelf(); updateHud(); show("game"); fitBoard();
   $("b-speed").textContent = "1×";
   tipQueue.length = 0;
+  if (SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
   if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`The castle sends out EXTRA robots! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer extras. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
   if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
   $("code-chip").hidden = true; $("friends").hidden = true;
@@ -2711,6 +2715,9 @@ function towerStats(t) {
     if (boost.rangePlus) out.range += boost.rangePlus;
     out.levelBoost = boost;
   }
+  if (t.ice) {   // Ice Dragon: slows instead of burning
+    const ic = SETTINGS.towers.fire.iceDragon; out.name = "Ice Dragon"; out.slowBy = ic.slowBy; out.slowSeconds = ic.slowSeconds; out.burnDamagePerSecond = 0; out.burnSeconds = 0;
+  }
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
   return out;
 }
@@ -2800,6 +2807,8 @@ function openPanel(t) {
   }
   if (s.onFactory) lines.push(`On Factory: ${SETTINGS.factoryWeakness} less damage`);
   const spec = SETTINGS.towers[t.kind];
+  const ice = spec.iceDragon, iceOK = ice && !t.ice && ice.themes.includes(G.map.theme);   // snowy levels: the Ice Dragon upgrade
+  if (t.ice) lines.push(`Ice Dragon: slows robots ${Math.round(s.slowBy * 100)}% for ${s.slowSeconds.toFixed(1)}s`);
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
@@ -2815,6 +2824,7 @@ function openPanel(t) {
     <span class="s">${lines.join("<br>")}</span>
     ${choices ? `<span class="s">Pick an upgrade · ${price} leaves</span><div class="pick">${choices.map((c, i) =>
       `<button class="go" id="p-pick-${i}" ${G.leaves < price ? "disabled" : ""}><b>${c.name}</b><small>${c.about}</small></button>`).join("")}</div>` : ""}
+    ${iceOK ? `<button class="go wallbtn icebtn" id="p-ice" ${G.leaves < ice.cost ? "disabled" : ""}>Turn into Ice Dragon · ${ice.cost}<small>Its icy blasts slow robots like a Water Frog (instead of burning them).</small></button>` : ""}
     ${s.nutWall ? `<button class="go wallbtn" id="p-wall">Build Nut Wall<small>The squirrel jumps onto the nearest path and blocks robots. It's gone for good.</small></button>` : ""}
     <div class="row">
       ${choices ? "" : `<button class="go" id="p-up" ${price === null || G.leaves < price ? "disabled" : ""}>${price === null ? "Max" : "Upgrade " + price}</button>`}
@@ -2837,6 +2847,12 @@ function openPanel(t) {
   if ($("p-up")) $("p-up").onclick = () => doUpgrade();
   (choices || []).forEach((c, i) => ($("p-pick-" + i).onclick = () => doUpgrade(i)));
   if ($("p-wall")) $("p-wall").onclick = () => { buildNutWall(t, s.nutWall); p.hidden = true; G.sel = null; updateHud(); };
+  if ($("p-ice")) $("p-ice").onclick = () => {
+    if (G.leaves < ice.cost) return;
+    G.leaves -= ice.cost; t.spent += ice.cost; t.ice = true; Sound.play("upgrade");
+    burst(t.x * T + 16, t.y * T + 12, "#bfe6fa", 18); burst(t.x * T + 16, t.y * T + 12, "#ffffff", 10); floatText(t.x * T + 16, t.y * T - 6, "Ice Dragon!", "#bfe6fa", 1.2);
+    updateHud(); updateShelf(); openPanel(t);
+  };
   $("p-sell").onclick = () => {
     G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t); updateShelf();
     Sound.play("sell"); p.hidden = true; G.sel = null; updateHud();
@@ -3250,13 +3266,13 @@ function fire(t, s, target) {
     G.tongues.push({ tower: t, target, s, t: 0, dur: 0.3, hit: false, end: null });
     Sound.play("tongue");
   } else {
-    G.shots.push({ kind: t.kind, x: sx, y: sy, ox: sx, oy: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
+    G.shots.push({ kind: t.kind, ice: !!t.ice, x: sx, y: sy, ox: sx, oy: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
     // Twin Gusts / Feather Storm: extra gusts at the next robots in range.
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
       G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && (() => { const q = rpos(r); return Math.hypot(q.x - cx, q.y - cy) <= R; })())
         .sort((a, b) => b.d - a.d).slice(0, s.targets - 1)
-        .forEach((r) => G.shots.push({ kind: t.kind, x: sx, y: sy, ox: sx, oy: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
+        .forEach((r) => G.shots.push({ kind: t.kind, ice: !!t.ice, x: sx, y: sy, ox: sx, oy: sy, target: r, s, speed: (t.kind === "air" ? 7 : 10) * T }));
     }
     Sound.play(t.kind);
   }
@@ -3271,19 +3287,21 @@ function landShot(sh) {
       if (o === r || o.dead || (o.hideT > 0 && !s.vision) || !canHit(sh.kind, o)) continue;
       const q = rpos(o);
       if (Math.hypot(q.x - c.x, q.y - c.y) <= R) { hurt(o, s.damage * 0.5, s.vision, false, sh.kind); if (!o.dead && sh.kind === "water") { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
-        if (!o.dead && sh.kind === "fire" && !(SETTINGS.robots[o.type] || {}).waterTimes) { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
+        if (!o.dead && sh.kind === "fire" && !sh.ice && !(SETTINGS.robots[o.type] || {}).waterTimes) { o.burnT = s.burnSeconds; o.burnDps = s.burnDamagePerSecond; }
+        if (!o.dead && sh.ice) { o.slowT = s.slowSeconds; o.slowBy = s.slowBy; }
         if (!o.dead && sh.kind === "air" && !isHeavy(o)) o.knock = (o.knock || 0) + s.pushBack * T * 0.6; }
     }
-    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : sh.kind === "crab" ? "255,150,110" : "120,200,255" });
+    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.ice ? "170,225,255" : sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : sh.kind === "crab" ? "255,150,110" : "120,200,255" });
     if (sh.kind === "crab") { burst(c.x, c.y, "#ffb08a", 10); burst(c.x, c.y, "#e8f6ff", 8); G.shake = Math.max(G.shake, 0.05); }
   }
-  hurt(r, s.damage * plowMul(r, sh.ox, sh.oy), s.vision, false, sh.kind);
+  hurt(r, s.damage * plowMul(r, sh.ox, sh.oy), s.vision, false, sh.ice ? "ice" : sh.kind);
   if (r.dead) return;
-  if (sh.kind === "fire" && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
+  if (sh.kind === "fire" && !sh.ice && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
+  if (sh.ice) { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }   // the Ice Dragon's blast chills robots
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
   if (sh.kind === "air" && !isHeavy(r)) r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
   const p = rpos(r);
-  burst(p.x, p.y, sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : sh.kind === "healer" ? "#ffd36b" : "#ffffff", sh.kind === "healer" ? 9 : 5);
+  burst(p.x, p.y, sh.ice ? "#bfe6fa" : sh.kind === "fire" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : sh.kind === "healer" ? "#ffd36b" : "#ffffff", sh.kind === "healer" ? 9 : 5);
 }
 
 /* ---------- bonus maple leaf ---------- */
@@ -3508,6 +3526,19 @@ function drawBonusLeaf(x) {
 
 /* ---------- effects ---------- */
 // A big flickering fireball with a glow and a trail of embers.
+// The Ice Dragon's blast: a glowing blue ball of frost with a sparkly trail
+function drawIceBlast(x, sh) {
+  const tr = sh.trail || [];
+  tr.forEach((p, i) => { const k = 1 - i / tr.length; x.globalAlpha = 0.55 * k; x.fillStyle = i < 2 ? "#d6f4ff" : i < 4 ? "#8fd8ff" : "#4a9ad8"; x.beginPath(); x.arc(p.x, p.y, 5 * k + 1, 0, Math.PI * 2); x.fill(); });
+  x.globalAlpha = 1;
+  const g = x.createRadialGradient(sh.x, sh.y, 2, sh.x, sh.y, 16); g.addColorStop(0, "rgba(200,240,255,0.6)"); g.addColorStop(1, "rgba(120,200,255,0)");
+  x.fillStyle = g; x.beginPath(); x.arc(sh.x, sh.y, 16, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#4a9ad8"; x.beginPath(); x.arc(sh.x, sh.y, 6.5, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#8fd8ff"; x.beginPath(); x.arc(sh.x, sh.y, 4.5, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = "#ffffff"; x.lineWidth = 1.5; x.beginPath();   // a little snowflake in the middle
+  for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3 + G.time * 4; x.moveTo(sh.x - Math.cos(a) * 4, sh.y - Math.sin(a) * 4); x.lineTo(sh.x + Math.cos(a) * 4, sh.y + Math.sin(a) * 4); }
+  x.stroke();
+}
 function drawFireball(x, sh) {
   const tr = sh.trail || [];
   tr.forEach((p, i) => {
@@ -3764,7 +3795,7 @@ function update(dt) {
     const p = rpos(r), dx = p.x - sh.x, dy = p.y - sh.y, dist = Math.hypot(dx, dy), step = sh.speed * dt;
     if (sh.kind === "fire") {
       (sh.trail = sh.trail || []).unshift({ x: sh.x, y: sh.y }); if (sh.trail.length > 7) sh.trail.pop();
-      if (Math.random() < 0.35) G.particles.push({ kind: "spark", x: sh.x, y: sh.y, vx: (Math.random() - 0.5) * 40, vy: -20 - Math.random() * 30, t: 0, life: 0.3, col: Math.random() < 0.5 ? "#ffb347" : "#ff6a1a" });
+      if (Math.random() < 0.35) G.particles.push({ kind: "spark", x: sh.x, y: sh.y, vx: (Math.random() - 0.5) * 40, vy: -20 - Math.random() * 30, t: 0, life: 0.3, col: sh.ice ? (Math.random() < 0.5 ? "#e6f6ff" : "#8fd8ff") : Math.random() < 0.5 ? "#ffb347" : "#ff6a1a" });
     }
     if (sh.kind === "healer" && Math.random() < 0.4) G.particles.push({ kind: "spark", x: sh.x, y: sh.y, vx: (Math.random() - 0.5) * 20, vy: -10, t: 0, life: 0.35, col: "#fff1a8" });
     if (dist <= step + 4) { landShot(sh); sh.done = true; } else { sh.x += dx / dist * step; sh.y += dy / dist * step; }
@@ -3885,7 +3916,7 @@ function draw() {
     if (t.level >= 3 && t.kind !== "healer") {
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + t.x);
       const g = x.createRadialGradient(cx, by - sz / 2, 2, cx, by - sz / 2, 22);
-      const col = t.kind === "healer" ? "255,225,120" : t.kind === "air" ? "200,235,255" : t.kind === "fire" ? "255,150,60" : t.kind === "water" ? "120,190,255" : t.kind === "plant" ? "150,255,120" : t.kind === "crab" ? "255,140,110" : "190,140,255";
+      const col = t.kind === "healer" ? "255,225,120" : t.kind === "air" ? "200,235,255" : t.kind === "fire" ? (t.ice ? "140,215,255" : "255,150,60") : t.kind === "water" ? "120,190,255" : t.kind === "plant" ? "150,255,120" : t.kind === "crab" ? "255,140,110" : "190,140,255";
       g.addColorStop(0, `rgba(${col},${0.35 + 0.25 * pulse})`); g.addColorStop(1, `rgba(${col},0)`);
       x.fillStyle = g; x.fillRect(cx - 24, by - sz / 2 - 24, 48, 48);
     }
@@ -3932,8 +3963,8 @@ function draw() {
       x.fillStyle = go; x.beginPath(); x.arc(ox, oy, s2 * 0.42, 0, Math.PI * 2); x.fill();
       if (!G.paused && Math.random() < 0.06) G.particles.push({ kind: "spark", x: ox, y: oy, vx: (Math.random() - 0.5) * 30, vy: -20 - Math.random() * 15, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#c8f4ff" : "#c8a2ff" });
     }
-    let img = towerSprite(t.kind);
-    if (t.kind === "fire" && t.level >= 3) img = [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid][Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
+    let img = t.ice ? SPR.fire_ice : towerSprite(t.kind);
+    if (t.kind === "fire" && t.level >= 3) img = (t.ice ? [SPR.fire_ice, SPR.fire_mid_ice, SPR.fire_down_ice, SPR.fire_mid_ice] : [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid])[Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
     else if (t.iceT > 0) x.filter = "saturate(0.4) brightness(1.15) hue-rotate(160deg)";   // frozen: icy blue   // trapped by a Pillar Titan: grayed out, but still visible
@@ -4119,7 +4150,7 @@ function draw() {
 
   // shots
   for (const sh of G.shots) {
-    if (sh.kind === "fire") drawFireball(x, sh);
+    if (sh.kind === "fire") (sh.ice ? drawIceBlast : drawFireball)(x, sh);
     else if (sh.kind === "crab") {
       // a spinning spiral seashell
       x.save(); x.translate(sh.x, sh.y); x.rotate(G.time * 14);

@@ -38,6 +38,8 @@ const SETTINGS = {
 
   towers: {
     fire:   { name: "Fire Dragon", cost: 60,  range: 2.3, damage: 9,  attacksPerSecond: 2.4, burnDamagePerSecond: 5, burnSeconds: 2,
+              // On snowy levels you can pay to turn a Fire Dragon into an Ice Dragon: its icy blasts slow robots like a Water Frog (instead of burning them).
+              iceDragon: { cost: 150, slowBy: 0.45, slowSeconds: 1.6, themes: ["tundra", "glacier", "blizzard"] },
               about: "Shoots fireballs that keep burning.",
               // Pick ONE choice at each upgrade. Same kinds of choices as the Water Frog, plus
               // burnPlus (extra burn damage per second) and burnSecondsPlus (burns for longer).
