@@ -412,11 +412,18 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- Dadbot's "are you sure?" screen -->
   <div class="dadcheck" id="dadcheck" hidden role="dialog" aria-modal="true" aria-labelledby="dad-title">
     <div class="box">
-      <div class="dad-icon" aria-hidden="true">📋</div>
-      <h2 id="dad-title">Are you sure you want to continue?</h2>
-      <p>Dadbot, you have <b>a lot of work to do!</b> Emails to answer, meetings to go to, and chores to finish.</p>
-      <p class="muted">Maybe finish your work first, then come back and defend the treehouse.</p>
-      <div class="row"><button class="go" id="dad-no">Back to work</button><button id="dad-yes">Play anyway</button></div>
+      <div id="dad-ask">
+        <div class="dad-icon" aria-hidden="true">📋</div>
+        <h2 id="dad-title">Are you sure you want to continue?</h2>
+        <p>Dadbot, you have <b>a lot of work to do!</b> Emails to answer, meetings to go to, and chores to finish.</p>
+        <p class="muted">Maybe finish your work first, then come back and defend the treehouse.</p>
+        <div class="row"><button class="go" id="dad-no">Back to work</button><button id="dad-yes">Play anyway</button></div>
+      </div>
+      <div id="dad-wrong" hidden>
+        <div class="dad-icon" aria-hidden="true">❌</div>
+        <h2>That was the wrong answer!</h2>
+        <p>Back to the save slots you go, Dadbot.</p>
+      </div>
     </div>
   </div>
 
@@ -1846,9 +1853,15 @@ $("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
 const WORK_NICKS = ["dadbot"];
 function dadCheck(nick, go) {
   if (!WORK_NICKS.includes((nick || "").trim().toLowerCase())) { go(); return; }
+  $("dad-ask").hidden = false; $("dad-wrong").hidden = true;
   $("dadcheck").hidden = false; $("dad-no").focus();
-  $("dad-yes").onclick = () => { $("dadcheck").hidden = true; go(); };
-  $("dad-no").onclick = () => { $("dadcheck").hidden = true; };
+  // the twist: "Back to work" starts the level...
+  $("dad-no").onclick = () => { $("dadcheck").hidden = true; go(); };
+  // ...and "Play anyway" is the wrong answer: back to the save slots you go!
+  $("dad-yes").onclick = () => {
+    Sound.play("nope"); $("dad-ask").hidden = true; $("dad-wrong").hidden = false;
+    setTimeout(() => { $("dadcheck").hidden = true; renderSlots(); show("s-slots"); startSlotScene(); }, 2200);
+  };
 }
 $("b-start").onclick = () => dadCheck($("nick").value, startLevel);
 const startLevel = async () => {
