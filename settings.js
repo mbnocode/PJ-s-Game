@@ -147,10 +147,28 @@ const SETTINGS = {
               ] },
     // The Super Tower. It only shows up in the shop after you buy it on the Upgrades page.
     pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 30, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
-              about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders." },
+              about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders.",
+              // Pick ONE choice at each upgrade.
+              upgradeChoices: [
+                [ { name: "Starburst",      about: "Shoots stars at 1 more robot (4 at once).", targetsPlus: 1 },
+                  { name: "Far Sight",      about: "Reaches 1 more square.", rangePlus: 1 } ],
+                [ { name: "Shooting Stars", about: "Attacks 50% faster.", speedTimes: 1.5 },
+                  { name: "Heavy Stars",    about: "Hits 60% harder.", damageTimes: 1.6 } ],
+                [ { name: "Constellation",  about: "Shoots stars at 2 more robots.", targetsPlus: 2 },
+                  { name: "Supernova",      about: "Hits twice as hard.", damageTimes: 2 } ],
+              ] },
     // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads bites a different robot.
     hydra:    { name: "Hydra", cost: 180, range: 2.2, damage: 18, attacksPerSecond: 1.1, targets: 3, serpentUnlock: "hydra",
-              about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once." },
+              about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once.",
+              // Pick ONE choice at each upgrade.
+              upgradeChoices: [
+                [ { name: "Long Necks",     about: "Reaches 1 more square.", rangePlus: 1 },
+                  { name: "Sharp Fangs",    about: "Bites 50% harder.", damageTimes: 1.5 } ],
+                [ { name: "Hungry Heads",   about: "Bites 50% faster.", speedTimes: 1.5 },
+                  { name: "Extra Bite",     about: "Bites 1 more robot each time (4 at once).", targetsPlus: 1 } ],
+                [ { name: "Hydra's Fury",   about: "Bites twice as hard.", damageTimes: 2 },
+                  { name: "Serpent Eyes",   about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
+              ] },
   },
   upgradeCost: [0.7, 1.0, 1.5],   // price of Upgrade 1, 2 and 3, times the Tower's price
   upgradeDamage: 0.45,            // each Upgrade adds this much damage (0.45 = +45%)

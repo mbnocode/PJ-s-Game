@@ -2965,7 +2965,7 @@ function openPanel(t) {
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
-  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : "Grabs"} ${s.targets} robots at once`);
+  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : t.kind === "pegasus" ? "Shoots" : "Grabs"} ${s.targets} robots at once`);
   if (s.pushBack && spec.upgradeChoices) lines.push(`Pushes robots back ${s.pushBack.toFixed(1)} squares`);
   if (s.holdSeconds && t.kind === "plant" && spec.upgradeChoices) lines.push(`Holds robots for ${s.holdSeconds.toFixed(1)}s`);
   if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
@@ -3450,7 +3450,7 @@ function fire(t, s, target) {
     const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
     const bites = [target, ...G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && Math.hypot(rpos(r).x - cx, rpos(r).y - cy) <= R)
       .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, (s.targets || 3) - 1)];
-    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : [1, 0, 2][i], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
+    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : [1, 0, 2][i % 3], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
     Sound.play("tongue");
   } else if (t.kind === "water") {
     // The frog's tongue shoots out, smacks the robot, and snaps back.
