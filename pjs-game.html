@@ -712,6 +712,7 @@ const ART = {
   // a little bat that flies across the title screen (two wing frames)
   titlebat: ["................",".k............k.","k3k..........k3k","k23k........k32k","k223k.k..k.k322k","k2223k2kk2k3222k","k22223333332222k",".k22222rr22222k.","..kk22222222kk..","....kk2w22kk....","......kkkk......","................","................","................","................","................"],
   titlebat2: ["................","................","................","................","......k..k......",".....k2kk2k.....",".kkkkk3333kkkkk.","k333332rr233333k","k22222222222222k","k222kk2w22kk222k","k22k..kkkk..k22k",".kk..........kk.","................","................","................","................"],
+  titlebatglide: ["................","................","................","................","......k..k......",".kkkkk2kk2kkkkk.","k33333333333333k","k222222rr222222k","k2k2k222222k2k2k",".k.k.k2w22k.k.k.","......kkkk......","................","................","................","................","................"],   // wings spread out flat, gliding
   // snow robots
   icechunk: ["................", "................", "................", "................", ".....kkkkkk.....", "....kUUUUUck....", "...kUccccccbk...", "...kUcwccwcbk...", "...kUcrccrcbk...", "...kUccccccbk...", "...kUcccwccbk...", "...kbbbbbbbbk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   snowplow: [".....k..........","....kfk........x","...kkoEkk.......","..kssssssk...kkw","..ksgUwcck..kfYk","..ksgccrbk.kGkYk",".kksggggGkkkGfk.","ksssssssssssgfYk","ksgGGGGGGggGGkYk","ksggyYgyYggGGfk.","ksGGGGGGGGGGGfYk","kkkkkkkkkkkkkfYk","kGsgGsgGsgGGkkkw","kGgTGgTGgTGGk.wx",".kkkkkkkkkkk....","................"],
@@ -1551,12 +1552,16 @@ function titleBats(dt, t) {
   if ((tBats.next -= dt) <= 0) {
     tBats.next = TB.everySeconds[0] + Math.random() * (TB.everySeconds[1] - TB.everySeconds[0]);
     const right = Math.random() < 0.5, size = 40 + Math.random() * 24;
-    tBats.list.push({ x: right ? -size : W + size, dir: right ? 1 : -1, y: H * (0.08 + Math.random() * 0.45), size, speed: 160 + Math.random() * 120, wave: 18 + Math.random() * 22, ph: Math.random() * 6, age: 0 });
+    tBats.list.push({ x: right ? -size : W + size, dir: right ? 1 : -1, y: H * (0.08 + Math.random() * 0.45), size, speed: 420 + Math.random() * 220, wave: 30 + Math.random() * 30, ph: Math.random() * 6, age: 0 });
   }
   for (const b of tBats.list) {
     b.age += dt; b.x += b.dir * b.speed * dt;
-    const y = b.y + Math.sin(b.age * 3 + b.ph) * b.wave, img = Math.floor(b.age * 9) % 2 ? SPR.titlebat2 : SPR.titlebat;
-    c.save(); c.translate(b.x, y); if (b.dir < 0) c.scale(-1, 1); c.drawImage(img, -b.size / 2, -b.size / 2, b.size, b.size); c.restore();
+    // long smooth swoops; a quick burst of flaps, then a glide with the wings spread out
+    const w = 1.8, y = b.y + Math.sin(b.age * w + b.ph) * b.wave, climb = Math.cos(b.age * w + b.ph) * b.wave * w;
+    const cyc = (b.age + b.ph) % 1.3, flapping = cyc < 0.35;
+    const img = flapping ? (Math.floor(cyc * 22) % 2 ? SPR.titlebat2 : SPR.titlebat) : SPR.titlebatglide;
+    c.save(); c.translate(b.x, y); if (b.dir < 0) c.scale(-1, 1); c.rotate(Math.atan2(climb, b.speed) * 0.8);   // tilt with the swoop
+    c.drawImage(img, -b.size / 2, -b.size / 2, b.size, b.size); c.restore();
   }
   tBats.list = tBats.list.filter((b) => b.x > -80 && b.x < W + 80);
 }
