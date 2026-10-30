@@ -3033,7 +3033,7 @@ function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - Math.mi
 function towerUnlocked(k) {
   const tw = SETTINGS.towers[k], s = slot();
   if (tw.serpentUnlock) return !!(s && s.materials && s.materials[tw.serpentUnlock]);   // bought in the Serpent's Shop
-  if (tw.boxUnlock) return !!(s && s.box && s.box.found && s.box.found[tw.boxUnlock]);   // found in the Mystery Box
+  if (tw.boxUnlock) return !!(s && ((s.box && s.box.found && s.box.found[tw.boxUnlock]) || (s.codeTowers && s.codeTowers[k])));   // found in the Mystery Box (or unlocked with a code)
   return !tw.superTower || perkLevel("superTower") > 0;
 }
 function renderPerks() {
@@ -3429,17 +3429,22 @@ $("b-towers-back").onclick = () => { renderLevels(); show("s-levels"); };
 $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"); };
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
-// Gift codes add Golden Acorns to the save slot you're in (once per slot).
-const GIFT_CODES = { "PJ250": 250, "PJ1050": 1050 };
+// Gift codes add Golden Acorns (or unlock a tower) in the save slot you're in (once per slot).
+const GIFT_CODES = { "PJ1050": 1050, "PHOENIXRISE": { tower: "phoenix" } };
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
   if (!GIFT_CODES[code]) { msg.textContent = "That code doesn't work. Check the spelling and try again."; return; }
   s.gifts = s.gifts || [];
   if (s.gifts.includes(code)) { msg.textContent = "This save slot already used that code."; return; }
-  s.gifts.push(code); s.acorns = (s.acorns || 0) + GIFT_CODES[code]; saveSlots(slots);
+  const gift = GIFT_CODES[code];
+  if (gift.tower) {
+    if (towerUnlocked(gift.tower)) { msg.textContent = `You already have the ${SETTINGS.towers[gift.tower].name}!`; return; }
+    s.codeTowers = s.codeTowers || {}; s.codeTowers[gift.tower] = true;
+  } else s.acorns = (s.acorns || 0) + gift;
+  s.gifts.push(code); saveSlots(slots);
   Sound.play("upgrade"); $("gift-code").value = "";
-  msg.textContent = `+${GIFT_CODES[code]} Golden Acorns!`; renderPerks();
+  msg.textContent = gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
 };
 $("gift-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-gift").click(); });
 $("b-perks").onclick = () => { Sound.init(); $("gift-msg").hidden = true; renderPerks(); show("s-perks"); };
