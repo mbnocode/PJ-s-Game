@@ -705,17 +705,17 @@ const SETTINGS = {
                 [["superglaciergolem", 1, 0], ["yetimech", 2, 8], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 44, 0.33]],   // 25: three Glacier Golems merge into the Super Glacier Golem!
               ] },
     blizzard: { name: "Blizzard Peak", acornDropChance: 0.08, about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff! The Blizzard King is waiting at the end. Scores are worth 4x.", theme: "blizzard",
-              robotHealth: 1.32,
-              lateToughness: { fromWave: 10, perWave: 0.055 },  // after wave 10, robots get 5.5% tougher every wave
+              robotHealth: 1.3,
+              lateToughness: { fromWave: 10, perWave: 0.04 },  // after wave 10, robots get 4% tougher every wave
               scoreTimes: 4,
-              path: [[0, 1], [7, 1], [7, 5], [2, 5], [2, 9], [12, 9], [12, 3], [17, 3], [17, 9], [19, 9]],
+              path: [[0, 1], [18, 1], [18, 5], [12, 5], [12, 3], [7, 3], [7, 5], [1, 5], [1, 9], [6, 9], [6, 7], [11, 7], [11, 9], [19, 9]],   // a long, winding road up the mountain
               cliff: true,   // the bottom row is a cliff edge: nothing can be built there
-              ice: [[7, 3], [2, 7], [12, 6], [17, 6]],   // icy road squares: robots slide 1.4x faster
+              ice: [[10, 1], [18, 3], [9, 3], [1, 7], [11, 8], [15, 9]],   // icy road squares: robots slide 1.4x faster
               iceSpeed: 1.4,
               // Trees are snowy pines, mushrooms are snowy rocks, tall grass is ice crystals.
-              trees:     [[4, 3], [10, 6], [15, 1], [14, 6], [5, 10], [9, 0], [19, 5], [0, 7]],
-              mushrooms: [[4, 7], [10, 1], [15, 10], [8, 6]],
-              tallGrass: [[0, 10], [14, 10], [1, 3], [19, 1]],
+              trees:     [[4, 2], [15, 3], [10, 4], [3, 7], [14, 7], [9, 8], [16, 0], [19, 6]],
+              mushrooms: [[15, 6], [4, 10], [8, 0], [3, 4]],
+              tallGrass: [[0, 7], [13, 10], [9, 6], [17, 4]],
               // Blizzard Peak's own 25 waves. The last wave is the Blizzard King, all alone.
               waves: [
                 [["penguin", 8, 1.0]],                                                  // 1
@@ -740,7 +740,7 @@ const SETTINGS = {
                 [["glaciergolem", 2, 8], ["yetimech", 1, 0], [["penguin", "snowdrone", "snowplow"], 20, 0.5]],   // 20
                 [[["snowplow", "penguin", "snowdrone", "tank", "hider"], 30, 0.42]],    // 21
                 [["glaciergolem", 2, 8], [["snowball", "repair", "snowplow"], 22, 0.45]],   // 22
-                [["yetimech", 1, 0], ["boss", 1, 0, 4500], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 30, 0.42]],   // 23
+                [["boss", 1, 0, 4000], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 30, 0.42]],   // 23
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
