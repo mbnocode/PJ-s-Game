@@ -3337,6 +3337,7 @@ function renderTowersInfo() {
 $("b-towers").onclick = () => { Sound.init(); renderTowersInfo(); show("s-towers"); };
 /* ---------- achievements (per save slot) ---------- */
 const GRASS_LEVELS = ["meadow", "forest", "swamp"];
+const SAND_LEVELS = ["beach", "desert", "pyramid"];
 const beat = (s, L, d) => !!(s.best && s.best[L] && (d ? s.best[L][d] : Object.keys(s.best[L]).length));
 const ACHIEVEMENTS = [
   { id: "firststeps", name: "First Steps", about: "Beat the Meadow.", pic: "tree", check: (s) => beat(s, "meadow") },
@@ -3359,16 +3360,32 @@ const ACHIEVEMENTS = [
   { id: "acornhunter", name: "Acorn Hunter", about: "Collect 25 Golden Acorns on the grass levels.", pic: "acorndoubler", goal: ["grassAcorns", 25] },
   { id: "leaftapper", name: "Leaf Tapper", about: "Tap 500 big maple leaves on the grass levels.", pic: "leaf", goal: ["grassTaps", 500] },
   { id: "grassperfect", name: "Grass Perfect", about: "Beat all 3 grass levels without losing any health.", pic: "tallgrass", check: (s) => GRASS_LEVELS.every((L) => s.perfect && s.perfect[L]) },
+  // sand-level achievements
+  { id: "shellshocked", name: "Shell Shocked", about: "Beat the Beach using only Crabs.", pic: "crab" },
+  { id: "fixitfail", name: "Fix-It Fail", about: "Destroy a Repair Bot before it heals anything.", pic: "repair" },
+  { id: "secretshopper", name: "Secret Shopper", about: "Find the shopkeeper under the sand.", pic: "hermitcrab" },
+  { id: "twofront", name: "Two-Front War", about: "Beat the Desert while robots from one of its two factories never reach your treehouse.", pic: "gate" },
+  { id: "golemcrusher", name: "Golem Crusher", about: "Defeat a Sand Golem before its sandstorm stops any of your towers.", pic: "sandboss" },
+  { id: "droneswatter", name: "Drone Swatter", about: "Destroy 25 Sky Drones on the Desert.", pic: "drone", goal: ["desertDrones", 25] },
+  { id: "oasiskeeper", name: "Oasis Keeper", about: "Beat the Desert on Hard (or Nightmare).", pic: "cactus", check: (s) => beat(s, "desert", "hard") || beat(s, "desert", "nightmare") },
+  { id: "mummyunwrapper", name: "Mummy Unwrapper", about: "Destroy 30 Mummy Bots (the Scouts they unravel into count too).", pic: "mummy", goal: ["mummyKills", 30] },
+  { id: "sinkingfeeling", name: "Sinking Feeling", about: "Destroy 100 robots while they're stuck in quicksand.", pic: "boulder", goal: ["quicksandKills", 100] },
+  { id: "tombraider", name: "Tomb Raider", about: "Collect 10 Golden Acorns on the Lost Pyramid.", pic: "obelisk", goal: ["pyramidAcorns", 10] },
+  { id: "pharaoh", name: "Pharaoh's Treasure", about: "Beat the Lost Pyramid without placing any towers next to the pyramid.", pic: "column" },
+  { id: "sandchampion", name: "Sand Champion", about: "Beat all 3 sand levels: the Beach, the Desert and the Lost Pyramid.", pic: "palm", check: (s) => SAND_LEVELS.every((L) => beat(s, L)) },
+  { id: "desertnightmare", name: "Desert Nightmare", about: "Beat all 3 sand levels on Nightmare.", pic: "sandboss", check: (s) => SAND_LEVELS.every((L) => beat(s, L, "nightmare")) },
+  { id: "sandyperfect", name: "Sandy Perfect", about: "Beat all 3 sand levels without losing any health.", pic: "starfish", check: (s) => SAND_LEVELS.every((L) => s.perfect && s.perfect[L]) },
+  { id: "sunbaked", name: "Sun-Baked", about: "Play 10 games on the sand levels.", pic: "tumbleweed", goal: ["sandGames", 10] },
   { id: "boxopener", name: "Box Opener", about: "Open the Mystery Box 10 times.", pic: "mysteryboxopen", check: (s) => (s.boxOpened || 0) >= 10 },
   { id: "jackpot", name: "Jackpot!", about: "Find the secret jackpot in the Mystery Box.", pic: "phoenix", check: (s) => !!(s.box && s.box.found && s.box.found.phoenix) },
 ];
 // Counts that build up over many games (kept in the save slot), for achievements like Robot Recycler
-function addStat(key, n) {
-  const s = slot(); if (!s || !GRASS_LEVELS.includes(G.level)) return;
+function addStat(key, n, levels = GRASS_LEVELS) {   // levels = which levels count toward it (null = any level)
+  const s = slot(); if (!s || (levels && !levels.includes(G.level))) return;
   s.stats = s.stats || {}; s.stats[key] = (s.stats[key] || 0) + n; G.slotDirty = true;
   for (const a of ACHIEVEMENTS) if (a.goal && a.goal[0] === key && s.stats[key] >= a.goal[1]) earnAch(a.id);
 }
-const ACH_BOXES = 30;   // the page shows this many boxes; the extra ones are waiting for future achievements
+const ACH_BOXES = Math.max(30, Math.ceil((ACHIEVEMENTS.length + 6) / 6) * 6);   // the page shows this many boxes (a row or so of empty ones waiting for future achievements)
 function hasAch(id) { const s = slot(); return !!(s && s.achievements && s.achievements[id]); }
 function earnAch(id) {
   const s = slot(); if (!s) return; s.achievements = s.achievements || {};
@@ -3837,6 +3854,7 @@ board.addEventListener("pointerdown", (e) => {
     G.leaves -= price;
     G.towers.push({ kind: G.pick, x: c.x, y: c.y, face: pathFacing(c.x, c.y), level: 0, cool: 0.2, spent: price, born: G.time, boosted: false });
     if (G.pick === "healer") earnAch("deer");
+    { const lm = G.map.landmark; if (lm && c.x >= lm.x - 1 && c.x <= lm.x + lm.w && c.y >= lm.y - 1 && c.y <= lm.y + lm.h) G.nearPyramid = true; }   // (Pharaoh's Treasure)
     G.placedN = (G.placedN || 0) + 1; (G.placedKinds = G.placedKinds || {})[G.pick] = true;
     if (G.towers.filter((o) => o.kind === "healer").length >= 3) earnAch("herd");
     if (TOWER_ORDER.filter(towerUnlocked).every((k) => G.placedKinds[k])) earnAch("oneofeach");
@@ -3975,7 +3993,7 @@ function spawn(q) {
     flying: !!base.flying,
     path: q.path || (base.flying ? G.map.flights : G.map.paths)[(G.spawnN = (G.spawnN || 0) + 1) % G.map.paths.length],   // two factories take turns
     leaves: Math.round(base.leaves * (A ? A.leaves : 1)), points: Math.round(base.points * (A ? A.points : 1)),
-    slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0,
+    slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0, fromMummy: !!q.fromMummy,
   });
 }
 /* ---------- "Coming next": the 3 main robots in the next wave ---------- */
@@ -4097,19 +4115,26 @@ function kill(r) {
   // Junk Splitter: bursts into Mini-Clankers that keep marching from where it fell
   const sb = SETTINGS.robots[r.type];
   if (sb && sb.splitInto) {
-    for (let i = 0; i < sb.splitInto; i++) spawn({ type: sb.splitType || "mini", d: Math.max(0, r.d - i * 9), path: r.path });
+    for (let i = 0; i < sb.splitInto; i++) spawn({ type: sb.splitType || "mini", d: Math.max(0, r.d - i * 9), path: r.path, fromMummy: r.type === "mummy" });
     const q = rpos(r); burst(q.x, q.y, r.type === "mummy" ? "#f4e2c0" : "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, r.type === "mummy" ? "Unraveled!" : "Split!", "#c9ced6");
   }
   G.leaves += r.leaves; G.killPoints += r.points;
   { const s = slot(); if (s) { s.defeated = s.defeated || {}; s.defeated[r.type] = (s.defeated[r.type] || 0) + 1; G.slotDirty = true; } }
   addStat("grassKills", 1);
   if (isHeavy(r) && G.level === "forest" && r.d < (r.path || G.map).total / 2) earnAch("bossbuster");
+  // sand-level achievements
+  if (r.type === "repair" && !r.healedAny) earnAch("fixitfail");
+  if (r.type === "sandboss" && !r.stormed) earnAch("golemcrusher");
+  if (r.type === "drone") addStat("desertDrones", 1, ["desert"]);
+  if (r.type === "mummy" || r.fromMummy) addStat("mummyKills", 1, null);
+  if (r.sinking) addStat("quicksandKills", 1, null);
   const p = rpos(r);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
   // Every Boss always drops a Golden Acorn (on any level, any wave).
   const bossDrop = isHeavy(r) && SETTINGS.bossDropsAcorn;
   if (bossDrop || (chance && Math.random() < chance)) {
+    addStat("pyramidAcorns", acornTimes(slot()), ["pyramid"]);
     const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got; addStat("grassAcorns", got);
     floatText(p.x, p.y - 18, got > 1 ? `+${got} Golden Acorns!` : "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
@@ -4125,6 +4150,7 @@ function kill(r) {
 }
 function reachBase(r) {
   r.dead = true; G.hurtBase = true;   // (for the Untouchable achievement)
+  (G.hurtFrom = G.hurtFrom || new Set()).add(G.map.paths.indexOf(r.path) >= 0 ? G.map.paths.indexOf(r.path) : (G.map.flights || []).indexOf(r.path));   // which factory's robots got through (Two-Front War)
   const dmg = (SETTINGS.robots[r.type] || {}).baseHit || Math.min(SETTINGS.maxHitPerRobot, Math.max(1, Math.ceil(r.hp * SETTINGS.robotHitRatio)));
   G.health = Math.max(0, G.health - dmg);
   G.shake = 0.3; Sound.play("hit");
@@ -4481,6 +4507,7 @@ function drawCrabSpot(x) {
 }
 let crabWasPaused = false, crabAnim = null;
 function openCrabShop() {
+  earnAch("secretshopper");
   crabWasPaused = G.paused; G.paused = true; Sound.play("place");
   renderCrabShop(); $("crabshop").hidden = false;
   if (!crabAnim) crabAnim = requestAnimationFrame(crabPortrait);
@@ -4663,7 +4690,7 @@ function update(dt) {
     for (const o of G.robots) {
       if (o.dead || o.hp >= o.maxHp) continue;
       const q = rpos(o); if (Math.hypot(q.x - c.x, q.y - c.y) > RB.healRadius * T) continue;
-      o.hp = Math.min(o.maxHp, o.hp + RB.healAmount * (SETTINGS.levels[G.level].robotHealth || 1)); healed++;
+      o.hp = Math.min(o.maxHp, o.hp + RB.healAmount * (SETTINGS.levels[G.level].robotHealth || 1)); healed++; rb.healedAny = true;
       for (let i = 0; i < 3; i++) G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 12, y: q.y - 4, vx: 0, vy: -25, t: 0, life: 0.6, col: "#7cf07a" });
     }
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: RB.healRadius * T, t: 0.3, col: "124,240,122" });
@@ -4677,7 +4704,7 @@ function update(dt) {
     if (sg.stormT > 0) continue;
     sg.stormT = SG.sandstormEvery;
     const c = rpos(sg), R = SG.sandstormRadius * T;
-    for (const t of G.towers) if (Math.hypot(t.x * T + 16 - c.x, t.y * T + 16 - c.y) <= R) { if (t.kind === "phoenix") phoenixRebirth(t); else t.stunT = SG.sandstormSeconds; }
+    for (const t of G.towers) if (Math.hypot(t.x * T + 16 - c.x, t.y * T + 16 - c.y) <= R) { if (t.kind === "phoenix") phoenixRebirth(t); else { t.stunT = SG.sandstormSeconds; sg.stormed = true; } }
     G.fx.push({ kind: "sandstorm", x: c.x, y: c.y, r: R, t: 0.9 });
     for (let i = 0; i < 30; i++) { const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 90; G.particles.push({ kind: "spark", x: c.x, y: c.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#e0b06a" : "#c28a52" }); }
     floatText(c.x, c.y - 30, "Sandstorm!", "#f2c27a"); G.shake = Math.max(G.shake, 0.15); Sound.play("smash");
@@ -5314,6 +5341,7 @@ function finish(won) {
   // The factory eats the rest of the map at a steady 40 squares a second.
   if (!won) { G.takeover = { t: 0, from: G.factoryCount, n: G.factoryCount, done: false, dur: Math.max(1, (G.map.grassOrder.length - G.factoryCount) / 40) }; Sound.play("horn"); }
   sendProgress(true, won ? "won" : "lost", stars, score);
+  addStat("sandGames", 1, SAND_LEVELS);   // (Sun-Baked)
   const on = G.online;
   // Golden Acorns for the save slot: 1 per Wave you got through, plus some for each star.
   if (won) {
@@ -5324,7 +5352,10 @@ function finish(won) {
       best = !prev || score > prev.score;
     }
     { const L = G.level, kinds = Object.keys(G.placedKinds || {});
-      if (!G.hurtBase && GRASS_LEVELS.includes(L)) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect
+      if (!G.hurtBase && (GRASS_LEVELS.includes(L) || SAND_LEVELS.includes(L))) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect / Sandy Perfect
+      if (L === "beach" && kinds.length && kinds.every((k) => k === "crab")) earnAch("shellshocked");
+      if (L === "desert" && (!G.hurtFrom || G.hurtFrom.size < 2)) earnAch("twofront");
+      if (L === "pyramid" && !G.nearPyramid) earnAch("pharaoh");
       saveSlots(slots);
       if (L === "meadow" && (G.placedN || 0) <= 3) earnAch("bareminimum");
       if (L === "meadow" && G.leaves >= 300) earnAch("leafsaver");
