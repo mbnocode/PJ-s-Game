@@ -177,10 +177,15 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #s-title { position: relative; }
 #s-title > .lineup { margin-top: auto; }   /* the night sky is first in the page, so keep the title centered */
 #s-title .night { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s linear; z-index: 0;
-  background: radial-gradient(circle at 82% 14%, #fff7c2 0 26px, rgba(255,247,194,0.35) 27px, rgba(255,247,194,0) 70px), radial-gradient(ellipse at 50% 0%, rgba(20,26,70,0.9), rgba(6,8,24,0.95)); }
+  background: radial-gradient(circle at 82% 14%, #fff7c2 0 26px, rgba(255,247,194,0.35) 27px, rgba(255,247,194,0) 70px), linear-gradient(180deg, rgba(14,18,52,0.94), rgba(10,12,34,0.9) 70%, rgba(6,8,24,0.72)); }
 #s-title .night::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#c8ccf0 1px, transparent 1.5px), radial-gradient(#fff7c2 1px, transparent 1.5px); background-size: 97px 83px, 151px 127px; background-position: 13px 7px, 61px 41px; opacity: .6; }
-#s-title > *:not(.night):not(.owltree):not(.titlebats) { position: relative; z-index: 2; }
 #s-title .titlebats { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+#s-title .titlesky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; image-rendering: pixelated; }
+#s-title > *:not(.night):not(.owltree):not(.titlebats):not(.titlesky) { position: relative; z-index: 2; }
+#s-title .muted { color: #f4f8ff; text-shadow: 0 2px 0 rgba(10, 20, 40, 0.55), 0 0 10px rgba(10, 20, 40, 0.35); }
+#s-title .vs { color: #f4f8ff; text-shadow: 0 2px 0 rgba(10, 20, 40, 0.6); }
+#s-title h1 { text-shadow: 0 4px 0 rgba(10, 20, 40, 0.45); }
+#s-title .tag { text-shadow: 0 2px 0 #3a1a08, 1px 0 0 #3a1a08, -1px 0 0 #3a1a08, 0 -1px 0 #3a1a08; }
 .owltree { position: absolute; left: 2%; bottom: 0; z-index: 1; background: none; border: 0; padding: 0; box-shadow: none; cursor: default; width: clamp(90px, 14vw, 160px); }
 .owltree canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
 .owltree.right { left: auto; right: 2%; pointer-events: none; }
@@ -454,6 +459,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <div id="app">
   <!-- Title -->
   <section class="screen menu" id="s-title">
+    <canvas class="titlesky" id="title-sky" aria-hidden="true"></canvas>
     <div class="night" id="title-night" aria-hidden="true"></div>
     <canvas class="titlebats" id="title-bats" aria-hidden="true"></canvas>
     <button id="b-owl" class="owltree" aria-label="An old tree" title="An old tree"><canvas id="owl-tree" width="160" height="200"></canvas></button>
@@ -1416,9 +1422,27 @@ function spriteCanvas(name, size = 16) {
   const c = document.createElement("canvas"); c.width = size; c.height = size;
   const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR[name], 0, 0, size, size); return c;
 }
-["plant", "air", "fire", "water"].forEach((n) => $("lineup").appendChild(spriteCanvas(n, 32)));   // full detail, the same pictures as in the game
-const vs = document.createElement("span"); vs.className = "vs"; vs.textContent = "vs"; $("lineup").appendChild(vs);
-$("lineup").appendChild(spriteCanvas("clanker", 32));
+// The title lineup: the same pictures as in the game, and they move a little (sway, blink, flap, puff, wobble).
+const LINEUP = ["plant", "air", "fire", "water", "vs", "clanker"].map((n) => {
+  if (n === "vs") { const vs = document.createElement("span"); vs.className = "vs"; vs.textContent = "vs"; $("lineup").appendChild(vs); return null; }
+  const c = document.createElement("canvas"); c.width = c.height = 40; c.dataset.k = n; $("lineup").appendChild(c); return c;
+}).filter(Boolean);
+function drawLineup(t) {
+  for (const cv of LINEUP) {
+    const k = cv.dataset.k, c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.clearRect(0, 0, 40, 40);
+    let img = SPR[k], rot = 0, sx = 1, sy = 1, dy = 0;
+    if (k === "plant") rot = Math.sin(t * 1.3) * 0.05;                                       // the Tree Giant sways
+    if (k === "air") dy = Math.round(Math.sin(t * 2) * 0.6);                                  // the Owl bobs (and blinks, below)
+    if (k === "fire") { img = [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid][Math.floor(t * 7) % 4]; dy = Math.round(Math.sin(t * 3.5) * 1.2); }   // the Dragon flaps
+    if (k === "water") { const p = t % 2.6; if (p < 0.3) { const q = Math.sin(p / 0.3 * Math.PI); sx = 1 + 0.1 * q; sy = 1 - 0.08 * q; } else if (p < 0.6) dy = -Math.round(Math.sin((p - 0.3) / 0.3 * Math.PI) * 3); }   // the Frog puffs up, then hops
+    if (k === "clanker") { rot = Math.sin(t * 7) * 0.06; dy = Math.round(Math.abs(Math.sin(t * 7)) * -1); }   // the Clanker rattles
+    c.save(); c.translate(20, 36 + dy); c.rotate(rot); c.scale(sx, sy); c.drawImage(img, -16, -32, 32, 32); c.restore();
+    if (k === "air" && (t % 3.4) < 0.15) {   // blink: eyelids over both eyes
+      c.fillStyle = PAL.e; c.fillRect(4 + 9, 4 + dy + 8, 6, 5); c.fillRect(4 + 19, 4 + dy + 8, 6, 5);
+      c.fillStyle = PAL.k; c.fillRect(4 + 9, 4 + dy + 11, 6, 1); c.fillRect(4 + 19, 4 + dy + 11, 6, 1);
+    }
+  }
+}
 
 $("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); startSlotScene(); };
 addEventListener("resize", () => { if (slotScene && $("s-slots")) $("slot-scene").dataset.r = Date.now(); });
@@ -1523,7 +1547,10 @@ function owlTreeTick(now) {
   const c = $("owl-tree").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 160, 200);
   c.drawImage(SPR.tree, 0, 30, 160, 160);
   if (owlNight.night > 0) { c.fillStyle = `rgba(10,14,40,${0.55 * owlNight.night})`; c.globalCompositeOperation = "source-atop"; c.fillRect(0, 0, 160, 200); c.globalCompositeOperation = "source-over"; }
+  titleSky(dt, t);
+  drawLineup(t);
   titleBats(dt, t);
+  titleLeaves(dt, t);
   {   // a second tree in the other corner, so the owl's tree doesn't stand out (no owl in this one)
     const c2 = $("title-tree2").getContext("2d"); c2.imageSmoothingEnabled = false; c2.clearRect(0, 0, 160, 200);
     c2.save(); c2.translate(160, 0); c2.scale(-1, 1); c2.drawImage(SPR.tree, 0, 30, 160, 160); c2.restore();
@@ -1542,6 +1569,85 @@ function owlTreeTick(now) {
   }
 }
 owlNight.anim = requestAnimationFrame(owlTreeTick);
+// The title sky: blue in the daytime, then (while you wait) the sun sets into orange and pink, then night falls for the Night Owl.
+// Far away on the hills, the battle goes on: little robots march from the factory and fireballs fly from the treehouse.
+const tSky = { clouds: null, robots: [], shots: [], puffs: [], smoke: [], nextBot: 1 };
+const mix = (a, b, k) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(",")})`; };
+function titleSky(dt, t) {
+  const cv = $("title-sky"), PX = 4, W = Math.ceil(cv.clientWidth / PX), H = Math.ceil(cv.clientHeight / PX);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; tSky.clouds = null; }
+  const c = cv.getContext("2d"); c.imageSmoothingEnabled = false;
+  const NS = SETTINGS.nightOwl || { waitSeconds: 20 }, sun = Math.max(0, Math.min(1, (owlNight.t - (NS.waitSeconds - 9)) / 9));   // 0 = day, 1 = sunset
+  // sky
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, mix("#2f6fc4", "#3b2f7a", sun)); g.addColorStop(0.55, mix("#6fb2ec", "#e0607a", sun)); g.addColorStop(0.85, mix("#a8dcf6", "#ffa552", sun));
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  // the sun, sinking toward the hills as evening comes
+  const sxp = W * 0.82, syp = H * (0.16 + 0.5 * sun), sr = Math.max(4, Math.round(Math.min(W, H) * 0.045));
+  const sg = c.createRadialGradient(sxp, syp, 1, sxp, syp, sr * 3.2); sg.addColorStop(0, mix("#fff6b0", "#ffb04a", sun) ); sg.addColorStop(1, "rgba(255,220,120,0)");
+  c.globalAlpha = 1 - owlNight.night;   // it's gone once night falls
+  c.fillStyle = sg; c.fillRect(sxp - sr * 4, syp - sr * 4, sr * 8, sr * 8);
+  c.fillStyle = mix("#fff6b0", "#ff8a3a", sun); c.beginPath(); c.arc(sxp, syp, sr, 0, Math.PI * 2); c.fill();
+  c.globalAlpha = 1;
+  // drifting pixel clouds
+  if (!tSky.clouds) tSky.clouds = Array.from({ length: 6 }, (_, i) => ({ x: Math.random() * W, y: H * (0.05 + 0.32 * Math.random()), w: 10 + Math.random() * 16, v: 0.6 + Math.random() * 1.1 }));
+  for (const cl of tSky.clouds) {
+    cl.x += cl.v * dt; if (cl.x - cl.w > W) cl.x = -cl.w * 1.5;
+    const x0 = Math.round(cl.x), y0 = Math.round(cl.y), w = Math.round(cl.w);
+    c.fillStyle = mix("#d6ecfa", "#c2709a", sun); c.fillRect(x0 - w, y0 + 2, w * 2, 2);   // shadowed bottom
+    c.fillStyle = mix("#ffffff", "#ffc9b0", sun);
+    c.fillRect(x0 - w, y0, w * 2, 2); c.fillRect(x0 - w * 0.6, y0 - 2, w * 1.2, 2); c.fillRect(x0 - w * 0.25, y0 - 4, w * 0.6, 2);
+  }
+  // hills: a far blue-green row and a near green row
+  const farY = (x) => H * 0.8 + Math.sin(x * 0.045 + 1) * 3 + Math.sin(x * 0.11) * 1.5, nearY = (x) => H * 0.87 + Math.sin(x * 0.03 + 4) * 3 + Math.sin(x * 0.09 + 2) * 1.2;
+  c.fillStyle = mix("#7cb894", "#7a5a7a", sun); for (let x = 0; x < W; x++) c.fillRect(x, Math.round(farY(x)), 1, H);
+  // the treehouse (left) and the robots' factory (right), far away
+  const hx = Math.round(W * 0.24), fx = Math.round(W * 0.76), hy = Math.round(farY(hx)), fy = Math.round(farY(fx)), bs = Math.max(10, Math.round(Math.min(W * 0.08, H * 0.07)));
+  c.globalAlpha = 0.85 - 0.2 * sun;
+  c.drawImage(SPR.base, hx - bs / 2, hy - bs + 2, bs, bs); c.drawImage(SPR.gate, fx - bs / 2, fy - bs + 2, bs, bs);
+  c.globalAlpha = 1;
+  if (Math.random() < dt * 3) tSky.smoke.push({ x: fx - bs * 0.2 + Math.random() * 2, y: fy - bs + 1, t: 0 });   // smoke from the factory
+  for (const p of tSky.smoke) { p.t += dt; p.y -= dt * 3; p.x += dt * 1.5; c.fillStyle = `rgba(150,150,160,${Math.max(0, 0.6 - p.t * 0.12)})`; const r = 1 + p.t * 0.6; c.fillRect(Math.round(p.x - r / 2), Math.round(p.y - r / 2), Math.ceil(r), Math.ceil(r)); }
+  tSky.smoke = tSky.smoke.filter((p) => p.t < 5);
+  // tiny robots march from the factory toward the treehouse
+  if ((tSky.nextBot -= dt) <= 0) { tSky.nextBot = 1.2 + Math.random() * 1.6; tSky.robots.push({ x: fx - bs / 2, hp: 1, shot: false, big: Math.random() < 0.2 }); }
+  for (const r of tSky.robots) {
+    r.x -= dt * (r.big ? 2 : 3.2);
+    const y = Math.round(farY(r.x)), bob = Math.floor(t * 6 + r.x) % 2, s2 = r.big ? 3 : 2;
+    c.fillStyle = "#3a3f48"; c.fillRect(Math.round(r.x), y - s2 - bob, s2, s2); c.fillStyle = "#ffd34d"; c.fillRect(Math.round(r.x), y - s2 - bob, 1, 1);
+    if (!r.shot && r.x < hx + W * 0.22) { r.shot = true; tSky.shots.push({ x0: hx + 2, y0: hy - bs * 0.6, r, t: 0, dur: 0.9 + Math.random() * 0.3 }); }   // the treehouse fires!
+  }
+  for (const sh of tSky.shots) {
+    sh.t += dt; const k = Math.min(1, sh.t / sh.dur), tx = sh.r.x + 1, ty = farY(sh.r.x) - 2;
+    const x = sh.x0 + (tx - sh.x0) * k, y = sh.y0 + (ty - sh.y0) * k - Math.sin(k * Math.PI) * H * 0.08;
+    c.fillStyle = "#ff8c1a"; c.fillRect(Math.round(x), Math.round(y), 2, 2); c.fillStyle = "#ffd36b"; c.fillRect(Math.round(x), Math.round(y), 1, 1);
+    if (k >= 1 && !sh.done) { sh.done = true; sh.r.hp = 0; for (let i = 0; i < 6; i++) tSky.puffs.push({ x: tx, y: ty, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 10, t: 0 }); }
+  }
+  tSky.shots = tSky.shots.filter((sh) => !sh.done);
+  tSky.robots = tSky.robots.filter((r) => r.hp > 0 && r.x > hx);
+  for (const p of tSky.puffs) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 20 * dt; c.fillStyle = p.t < 0.15 ? "#fff6b0" : "#ff8c1a"; if (p.t < 0.45) c.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); }
+  tSky.puffs = tSky.puffs.filter((p) => p.t < 0.45);
+  // near hills in front, with a few flowers
+  c.fillStyle = mix("#4f9a45", "#4a5a3a", sun); for (let x = 0; x < W; x++) c.fillRect(x, Math.round(nearY(x)), 1, H);
+  c.fillStyle = mix("#6fbf55", "#5a6a45", sun); for (let x = 0; x < W; x++) c.fillRect(x, Math.round(nearY(x)), 1, 1);
+  for (let x = 3; x < W; x += 7) { const y = Math.round(nearY(x)) + 2 + (x * 7) % 5; c.fillStyle = ["#ff6a8a", "#ffd34d", "#ffffff", "#c88aff"][x % 4]; c.fillRect(x, y, 1, 1); }
+}
+// Maple leaves drift down and spin across the title screen.
+const tLeaves = { list: [], next: 0.5 };
+function titleLeaves(dt, t) {
+  const cv = $("title-bats"), c = cv.getContext("2d"), W = cv.width, H = cv.height;
+  if ((tLeaves.next -= dt) <= 0 && tLeaves.list.length < 9) {
+    tLeaves.next = 0.7 + Math.random() * 1.2;
+    tLeaves.list.push({ x: Math.random() * W, y: -30, size: 0.8 + Math.random() * 0.6, vy: 30 + Math.random() * 30, sway: 20 + Math.random() * 40, ph: Math.random() * 6, spin: (Math.random() - 0.5) * 3, col: ["#ec7a2c", "#d9483a", "#f2c230", "#e8902c"][Math.random() * 4 | 0], age: 0 });
+  }
+  for (const L of tLeaves.list) {
+    L.age += dt; L.y += L.vy * dt;
+    const x = L.x + Math.sin(L.age * 1.4 + L.ph) * L.sway;
+    c.save(); c.translate(x, L.y); c.rotate(L.age * L.spin + Math.sin(L.age * 2 + L.ph) * 0.4); c.scale(L.size * Math.cos(L.age * 1.7 + L.ph) * 0.4 + L.size * 0.6, L.size); c.translate(-12, -12);
+    c.fillStyle = L.col; c.strokeStyle = "rgba(90,40,10,0.8)"; c.lineWidth = 1.2; c.lineJoin = "round"; c.fill(LEAF_PATH); c.stroke(LEAF_PATH); c.restore();
+  }
+  tLeaves.list = tLeaves.list.filter((L) => L.y < H + 40);
+}
 // Every few seconds a little bat flaps across the title screen on a wavy path.
 const tBats = { next: 3, list: [] };
 function titleBats(dt, t) {
