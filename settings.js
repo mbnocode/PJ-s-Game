@@ -331,7 +331,7 @@ const SETTINGS = {
 
   // ---------------- PERMANENT UPGRADES ----------------
   // Golden Acorns only come from robots dropping them (see acornDropChance on each level).
-  acornsFromWave: 6,   // robots only drop Golden Acorns from this wave on (6 = after wave 5)
+  acornsFromWave: 3,   // robots only drop Golden Acorns from this wave on (3 = starting on wave 3)
   bossDropsAcorn: true,   // every Boss you defeat always drops a Golden Acorn (any wave, any level)
   // Spend them on the Upgrades page.
   permanentUpgrades: {
@@ -375,7 +375,7 @@ const SETTINGS = {
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
     forest: { name: "The Forest", acornDropChance: 0.02, about: "A shady trail through tall pines. Robots get through faster. Tree Giants attack 50% faster here.", theme: "forest",
-              // 2% Golden Acorn chance per robot (after wave 5)
+              // 2% Golden Acorn chance per robot (from wave 3 on)
               // In the Forest, trees are tall pines, mushrooms are brown, and tall grass is ferns.
               towerBoosts: { plant: { speedTimes: 1.5 } },
               path: [[0, 6], [7, 6], [7, 2], [13, 2], [13, 9], [19, 9]],
@@ -383,7 +383,7 @@ const SETTINGS = {
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
     swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "Robots wade through murky water to the swamp treehouse. They're 50% tougher here, but frogs hit 25% harder.", theme: "swamp",
-              // 3% Golden Acorn chance per robot (after wave 5)
+              // 3% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
               // takes turns through the list. A number after the gap only changes Boss health (900 = a level 1 Boss).
@@ -402,7 +402,7 @@ const SETTINGS = {
               mushrooms: [[4, 8], [7, 4], [16, 0], [12, 10]],
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
     beach:  { name: "The Beach", acornDropChance: 0.05, about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder and scores are worth 1.5x.", theme: "beach",
-              // 5% Golden Acorn chance per robot (after wave 5)
+              // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               scoreTimes: 1.5,    // your score on this level is multiplied by this (on top of the difficulty's score bonus)
               // Towers that are stronger on this level: Crabs are at home on the beach.
@@ -440,7 +440,7 @@ const SETTINGS = {
               ] },
     // A two-factory level: the left half is written here, and mirror: true copies the path, scenery and factory onto the right half.
     desert: { name: "The Desert", acornDropChance: 0.04, about: "Two factories! Robots march from both sides along twisty canyon roads to the oasis treehouse in the middle. Scores are worth 1.75x.", theme: "desert",
-              // 4% Golden Acorn chance per robot (after wave 5)
+              // 4% Golden Acorn chance per robot (from wave 3 on)
               mirror: true,          // build a matching path and factory on the right side
               base: [9, 5],          // the treehouse sits in the middle (top-left square of its 2 x 2 spot)
               robotHealth: 0.85,     // robots have this many times their normal health (you must guard two roads, so they are a bit weaker)
@@ -474,7 +474,7 @@ const SETTINGS = {
                 [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
               ] },
     pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Quicksand slows them down, and Mummy Bots unravel! Scores are worth 2x.", theme: "pyramid",
-              // 5% Golden Acorn chance per robot (after wave 5)
+              // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.4,      // robots have this many times their normal health (the quicksand helps you a lot)
               scoreTimes: 2,         // your score on this level is multiplied by this
               path: [[0, 10], [6, 10], [6, 1], [13, 1], [13, 8], [16, 8], [16, 3], [19, 3]],
@@ -578,7 +578,7 @@ const SETTINGS = {
                 [["magmaking", 1, 0], ["emberbat", 14, 0.3], [["magmacube", "fireproof"], 12, 0.7]],   // 22
                 [["magmaking", 3, 6], [["fireproof", "crawler", "obsidian", "emberbat", "magmacube"], 30, 0.45]],   // 23: the big finish
               ] },
-    volcano: { name: "Inside the Volcano", acornDropChance: 0.07,   // 7% Golden Acorn chance per robot (after wave 5)
+    volcano: { name: "Inside the Volcano", acornDropChance: 0.07,   // 7% Golden Acorn chance per robot (from wave 3 on)
               about: "Deep inside the mountain, where lava bubbles up through the road. Every lava robot, and the Volcano Heart heals on the lava! Fire Dragons do 1.5x damage. Scores are worth 3x.", theme: "volcano",
               robotHealth: 1.35,
               scoreTimes: 3,
