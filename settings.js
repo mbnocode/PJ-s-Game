@@ -274,7 +274,7 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },
+    { name: "Infinity", look: "infinity", about: "The waves never stop. Every wave is tougher than the last. How long can you survive?" },
   ],
 
   // ---------------- THE SERPENT'S SHOP ----------------
