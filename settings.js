@@ -16,6 +16,7 @@ const SETTINGS = {
   factorySquares: 100,            // how many squares of land the Robots can take over
   robotHitRatio: 0.1,             // a Robot that reaches the Base hits it for this much of the health it has left (0.1 = 10%)
   maxHitPerRobot: 40,             // no single Robot can hit the Base harder than this
+  robotHealthBoost: 1.1,          // every Robot has this much more health than its number below (1.1 = 10% more). Robots with fixedHealth don't get it.
   factoryWeakness: 2,             // Towers standing on Factory do this much less damage
   waveBonusLeaves: 20,            // Maple Leaves you get for clearing a Wave (plus 2 more per Wave number)
   // During a Wave, a bonus Maple Leaf pops up on an empty square every few seconds. Tap it before it disappears!
