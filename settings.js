@@ -231,6 +231,10 @@ const SETTINGS = {
     snowdrone: { name: "Snow Drone", health: 55, speed: 2.6, leaves: 12, points: 30, flying: true, baseHit: 8, dropEvery: 5, freezeSeconds: 2 },
     yetimech:     { name: "Yeti Mech", health: 2600, speed: 0.7, leaves: 180, points: 650, baseHit: 50, isBoss: true, roarEvery: 7, freezeRadius: 1.5, freezeSeconds: 2 },
     glaciergolem: { name: "Glacier Golem", health: 2400, speed: 0.75, leaves: 170, points: 600, baseHit: 45, isBoss: true, chunkEvery: 400 },   // drops an Ice Chunk every chunkEvery damage
+    // The Super Glacier Golem: three Glacier Golems merge into it on the last wave of The Glacier Caves.
+    // fixedHealth: its health is exactly this on Normal (the level and late waves don't make it tougher; Easy/Hard/Nightmare still do).
+    superglaciergolem: { name: "Super Glacier Golem", health: 4000, speed: 1, leaves: 400, points: 1800, baseHit: 80, isBoss: true, fixedHealth: true, chunkEvery: 500,
+                         mergeIntro: { seconds: 5.5, atSquare: 6.5 } },   // the merge cutscene: how long the rest of the wave waits, and how many squares down the road they merge
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     blizzardking: { name: "Blizzard King", health: 4000, speed: 0.6, leaves: 260, points: 950, baseHit: 60, isBoss: true, rangeShrink: 0.3 },
     // Lava-level Bosses:
@@ -678,7 +682,7 @@ const SETTINGS = {
                 [["glaciergolem", 2, 8], [["snowball", "repair", "snowplow"], 22, 0.45]],   // 22
                 [["yetimech", 2, 8], ["boss", 1, 0, 4500], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 32, 0.4]],   // 23
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
-                [["glaciergolem", 3, 9], ["yetimech", 2, 8], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 44, 0.33]],   // 25: the Golems' last stand
+                [["superglaciergolem", 1, 0], ["yetimech", 2, 8], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 44, 0.33]],   // 25: three Glacier Golems merge into the Super Glacier Golem!
               ] },
   },
 };

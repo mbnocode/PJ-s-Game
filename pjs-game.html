@@ -802,6 +802,10 @@ const ACORN_IMG = new Image(); ACORN_IMG.src = ACORN_URL;
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
 SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like little Clankers
+{ // the Super Glacier Golem: three Glacier Golems merged into one, in deeper, colder blues with a brighter core
+  const SUPER = { U: "#f0fdff", c: "#7fd2f7", b: "#2c6fc0", B: "#173a7a", u: "#9effff", w: "#ffffff" };
+  SPR.superglaciergolem = makeSprite(ART.glaciergolem, false, SUPER); SPRF.superglaciergolem = makeSprite(ART.glaciergolem, true, SUPER);
+}
 { // the Sand Golem's colors: scorched sandstone, bone spikes, burning eyes and a molten crack
   const SAND = { a: "#a87444", A: "#6e4422", m: "#4a2a12", e: "#f4e2c0", N: "#3e220e", o: "#ff7a1a", y: "#ffe066", f: "#fff8d0", R: "#b0200c", r: "#ff2a1a", w: "#f4ead0" };   // R/o/y/f = the magma crack, dark red to white-hot
   SPR.sandboss = makeSprite(ART.sandboss, false, SAND); SPRF.sandboss = makeSprite(ART.sandboss, true, SAND); }
@@ -3016,10 +3020,10 @@ function playBoxOpening(prize, done) {
 }
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
-const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "blizzardking"];
+const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking"];
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES];
 const NEW_FOES = new Set(["blizzardking"]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "blizzardking"]);
+const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -3045,6 +3049,7 @@ const FOE_ABOUT = {
   penguin: "A small robot penguin with a sharp orange beak. Slow on its feet, but watch it slide on ice!",
   snowdrone: "An icy flying bot carrying a big snowball to drop on your towers.",
   yetimech: "A huge shaggy robot-yeti with a metal face, glowing red eyes and a giant snowball in its claw.",
+  superglaciergolem: "Three Glacier Golems merged into one enormous frozen giant, in deep blue ice with a blazing cold core.",
   glaciergolem: "A giant built from blocks of blue glacier ice, with cold glowing eyes.",
   blizzardking: "The ruler of the snowy peaks: an icy robot king with a crown and an ice scepter, riding in on a storm cloud.",
   volcanoheart: "The molten heart of the volcano, wrapped in armor plates, with fire roaring out of its vents. The final boss.",
@@ -3086,6 +3091,7 @@ function renderEnemies() {
       : k === "penguin" ? `Special: it belly-slides ${r.iceSpeed} times faster on icy road squares, then waddles slowly everywhere else. Shows up on The Frozen Tundra.`
       : k === "snowdrone" ? `Special: flies straight to your treehouse and every ${r.dropEvery} seconds drops a snowball that freezes a tower for ${r.freezeSeconds} seconds. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage) and the Wizard's Elemental Sphere can hit it. Shows up on The Frozen Tundra.`
       : k === "yetimech" ? `Special: every ${r.roarEvery} seconds it roars and throws a giant snowball that freezes every tower within ${r.freezeRadius} squares for ${r.freezeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Frozen Tundra.`
+      : k === "superglaciergolem" ? `Special: on the last wave of The Glacier Caves, three Glacier Golems march in and merge into it! It has ${r.health.toLocaleString()} health and walks ${r.speed} square a second. Chunks of ice break off it too.`
       : k === "glaciergolem" ? `Special: every time it takes ${r.chunkEvery} damage, a chunk of ice breaks off and keeps marching toward your treehouse. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Glacier Caves (and it visits The Frozen Tundra).`
       : k === "blizzardking" ? `Special: it brings a howling blizzard with it. Until it's destroyed, every tower's range shrinks by ${Math.round(r.rangeShrink * 100)}%. Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss of Blizzard Peak.`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
@@ -3688,6 +3694,14 @@ function startWave() {
     G.quakeT = quake; Sound.play("smash");
     floatText(320, 150, "The Volcano Heart awakens!", "#ff6a3a", 2.4);
   }
+  // The Super Glacier Golem: first three Glacier Golems march in and merge into it (the rest of the wave waits for them).
+  const sgq = G.queue.find((q) => q.type === "superglaciergolem"), MI = (SETTINGS.robots.superglaciergolem || {}).mergeIntro;
+  if (sgq && MI) {
+    G.queue = G.queue.filter((q) => q !== sgq);
+    G.queue.forEach((q) => { q.at += MI.seconds; });
+    G.merge = { t: 0, path: G.map.paths[0], at: MI.atSquare * T, golems: 3 };
+    Sound.play("horn"); floatText(320, 130, "Three Glacier Golems are coming…", "#bfe6fa", 2.6);
+  }
   if (G.tutorial) tutorialEvent("wave" + G.wave);
   if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
   else if (hasGolem && !G.seenGolem) tip(`A Sand Golem is rising from the dunes! Its sandstorms stop towers within ${SETTINGS.robots.sandboss.sandstormRadius} squares from attacking for ${SETTINGS.robots.sandboss.sandstormSeconds} seconds. Spread your towers out!`, undefined, "Heads up");
@@ -3734,10 +3748,11 @@ function spawn(q) {
   }
   let aura = 0;
   const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
-  if (cap > 0 && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
+  if (cap > 0 && !base.fixedHealth && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
   const A = SETTINGS.auras[aura];
   const lt = SETTINGS.levels[G.level].lateToughness, late = lt ? 1 + Math.max(0, G.wave - lt.fromWave) * lt.perWave : 1;   // some levels' robots get tougher in the late waves
-  const hp = (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * late * (A ? A.health : 1);
+  const hp = base.fixedHealth ? (q.hp || base.health) * d.robotHealth   // a set amount of health (only the difficulty changes it)
+    : (q.hp || base.health) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * late * (A ? A.health : 1);
   G.robots.push({
     type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: q.d || 0,
     flying: !!base.flying,
@@ -3763,6 +3778,50 @@ function showNextWave() {
   const home = side ? $("abilities") : $("stage"); if (box.parentNode !== home) home.appendChild(box);
   box.hidden = false;
   $("nw-x").onclick = () => { box.hidden = true; };
+}
+// The merge: three Glacier Golems march out single file, stop in a row, slide together while the ground shakes,
+// then a blinding flash and the Super Glacier Golem stands where they met.
+const MERGE_WALK = 3.8, MERGE_GATHER = 1.3;   // seconds of marching, then of sliding together
+function mergeSpots(m) {   // where each of the three golems is right now
+  const out = [];
+  for (let i = 0; i < m.golems; i++) {
+    const stop = m.at + (1 - i) * 1.1 * T, start = Math.max(0, m.t - i * 0.6), walked = Math.min(stop, start * 2.2 * T);
+    let p = posAt(m.path, walked);
+    if (m.t > MERGE_WALK) { const k = Math.min(1, (m.t - MERGE_WALK) / MERGE_GATHER), c = posAt(m.path, m.at), e = k * k; p = { x: p.x + (c.x - p.x) * e, y: p.y + (c.y - p.y) * e, dx: p.dx }; }
+    out.push({ ...p, step: walked < stop && m.t < MERGE_WALK });
+  }
+  return out;
+}
+function tickMerge(dt) {
+  const m = G.merge; m.t += dt;
+  if (m.t > MERGE_WALK) { G.shake = Math.max(G.shake, 0.12 + 0.2 * Math.min(1, (m.t - MERGE_WALK) / MERGE_GATHER)); const c = posAt(m.path, m.at);
+    if (Math.random() < dt * 30) G.particles.push({ kind: "spark", x: c.x + (Math.random() - 0.5) * 70, y: c.y - 20 + (Math.random() - 0.5) * 50, vx: 0, vy: -10, t: 0, life: 0.5, col: Math.random() < 0.5 ? "#e6f6ff" : "#7cd4ff" }); }
+  if (!m.done && m.t >= MERGE_WALK + MERGE_GATHER) {
+    m.done = true; const c = posAt(m.path, m.at);
+    spawn({ type: "superglaciergolem", d: m.at, path: m.path });
+    G.shake = 0.6; Sound.play("smash"); Sound.play("horn");
+    burst(c.x, c.y - 20, "#ffffff", 40); burst(c.x, c.y - 20, "#7cd4ff", 40); burst(c.x, c.y - 20, "#bfe6fa", 30);
+    G.fx.push({ kind: "splash", x: c.x, y: c.y, r: 2.5 * T, t: 0.4, col: "190,235,255" });
+    floatText(c.x, c.y - 70, "SUPER GLACIER GOLEM!", "#9effff", 2.6);
+    m.flash = 0.5;
+  }
+  if (m.done) { m.flash -= dt; if (m.flash <= 0) G.merge = null; }
+}
+function drawMerge(x) {
+  const m = G.merge; if (!m) return;
+  if (!m.done) {
+    const k = m.t > MERGE_WALK ? Math.min(1, (m.t - MERGE_WALK) / MERGE_GATHER) : 0, c = posAt(m.path, m.at);
+    if (k > 0) {   // an icy glow grows where they're merging
+      const g = x.createRadialGradient(c.x, c.y - 24, 4, c.x, c.y - 24, 40 + 50 * k); g.addColorStop(0, `rgba(200,245,255,${0.7 * k})`); g.addColorStop(1, "rgba(120,210,255,0)");
+      x.fillStyle = g; x.fillRect(c.x - 100, c.y - 130, 200, 200);
+    }
+    for (const p of mergeSpots(m)) {
+      const bob = p.step ? Math.abs(Math.sin(G.time * 6 + p.x)) * -2 : 0, sz = 60 * (1 - 0.25 * k);
+      x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4);
+      x.globalAlpha = 1 - 0.5 * k * k; x.drawImage((p.dx < 0 ? SPRF : SPR).glaciergolem, p.x - sz / 2, p.y - sz / 2 - 12 + bob, sz, sz); x.globalAlpha = 1;
+    }
+  }
+  if (m.done && m.flash > 0) { x.fillStyle = `rgba(235,250,255,${m.flash * 1.4})`; x.fillRect(0, 0, 640, 384); }   // the flash
 }
 function endWave() {
   G.waveActive = false;
@@ -4336,6 +4395,7 @@ function lavaPowers(dt) {
 }
 function update(dt) {
   G.time += dt;
+  if (G.merge) tickMerge(dt);   // the Super Glacier Golem's merge cutscene
   tickCrabSpot(dt);
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
@@ -4516,7 +4576,7 @@ function update(dt) {
     }
   }
   G.tongues = G.tongues.filter((tg) => tg.t < tg.dur && G.towers.includes(tg.tower));
-  if (G.waveActive && !G.queue.length && !G.robots.length && !G.over) endWave();
+  if (G.waveActive && !G.queue.length && !G.robots.length && !G.merge && !G.over) endWave();
 }
 function tickFx(dt) {
   for (const p of G.particles) {
@@ -4743,11 +4803,12 @@ function draw() {
     }
   }
 
+  drawMerge(x);
   // robots
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" ? 60 :
+    const sz = r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -4793,6 +4854,11 @@ function draw() {
       const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 4 + r.wob), gr = x.createRadialGradient(0, 2 * k, 0, 0, 2 * k, 12 * k);
       gr.addColorStop(0, `rgba(255,${r.healing ? 220 : 140},40,${0.45 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,100,20,0)");
       x.fillStyle = gr; x.beginPath(); x.arc(0, 2 * k, 12 * k, 0, Math.PI * 2); x.fill();
+    }
+    if (r.type === "superglaciergolem" && !hidden) {   // a freezing glow throbs around it
+      const pulse = 0.5 + 0.5 * Math.sin(G.time * 3 + r.wob), gr = x.createRadialGradient(0, 0, 6, 0, 0, sz * 0.7);
+      gr.addColorStop(0, `rgba(160,240,255,${0.25 + 0.2 * pulse})`); gr.addColorStop(1, "rgba(120,210,255,0)"); x.fillStyle = gr; x.beginPath(); x.arc(0, 0, sz * 0.7, 0, Math.PI * 2); x.fill();
+      if (!G.paused && Math.random() < 0.3) G.particles.push({ kind: "spark", x: p.x + (Math.random() - 0.5) * sz * 0.8, y: p.y - sz * 0.3 + (Math.random() - 0.5) * sz * 0.5, vx: 0, vy: -12, t: 0, life: 0.6, col: "#e6f6ff" });
     }
     if (r.type === "obsidian" && r.cracked) { x.strokeStyle = "#e8dcff"; x.lineWidth = 1; x.beginPath(); x.moveTo(-6, -8); x.lineTo(-1, -3); x.lineTo(-4, 1); x.moveTo(-1, -3); x.lineTo(5, -5); x.stroke(); }
     if (r.type === "boss" && !hidden) {
