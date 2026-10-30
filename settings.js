@@ -288,7 +288,8 @@ const SETTINGS = {
 
   // ---------------- MORE SECRET SHOPS ----------------
   // The Night Owl: wait on the title screen and night falls; tap the glowing eyes in the old tree.
-  nightOwl: { waitSeconds: 20, duskSeconds: 5, shelves: 3 },   // seconds of waiting before dusk, how long night takes to fall, shelves in the shop
+  nightOwl: { waitSeconds: 20, duskSeconds: 5, shelves: 3 },
+  titleBats: { everySeconds: [4, 8] },   // a bat flies across the title screen every 4 to 8 seconds   // seconds of waiting before dusk, how long night takes to fall, shelves in the shop
   nightOwlShop: {
     // Add items here, just like the Serpent's Shop (name, cost, about, picture, shelf, unlock).
   },

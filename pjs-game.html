@@ -179,7 +179,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 #s-title .night { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s linear; z-index: 0;
   background: radial-gradient(circle at 82% 14%, #fff7c2 0 26px, rgba(255,247,194,0.35) 27px, rgba(255,247,194,0) 70px), radial-gradient(ellipse at 50% 0%, rgba(20,26,70,0.9), rgba(6,8,24,0.95)); }
 #s-title .night::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#c8ccf0 1px, transparent 1.5px), radial-gradient(#fff7c2 1px, transparent 1.5px); background-size: 97px 83px, 151px 127px; background-position: 13px 7px, 61px 41px; opacity: .6; }
-#s-title > *:not(.night):not(.owltree) { position: relative; z-index: 2; }
+#s-title > *:not(.night):not(.owltree):not(.titlebats) { position: relative; z-index: 2; }
+#s-title .titlebats { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 .owltree { position: absolute; left: 2%; bottom: 0; z-index: 1; background: none; border: 0; padding: 0; box-shadow: none; cursor: default; width: clamp(90px, 14vw, 160px); }
 .owltree canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
 .owltree.right { left: auto; right: 2%; pointer-events: none; }
@@ -454,6 +455,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- Title -->
   <section class="screen menu" id="s-title">
     <div class="night" id="title-night" aria-hidden="true"></div>
+    <canvas class="titlebats" id="title-bats" aria-hidden="true"></canvas>
     <button id="b-owl" class="owltree" aria-label="An old tree" title="An old tree"><canvas id="owl-tree" width="160" height="200"></canvas></button>
     <div class="owltree right" aria-hidden="true"><canvas id="title-tree2" width="160" height="200"></canvas></div>
     <div class="lineup" id="lineup"></div>
@@ -707,6 +709,9 @@ const ART = {
   // secret shopkeepers: the Night Owl (title screen) and the Hermit Crab (under the sand on the Beach)
   nightowl: ["................................","........k...............k.......","..5....k3k.kkkkkkkkkk..k3k......",".......k2kk1111111122k.k2k......","........k2111111122222k2k.......","........k12441122224422k........",".......k144YY442244YY443k....7..",".......k14YY665224YY6653k.......",".......k4Y6wk6654Y6wk665k.......",".......k4666k6754666k675k.......",".......k2466k7533466k754k.......",".......k2557755YY5577554k.......","...5...k12255333y3455443k.......","......k111333333444444333k......","......k111133344444443333k......","......k111223333344433331k....5.","......k112223333444433333k......","......k1222333444444433341k.....","......k222233434444443344k......","......k212234444434443441k......","......k222244444444454444k......",".......k2224444344455444k.......",".7.....k2234434444355444k.......","........k33344444555444k........",".........k334444355544k....kk...","....k.....k3335555444k....kLlk..","kkkk8kkkkkkkkyy444yykkkkkk8kkkkk","nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn","99999999999999999999999999999999","kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk","................................","................................"],
   hermitcrab: ["................................","................................","................................","................................","................................","........kkkkkkkk................","......kkjjjjjjjjkk........kkk...",".....kjjjwjjjjjjmnk...kkkkwwwk..","....kjjwNNNNNNmmmmnk.kwwwkwkwk..","...kjjwNjjjjjnnmmmmnkkwkwkwwwk..","..kjjNjjjjjjmmnnmmmnmkwwwkkRk...","..kjNNjjjjmmmmmnmmmnmkkRk.kRk...",".kjjNjjjNnnnmmmnmmmnnekRk.kRkk..",".kjjNjjmnmmnmmmnmmmnnekRk.kRRRk.",".kjNNjmmnmmmmmmnmmmnnekRk.kRrrrk",".kjjNmmmnmmmmmmnmeeneekRkkkRrrro",".kjmnmmmnnmmmmnmeeeneeRRRRRRrrok",".kmmnmmmmnnnnneeeenneeRRRrrrkrk.","..kmmnmmmmmmmeeeeeneeRRRrrrrrrk.","..kmmnnmmmmmeeeeeneeeRrrrrrrrrk.","...kmmnnmmeeeeenneeeRrrrrrrrrrk.","....kmmmnnnnnnnneeerrrrkrrkrrok.",".....kmeeeenneeeeekrrrrrkkroook.","......kkeeeeeeeekk.krrrrrroook..","........kkkkkkkk....krrroooRRRk.","....................kkroooRRRrrk","...................kRkkRkkRRrrok","...................kRkkRkkRrook.",".e..................k..k..kkkk..","....m.....e..................e..","................m...............","................................"],
+  // a little bat that flies across the title screen (two wing frames)
+  titlebat: ["................",".k............k.","k3k..........k3k","k23k........k32k","k223k.k..k.k322k","k2223k2kk2k3222k","k22223333332222k",".k22222rr22222k.","..kk22222222kk..","....kk2w22kk....","......kkkk......","................","................","................","................","................"],
+  titlebat2: ["................","................","................","................","......k..k......",".....k2kk2k.....",".kkkkk3333kkkkk.","k333332rr233333k","k22222222222222k","k222kk2w22kk222k","k22k..kkkk..k22k",".kk..........kk.","................","................","................","................"],
   // snow robots
   icechunk: ["................", "................", "................", "................", ".....kkkkkk.....", "....kUUUUUck....", "...kUccccccbk...", "...kUcwccwcbk...", "...kUcrccrcbk...", "...kUccccccbk...", "...kUcccwccbk...", "...kbbbbbbbbk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   snowplow: [".....k..........","....kfk........x","...kkoEkk.......","..kssssssk...kkw","..ksgUwcck..kfYk","..ksgccrbk.kGkYk",".kksggggGkkkGfk.","ksssssssssssgfYk","ksgGGGGGGggGGkYk","ksggyYgyYggGGfk.","ksGGGGGGGGGGGfYk","kkkkkkkkkkkkkfYk","kGsgGsgGsgGGkkkw","kGgTGgTGgTGGk.wx",".kkkkkkkkkkk....","................"],
@@ -1517,6 +1522,7 @@ function owlTreeTick(now) {
   const c = $("owl-tree").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 160, 200);
   c.drawImage(SPR.tree, 0, 30, 160, 160);
   if (owlNight.night > 0) { c.fillStyle = `rgba(10,14,40,${0.55 * owlNight.night})`; c.globalCompositeOperation = "source-atop"; c.fillRect(0, 0, 160, 200); c.globalCompositeOperation = "source-over"; }
+  titleBats(dt, t);
   {   // a second tree in the other corner, so the owl's tree doesn't stand out (no owl in this one)
     const c2 = $("title-tree2").getContext("2d"); c2.imageSmoothingEnabled = false; c2.clearRect(0, 0, 160, 200);
     c2.save(); c2.translate(160, 0); c2.scale(-1, 1); c2.drawImage(SPR.tree, 0, 30, 160, 160); c2.restore();
@@ -1535,6 +1541,25 @@ function owlTreeTick(now) {
   }
 }
 owlNight.anim = requestAnimationFrame(owlTreeTick);
+// Every few seconds a little bat flaps across the title screen on a wavy path.
+const tBats = { next: 3, list: [] };
+function titleBats(dt, t) {
+  const cv = $("title-bats"), W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.clearRect(0, 0, W, H);
+  const TB = SETTINGS.titleBats || { everySeconds: [4, 8] };
+  if ((tBats.next -= dt) <= 0) {
+    tBats.next = TB.everySeconds[0] + Math.random() * (TB.everySeconds[1] - TB.everySeconds[0]);
+    const right = Math.random() < 0.5, size = 40 + Math.random() * 24;
+    tBats.list.push({ x: right ? -size : W + size, dir: right ? 1 : -1, y: H * (0.08 + Math.random() * 0.45), size, speed: 160 + Math.random() * 120, wave: 18 + Math.random() * 22, ph: Math.random() * 6, age: 0 });
+  }
+  for (const b of tBats.list) {
+    b.age += dt; b.x += b.dir * b.speed * dt;
+    const y = b.y + Math.sin(b.age * 3 + b.ph) * b.wave, img = Math.floor(b.age * 9) % 2 ? SPR.titlebat2 : SPR.titlebat;
+    c.save(); c.translate(b.x, y); if (b.dir < 0) c.scale(-1, 1); c.drawImage(img, -b.size / 2, -b.size / 2, b.size, b.size); c.restore();
+  }
+  tBats.list = tBats.list.filter((b) => b.x > -80 && b.x < W + 80);
+}
 $("b-owl").onclick = () => { if (owlNight.night < 1) return; Sound.init(); Sound.play("place"); openOwlShop(); };
 let owlSlot = -1, owlAnim = null;
 function openOwlShop() {
