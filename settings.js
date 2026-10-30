@@ -173,7 +173,7 @@ const SETTINGS = {
               ] },
     // The Wolf: unlock it in the Night Owl's shop. It hits like a Fire Dragon (without the burn, and it can't hit flying robots),
     // and packBonus = extra damage on every attack for each Wolf in the 8 squares around it.
-    wolf:     { name: "Wolf", cost: 85, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, serpentUnlock: "wolf",
+    wolf:     { name: "Wolf", cost: 120, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, serpentUnlock: "wolf",
               about: "Unlocked in the Night Owl's shop. Hits like a Fire Dragon, and gets stronger next to other Wolves.",
               upgradeChoices: [
                 [ { name: "Sharp Fangs",  about: "Hits 50% harder.", damageTimes: 1.5 },
@@ -307,7 +307,7 @@ const SETTINGS = {
   titleBats: { everySeconds: [4, 8] },   // a bat flies across the title screen every 4 to 8 seconds   // seconds of waiting before dusk, how long night takes to fall, shelves in the shop
   nightOwlShop: {
     // Add items here, just like the Serpent's Shop (name, cost, about, picture, shelf, unlock).
-    wolf: { name: "Wolf", cost: 400, unlock: true, shelf: 1, picture: "wolf", about: "A snarling wolf tower with glowing red eyes! It hits as hard as a Fire Dragon, and every Wolf next to it adds 15 damage to each of its attacks. Unlock it and it joins your towers in every level." },
+    wolf: { name: "Wolf", cost: 700, unlock: true, shelf: 1, picture: "wolf", about: "A snarling wolf tower with glowing red eyes! It hits as hard as a Fire Dragon, and every Wolf next to it adds 15 damage to each of its attacks. Unlock it and it joins your towers in every level." },
   },
   // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 3 },   // chance = how often the bump shows up in each break between waves
