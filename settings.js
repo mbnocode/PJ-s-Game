@@ -233,7 +233,7 @@ const SETTINGS = {
     glaciergolem: { name: "Glacier Golem", health: 2400, speed: 0.75, leaves: 170, points: 600, baseHit: 45, isBoss: true, chunkEvery: 400 },   // drops an Ice Chunk every chunkEvery damage
     // The Super Glacier Golem: three Glacier Golems merge into it on the last wave of The Glacier Caves.
     // fixedHealth: its health is exactly this on Normal (the level and late waves don't make it tougher; Easy/Hard/Nightmare still do).
-    superglaciergolem: { name: "Super Glacier Golem", health: 4000, speed: 1, leaves: 400, points: 1800, baseHit: 80, isBoss: true, fixedHealth: true, chunkEvery: 500,
+    superglaciergolem: { name: "Super Glacier Golem", health: 6000, speed: 1, leaves: 400, points: 1800, baseHit: 80, isBoss: true, fixedHealth: true, chunkEvery: 500,
                          mergeIntro: { seconds: 5.5, atSquare: 6.5 } },   // the merge cutscene: how long the rest of the wave waits, and how many squares down the road they merge
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     blizzardking: { name: "Blizzard King", health: 4000, speed: 0.6, leaves: 260, points: 950, baseHit: 60, isBoss: true, rangeShrink: 0.3 },

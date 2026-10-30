@@ -3178,7 +3178,14 @@ function flipToDefector(card) {
     const c = document.createElement("canvas"); c.width = c.height = 32; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false; cx.drawImage(SPR.defector, 0, 0);
     card.querySelector(".pic").replaceWith(c);
     $("b-defector-shop").onclick = () => { Sound.play("place"); openDefectorShop(); };
-    $("b-defector-flip").onclick = () => renderEnemies();
+    $("b-defector-flip").onclick = () => {   // flip the card back over to the Clanker
+      card.classList.add("flip-out");
+      setTimeout(() => {
+        renderEnemies();
+        const front = $("foe-list").children[Math.max(0, MAIN_FOES.indexOf((SETTINGS.defector || {}).card))];
+        if (front) { front.classList.add("flip-in"); setTimeout(() => front.classList.remove("flip-in"), 300); }
+      }, 220);
+    };
     setTimeout(() => card.classList.remove("flip-in"), 300);
   }, 220);
 }
