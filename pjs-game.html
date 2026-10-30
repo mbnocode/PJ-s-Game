@@ -1556,17 +1556,7 @@ function owlTreeTick(now) {
     c2.save(); c2.translate(160, 0); c2.scale(-1, 1); c2.drawImage(SPR.tree, 0, 30, 160, 160); c2.restore();
     if (owlNight.night > 0) { c2.fillStyle = `rgba(10,14,40,${0.55 * owlNight.night})`; c2.globalCompositeOperation = "source-atop"; c2.fillRect(0, 0, 160, 200); c2.globalCompositeOperation = "source-over"; }
   }
-  if (owlNight.night >= 1) {   // glowing eyes peeking out of the leaves, blinking now and then
-    const blink = (t % 4.2) < 0.18, look = Math.sin(t * 0.7) * 2, ex = 58 + look, ey = 84;
-    const glow = c.createRadialGradient(ex + 22, ey + 5, 2, ex + 22, ey + 5, 40); glow.addColorStop(0, "rgba(255,230,110,0.35)"); glow.addColorStop(1, "rgba(255,230,110,0)");
-    c.fillStyle = glow; c.fillRect(ex - 20, ey - 35, 84, 80);
-    for (const dx of [0, 30]) {
-      c.fillStyle = "#16191d"; c.fillRect(ex + dx - 2, ey - 2, 18, blink ? 6 : 14);
-      if (blink) { c.fillStyle = "#ffe066"; c.fillRect(ex + dx, ey + 1, 14, 2); continue; }
-      c.fillStyle = "#ffe066"; c.fillRect(ex + dx, ey, 14, 10); c.fillStyle = "#fff7c2"; c.fillRect(ex + dx, ey, 14, 3);
-      c.fillStyle = "#16191d"; c.fillRect(ex + dx + 6, ey + 1, 3, 8); c.fillStyle = "#ffffff"; c.fillRect(ex + dx + 2, ey + 1, 2, 2);
-    }
-  }
+  if (owlNight.night >= 1) drawOwlEyes(c, t, Math.min(1, (owlNight.t - NS.waitSeconds - NS.duskSeconds) / 1.2));
 }
 owlNight.anim = requestAnimationFrame(owlTreeTick);
 // The title sky: blue in the daytime, then (while you wait) the sun sets into orange and pink, then night falls for the Night Owl.
@@ -1670,6 +1660,35 @@ function titleBats(dt, t) {
     c.drawImage(img, -b.size / 2, -b.size / 2, b.size, b.size); c.restore();
   }
   tBats.list = tBats.list.filter((b) => b.x > -80 && b.x < W + 80);
+}
+// The Night Owl peeking out of the leaves: a shadowy face, ear tufts, and two big round glowing eyes that look around and blink.
+function drawOwlEyes(c, t, open) {
+  const U = 4, px = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), w * U, h * U); };
+  const cx = 80, cy = 88, look = Math.round(Math.sin(t * 0.6) * 1.2 + Math.sin(t * 1.7) * 0.4), sp = 5 * U;   // the eyes' centers are cx ± sp
+  // soft amber glow around the face (it fades in as the owl wakes up)
+  const gl = c.createRadialGradient(cx, cy, 4, cx, cy, 52); gl.addColorStop(0, `rgba(255,200,80,${0.32 * open})`); gl.addColorStop(1, "rgba(255,200,80,0)");
+  c.fillStyle = gl; c.fillRect(cx - 56, cy - 56, 112, 112);
+  c.globalAlpha = Math.max(0, open);
+  // the owl's dark face and ear tufts, half hidden in the leaves
+  px(cx - 9 * U, cy - 4 * U, 18, 8, "#1a1f3a"); px(cx - 10 * U, cy - 3 * U, 20, 6, "#1a1f3a"); px(cx - 8 * U, cy + 4 * U, 16, 1, "#1a1f3a");
+  px(cx - 9 * U, cy - 7 * U, 2, 3, "#1a1f3a"); px(cx - 9 * U, cy - 8 * U, 1, 1, "#1a1f3a"); px(cx + 7 * U, cy - 7 * U, 2, 3, "#1a1f3a"); px(cx + 8 * U, cy - 8 * U, 1, 1, "#1a1f3a");   // ear tufts
+  px(cx - 8 * U, cy - 6 * U, 1, 2, "#2a3260"); px(cx + 7 * U, cy - 6 * U, 1, 2, "#2a3260");
+  px(cx - 1 * U, cy + 1 * U, 2, 2, "#c98e12"); px(cx - 0.5 * U, cy + 3 * U, 1, 1, "#8a5a0a");   // little beak
+  // the two eyes: dark ring, orange-to-yellow iris, a tall pupil, and a shine
+  const blink = (t % 4.6) < 0.22 ? Math.sin(((t % 4.6) / 0.22) * Math.PI) : 0;   // 0 = open, 1 = shut
+  for (const side of [-1, 1]) {
+    const ex = cx + side * sp, ey = cy;
+    const disc = [[-2, -3, 4], [-3, -2, 6], [-3, -1, 6], [-3, 0, 6], [-3, 1, 6], [-2, 2, 4]];   // a round eye, row by row: [x, y, width] in big pixels
+    for (const [x, y, w] of disc) px(ex + (x - 0.5) * U, ey + (y - 0.25) * U, w + 1, 1.5, "#0c0f22");   // dark socket ring
+    for (const [x, y, w] of disc) px(ex + x * U, ey + y * U, w, 1, y <= -2 ? "#ffb12e" : y >= 2 ? "#e07a12" : "#ffd34d");   // iris (lighter in the middle)
+    px(ex - 1 * U, ey - 1 * U, 2, 2, "#fff0a0");                                                       // bright center
+    px(ex + (look - 0.5) * U, ey - 2 * U, 1, 4, "#16191d");                                             // tall pupil, looking around
+    px(ex - 2 * U, ey - 2 * U, 1, 1, "#ffffff");                                                       // shine
+    if (blink > 0) { const lid = Math.ceil(blink * 6); px(ex - 3.5 * U, ey - 3.5 * U, 7, lid + 0.5, "#1a1f3a"); px(ex - 3.5 * U, ey + (lid - 3) * U, 7, 0.5, "#3f4a86"); }   // eyelid sliding down
+  }
+  // a frowning brow between the eyes (it's a grumpy old owl)
+  px(cx - 2 * U, cy - 4 * U, 1, 1, "#2a3260"); px(cx + 1 * U, cy - 4 * U, 1, 1, "#2a3260"); px(cx - 1 * U, cy - 3 * U, 2, 1, "#2a3260");
+  c.globalAlpha = 1;
 }
 $("b-owl").onclick = () => { if (owlNight.night < 1) return; Sound.init(); Sound.play("place"); openOwlShop(); };
 let owlSlot = -1, owlAnim = null;
