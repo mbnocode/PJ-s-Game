@@ -392,6 +392,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   background: radial-gradient(circle at 35% 35%, #d8dde4, #8b929c 60%, #5a6068); animation: screwwiggle 5s infinite; cursor: pointer; transform: rotate(20deg); }
 .foe .screw::after { content: ""; position: absolute; left: 2px; right: 2px; top: 5px; height: 2px; background: #3a3f46; }
 .foe .screw:hover { filter: brightness(1.15); }
+.foe .screw.fixed { animation: none; cursor: default; pointer-events: none; }   /* the screws that are tight: they don't wiggle */
+.foe .screw.left { right: auto; left: 7px; }
+.foe.boss .screw { border-color: #3a1410; }
 @keyframes screwwiggle { 0%, 88%, 100% { transform: rotate(20deg); } 90% { transform: rotate(-10deg) translateY(-1px); } 92% { transform: rotate(45deg); } 94% { transform: rotate(5deg) translateY(-1px); } 96% { transform: rotate(30deg); } }
 .foe.flip-out { transform: perspective(700px) rotateY(90deg); transition: transform .22s ease-in; }
 .foe.flip-in { animation: cardflip .3s ease-out; }
@@ -3081,8 +3084,14 @@ const FOE_ABOUT = {
 };
 /* ---------- the Defector Robot (a secret on the Enemies page) ---------- */
 // One robot card has a tiny loose screw in its corner. Tap it and the card flips over: a robot who switched sides!
-function addLooseScrew(card) {
+function addScrews(card, loose) {
   card.classList.add("has-screw");
+  const turn = () => 10 + Math.floor(Math.random() * 140);
+  const left = document.createElement("span"); left.className = "screw fixed left"; left.style.transform = `rotate(${turn()}deg)`; card.appendChild(left);
+  if (loose) { addLooseScrew(card); return; }
+  const right = document.createElement("span"); right.className = "screw fixed"; right.style.transform = `rotate(${turn()}deg)`; card.appendChild(right);
+}
+function addLooseScrew(card) {
   const b = document.createElement("button"); b.className = "screw"; b.id = "b-screw"; b.setAttribute("aria-label", "A loose screw"); b.title = "Hmm, this screw looks loose…";
   b.onclick = (e) => { e.stopPropagation(); Sound.play("place"); flipToDefector(card); };
   card.appendChild(b);
@@ -3134,7 +3143,7 @@ function renderEnemies() {
   const box = $("foe-list"); box.innerHTML = "";
   for (const k of MAIN_FOES) {
     const r = R[k], d = document.createElement("div"); d.className = "foe" + (NEW_FOES.has(k) ? " coming" : "") + (BOSS_FOES.has(k) ? " boss" : "");
-    if (k === (SETTINGS.defector || {}).card) setTimeout(() => addLooseScrew(d), 0);   // a secret: one card has a loose screw
+    setTimeout(() => addScrews(d, k === (SETTINGS.defector || {}).card), 0);   // (after the card is filled in) every card is screwed together in its two top corners (one card has a loose screw: a secret!)
     const power = k === "hider" ? `Special: hides for ${r.hideSeconds} seconds after a hit. Only towers with Vision (like the Owl) can hit it while hidden.`
       : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp and The Beach.`
       : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Always drops a Golden Acorn! Bars are off the chart!`
