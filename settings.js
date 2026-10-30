@@ -301,6 +301,11 @@ const SETTINGS = {
   hermitCrabShop: {
     // Add items here, just like the Serpent's Shop.
   },
+  // The Defector Robot: a robot who switched to nature's side. On the Enemies page, one robot card (this one) has a loose screw: tap it!
+  defector: { card: "clanker", shelves: 3 },
+  defectorShop: {
+    // Add items here, just like the Serpent's Shop.
+  },
 
   // Leaderboard resets: a level's leaderboard only counts scores from after this time (UTC).
   // The old scores aren't deleted. Remove a line to bring that level's old scores back.
