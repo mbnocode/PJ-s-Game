@@ -173,7 +173,7 @@ const SETTINGS = {
               ] },
     // The Wolf: unlock it in the Night Owl's shop. It hits like a Fire Dragon (without the burn, and it can't hit flying robots),
     // and packBonus = extra damage on every attack for each Wolf in the 8 squares around it.
-    wolf:     { name: "Wolf", cost: 70, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, serpentUnlock: "wolf",
+    wolf:     { name: "Wolf", cost: 85, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, serpentUnlock: "wolf",
               about: "Unlocked in the Night Owl's shop. Hits like a Fire Dragon, and gets stronger next to other Wolves.",
               upgradeChoices: [
                 [ { name: "Sharp Fangs",  about: "Hits 50% harder.", damageTimes: 1.5 },
