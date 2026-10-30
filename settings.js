@@ -171,7 +171,7 @@ const SETTINGS = {
                 [ { name: "Sun Fire",         about: "Hits twice as hard.", damageTimes: 2 },
                   { name: "Phoenix Eyes",     about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
               ] },
-    hydra:    { name: "Hydra", cost: 180, range: 2.2, damage: 18, attacksPerSecond: 1.1, targets: 3, serpentUnlock: "hydra",
+    hydra:    { name: "Hydra", cost: 180, range: 2.2, damage: 24, attacksPerSecond: 1.11, targets: 3, serpentUnlock: "hydra",
               flyingDamageTimes: 0.5,   // it can bite flying robots, but only does this much of its damage to them (0.5 = half)
               about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once.",
               // Pick ONE choice at each upgrade.
