@@ -255,7 +255,6 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "The Glacier Caves", look: "glacier", about: "Tunnels of glowing blue glacier ice, with icicles hanging overhead." },
     { name: "Blizzard Peak", look: "blizzard", about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff!" },
     { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },
   ],
@@ -641,6 +640,45 @@ const SETTINGS = {
                 [["yetimech", 1, 0], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 32, 0.4]],   // 23
                 [["glaciergolem", 1, 0], ["yetimech", 2, 8], [["penguin", "snowdrone", "snowplow"], 20, 0.45]],   // 24
                 [["yetimech", 2, 8], ["glaciergolem", 2, 10], ["boss", 1, 0, 4500], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 40, 0.35]],   // 25: the big finish
+              ] },
+    glacier: { name: "The Glacier Caves", acornDropChance: 0.07, about: "Deep inside the glacier, robots slide along an icy walkway under hanging icicles. This is where the Glacier Golem lives! Scores are worth 3.5x.", theme: "glacier",
+              robotHealth: 1.45,
+              lateToughness: { fromWave: 10, perWave: 0.055 },  // after wave 10, robots get 5.5% tougher every wave (wave 25 = 1.83x)
+              scoreTimes: 3.5,
+              path: [[0, 10], [3, 10], [3, 6], [8, 6], [8, 1], [13, 1], [13, 10], [18, 10], [18, 4], [19, 4]],
+              ice: [[13, 3], [13, 5], [13, 7], [15, 10]],   // extra-slippery squares on the walkway: robots slide 1.4x faster
+              iceSpeed: 1.4,
+              // Trees are ice stalagmites, mushrooms are glowing frost mushrooms, tall grass is ice crystals.
+              trees:     [[1, 2], [6, 3], [10, 4], [16, 2], [1, 7], [6, 9], [11, 8], [16, 7]],
+              mushrooms: [[5, 11], [10, 11], [15, 5], [2, 4]],
+              tallGrass: [[0, 0], [11, 3], [16, 11], [5, 1]],
+              // The Glacier Caves' own 25 waves: the Glacier Golem's home (the Blizzard King still waits for Blizzard Peak).
+              waves: [
+                [["penguin", 8, 1.0]],                                                  // 1
+                [["snowball", 2, 1.8], ["penguin", 5, 0.9]],                            // 2
+                [["snowplow", 1, 0], ["walker", 5, 1.0]],                               // 3
+                [["snowdrone", 2, 1.4], ["penguin", 6, 1.0]],                           // 4
+                [[["penguin", "snowball", "penguin"], 9, 1.0], ["snowplow", 1, 0]],     // 5
+                [["glaciergolem", 1, 0, 1400], ["penguin", 6, 0.9]],                    // 6: a young Glacier Golem
+                [[["snowdrone", "hider"], 10, 0.8]],                                    // 7
+                [["snowplow", 4, 1.2], ["snowball", 6, 0.8]],                           // 8
+                [["yetimech", 1, 0, 1800], [["penguin", "snowdrone"], 10, 0.8]],        // 9
+                [["glaciergolem", 1, 0], [["snowball", "penguin"], 12, 0.7]],           // 10
+                [[["snowplow", "tank", "tesla"], 12, 0.9]],                             // 11
+                [[["snowdrone", "snowdrone", "penguin"], 16, 0.6]],                     // 12
+                [["glaciergolem", 1, 0], ["yetimech", 1, 0, 2000], ["penguin", 10, 0.7]],   // 13
+                [[["snowplow", "snowball", "repair"], 18, 0.6]],                        // 14
+                [["boss", 1, 0, 3000], [["snowdrone", "hider", "penguin"], 16, 0.6]],   // 15
+                [["glaciergolem", 2, 8], [["snowplow", "snowball"], 14, 0.6]],          // 16
+                [[["tank", "snowplow", "tesla", "penguin"], 22, 0.5]],                  // 17
+                [["yetimech", 2, 8], [["snowdrone", "penguin"], 18, 0.5]],              // 18
+                [[["snowball", "snowball", "snowplow", "repair"], 24, 0.5]],            // 19
+                [["glaciergolem", 2, 8], ["yetimech", 1, 0], [["penguin", "snowdrone", "snowplow"], 20, 0.5]],   // 20
+                [[["snowplow", "penguin", "snowdrone", "tank", "hider"], 30, 0.42]],    // 21
+                [["glaciergolem", 2, 8], [["snowball", "repair", "snowplow"], 22, 0.45]],   // 22
+                [["yetimech", 2, 8], ["boss", 1, 0, 4500], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 32, 0.4]],   // 23
+                [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
+                [["glaciergolem", 3, 9], ["yetimech", 2, 8], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 44, 0.33]],   // 25: the Golems' last stand
               ] },
   },
 };
