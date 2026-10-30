@@ -181,7 +181,7 @@ const SETTINGS = {
                 [ { name: "Keen Nose",    about: "Can sniff out Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 },
                   { name: "Long Leap",    about: "Reaches 1 more square.", rangePlus: 1 } ],
                 [ { name: "Alpha Wolf",   about: "Hits twice as hard.", damageTimes: 2 },
-                  { name: "Pack Howl",    about: "Every Wolf next to it adds 10 more damage (25 each).", packPlus: 10 } ],
+                  { name: "Strength in Numbers", about: "Every other Wolf on the board, anywhere, adds 8 damage to its attacks (on top of the bonus for Wolves next to it).", wolfCount: 8 } ],
               ] },
     hydra:    { name: "Hydra", cost: 170, range: 2.2, damage: 24, attacksPerSecond: 1.11, targets: 3, serpentUnlock: "hydra",
               flyingDamageTimes: 0.5,   // it can bite flying robots, but only does this much of its damage to them (0.5 = half)

@@ -3474,6 +3474,7 @@ function wolfPack(t) { let n = 0; for (const o of G.towers) if (o !== t && o.kin
 function towerStats(t) {
   const out = towerStatsBase(t);
   if (out.packBonus && G) { out.pack = wolfPack(t); out.damage += out.pack * (out.packBonus + (out.packBonusPlus || 0)); }
+  if (out.wolfCount && G) { out.allWolves = G.towers.filter((o) => o !== t && o.kind === "wolf").length; out.damage += out.allWolves * out.wolfCount; }   // Strength in Numbers
   // Helper auras: Wizards and Deer can make nearby towers hit harder or see Hiders.
   if (out.damage) {
     let dmg = 0, see = false;
@@ -3530,6 +3531,7 @@ function towerStatsBase(t) {
       if (c.vision) out.vision = true;
       if (c.targetsPlus) out.targets = (out.targets || 1) + c.targetsPlus;
       if (c.packPlus) out.packBonusPlus = (out.packBonusPlus || 0) + c.packPlus;
+      if (c.wolfCount) out.wolfCount = (out.wolfCount || 0) + c.wolfCount;
       if (c.holdSecondsPlus) out.holdSeconds = (out.holdSeconds || 0) + c.holdSecondsPlus;
       if (c.pushTimes) out.pushBack = (out.pushBack || 0) * c.pushTimes;
       if (c.leavesPlus) out.leavesPerWave = (out.leavesPerWave || 0) + c.leavesPlus;
@@ -3593,6 +3595,7 @@ function openPanel(t) {
   const choices = spec.upgradeChoices && price !== null ? spec.upgradeChoices[t.level] || [] : null;
   const picked = spec.upgradeChoices ? (t.picks || []).map((ci, lvl) => (spec.upgradeChoices[lvl] || [])[ci]).filter(Boolean) : [];
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
+  if (s.wolfCount) lines.push(`Strength in Numbers: ${s.allWolves} other ${s.allWolves === 1 ? "Wolf" : "Wolves"} on the board, +${s.allWolves * s.wolfCount} damage`);
   if (s.packBonus) lines.push(s.pack ? `Pack: ${s.pack} ${s.pack > 1 ? "Wolves" : "Wolf"} next to it, +${s.pack * (s.packBonus + (s.packBonusPlus || 0))} damage` : `Pack: no Wolves next to it yet (+${s.packBonus + (s.packBonusPlus || 0)} damage for each one)`);
   if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : t.kind === "pegasus" ? "Shoots" : "Grabs"} ${s.targets} robots at once`);
   if (s.pushBack && spec.upgradeChoices) lines.push(`Pushes robots back ${s.pushBack.toFixed(1)} squares`);
