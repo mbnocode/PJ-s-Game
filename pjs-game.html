@@ -4011,7 +4011,7 @@ function tickCrabSpot(dt) {
 }
 function drawCrabSpot(x) {
   const c = G.crabSpot; if (!c) return;
-  const cx = c.x * T + 16, cy = c.y * T + 22, ph = c.t % 3.2, wig = ph < 0.6 ? Math.sin(ph * 30) * 1.5 : 0;   // it just wiggles; no eyes, so it stays a secret
+  const cx = c.x * T + 16, cy = c.y * T + 22, ph = c.t, wig = ph < 0.6 ? Math.sin(ph * 30) * 1.5 : 0;   // it wiggles just once, right when it shows up (no eyes), so it stays a secret
   x.fillStyle = "rgba(0,0,0,0.12)"; x.beginPath(); x.ellipse(cx, cy + 3, 11, 3, 0, 0, Math.PI * 2); x.fill();
   x.fillStyle = "#b89a5e"; x.beginPath(); x.ellipse(cx + wig, cy + 0.5, 11, 6, 0, Math.PI, 0); x.fill();   // a darker rim so the bump stands out a little
   x.fillStyle = "#d9bf82"; x.beginPath(); x.ellipse(cx + wig, cy, 10, 5, 0, Math.PI, 0); x.fill();
