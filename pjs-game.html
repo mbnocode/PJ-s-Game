@@ -603,7 +603,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <!-- The Serpent's Shop: a secret shop reached by tapping the serpent on the save slot screen -->
   <section class="screen menu" id="s-defector" hidden>
     <h2>The Defector's Shop</h2>
-    <canvas id="def-portrait" width="64" height="64" aria-label="A friendly mossy robot with a flower on its head, waving a white flag"></canvas>
+    <canvas id="def-portrait" width="64" height="64" aria-label="A sleek robot in steel armor with a glowing green visor, a leafy scarf and a vine whip"></canvas>
     <p class="muted" id="def-say"></p>
     <div class="acorns" id="def-acorns-row"><span id="def-acorns">0</span> Golden Acorns</div>
     <div class="perks" id="def-shop"></div>
@@ -760,7 +760,7 @@ const ART = {
   titlebat2: ["................","................","................","................","......k..k......",".....k2kk2k.....",".kkkkk3333kkkkk.","k333332rr233333k","k22222222222222k","k222kk2w22kk222k","k22k..kkkk..k22k",".kk..........kk.","................","................","................","................"],
   titlebatglide: ["................","................","................","................","......k..k......",".kkkkk2kk2kkkkk.","k33333333333333k","k222222rr222222k","k2k2k222222k2k2k",".k.k.k2w22k.k.k.","......kkkk......","................","................","................","................","................"],   // wings spread out flat, gliding
   // the Defector Robot: a robot who switched to nature's side (secret shop on the Enemies page)
-  defector: ["...............k................","..............kyk...............",".............kwywk..............","............klkwkk..............",".............klLklk.............","..............kLlk.........kkkkk",".........kkkkkkLkkkkkkk...knwwww","........kllLlssslLsssllk..knwwwx","........kllgggggggggggGk..knwwww","........ksgkkkkkkkkkkgLk..knxxxx","........ksgkwckkkkwckglk..knkkkk","........ksgkckkkkkcckgGk..knk...","........ksgkkckkkkckkgGk..knk...","........ksgkkkcccckkkgGk..knk...","........ksggggggggggggGk.kknk...","........kgGGGGGGGGGGGGGkksgnk...","........kkkkkkkGGkkkkkkkkggnk...",".....kkkllllllllllllllllkggnk...","....ksgklLLLLLLLLLLLLLLvkggk....","....kggklLLLLssssssLLLLvkggk....","....kggklLLLLgrrgrrLLLLvkggk....","....kggklLGLLgrrrrrLLGLvkkk.....","....kggklLLLLggrrrgLLLLvk.......","....kggklLLLLgggrggLLLLvk.......","....kGGklLLLLggggggLLLLvk.......",".....kkklLLLLLLLLLLLLLLvk.......",".......kLvvvvvvvvvvvvvvvk.......","........kkggggkkkkggggkk........",".........kglggk..kgglgk.........",".........kggggk..kggggk.........","........kGGGGGGkkGGGGGGk........",".........kkkkkk..kkkkkk........."],
+  defector: ["...........kLkkhk...............","..........khlklk................","...........kknk.................","...........kknkkkkkkk...........","..........kggggggggggk..........",".........kGgggggkrrggGk.........",".........kgGGGGGrwkGGTk.........",".........kgGGGGGGGGGGTk.........",".........kgkLLLLLLLLLk......k...",".........kgkhUUhhhUhhlk....khk..",".........kgkkkkkkkkkkk....kLlk..",".........kgGGGGGGGGGGTk..klkkLk.",".........kgGGGGGGGGGGTk...k..kUk",".........kGTTTTTTTTTTTk......klk",".....k.kkLLkkkTTTTkkkkkkk.....k.","...kkhklyslggggggggggslrsk...kLk",".kkhkLlgglgGGGGGGGGGGggglk...kkh","khkLlvLggggGGkkkkkkGGggggk..klkk","kLlkLkgGGgGgGkkhhkkGgGTgGGk.kk..","LlvlkkGGGgGGGklUhlkGGGTGGGkkLk..","kkkk.kGGGgGGGklhlLkGGGTGGGklk...",".....kGGGgGGGkkLnkkGGGTGGgggk...",".....kGGGgGgGkkkkkkGgGTkkgggk...",".....kGGGgGGGGGGGGGGGGTk.kkk....",".....kgggGTTTTTTTTTTTTTk........",".....kgggkvvvvvyYvvvvvk.........","......kkk.kgGGGkkgGGGk..........","..........kGGGGkkGGGGk..........","..........kGGGTkkGGGTk..........","..........kGGGGkkGGGGk..........",".........kGTTTTTGTTTTTk.........","..........kkkkkkkkkkkk.........."],
   // snow robots
   icechunk: ["................", "................", "................", "................", ".....kkkkkk.....", "....kUUUUUck....", "...kUccccccbk...", "...kUcwccwcbk...", "...kUcrccrcbk...", "...kUccccccbk...", "...kUcccwccbk...", "...kbbbbbbbbk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   snowplow: [".....k..........","....kfk........x","...kkoEkk.......","..kssssssk...kkw","..ksgUwcck..kfYk","..ksgccrbk.kGkYk",".kksggggGkkkGfk.","ksssssssssssgfYk","ksgGGGGGGggGGkYk","ksggyYgyYggGGfk.","ksGGGGGGGGGGGfYk","kkkkkkkkkkkkkfYk","kGsgGsgGsgGGkkkw","kGgTGgTGgTGGk.wx",".kkkkkkkkkkk....","................"],
@@ -1179,24 +1179,79 @@ function makeMakeshiftFactory(doorRow) {
   r("#16191d", 0, 31, 32, 1); r("#e6f2fb", 0, 30, 3, 1); r("#e6f2fb", 18, 30, 3, 1);   // snow on the ground
   return c;
 }
-// The castle with plants growing over it: stage 0 = clean, 4 = completely overgrown (vines climb from the bottom up).
+// The castle with plants growing over it: stage 0 = clean, 4 = completely overgrown.
+// The plants are drawn at full board detail (64 x 64 for the 2 x 2 squares): thick Tree Giant vines with leaves and thorns
+// climb the walls a little more with every overgrow, with moss, flowers and mushrooms, and at the end a little tree on top.
 const CASTLE_CACHE = {};
 function castleImage(door, stage) {
   const key = door + ":" + stage; if (CASTLE_CACHE[key]) return CASTLE_CACHE[key];
-  const c = makeMakeshiftFactory(door), x = c.getContext("2d"), img = x.getImageData(0, 0, 32, 32), D = img.data, steps = 4;
-  const hsh = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x2f1d; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
-  const leaf = [[63, 138, 40], [95, 191, 74], [47, 110, 30], [79, 165, 46]];
-  for (let j = 0; j < 32; j++) for (let i = 0; i < 32; i++) {
-    const k = (j * 32 + i) * 4; if (!D[k + 3]) continue;
-    const score = hsh(i, j) * 0.55 + (j / 32) * 0.45;   // the bottom gets covered first
-    if (score < 1 - stage / steps * 0.97) continue;
-    let col = leaf[(hsh(i * 3, j * 7) * 4) | 0];
-    if (stage >= 2 && hsh(i * 11, j * 5) < 0.06) col = hsh(i, j * 2) < 0.5 ? [255, 159, 191] : [255, 224, 102];   // flowers
-    D[k] = col[0]; D[k + 1] = col[1]; D[k + 2] = col[2]; D[k + 3] = 255;
+  const small = makeMakeshiftFactory(door), c = document.createElement("canvas"); c.width = c.height = 64;
+  const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(small, 0, 0, 64, 64);
+  if (stage <= 0) return (CASTLE_CACHE[key] = c);
+  let sd = 1234; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const onCastle = (() => { const d = x.getImageData(0, 0, 64, 64).data; return (i, j) => i >= 0 && j >= 0 && i < 64 && j < 64 && d[(j * 64 + i) * 4 + 3] > 0; })();
+  // moss creeping up the stones (2 x 2 clumps, more at the bottom)
+  for (let n = 0; n < 60 + stage * 70; n++) {
+    const i = R() * 62 | 0, j = 64 - Math.pow(R(), 1.6) * (16 + stage * 12) | 0;
+    if (!onCastle(i, j)) continue;
+    x.fillStyle = ["#3f8a28", "#5fa83a", "#2f6e1e", "#7cc84a"][R() * 4 | 0]; x.fillRect(i, j, 2, 2);
   }
-  x.putImageData(img, 0, 0);
-  if (stage >= 2) for (const vx of [3, 9, 14, 19, 25, 29]) { const len = stage * 4 + (vx % 3) * 2; for (let j = 0; j < len && j < 30; j++) { x.fillStyle = j % 3 ? "#2f6e1e" : "#5fbf4a"; x.fillRect(vx + (j % 4 === 0 ? 1 : 0), 8 + j, 1, 1); } }   // vines hanging down
-  if (stage >= 4) { x.fillStyle = "#2f6e1e"; x.fillRect(5, 0, 1, 9); x.fillStyle = "#5fbf4a"; x.fillRect(3, 1, 5, 3); x.fillStyle = "#ff9fbf"; x.fillRect(4, 2, 1, 1); x.fillRect(7, 1, 1, 1); }   // the flag pole is a flowering vine
+  // the vines: paths up the walls, each grows longer with every stage
+  const VINES = [
+    [[8, 64], [5, 52], [12, 42], [6, 30], [11, 18], [8, 8]],          // up the left tower
+    [[46, 64], [51, 54], [44, 44], [52, 34], [47, 22]],               // up the gate tower
+    [[26, 64], [31, 53], [23, 45], [30, 36], [26, 26]],               // up the middle wall
+    [[59, 64], [62, 51], [56, 41], [61, 29], [57, 19]],               // up the right edge
+    [[4, 30], [16, 24], [30, 27], [44, 21], [60, 23]],                // draped across the top
+    [[44, 30], [48, 38], [45, 46], [50, 56]],                         // hanging down over the gate
+  ];
+  const plan = [[], [[0, 0.45], [1, 0.4]], [[0, 0.7], [1, 0.65], [2, 0.55], [3, 0.5]], [[0, 0.9], [1, 0.9], [2, 0.85], [3, 0.85], [4, 0.6]], [[0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1]]][Math.min(4, stage)];
+  const along = (pts, f) => {   // points along a smooth path, up to fraction f of its length
+    const out = []; const N = 40;
+    for (let k = 0; k <= N * f; k++) { const t = k / N * (pts.length - 1), a = Math.floor(t), u = t - a, p0 = pts[Math.max(0, a - 1)], p1 = pts[a], p2 = pts[Math.min(pts.length - 1, a + 1)], p3 = pts[Math.min(pts.length - 1, a + 2)];
+      const cr = (q0, q1, q2, q3) => 0.5 * ((2 * q1) + (-q0 + q2) * u + (2 * q0 - 5 * q1 + 4 * q2 - q3) * u * u + (-q0 + 3 * q1 - 3 * q2 + q3) * u * u * u);
+      out.push([cr(p0[0], p1[0], p2[0], p3[0]), cr(p0[1], p1[1], p2[1], p3[1])]); }
+    return out;
+  };
+  const flowers = [];
+  x.lineCap = "round"; x.lineJoin = "round";
+  for (const [vi, f] of plan) {
+    const pts = along(VINES[vi], f); if (pts.length < 2) continue;
+    for (const [col, w] of [["#1f3d14", 5], ["#3f8a28", 3.2], ["#7cc84a", 1.1]]) {   // the same three-tone vine as the Tree Giant's
+      x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(...pts[0]); for (const p of pts) x.lineTo(...p); x.stroke();
+    }
+    for (let k = 3; k < pts.length - 1; k += 4) {   // leaves and thorns along it
+      const a = pts[k], b = pts[k + 1], ang = Math.atan2(b[1] - a[1], b[0] - a[0]), side = (k / 4) % 2 ? 1 : -1;
+      x.save(); x.translate(a[0], a[1]); x.rotate(ang + side * 1.1);
+      x.fillStyle = "#1f3d14"; x.beginPath(); x.ellipse(4.5, 0, 4.2, 2.3, 0, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#4fa52e"; x.beginPath(); x.ellipse(4.5, 0, 3.4, 1.6, 0, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#9be26a"; x.fillRect(2.5, -0.4, 4, 0.8);
+      x.restore();
+      if (k % 8 === 3) { x.fillStyle = "#e8e0b0"; x.beginPath(); x.moveTo(a[0] - 1, a[1]); x.lineTo(a[0] - side * 2.5, a[1] - 3); x.lineTo(a[0] + 1, a[1]); x.fill(); }   // a thorn
+      if (stage >= 2 && R() < 0.12 + stage * 0.06) flowers.push([a[0] + side * 3, a[1] - 1]);
+    }
+  }
+  x.lineCap = "butt"; x.lineJoin = "miter";
+  // flowers on the vines (pink, yellow and white)
+  for (const [fx, fy] of flowers) {
+    const col = ["#ff9fbf", "#ffe066", "#ffffff", "#c88aff"][R() * 4 | 0];
+    x.fillStyle = "#16191d"; x.fillRect(fx - 2, fy - 2, 5, 5);
+    x.fillStyle = col; x.fillRect(fx - 1, fy - 2, 3, 5); x.fillRect(fx - 2, fy - 1, 5, 3); x.fillStyle = "#f2c230"; x.fillRect(fx, fy, 1, 1);
+  }
+  // mushrooms at the bottom of the walls
+  if (stage >= 2) for (const [mx, big] of [[15, 1], [37, 0], stage >= 3 ? [54, 1] : null, stage >= 4 ? [30, 0] : null].filter(Boolean)) {
+    const my = 62, w = big ? 7 : 5;
+    x.fillStyle = "#16191d"; x.fillRect(mx - w / 2 - 1, my - (big ? 8 : 6) - 1, w + 2, 4); x.fillRect(mx - 1.5, my - 5, 3, 5);
+    x.fillStyle = "#f4efe0"; x.fillRect(mx - 1, my - 5, 2, 5);
+    x.fillStyle = "#e0443a"; x.fillRect(mx - w / 2, my - (big ? 8 : 6), w, 3); x.fillStyle = "#ffffff"; x.fillRect(mx - 1, my - (big ? 7 : 5), 1, 1); x.fillRect(mx + 1, my - (big ? 8 : 6), 1, 1);
+  }
+  // fully overgrown: leaves cover the robot's peephole, the flag pole becomes a flowering vine, and a little tree grows on the tower
+  if (stage >= 4) {
+    for (let n = 0; n < 26; n++) { const lx = 44 + R() * 18, ly = 34 + R() * 24; x.fillStyle = ["#2f6e1e", "#3f8a28", "#4fa52e", "#7cc84a"][R() * 4 | 0]; x.beginPath(); x.ellipse(lx, ly, 3, 1.8, R() * 3, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "#5a3a1c"; x.fillRect(19, 2, 3, 12); x.fillStyle = "#7a4a24"; x.fillRect(19, 2, 1, 12);   // tree trunk on top of the left tower
+    for (const [tx, ty, r2, col] of [[20, 4, 9, "#1f3d14"], [20, 3, 8, "#3f8a28"], [17, 1, 4, "#5fbf4a"], [23, 2, 3, "#4fa52e"], [18, 0, 2, "#9be26a"]]) { x.fillStyle = col; x.beginPath(); x.arc(tx, ty + 2, r2, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "#ff9fbf"; x.fillRect(14, 3, 2, 2); x.fillRect(25, 6, 2, 2); x.fillStyle = "#e0443a"; x.fillRect(22, 1, 2, 2);   // blossoms and an apple
+  }
   return (CASTLE_CACHE[key] = c);
 }
 function makeFactory(doorRow) {
@@ -3139,8 +3194,9 @@ function defPortrait(now) {
   const c = $("def-portrait").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 64, 64);
   const bob = Math.round(Math.sin(t * 2) * 1);
   c.drawImage(SPR.defector, 0, 1 + bob, 64, 64);
-  if ((t % 3.8) < 0.15) { c.fillStyle = "#16191d"; c.fillRect(24, 1 + bob + 20, 4, 4); c.fillRect(36, 1 + bob + 20, 4, 4); }   // blink
-  if (Math.floor(t * 3) % 2) { c.fillStyle = "#e8e8e8"; c.fillRect(56, 1 + bob + 12, 8, 2); }   // the flag flaps
+  { const g = 0.35 + 0.35 * Math.sin(t * 3); c.fillStyle = `rgba(160,255,120,${g})`; c.fillRect(24, 1 + bob + 18, 18, 2); }   // the visor glows
+  if ((t % 3.8) < 0.15) { c.fillStyle = "#16191d"; c.fillRect(24, 1 + bob + 18, 18, 2); }   // the visor flickers off for a blink
+  { const g = 0.4 + 0.4 * Math.sin(t * 2.2 + 1); c.fillStyle = `rgba(200,255,150,${g})`; c.fillRect(30, 1 + bob + 38, 4, 2); }   // the leaf emblem pulses
   defAnim = requestAnimationFrame(defPortrait);
 }
 $("b-defector-back").onclick = () => { renderEnemies(); show("s-enemies"); };
