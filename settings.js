@@ -251,7 +251,7 @@ const SETTINGS = {
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).
     // fixedHealth: his health is exactly this on Normal (the level and late waves don't make him tougher; Easy/Hard/Nightmare still do).
-    blizzardking: { name: "Blizzard King", health: 15000, speed: 0.6, leaves: 260, points: 3000, baseHit: 100, isBoss: true, fixedHealth: true, rangeShrink: 0.3 },
+    blizzardking: { name: "Blizzard King", health: 15000, speed: 1, leaves: 260, points: 3000, baseHit: 100, isBoss: true, fixedHealth: true, rangeShrink: 0.3 },
     // Lava-level Bosses:
     pillartitan:  { name: "Pillar Titan", health: 2200, speed: 0.7, leaves: 170, points: 600, baseHit: 45, isBoss: true, slamEvery: 8 },
     magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2, splitType: "magmacube" },
@@ -705,7 +705,7 @@ const SETTINGS = {
                 [["superglaciergolem", 1, 0], ["yetimech", 2, 8], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 44, 0.33]],   // 25: three Glacier Golems merge into the Super Glacier Golem!
               ] },
     blizzard: { name: "Blizzard Peak", acornDropChance: 0.08, about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff! The Blizzard King is waiting at the end. Scores are worth 4x.", theme: "blizzard",
-              robotHealth: 1.45,
+              robotHealth: 1.32,
               lateToughness: { fromWave: 10, perWave: 0.055 },  // after wave 10, robots get 5.5% tougher every wave
               scoreTimes: 4,
               path: [[0, 1], [7, 1], [7, 5], [2, 5], [2, 9], [12, 9], [12, 3], [17, 3], [17, 9], [19, 9]],
