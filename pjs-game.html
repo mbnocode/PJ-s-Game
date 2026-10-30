@@ -4611,7 +4611,7 @@ function lavaPowers(dt) {
       r.dropT = (r.dropT ?? RS.snowdrone.dropEvery * 0.6) - dt;
       if (r.dropT <= 0) {
         const gy = q.y + 14, t = G.towers.filter((t) => Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - gy) <= 3 * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - gy) - Math.hypot(b.x * T - q.x, b.y * T - gy))[0];
-        if (t && t.ice) { r.dropT = RS.snowdrone.dropEvery; floatText(t.x * T + 16, t.y * T - 4, "Ice-proof!", "#9fe8ff", 0.9); burst(t.x * T + 16, t.y * T + 8, "#e6f6ff", 10); }   // Ice Dragons can't be frozen by Snow Drones: the snowball just bursts
+        if (t && t.ice) r.dropT = RS.snowdrone.dropEvery;   // Ice Dragons can't be frozen by Snow Drones (nothing happens)
         else if (t) { r.dropT = RS.snowdrone.dropEvery; freezeTower(t, RS.snowdrone.freezeSeconds); floatText(t.x * T + 16, t.y * T - 4, "Frozen!", "#bfe6fa", 0.8); G.fx.push({ kind: "splash", x: t.x * T + 16, y: t.y * T + 16, r: 0.7 * T, t: 0.3, col: "230,246,255" }); }
         else r.dropT = 0.3;
       }
