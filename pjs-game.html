@@ -199,6 +199,20 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .crabshop { position: fixed; inset: 0; z-index: 65; background: rgba(10, 30, 40, 0.75); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .crabshop .cs-box { background: linear-gradient(180deg, #2a4a52, #1b2f33); border: 3px solid #e8d29a; border-radius: 10px; padding: 18px; max-width: 920px; width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 #crab-portrait { width: 128px; height: 128px; image-rendering: pixelated; }
+/* the info of a robot you tapped, at the top of the board */
+.robotinfo { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none; display: flex; gap: 12px; align-items: center;
+  background: rgba(22, 25, 29, 0.92); border: 3px solid var(--gold); border-radius: 8px; padding: 8px 14px; box-shadow: 0 6px 0 rgba(0,0,0,.35); min-width: min(440px, 92vw); max-width: 94%; animation: achpop .25s ease-out; }
+.robotinfo canvas { width: 48px; height: 48px; image-rendering: pixelated; flex: none; background: rgba(255,255,255,0.06); border-radius: 6px; }
+.robotinfo .ri-main { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.robotinfo .ri-name { font-family: var(--display); font-size: 18px; color: #f4efe0; }
+.robotinfo .ri-tag { font-family: var(--body); font-size: 11px; font-weight: 700; color: #16191d; background: #ffd34d; border-radius: 4px; padding: 1px 6px; vertical-align: middle; }
+.robotinfo .ri-tag.boss { background: #e2574c; color: #fff; }
+.robotinfo .ri-hp { position: relative; height: 19px; background: #3a1a18; border: 1px solid #16191d; border-radius: 4px; overflow: hidden; }
+.robotinfo .ri-hp i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(180deg, #8fe07a, #4fa23e); transition: width .15s linear; }
+.robotinfo .ri-hp span { position: relative; font-size: 12px; font-weight: 700; color: #fff; padding-left: 6px; text-shadow: 0 1px 0 #000; line-height: 18px; display: block; }
+.robotinfo .ri-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--muted); }
+.robotinfo .ri-stats b { color: #f4efe0; }
+.robotinfo .ri-now { color: #ffd34d; }
 .achtoast { position: fixed; z-index: 80; top: 14px; left: 50%; transform: translateX(-50%); background: #23301e; border: 3px solid var(--gold); border-radius: 8px; padding: 10px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.4); animation: achpop .35s ease-out; }
 .achtoast canvas { width: 40px; height: 40px; image-rendering: pixelated; }
 .achtoast .t { font-family: var(--display); font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
@@ -690,6 +704,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     </div>
     <div id="stage">
       <canvas id="board" width="640" height="384"></canvas>
+      <div class="robotinfo" id="robotinfo" hidden></div>
       <div class="abilities" id="abilities">
         <button class="ability" id="b-fireball" title="Mega Fireball: tap it, then tap where it should land">
           <canvas class="ab-icon" id="fb-icon" width="40" height="40"></canvas>
@@ -2874,6 +2889,7 @@ function takeLeafBoost() {
   return n;
 }
 function startGame(L, d, tutorial, online) {
+  if ($("robotinfo")) $("robotinfo").hidden = true;
   const diff = SETTINGS.difficulties[d];
   G = {
     level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
@@ -3563,6 +3579,53 @@ const towerAt = (x, y) => G.towers.find((t) => t.x === x && t.y === y);
 board.addEventListener("pointermove", (e) => { if (G) G.hover = tileFromEvent(e); });
 board.addEventListener("pointerleave", () => { if (G) G.hover = null; });
 /* ---------- Mega Fireball ability ---------- */
+/* ---------- tap a robot to see its info at the top of the screen ---------- */
+function robotAt(p) {
+  let best = null, bd = 1e9;
+  for (const r of G.robots) {
+    if (r.dead || r.under || r.hideT > 0) continue;
+    const q = rpos(r), rad = isHeavy(r) ? 28 : 16, d = Math.hypot(q.x - p.x, q.y - 8 - p.y);
+    if (d <= rad && d < bd) { bd = d; best = r; }
+  }
+  return best;
+}
+function openRobotInfo(r) {
+  G.inspect = r; G.inspectGone = 0; Sound.play("place");
+  const R = SETTINGS.robots[r.type], box = $("robotinfo"), aura = r.aura ? SETTINGS.auras[r.aura] : null;
+  box.innerHTML = `<span class="pic"></span><div class="ri-main"><div class="ri-name">${R.name}${isHeavy(r) ? ' <span class="ri-tag boss">Boss</span>' : ""}${aura ? ` <span class="ri-tag" style="background:${aura.color}">${aura.name} glow</span>` : ""}</div>
+    <div class="ri-hp"><i id="ri-hpbar"></i><span id="ri-hptext"></span></div>
+    <div class="ri-stats" id="ri-stats"></div></div>`;
+  const c = document.createElement("canvas"); c.width = c.height = 32; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false; cx.drawImage(SPR[r.type], 0, 0, 32, 32);
+  box.querySelector(".pic").replaceWith(c); box.hidden = false; updateRobotInfo();
+}
+function closeRobotInfo() { if (!G) return; G.inspect = null; $("robotinfo").hidden = true; }
+function updateRobotInfo() {
+  const r = G && G.inspect; if (!r) return;
+  if (r.dead) {   // destroyed (or it reached the treehouse): say so for a moment, then close
+    if (!G.inspectGone) { G.inspectGone = G.time + 1.2; $("ri-stats").textContent = r.hp > 0 ? "It reached your treehouse!" : "Destroyed!"; $("ri-hpbar").style.width = "0%"; $("ri-hptext").textContent = "0"; }
+    if (G.time > G.inspectGone) closeRobotInfo();
+    return;
+  }
+  const R = SETTINGS.robots[r.type], hit = R.baseHit || Math.min(SETTINGS.maxHitPerRobot, Math.max(1, Math.ceil(r.hp * SETTINGS.robotHitRatio)));
+  $("ri-hpbar").style.width = Math.max(0, 100 * r.hp / r.maxHp) + "%";
+  $("ri-hptext").textContent = `${Math.ceil(r.hp).toLocaleString()} / ${Math.ceil(r.maxHp).toLocaleString()} health`;
+  const now = [];
+  if (r.burnT > 0) now.push("🔥 burning"); if (r.slowT > 0) now.push("💧 slowed"); if (r.rootT > 0) now.push("🌿 held"); if (r.frozenT > 0 || r.freezeT > 0) now.push("❄️ frozen");
+  if (r.charged) now.push("⚡ charged"); if (r.flying) now.push("🪽 flying");
+  $("ri-stats").innerHTML = `<span>Speed <b>${+(r.speed).toFixed(2)}</b></span><span>Base hit <b>${hit}</b></span><span>Leaves <b>${r.leaves}</b></span><span>Points <b>${r.points}</b></span>${now.length ? `<span class="ri-now">${now.join(" · ")}</span>` : ""}`;
+}
+// the robot you tapped gets a pulsing ring and a bouncing arrow
+function drawInspect(x) {
+  const r = G.inspect; if (!r || r.dead) return;
+  const q = rpos(r), big = isHeavy(r), pulse = 0.5 + 0.5 * Math.sin(G.time * 6), rx = big ? 26 : 15, top = q.y - (big ? 52 : 30);
+  x.strokeStyle = "#16191d"; x.lineWidth = 4; x.beginPath(); x.ellipse(q.x, q.y + (big ? 14 : 6), rx + 2 * pulse, rx * 0.42 + pulse, 0, 0, Math.PI * 2); x.stroke();
+  x.strokeStyle = "#ffd34d"; x.lineWidth = 2; x.stroke();
+  const ay = top - 4 - Math.abs(Math.sin(G.time * 5)) * 5;
+  x.fillStyle = "#16191d"; x.beginPath(); x.moveTo(q.x - 7, ay - 9); x.lineTo(q.x + 7, ay - 9); x.lineTo(q.x, ay + 1); x.closePath(); x.fill();
+  x.fillStyle = "#ffd34d"; x.beginPath(); x.moveTo(q.x - 5, ay - 8); x.lineTo(q.x + 5, ay - 8); x.lineTo(q.x, ay - 1); x.closePath(); x.fill();
+}
+// tapping anywhere outside the board closes the robot's info too
+document.addEventListener("pointerdown", (e) => { if (G && G.inspect && e.target !== board) closeRobotInfo(); }, true);
 function boardPos(e) { const r = board.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 640, y: (e.clientY - r.top) / r.height * 384 }; }
 board.addEventListener("pointermove", (e) => { if (G && G.aim) G.aimPos = boardPos(e); });
 // Abilities: tap a button beside the board, then tap the board to use it there. G.aim = which one you're aiming.
@@ -3676,6 +3739,8 @@ for (const k of ABILITIES) $("b-" + k).onclick = () => {
 board.addEventListener("pointerdown", (e) => {
   if (!G || G.over) return;
   if (G.aim) { castAbility(G.aim, boardPos(e)); return; }   // aiming an ability
+  if (G.inspect) { closeRobotInfo(); return; }               // a robot's info is showing: any tap closes it
+  { const r = robotAt(boardPos(e)); if (r) { openRobotInfo(r); return; } }   // tapped a robot: show its info
   const c = tileFromEvent(e); if (!c) return;
   G.hover = c;
   if (G.bonus && G.bonus.x === c.x && G.bonus.y === c.y) { collectBonusLeaf(); return; }
@@ -5099,6 +5164,8 @@ function draw() {
   }
   drawBonusLeaf(x);
   drawCrabSpot(x);
+  drawInspect(x);
+  updateRobotInfo();
   // Mega Fireball: the target circle while aiming, and the fireball falling from the sky
   if (G.aim && G.aimPos) {
     const ice = G.aim === "freeze", R = SETTINGS.abilities[G.aim].radius * T, p = G.aimPos, pulse = 0.5 + 0.5 * Math.sin(G.time * 8);
