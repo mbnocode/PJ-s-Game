@@ -4011,15 +4011,12 @@ function tickCrabSpot(dt) {
 }
 function drawCrabSpot(x) {
   const c = G.crabSpot; if (!c) return;
-  const cx = c.x * T + 16, cy = c.y * T + 22, ph = c.t % 3.2, wig = ph < 0.6 ? Math.sin(ph * 30) * 1.5 : 0, peek = ph > 1.6 && ph < 2.5;
+  const cx = c.x * T + 16, cy = c.y * T + 22, ph = c.t % 3.2, wig = ph < 0.6 ? Math.sin(ph * 30) * 1.5 : 0;   // it just wiggles; no eyes, so it stays a secret
   x.fillStyle = "rgba(0,0,0,0.12)"; x.beginPath(); x.ellipse(cx, cy + 3, 11, 3, 0, 0, Math.PI * 2); x.fill();
   x.fillStyle = "#b89a5e"; x.beginPath(); x.ellipse(cx + wig, cy + 0.5, 11, 6, 0, Math.PI, 0); x.fill();   // a darker rim so the bump stands out a little
   x.fillStyle = "#d9bf82"; x.beginPath(); x.ellipse(cx + wig, cy, 10, 5, 0, Math.PI, 0); x.fill();
   x.fillStyle = "#f2e0ae"; x.beginPath(); x.ellipse(cx + wig - 2, cy - 1, 6, 3, 0, Math.PI, 0); x.fill();
   x.fillStyle = "#b8a070"; x.fillRect(cx + wig - 7, cy - 1, 2, 1); x.fillRect(cx + wig + 4, cy - 2, 2, 1);
-  if (peek) {   // two tiny eyes on stalks peek out of the sand
-    for (const ex of [-3, 3]) { x.fillStyle = "#9e2a22"; x.fillRect(cx + ex, cy - 9, 1, 5); x.fillStyle = "#16191d"; x.fillRect(cx + ex - 2, cy - 12, 4, 4); x.fillStyle = "#ffffff"; x.fillRect(cx + ex - 1, cy - 11, 2, 2); x.fillStyle = "#16191d"; x.fillRect(cx + ex, cy - 11, 1, 1); }
-  }
   if (ph < 0.6 && Math.random() < 0.3) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * 16, y: cy - 2, vx: (Math.random() - 0.5) * 20, vy: -12, t: 0, life: 0.35, col: "#e8d29a" });
 }
 let crabWasPaused = false, crabAnim = null;
