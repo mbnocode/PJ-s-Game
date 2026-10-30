@@ -173,6 +173,25 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .perk.mystery .coll .ci.got { color: #f4efe0; }
 .perk.mystery .coll .ci.got b { color: var(--gold); opacity: 1; }
 .bnote { display: block; font-family: var(--body); font-size: 13px; color: var(--muted); text-transform: none; letter-spacing: 0; margin-top: 2px; }
+/* the Night Owl's tree and the night sky on the title screen */
+#s-title { position: relative; }
+#s-title > .lineup { margin-top: auto; }   /* the night sky is first in the page, so keep the title centered */
+#s-title .night { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s linear; z-index: 0;
+  background: radial-gradient(circle at 82% 14%, #fff7c2 0 26px, rgba(255,247,194,0.35) 27px, rgba(255,247,194,0) 70px), radial-gradient(ellipse at 50% 0%, rgba(20,26,70,0.9), rgba(6,8,24,0.95)); }
+#s-title .night::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#c8ccf0 1px, transparent 1.5px), radial-gradient(#fff7c2 1px, transparent 1.5px); background-size: 97px 83px, 151px 127px; background-position: 13px 7px, 61px 41px; opacity: .6; }
+#s-title > *:not(.night):not(.owltree) { position: relative; z-index: 1; }
+.owltree { position: absolute; left: 2%; bottom: 0; z-index: 1; background: none; border: 0; padding: 0; box-shadow: none; cursor: default; width: clamp(90px, 14vw, 160px); }
+.owltree canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+.owltree.awake { cursor: pointer; }
+.owltree.awake:hover { filter: drop-shadow(0 0 8px rgba(255,230,110,0.5)); }
+.owltree:hover, .owltree:active { transform: none; background: none; }
+@media (max-width: 760px) { .owltree { left: -10px; width: 90px; opacity: .9; } }
+#owl-portrait { width: 192px; height: 128px; image-rendering: pixelated; }
+#s-owl::before { content: ""; position: fixed; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 0%, #1c2350, #0c0f22 70%); }
+/* the Hermit Crab's shop (inside a Beach game) */
+.crabshop { position: fixed; inset: 0; z-index: 65; background: rgba(10, 30, 40, 0.75); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.crabshop .cs-box { background: linear-gradient(180deg, #2a4a52, #1b2f33); border: 3px solid #e8d29a; border-radius: 10px; padding: 18px; max-width: 920px; width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+#crab-portrait { width: 128px; height: 128px; image-rendering: pixelated; }
 .achtoast { position: fixed; z-index: 80; top: 14px; left: 50%; transform: translateX(-50%); background: #23301e; border: 3px solid var(--gold); border-radius: 8px; padding: 10px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.4); animation: achpop .35s ease-out; }
 .achtoast canvas { width: 40px; height: 40px; image-rendering: pixelated; }
 .achtoast .t { font-family: var(--display); font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
@@ -433,6 +452,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <div id="app">
   <!-- Title -->
   <section class="screen menu" id="s-title">
+    <div class="night" id="title-night" aria-hidden="true"></div>
+    <button id="b-owl" class="owltree" aria-label="An old tree" title="An old tree"><canvas id="owl-tree" width="160" height="200"></canvas></button>
     <div class="lineup" id="lineup"></div>
     <div>
       <h1>PJ's Game</h1>
@@ -506,6 +527,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   </section>
 
   <div class="achtoast" id="achtoast" hidden></div>
+  <div class="crabshop" id="crabshop" hidden><div class="cs-box">
+    <h2>The Hermit Crab's Shop</h2><canvas id="crab-portrait" width="128" height="128" aria-label="A hermit crab peeking out of a spiral shell"></canvas>
+    <p class="muted" id="crab-say"></p><div class="acorns"><span id="crab-acorns">0</span> Golden Acorns</div>
+    <div class="perks" id="crab-shop"></div><button class="go" id="b-crab-back">Back to the beach</button></div></div>
   <div class="boxopen" id="boxopen" hidden><div class="bo-rays"></div><div class="bo-stage"><canvas id="bo-box" width="160" height="160"></canvas><div id="bo-prize"></div></div><div class="bo-text" id="bo-text"></div><button class="go" id="bo-ok" hidden>Awesome!</button></div>
 
   <!-- Dadbot's "are you sure?" screen -->
@@ -537,6 +562,16 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   </section>
 
   <!-- The Serpent's Shop: a secret shop reached by tapping the serpent on the save slot screen -->
+  <section class="screen menu" id="s-owl" hidden>
+    <h2>The Night Owl's Shop</h2>
+    <canvas id="owl-portrait" width="96" height="64" aria-label="A midnight-blue owl with glowing eyes, on a branch under the moon"></canvas>
+    <p class="muted" id="owl-say"></p>
+    <div class="choices" id="owl-slots"></div>
+    <div class="acorns" id="owl-acorns-row"><span id="owl-acorns">0</span> Golden Acorns</div>
+    <div class="perks" id="owl-shop"></div>
+    <button class="link" id="b-owl-back">Back to the title screen</button>
+  </section>
+
   <section class="screen menu" id="s-serpent" hidden>
     <h2>The Serpent's Shop</h2>
     <canvas id="serp-portrait" width="96" height="48" aria-label="A green serpent coiled around a pile of Golden Acorns"></canvas>
@@ -653,6 +688,7 @@ const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
 const PAL = {
+  "1": "#1a1f3a", "2": "#2a3260", "3": "#3f4a86", "4": "#6a74b8", "5": "#c8ccf0", "6": "#ffe066", "7": "#fff7c2", "8": "#5a3a1c", "9": "#3a2410",   // the Night Owl's night colors
   k: "#16191d", y: "#f2c230", Y: "#c98e12", w: "#ffffff", r: "#e0443a", R: "#9e2a22", g: "#7a8089", G: "#4a5059",
   o: "#ff8c1a", b: "#3d8fe0", B: "#1f5fa8", c: "#8fd3ff", n: "#7a4a24", N: "#4e2d14", l: "#5fbf4a", L: "#2f7d32",
   a: "#24163a", A: "#3a2458", i: "#8a6ac0", d: "#5a1608", D: "#2a0a04", t: "#6a6676", T: "#3c3944", E: "#ffb12e",   // lava-level robots
@@ -666,6 +702,9 @@ const ART = {
   mysteryboxopen: [".kpYppppppppYpk.",".kPYPPPPPPPPYPk.",".kPYPPPPPPPPYPk.","..kkkkkwzkkkkk..","f.kkwwwwwwwwkk..",".kUUUUUUUUUUUUkz",".kUUUUUUUUUUUUk.","kppYppppppppYppk","kpPYPPPPPPPPYPak","kpPYPPPPPPPPYPak","kfYYYYYYYYYYYYYk","kpPYPPPPPPPPYPak","kpPYPPPffPPPYPak","kpPYPPPPPPPPYPak","kpaYaaaaaaaaYaak",".kkkkkkkkkkkkkk."],
   // the Phoenix: the jackpot prize from the Mystery Box
   phoenix: ["......k......kok..k.............",".....kRk.....kyk.kok............","..f..kRk....kook.kykk.........E.","..k..kRRk..kooookookfkkk........",".kRk.krRk...koookookkroEk.k.....","..kRkkrRRk..koEoooEkkorkrkrk....","..kRRRrrRRk.koooooEkookooEk.....","..kRRRrrrRk.kooEoEEoookkfffk....","..kRrrrrrRRkkooEEEEoERkffffEk...","kkkRRrrrrrRkkooEfEEEoREEEEwkEkk.","RRRRRrrrrrrRkkoEffEEoREEEERkEyyk","kRRRRRrrrrrRRkoEfffEoRoooooooYYY",".kRRRRrrrrrrRkoEfffEokkoooookkkk","..kRRRRRrrrrrRoEEEEEoEEEoook....","...kRRRRRrrrrroooooooEEEkkk.....",".o.kRRRRRRrrrrooooooooook......f","....kkkRRRRrrrooooooooook.......",".......kkRRroooooooEEkkk........",".........krooooooEEEEEk.........","..........kooooEEEEEEk..........",".E.......kkooEEEEEEffk...E......",".......kkrrEEEEEEfffk...........",".....kkrroEorEEffffk.........o..","...kkrrooEoorrkkkkk.............","..krrooEEEoorrkYkkYk............","..krrooEooorrkkYkkYk............",".krroorroorrrkYEYYkYkkk.........",".krrorrrogrrrggggggggggk........","krrrkrrrGGrrTGGGGGTGGGTk........","krkkkrrkGTTrTTTTTTTTTTTk........",".k..krk.kkkkkkkkkkkkkkk.........",".....k.........................."],
+  // secret shopkeepers: the Night Owl (title screen) and the Hermit Crab (under the sand on the Beach)
+  nightowl: ["................................","........k...............k.......","..5....k3k.kkkkkkkkkk..k3k......",".......k2kk1111111122k.k2k......","........k2111111122222k2k.......","........k12441122224422k........",".......k144YY442244YY443k....7..",".......k14YY665224YY6653k.......",".......k4Y6wk6654Y6wk665k.......",".......k4666k6754666k675k.......",".......k2466k7533466k754k.......",".......k2557755YY5577554k.......","...5...k12255333y3455443k.......","......k111333333444444333k......","......k111133344444443333k......","......k111223333344433331k....5.","......k112223333444433333k......","......k1222333444444433341k.....","......k222233434444443344k......","......k212234444434443441k......","......k222244444444454444k......",".......k2224444344455444k.......",".7.....k2234434444355444k.......","........k33344444555444k........",".........k334444355544k....kk...","....k.....k3335555444k....kLlk..","kkkk8kkkkkkkkyy444yykkkkkk8kkkkk","nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn","99999999999999999999999999999999","kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk","................................","................................"],
+  hermitcrab: ["................................","................................","................................","................................","................................","........kkkkkkkk................","......kkjjjjjjjjkk........kkk...",".....kjjjwjjjjjjmnk...kkkkwwwk..","....kjjwNNNNNNmmmmnk.kwwwkwkwk..","...kjjwNjjjjjnnmmmmnkkwkwkwwwk..","..kjjNjjjjjjmmnnmmmnmkwwwkkRk...","..kjNNjjjjmmmmmnmmmnmkkRk.kRk...",".kjjNjjjNnnnmmmnmmmnnekRk.kRkk..",".kjjNjjmnmmnmmmnmmmnnekRk.kRRRk.",".kjNNjmmnmmmmmmnmmmnnekRk.kRrrrk",".kjjNmmmnmmmmmmnmeeneekRkkkRrrro",".kjmnmmmnnmmmmnmeeeneeRRRRRRrrok",".kmmnmmmmnnnnneeeenneeRRRrrrkrk.","..kmmnmmmmmmmeeeeeneeRRRrrrrrrk.","..kmmnnmmmmmeeeeeneeeRrrrrrrrrk.","...kmmnnmmeeeeenneeeRrrrrrrrrrk.","....kmmmnnnnnnnneeerrrrkrrkrrok.",".....kmeeeenneeeeekrrrrrkkroook.","......kkeeeeeeeekk.krrrrrroook..","........kkkkkkkk....krrroooRRRk.","....................kkroooRRRrrk","...................kRkkRkkRRrrok","...................kRkkRkkRrook.",".e..................k..k..kkkk..","....m.....e..................e..","................m...............","................................"],
   // snow robots
   icechunk: ["................", "................", "................", "................", ".....kkkkkk.....", "....kUUUUUck....", "...kUccccccbk...", "...kUcwccwcbk...", "...kUcrccrcbk...", "...kUccccccbk...", "...kUcccwccbk...", "...kbbbbbbbbk...", "....kkkkkkkk....", "....kk....kk....", "................", "................"],
   snowplow: [".....k..........","....kfk........x","...kkoEkk.......","..kssssssk...kkw","..ksgUwcck..kfYk","..ksgccrbk.kGkYk",".kksggggGkkkGfk.","ksssssssssssgfYk","ksgGGGGGGggGGkYk","ksggyYgyYggGGfk.","ksGGGGGGGGGGGfYk","kkkkkkkkkkkkkfYk","kGsgGsgGsgGGkkkw","kGgTGgTGgTGGk.wx",".kkkkkkkkkkk....","................"],
@@ -1362,7 +1401,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-achievements", "game"];
+const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-achievements", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -1420,49 +1459,113 @@ function openSerpentShop() {
   renderSerpentShop(); show("s-serpent");
   if (!serpAnim) serpAnim = requestAnimationFrame(serpPortrait);
 }
-function renderSerpentShop() {
-  const has = slots.some((s) => s);
-  const box = $("serp-slots"); box.innerHTML = "";
-  slots.forEach((s, i) => {
-    if (!s) return;
-    const b = document.createElement("button"); b.id = "serp-slot-" + i; b.setAttribute("aria-pressed", String(i === serpSlot));
-    b.innerHTML = `Slot ${i + 1}<small>${s.acorns || 0} Golden Acorns</small>`;
-    b.onclick = () => { serpSlot = i; renderSerpentShop(); };
-    box.appendChild(b);
-  });
-  box.hidden = slots.filter((s) => s).length < 2;
-  $("serp-say").textContent = has ? "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns. Pick a save slot to shop with.”"
-    : "“Sssso… you found me. Come back when you have a save slot and some Golden Acorns.”";
-  if (has && slots.filter((s) => s).length < 2) $("serp-say").textContent = "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns.”";
-  const s = slots[serpSlot];
-  $("serp-acorns-row").hidden = !s; if (s) $("serp-acorns").textContent = s.acorns || 0;
-  const shop = $("serp-shop"); shop.innerHTML = "";
-  // Each shelf holds one item; an item can pick its shelf (shelf: 3 = the third one). Empty shelves say "Coming soon".
-  const shelves = Array(Math.max(SETTINGS.serpentShopSlots || 3, Object.keys(SETTINGS.serpentShop || {}).length)).fill(null);
-  const all = Object.entries(SETTINGS.serpentShop || {});
+// Shelves for any secret shop. items = { key: { name, cost, about, picture, shelf, unlock, oneAtATime } }.
+function renderShopShelves(shop, items, shelfCount, s, prefix, soonText, rerender) {
+  shop.innerHTML = "";
+  const shelves = Array(Math.max(shelfCount || 3, Object.keys(items || {}).length)).fill(null);
+  const all = Object.entries(items || {});
   all.filter(([, it]) => it.shelf && !shelves[it.shelf - 1]).forEach((e) => { shelves[e[1].shelf - 1] = e; });
   all.filter((e) => !shelves.includes(e)).forEach((e) => { const n = shelves.indexOf(null); if (n >= 0) shelves[n] = e; });
   shelves.forEach((entry) => {
     if (!entry) {
       const d = document.createElement("div"); d.className = "perk soon";
-      d.innerHTML = `<span class="k">???</span><span class="s">Coming soon. The serpent is still gathering its treasures…</span>`;
+      d.innerHTML = `<span class="k">???</span><span class="s">${soonText}</span>`;
       shop.appendChild(d); return;
     }
     const [key, it] = entry;
     const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0, holding = it.oneAtATime && own > 0;
     const d = document.createElement("div"); d.className = "perk" + (done ? " maxed" : "");
     d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
-      ${done ? '<span class="owned">Unlocked!</span>' : holding ? '<span class="owned">You have one! Use it on the Mystery Box (Upgrades page).</span>' : `${own ? `<span class="owned">You have ${own}</span>` : ""}
-      <button class="go" id="serp-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
+      ${done ? '<span class="owned">Unlocked!</span>' : holding ? `<span class="owned">${it.holdingText || "You have one!"}</span>` : `${own ? `<span class="owned">You have ${own}</span>` : ""}
+      <button class="go" id="${prefix}-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
     if (it.picture && SPR[it.picture]) { const pc = spriteCanvas(it.picture, 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc); }
     if (done || holding) { shop.appendChild(d); return; }
     d.querySelector("button").onclick = () => {
       if (!s || (s.acorns || 0) < it.cost) return;
       s.acorns -= it.cost; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + 1;
-      saveSlots(slots); Sound.play("upgrade"); renderSerpentShop();
+      saveSlots(slots); Sound.play("upgrade"); rerender();
     };
     shop.appendChild(d);
   });
+}
+// Save-slot buttons for shops you reach from outside a game.
+function renderShopSlotPicker(box, current, prefix, pick) {
+  box.innerHTML = "";
+  slots.forEach((s, i) => {
+    if (!s) return;
+    const b = document.createElement("button"); b.id = prefix + "-slot-" + i; b.setAttribute("aria-pressed", String(i === current));
+    b.innerHTML = `Slot ${i + 1}<small>${s.acorns || 0} Golden Acorns</small>`;
+    b.onclick = () => pick(i);
+    box.appendChild(b);
+  });
+  box.hidden = slots.filter((s) => s).length < 2;
+}
+/* ---------- the Night Owl's secret shop (title screen) ---------- */
+// Wait on the title screen and night slowly falls. Then a pair of glowing eyes opens in the old tree: tap them!
+const owlNight = { t: 0, last: 0, night: 0, anim: null };
+function owlTreeTick(now) {
+  owlNight.anim = requestAnimationFrame(owlTreeTick);
+  const dt = Math.min(0.1, (now - (owlNight.last || now)) / 1000); owlNight.last = now;
+  if ($("s-title").hidden) { owlNight.t = 0; owlNight.night = 0; $("title-night").style.opacity = 0; $("b-owl").classList.remove("awake"); return; }
+  owlNight.t += dt;
+  const NS = SETTINGS.nightOwl || { waitSeconds: 20, duskSeconds: 5 };
+  owlNight.night = Math.max(0, Math.min(1, (owlNight.t - NS.waitSeconds) / NS.duskSeconds));
+  $("title-night").style.opacity = owlNight.night;
+  $("b-owl").classList.toggle("awake", owlNight.night >= 1);
+  const c = $("owl-tree").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 160, 200);
+  c.drawImage(SPR.tree, 0, 30, 160, 160);
+  if (owlNight.night > 0) { c.fillStyle = `rgba(10,14,40,${0.55 * owlNight.night})`; c.globalCompositeOperation = "source-atop"; c.fillRect(0, 0, 160, 200); c.globalCompositeOperation = "source-over"; }
+  if (owlNight.night >= 1) {   // glowing eyes peeking out of the leaves, blinking now and then
+    const blink = (t % 4.2) < 0.18, look = Math.sin(t * 0.7) * 2, ex = 58 + look, ey = 84;
+    const glow = c.createRadialGradient(ex + 22, ey + 5, 2, ex + 22, ey + 5, 40); glow.addColorStop(0, "rgba(255,230,110,0.35)"); glow.addColorStop(1, "rgba(255,230,110,0)");
+    c.fillStyle = glow; c.fillRect(ex - 20, ey - 35, 84, 80);
+    for (const dx of [0, 30]) {
+      c.fillStyle = "#16191d"; c.fillRect(ex + dx - 2, ey - 2, 18, blink ? 6 : 14);
+      if (blink) { c.fillStyle = "#ffe066"; c.fillRect(ex + dx, ey + 1, 14, 2); continue; }
+      c.fillStyle = "#ffe066"; c.fillRect(ex + dx, ey, 14, 10); c.fillStyle = "#fff7c2"; c.fillRect(ex + dx, ey, 14, 3);
+      c.fillStyle = "#16191d"; c.fillRect(ex + dx + 6, ey + 1, 3, 8); c.fillStyle = "#ffffff"; c.fillRect(ex + dx + 2, ey + 1, 2, 2);
+    }
+  }
+}
+owlNight.anim = requestAnimationFrame(owlTreeTick);
+$("b-owl").onclick = () => { if (owlNight.night < 1) return; Sound.init(); Sound.play("place"); openOwlShop(); };
+let owlSlot = -1, owlAnim = null;
+function openOwlShop() {
+  owlSlot = slots[slotIndex] ? slotIndex : slots.findIndex((s) => s);
+  renderOwlShop(); show("s-owl");
+  if (!owlAnim) owlAnim = requestAnimationFrame(owlPortrait);
+}
+function renderOwlShop() {
+  const has = slots.some((s) => s);
+  renderShopSlotPicker($("owl-slots"), owlSlot, "owl", (i) => { owlSlot = i; renderOwlShop(); });
+  $("owl-say").textContent = !has ? "“Hoo… who's there? Come back when you have a save slot and some Golden Acorns.”"
+    : "“Hoo… hoo goes there? Only the patient find me, and only at night. I trade my moonlit treasures for Golden Acorns.”";
+  const s = slots[owlSlot];
+  $("owl-acorns-row").hidden = !s; if (s) $("owl-acorns").textContent = s.acorns || 0;
+  renderShopShelves($("owl-shop"), SETTINGS.nightOwlShop, (SETTINGS.nightOwl || {}).shelves || 3, s, "owl", "Coming soon. The owl is still collecting treasures under the moon…", renderOwlShop);
+}
+function owlPortrait(now) {
+  if ($("s-owl").hidden) { owlAnim = null; return; }
+  const c = $("owl-portrait").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 96, 64);
+  c.fillStyle = "#fff7c2"; c.beginPath(); c.arc(84, 12, 9, 0, Math.PI * 2); c.fill(); c.fillStyle = "#e8dc9a"; c.fillRect(80, 9, 3, 3); c.fillRect(87, 15, 2, 2);   // the moon
+  for (const [sx, sy, k] of [[8, 8, 0], [22, 20, 1.3], [88, 40, 2.1], [6, 40, 0.7], [56, 6, 1.9]]) { c.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.5 + k)); c.fillStyle = "#c8ccf0"; c.fillRect(sx, sy, 2, 2); }
+  c.globalAlpha = 1;
+  const bob = Math.round(Math.sin(t * 1.2) * 1);
+  c.drawImage(SPR.nightowl, 18, 1 + bob, 60, 60);
+  if ((t % 3.6) < 0.16) { const k = 60 / 32; c.fillStyle = "#3f4a86"; c.fillRect(18 + 9 * k, 1 + bob + 6 * k, 6 * k, 6 * k); c.fillRect(18 + 17 * k, 1 + bob + 6 * k, 6 * k, 6 * k); }   // blink
+  owlAnim = requestAnimationFrame(owlPortrait);
+}
+$("b-owl-back").onclick = () => show("s-title");
+
+function renderSerpentShop() {
+  const has = slots.some((s) => s);
+  renderShopSlotPicker($("serp-slots"), serpSlot, "serp", (i) => { serpSlot = i; renderSerpentShop(); });
+  $("serp-say").textContent = has ? "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns. Pick a save slot to shop with.”"
+    : "“Sssso… you found me. Come back when you have a save slot and some Golden Acorns.”";
+  if (has && slots.filter((s) => s).length < 2) $("serp-say").textContent = "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns.”";
+  const s = slots[serpSlot];
+  $("serp-acorns-row").hidden = !s; if (s) $("serp-acorns").textContent = s.acorns || 0;
+  renderShopShelves($("serp-shop"), SETTINGS.serpentShop, SETTINGS.serpentShopSlots, s, "serp", "Coming soon. The serpent is still gathering its treasures…", renderSerpentShop);
 }
 function serpPortrait(now) {
   if ($("s-serpent").hidden) { serpAnim = null; return; }
@@ -3298,6 +3401,7 @@ board.addEventListener("pointerdown", (e) => {
   const c = tileFromEvent(e); if (!c) return;
   G.hover = c;
   if (G.bonus && G.bonus.x === c.x && G.bonus.y === c.y) { collectBonusLeaf(); return; }
+  if (G.crabSpot && G.crabSpot.x === c.x && G.crabSpot.y === c.y) { openCrabShop(); return; }   // the Hermit Crab's secret shop
   { const cg = G.map.gates.find((g) => g.castle);   // tap the robots' castle to overgrow it with plants
     if (cg && c.x >= cg.x && c.x < cg.x + 2 && c.y >= cg.y && c.y < cg.y + 2) { overgrowCastle(cg); return; } }
   const t = towerAt(c.x, c.y);
@@ -3858,6 +3962,54 @@ function towerScale(t) {
   if (t.kind === "plant") return [0.85, 0.97, 1.09, 1.22][t.level];
   return [0.72, 0.84, 0.96, 1.1][t.level];
 }
+// Between waves on the Beach, sometimes a little bump moves in the sand. Tap it to find the Hermit Crab's secret shop.
+function tickCrabSpot(dt) {
+  const CS = SETTINGS.hermitCrab; if (!CS || !CS.levels.includes(G.level)) return;
+  if (G.waveActive || G.over) { G.crabSpot = null; return; }
+  if (G.wave < 1) return;
+  if (G.crabBreak !== G.wave) {
+    G.crabBreak = G.wave;
+    if (Math.random() < CS.chance) {
+      const free = [];
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (G.map.cells[y][x] === "grass" && !towerAt(x, y) && !G.map.scenery[x + "," + y] && !isFactory(x, y) && !(G.bonus && G.bonus.x === x && G.bonus.y === y)) free.push({ x, y });
+      if (free.length) G.crabSpot = { ...free[Math.random() * free.length | 0], t: 0 };
+    }
+  }
+  if (G.crabSpot) G.crabSpot.t += dt;
+}
+function drawCrabSpot(x) {
+  const c = G.crabSpot; if (!c) return;
+  const cx = c.x * T + 16, cy = c.y * T + 22, ph = c.t % 3.2, wig = ph < 0.6 ? Math.sin(ph * 30) * 1.5 : 0, peek = ph > 1.6 && ph < 2.5;
+  x.fillStyle = "rgba(0,0,0,0.12)"; x.beginPath(); x.ellipse(cx, cy + 3, 11, 3, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#b89a5e"; x.beginPath(); x.ellipse(cx + wig, cy + 0.5, 11, 6, 0, Math.PI, 0); x.fill();   // a darker rim so the bump stands out a little
+  x.fillStyle = "#d9bf82"; x.beginPath(); x.ellipse(cx + wig, cy, 10, 5, 0, Math.PI, 0); x.fill();
+  x.fillStyle = "#f2e0ae"; x.beginPath(); x.ellipse(cx + wig - 2, cy - 1, 6, 3, 0, Math.PI, 0); x.fill();
+  x.fillStyle = "#b8a070"; x.fillRect(cx + wig - 7, cy - 1, 2, 1); x.fillRect(cx + wig + 4, cy - 2, 2, 1);
+  if (peek) {   // two tiny eyes on stalks peek out of the sand
+    for (const ex of [-3, 3]) { x.fillStyle = "#9e2a22"; x.fillRect(cx + ex, cy - 9, 1, 5); x.fillStyle = "#16191d"; x.fillRect(cx + ex - 2, cy - 12, 4, 4); x.fillStyle = "#ffffff"; x.fillRect(cx + ex - 1, cy - 11, 2, 2); x.fillStyle = "#16191d"; x.fillRect(cx + ex, cy - 11, 1, 1); }
+  }
+  if (ph < 0.6 && Math.random() < 0.3) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * 16, y: cy - 2, vx: (Math.random() - 0.5) * 20, vy: -12, t: 0, life: 0.35, col: "#e8d29a" });
+}
+let crabWasPaused = false, crabAnim = null;
+function openCrabShop() {
+  crabWasPaused = G.paused; G.paused = true; Sound.play("place");
+  renderCrabShop(); $("crabshop").hidden = false;
+  if (!crabAnim) crabAnim = requestAnimationFrame(crabPortrait);
+}
+function renderCrabShop() {
+  const s = slot(); $("crab-acorns").textContent = (s && s.acorns) || 0;
+  $("crab-say").textContent = "“Oh! You found me under the sand. Shh… I only come out between waves. I've got treasures from the bottom of the sea, for Golden Acorns.”";
+  renderShopShelves($("crab-shop"), SETTINGS.hermitCrabShop, SETTINGS.hermitCrab.shelves || 3, s, "crab", "Coming soon. The crab is still digging up treasures from the sea…", renderCrabShop);
+}
+function crabPortrait(now) {
+  if ($("crabshop").hidden) { crabAnim = null; return; }
+  const c = $("crab-portrait").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 128, 128);
+  c.fillStyle = "#e8d29a"; c.fillRect(0, 110, 128, 18); c.fillStyle = "#d9bf82"; for (let i = 0; i < 128; i += 9) c.fillRect(i, 112 + (i % 3), 4, 2);
+  const bob = Math.round(Math.abs(Math.sin(t * 2)) * -2);
+  c.drawImage(SPR.hermitcrab, 0, 0 + bob, 128, 128);
+  crabAnim = requestAnimationFrame(crabPortrait);
+}
+$("b-crab-back").onclick = () => { $("crabshop").hidden = true; if (G) G.paused = crabWasPaused; };
 function drawBonusLeaf(x) {
   const b = G.bonus; if (!b) return;
   const left = (b.stay || SETTINGS.bonusLeaf.staySeconds) - b.t;
@@ -3989,6 +4141,7 @@ function lavaPowers(dt) {
 }
 function update(dt) {
   G.time += dt;
+  tickCrabSpot(dt);
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
     const airK = r.flying ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage
@@ -4587,6 +4740,7 @@ function draw() {
     }
   }
   drawBonusLeaf(x);
+  drawCrabSpot(x);
   // Mega Fireball: the target circle while aiming, and the fireball falling from the sky
   if (G.aim && G.aimPos) {
     const ice = G.aim === "freeze", R = SETTINGS.abilities[G.aim].radius * T, p = G.aimPos, pulse = 0.5 + 0.5 * Math.sin(G.time * 8);

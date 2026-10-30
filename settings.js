@@ -269,7 +269,8 @@ const SETTINGS = {
     // acornTimes: once you own it, every Golden Acorn that drops counts this many times.
     acorndoubler: { name: "Golden Acorn Doubler", cost: 150, unlock: true, shelf: 1, picture: "acorndoubler", acornTimes: 2, about: "Every Golden Acorn that drops counts twice: you get 2 instead of 1! Works on every level, for this save slot." },
     // oneAtATime: you can hold only one. Opening the Mystery Box uses it up, then you can buy another.
-    mysterykey: { name: "Mystery Key", cost: 400, oneAtATime: true, shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…" },
+    mysterykey: { name: "Mystery Key", cost: 400, oneAtATime: true, shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…",
+                  holdingText: "You have one! Use it on the Mystery Box (Upgrades page)." },
     hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head bites a different robot." },
   },
   // The Mystery Box on the Upgrades page. It needs the Mystery Key from the Serpent's Shop.
@@ -284,6 +285,18 @@ const SETTINGS = {
                   phoenix:   { chance: 5 },                         // JACKPOT: the Phoenix tower (only once)
                 } },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
+
+  // ---------------- MORE SECRET SHOPS ----------------
+  // The Night Owl: wait on the title screen and night falls; tap the glowing eyes in the old tree.
+  nightOwl: { waitSeconds: 20, duskSeconds: 5, shelves: 3 },   // seconds of waiting before dusk, how long night takes to fall, shelves in the shop
+  nightOwlShop: {
+    // Add items here, just like the Serpent's Shop (name, cost, about, picture, shelf, unlock).
+  },
+  // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
+  hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 3 },   // chance = how often the bump shows up in each break between waves
+  hermitCrabShop: {
+    // Add items here, just like the Serpent's Shop.
+  },
 
   // Leaderboard resets: a level's leaderboard only counts scores from after this time (UTC).
   // The old scores aren't deleted. Remove a line to bring that level's old scores back.
