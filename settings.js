@@ -147,7 +147,7 @@ const SETTINGS = {
                   { name: "Double Pinch",  about: "Throws shells at 2 robots at once.", targetsPlus: 1 } ],
               ] },
     // The Super Tower. It only shows up in the shop after you buy it on the Upgrades page.
-    pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 30, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
+    pegasus:  { name: "Pegasus", cost: 350, range: 3.4, damage: 40, attacksPerSecond: 1.1, targets: 3, vision: true, superTower: true,
               about: "Super Tower: shoots golden stars at 3 robots at once. Can see Hiders.",
               // Pick ONE choice at each upgrade.
               upgradeChoices: [
@@ -161,7 +161,7 @@ const SETTINGS = {
     // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads bites a different robot.
     // The Phoenix: the jackpot prize from the Mystery Box. Its fire feathers burn robots, and nothing can freeze, stun or trap it:
     // it bursts into flames instead ("rebirth") and scorches robots within rebirth.radius squares.
-    phoenix:  { name: "Phoenix", cost: 220, range: 2.8, damage: 20, attacksPerSecond: 1.3, burnDamagePerSecond: 8, burnSeconds: 2.5, boxUnlock: "phoenix",
+    phoenix:  { name: "Phoenix", cost: 220, range: 2.8, damage: 27, attacksPerSecond: 1.3, burnDamagePerSecond: 8, burnSeconds: 2.5, boxUnlock: "phoenix",
               rebirth: { radius: 1.5, damage: 40 },
               about: "Found in the Mystery Box. Shoots blazing feathers that burn robots. It can't be frozen or trapped: it bursts into flames instead.",
               upgradeChoices: [
