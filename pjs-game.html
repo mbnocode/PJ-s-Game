@@ -4365,6 +4365,10 @@ function drawBonusLeaf(x) {
   g.addColorStop(0, "rgba(255,210,120,0.55)"); g.addColorStop(1, "rgba(255,160,60,0)");
   x.fillStyle = g; x.beginPath(); x.arc(cx, cy, 20, 0, Math.PI * 2); x.fill();
   x.save(); x.translate(cx, cy); x.rotate(Math.sin(b.t * 3) * 0.25); x.scale(pop * 1.15, pop * 1.15); x.translate(-12, -12);
+  if (["basalt", "magma", "volcano"].includes(G.map.theme)) {   // on the fire levels, a bright outline so the leaf stands out from the glowing ground
+    x.lineJoin = "round"; x.strokeStyle = "#16191d"; x.lineWidth = 5.5; x.stroke(LEAF_PATH);
+    x.strokeStyle = "#ffffff"; x.lineWidth = 3; x.stroke(LEAF_PATH);
+  }
   x.fillStyle = b.gold ? "#f2c230" : "#ec7a2c"; x.strokeStyle = b.gold ? "#8a5a0a" : "#7a3a0e"; x.lineWidth = 1.4; x.lineJoin = "round"; x.fill(LEAF_PATH); x.stroke(LEAF_PATH);
   x.strokeStyle = b.gold ? "#fff1a8" : "#ffb066"; x.lineWidth = 0.9; x.beginPath(); x.moveTo(12, 21); x.lineTo(12, 6); x.moveTo(12, 12); x.lineTo(8, 9); x.moveTo(12, 12); x.lineTo(16, 9); x.stroke();
   x.restore();
