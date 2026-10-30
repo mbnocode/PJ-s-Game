@@ -236,7 +236,7 @@ const SETTINGS = {
     fireproof: { name: "Fire-Proof Bot", health: 140, speed: 1.8, leaves: 12, points: 35, waterTimes: 2 },
     // Lava Diver: every diveEvery seconds it dives under the lava for diveSeconds and can't be hit.
     diver:    { name: "Lava Diver", health: 120, speed: 2.2, leaves: 14, points: 40, diveEvery: 4, diveSeconds: 2 },
-    // Snow robots (The Frozen Tundra). The Blizzard King waits for Blizzard Peak.
+    // Snow robots (The Frozen Tundra, the Glacier Caves and Blizzard Peak).
     snowplow:  { name: "Snowplow Bot", health: 220, speed: 1.4, leaves: 16, points: 45, frontArmor: 0.5 },   // takes half damage from towers in front of it
     snowball:  { name: "Snowball Roller", health: 40, speed: 2.0, leaves: 10, points: 30, growPerSquare: 3, baseHit: 8 },   // gains health for every square it rolls
     penguin:   { name: "Penguin Bot", health: 50, speed: 1.6, leaves: 8, points: 20, iceSpeed: 3 },   // slides this many times faster on ice
@@ -248,7 +248,9 @@ const SETTINGS = {
     superglaciergolem: { name: "Super Glacier Golem", health: 6000, speed: 1, leaves: 400, points: 1800, baseHit: 80, isBoss: true, fixedHealth: true, chunkEvery: 500,
                          mergeIntro: { seconds: 5.5, atSquare: 6.5 } },   // the merge cutscene: how long the rest of the wave waits, and how many squares down the road they merge
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
-    blizzardking: { name: "Blizzard King", health: 4000, speed: 0.6, leaves: 260, points: 950, baseHit: 60, isBoss: true, rangeShrink: 0.3 },
+    // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).
+    // fixedHealth: his health is exactly this on Normal (the level and late waves don't make him tougher; Easy/Hard/Nightmare still do).
+    blizzardking: { name: "Blizzard King", health: 15000, speed: 0.6, leaves: 260, points: 3000, baseHit: 100, isBoss: true, fixedHealth: true, rangeShrink: 0.3 },
     // Lava-level Bosses:
     pillartitan:  { name: "Pillar Titan", health: 2200, speed: 0.7, leaves: 170, points: 600, baseHit: 45, isBoss: true, slamEvery: 8 },
     magmaking:    { name: "Magma Cube King", health: 1800, speed: 0.8, leaves: 160, points: 550, baseHit: 40, isBoss: true, splitInto: 2, splitType: "magmacube" },
@@ -271,7 +273,6 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "Blizzard Peak", look: "blizzard", about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff!" },
     { name: "The Iron Fortress", look: "fortress", about: "The robots' giant iron stronghold. 100 waves! Can you survive them all?" },
   ],
 
@@ -701,6 +702,46 @@ const SETTINGS = {
                 [["yetimech", 2, 8], ["boss", 1, 0, 4500], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 32, 0.4]],   // 23
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["superglaciergolem", 1, 0], ["yetimech", 2, 8], [["snowplow", "snowball", "penguin", "snowdrone", "tank"], 44, 0.33]],   // 25: three Glacier Golems merge into the Super Glacier Golem!
+              ] },
+    blizzard: { name: "Blizzard Peak", acornDropChance: 0.08, about: "The top of a snowy mountain in a howling blizzard. Watch out for the cliff! The Blizzard King is waiting at the end. Scores are worth 4x.", theme: "blizzard",
+              robotHealth: 1.45,
+              lateToughness: { fromWave: 10, perWave: 0.055 },  // after wave 10, robots get 5.5% tougher every wave
+              scoreTimes: 4,
+              path: [[0, 1], [7, 1], [7, 5], [2, 5], [2, 9], [12, 9], [12, 3], [17, 3], [17, 9], [19, 9]],
+              cliff: true,   // the bottom row is a cliff edge: nothing can be built there
+              ice: [[7, 3], [2, 7], [12, 6], [17, 6]],   // icy road squares: robots slide 1.4x faster
+              iceSpeed: 1.4,
+              // Trees are snowy pines, mushrooms are snowy rocks, tall grass is ice crystals.
+              trees:     [[4, 3], [10, 6], [15, 1], [14, 6], [5, 10], [9, 0], [19, 5], [0, 7]],
+              mushrooms: [[4, 7], [10, 1], [15, 10], [8, 6]],
+              tallGrass: [[0, 10], [14, 10], [1, 3], [19, 1]],
+              // Blizzard Peak's own 25 waves. The last wave is the Blizzard King, all alone.
+              waves: [
+                [["penguin", 8, 1.0]],                                                  // 1
+                [["snowball", 2, 1.8], ["penguin", 5, 0.9]],                            // 2
+                [["snowplow", 1, 0], ["walker", 5, 1.0]],                               // 3
+                [["snowdrone", 2, 1.4], ["penguin", 6, 1.0]],                           // 4
+                [[["penguin", "snowball", "penguin"], 9, 1.0], ["snowplow", 1, 0]],     // 5
+                [["glaciergolem", 1, 0, 1400], ["penguin", 6, 0.9]],                    // 6: a young Glacier Golem
+                [[["snowdrone", "hider"], 10, 0.8]],                                    // 7
+                [["snowplow", 4, 1.2], ["snowball", 6, 0.8]],                           // 8
+                [["yetimech", 1, 0, 1800], [["penguin", "snowdrone"], 10, 0.8]],        // 9
+                [["glaciergolem", 1, 0], [["snowball", "penguin"], 12, 0.7]],           // 10
+                [[["snowplow", "tank", "tesla"], 12, 0.9]],                             // 11
+                [[["snowdrone", "snowdrone", "penguin"], 16, 0.6]],                     // 12
+                [["glaciergolem", 1, 0], ["yetimech", 1, 0, 2000], ["penguin", 10, 0.7]],   // 13
+                [[["snowplow", "snowball", "repair"], 18, 0.6]],                        // 14
+                [["boss", 1, 0, 3500], [["snowdrone", "hider", "penguin"], 16, 0.6]],   // 15
+                [["glaciergolem", 2, 8], [["snowplow", "snowball"], 14, 0.6]],          // 16
+                [[["tank", "snowplow", "tesla", "penguin"], 22, 0.5]],                  // 17
+                [["yetimech", 2, 8], [["snowdrone", "penguin"], 18, 0.5]],              // 18
+                [[["snowball", "snowball", "snowplow", "repair"], 24, 0.5]],            // 19
+                [["glaciergolem", 2, 8], ["yetimech", 1, 0], [["penguin", "snowdrone", "snowplow"], 20, 0.5]],   // 20
+                [[["snowplow", "penguin", "snowdrone", "tank", "hider"], 30, 0.42]],    // 21
+                [["glaciergolem", 2, 8], [["snowball", "repair", "snowplow"], 22, 0.45]],   // 22
+                [["yetimech", 1, 0], ["boss", 1, 0, 4500], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 30, 0.42]],   // 23
+                [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
+                [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
   },
 };

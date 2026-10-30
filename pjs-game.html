@@ -557,7 +557,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-perks" hidden>
     <h2>Upgrades</h2>
     <div class="acorns"><span id="acorn-num">0</span> Golden Acorns</div>
-    <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: after wave 5, sometimes a robot drops one when you destroy it. Meadow 1%, Forest 2%, Swamp 3%, Beach 5%, Desert 4%, Lost Pyramid 5%, Basalt Delta 5%, Magma Fields 5%, Volcano 7%, Frozen Tundra 6%, Glacier Caves 7%. Every Boss you defeat always drops one!</p>
+    <p class="muted">Upgrades last forever in this save slot. Golden Acorns are rare: after wave 5, sometimes a robot drops one when you destroy it. Meadow 1%, Forest 2%, Swamp 3%, Beach 5%, Desert 4%, Lost Pyramid 5%, Basalt Delta 5%, Magma Fields 5%, Volcano 7%, Frozen Tundra 6%, Glacier Caves 7%, Blizzard Peak 8%. Every Boss you defeat always drops one!</p>
     <div class="perks" id="perk-list"></div>
     <div class="gift"><label class="field" for="gift-code">Have a gift code?<small>Each code works once per save slot.</small>
       <input id="gift-code" maxlength="20" autocomplete="off" spellcheck="false" placeholder="Type the code"></label>
@@ -730,7 +730,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "phoenix"];
@@ -1074,6 +1074,12 @@ function makeTile(kind) {
     for (let n = 0; n < 30; n++) px(["#ffffff", "#dde8f4", "#f4f8fc"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
     if (rnd() < 0.35) { const i = 1 + rnd() * 10 | 0, j = 2 + rnd() * 11 | 0; x.fillStyle = "#d2e0ef"; x.fillRect(i, j, 5, 1); x.fillRect(i + 1, j + 1, 3, 1); }   // a little drift shadow
     if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ffffff", i, j); px("#bfe0f6", i + 1, j); }   // a sparkle
+  } else if (kind === "blizzard") {
+    // Blizzard Peak: wind-packed stormy snow, gray rock poking through, and streaks of blown snow
+    x.fillStyle = "#d6dde8"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 26; n++) px(["#c8d1de", "#e4e9f1", "#bcc6d4"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.4) { const i = rnd() * 11 | 0, j = 2 + rnd() * 11 | 0, w = 3 + rnd() * 3 | 0; x.fillStyle = "#6e7888"; x.fillRect(i, j, w, 2); x.fillStyle = "#565f6e"; x.fillRect(i + 1, j + 2, w - 1, 1); x.fillStyle = "#f4f7fb"; x.fillRect(i, j - 1, w - 1, 1); }   // a rock poking through
+    for (let n = 0, m = 1 + rnd() * 2 | 0; n < m; n++) { const i = rnd() * 10 | 0, j = rnd() * 16 | 0; x.fillStyle = "#f2f5fa"; x.fillRect(i, j, 5 + rnd() * 4 | 0, 1); }   // drifting snow streaks
   } else if (kind === "glacier") {
     // the Glacier Caves floor: deep blue glacier ice in faceted chunks, with dark cracks and frosty sparkles
     x.fillStyle = "#3f86bb"; x.fillRect(0, 0, 16, 16);
@@ -1298,6 +1304,7 @@ const MAGMA = Array.from({ length: 8 }, () => makeTile("magma"));
 const VOLCANO_ROCK = Array.from({ length: 8 }, () => makeTile("volcano"));
 const SNOW = Array.from({ length: 8 }, () => makeTile("tundra"));
 const GLACIER_FLOOR = Array.from({ length: 8 }, () => makeTile("glacier"));
+const BLIZZ_SNOW = Array.from({ length: 8 }, () => makeTile("blizzard"));
 { // Frozen Tundra scenery: snowy pines, snowy rocks and ice crystals
   const ICE_ART = {
     snowpine: [".......k........", "......kwk.......", ".....kwLwk......", ".....kLLLk......", "....kwwLwwk.....", "....kLLLLLk.....", "...kwwLLLwwk....", "...kLLLLLLLk....", "..kwwwLLLwwwk...", "..kLLLLLLLLLk...", ".kwwLLLLLLLwwk..", ".kkkkkkNkkkkkk..", "......kNk.......", "......kNk.......", "....wwwwwww.....", "................"],
@@ -1341,7 +1348,8 @@ SPR.dunegrass = makeSprite(ART.tallgrass, false, { h: "#e6e48a", L: "#7a9a3a" })
 const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgrass: "cattail" }, beach: { tree: "palm", mushroom: "starfish", tallgrass: "dunegrass" }, forest: { tree: "pine", mushroom: "brownshroom", tallgrass: "fern" }, desert: { tree: "cactus", mushroom: "boulder", tallgrass: "tumbleweed" }, pyramid: { tree: "column", mushroom: "obelisk", tallgrass: "papyrus" },
   basalt: { tree: "basaltpillar", mushroom: "lavapool", tallgrass: "obsidianrock" }, magma: { tree: "magmarock", mushroom: "flamevent", tallgrass: "obsidianrock" }, volcano: { tree: "stalagmite", mushroom: "flamevent", tallgrass: "obsidianrock" },
   tundra: { tree: "snowpine", mushroom: "snowrock", tallgrass: "icecrystal" },
-  glacier: { tree: "icestalagmite", mushroom: "frostshroom", tallgrass: "icecrystal" } };
+  glacier: { tree: "icestalagmite", mushroom: "frostshroom", tallgrass: "icecrystal" },
+  blizzard: { tree: "snowpine", mushroom: "snowrock", tallgrass: "icecrystal" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -2570,6 +2578,7 @@ function buildMap(L) {
     const a = { x: (g0.gx + (g0.flip ? 1 : -1) + 0.5) * T, y: (g0.gy + 0.5) * T }, b = { x: (bLeft + 1) * T, y: (bTop + 1) * T };
     const len = Math.hypot(b.x - a.x, b.y - a.y); return { segs: [{ a, b, start: 0, len }], total: len };
   });
+  if (lv.cliff) for (let x = 0; x < COLS; x++) if (cells[ROWS - 1][x] === "grass") cells[ROWS - 1][x] = "cliff";   // Blizzard Peak: the bottom row is a cliff edge
   // Factory spreads from the Robots' side: the grass squares closest to a factory go first.
   const grass = [];
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass")
@@ -2603,7 +2612,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
@@ -2633,6 +2642,7 @@ function paintGround(x, map, factoryCount) {
   }
   if (map.lake) drawFrozenLake(x, map, fset);
   if (map.theme === "glacier") drawCaveCeiling(x, map);
+  if (map.cells[ROWS - 1].includes("cliff")) drawCliff(x, map);
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
   for (const key of map.quick || []) drawQuicksand(x, ...key.split(",").map(Number));
@@ -2669,6 +2679,26 @@ function makeVolcanoVeins(map) {
   const glow = document.createElement("canvas"); glow.width = 640; glow.height = 384; const gx = glow.getContext("2d");
   gx.imageSmoothingEnabled = true; gx.drawImage(small, 0, 0, 640, 384);
   map.veins = cv; map.veinGlow = glow;
+}
+// Blizzard Peak: the bottom row is the edge of a cliff, with a snowy lip and dark rock falling away into the storm
+function drawCliff(x, map) {
+  let sd = 53; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const top = (ROWS - 1) * T;
+  for (let px0 = 0; px0 < 640; px0 += 2) {
+    const col = Math.floor(px0 / T); if (map.cells[ROWS - 1][col] !== "cliff") continue;
+    const lip = top + 6 + Math.round(Math.sin(px0 / 9) * 3 + Math.sin(px0 / 23) * 2 + R() * 2);
+    x.fillStyle = "#eef2f8"; x.fillRect(px0, top, 2, lip - top);                      // packed snow right up to the edge
+    x.fillStyle = "#ffffff"; x.fillRect(px0, lip - 2, 2, 2);                          // the bright snowy lip
+    for (let y = lip; y < top + T; y += 2) {                                         // rock face, getting darker as it drops away
+      const k = (y - lip) / (top + T - lip), n = R();
+      x.fillStyle = k < 0.25 ? (n < 0.5 ? "#5e6674" : "#6e7684") : k < 0.6 ? (n < 0.5 ? "#454c58" : "#3c434e") : (n < 0.5 ? "#262b33" : "#1e2229");
+      x.fillRect(px0, y, 2, 2);
+    }
+    if (R() < 0.12) { x.fillStyle = "#dfe6f0"; x.fillRect(px0, lip + 4 + R() * 10, 2, 2); }   // snow stuck on a ledge
+  }
+  // swirling snow mist rising from below the edge
+  const g = x.createLinearGradient(0, top + T, 0, top + 8); g.addColorStop(0, "rgba(220,228,240,0.55)"); g.addColorStop(1, "rgba(220,228,240,0)");
+  x.fillStyle = g; x.fillRect(0, top + 8, 640, T - 8);
 }
 // The Glacier Caves: a dark band of cave ceiling along the top with icicles hanging down (they never cover the road)
 function drawCaveCeiling(x, map) {
@@ -2743,7 +2773,7 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra"].includes(map.theme);
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard"].includes(map.theme);
   const C = map.theme === "basalt"
     // an old crumbling stone road (the lava levels)
     ? { rim: hex("#16141a"), dirt: hex("#6a6874"), dark: hex("#56535f"), light: hex("#7e7b88"), edge: hex("#46444e"), stone: hex("#9a97a4"), rut: hex("#5a5764"), tuft: hex("#3c3944"), tuft2: hex("#2f2c34"), mortar: hex("#25232b") }
@@ -2752,7 +2782,7 @@ function makePathLayer(map) {
     : map.theme === "glacier"
     // an icy walkway: polished slabs of pale ice with frosty seams and shiny streaks, edged with packed snow
     ? { rim: hex("#163e62"), dirt: hex("#d6f0ff"), dark: hex("#bfe4f8"), light: hex("#eefaff"), edge: hex("#f4fbff"), stone: hex("#ffffff"), rut: hex("#a8d8f2"), tuft: hex("#eaf6ff"), tuft2: hex("#ffffff"), mortar: hex("#8ec6e8"), shine: hex("#ffffff") }
-    : map.theme === "tundra"
+    : map.theme === "tundra" || map.theme === "blizzard"
     ? { rim: hex("#1e2430"), dirt: hex("#86909f"), dark: hex("#727c8c"), light: hex("#f4f8ff"), edge: hex("#5a6474"), stone: hex("#b4bfcd"), rut: hex("#7a8494"), tuft: hex("#eaf1f9"), tuft2: hex("#ffffff"), mortar: hex("#3a4250") }
     : map.theme === "volcano"
     ? { rim: hex("#140806"), dirt: hex("#76604f"), dark: hex("#5e4a3e"), light: hex("#8e7562"), edge: hex("#4e3c32"), stone: hex("#a68a72"), rut: hex("#6a5446"), tuft: hex("#2a120c"), tuft2: hex("#3a170d"), mortar: hex("#2a1c16") }
@@ -2812,7 +2842,7 @@ function makePathLayer(map) {
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
 function makeGrandTree(theme) {
-  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || ["basalt", "magma", "volcano", "tundra", "glacier"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
+  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || ["basalt", "magma", "volcano", "tundra", "glacier", "blizzard"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
   const forest = theme === "forest";
   const leafCols = forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -3126,7 +3156,7 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking"];
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES];
-const NEW_FOES = new Set(["blizzardking"]);   // robots on the Enemies page that aren't in any waves yet
+const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
 const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
@@ -3521,6 +3551,7 @@ function towerStats(t) {
     if (ic.damageTimes && out.damage) out.damage *= ic.damageTimes;
   }
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
+  if (G.kingStorm && out.range) out.range *= 1 - G.kingStorm;   // the Blizzard King's howling blizzard shrinks every tower's range
   return out;
 }
 function towerStatsBase(t) {
@@ -4668,6 +4699,7 @@ function lavaPowers(dt) {
 function update(dt) {
   G.time += dt;
   if (G.merge) tickMerge(dt);   // the Super Glacier Golem's merge cutscene
+  { let k = 0; for (const r of G.robots) if (!r.dead && r.hp > 0) { const rs = (SETTINGS.robots[r.type] || {}).rangeShrink; if (rs > k) k = rs; } G.kingStorm = k; }   // the Blizzard King's blizzard
   tickCrabSpot(dt);
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
@@ -4865,11 +4897,24 @@ function tickFx(dt) {
 }
 
 /* ---------- draw ---------- */
+// Blizzard Peak: snow blows sideways across the mountaintop (and much harder while the Blizzard King is here)
+function drawBlizzardWind(x, front) {
+  const storm = G.kingStorm ? 1 : 0, n = front ? (storm ? 120 : 45) : 30;
+  x.save(); x.fillStyle = "#ffffff";
+  for (let i = 0; i < n; i++) {
+    const sp = 140 + (i % 7) * 30 + storm * 160, ph = ((G.time * sp + i * 977.3) % 760) - 60, fy = ((i * 53.7) % 1 * 384 + Math.sin(G.time * 2 + i) * 8 + ph * 0.18) % 384;
+    x.globalAlpha = front ? (i % 3 ? 0.55 : 0.85) : 0.3; const len = front ? 6 + (i % 5) * 3 + storm * 8 : 4;
+    x.fillRect(ph, fy, len, i % 4 ? 1 : 2);
+  }
+  if (front && storm) { x.globalAlpha = 0.12 + 0.05 * Math.sin(G.time * 3); x.fillStyle = "#dce6f4"; x.fillRect(0, 0, 640, 384); }   // a whiteout haze while the King's blizzard howls
+  x.restore();
+}
 function draw() {
   const x = ctx;
   x.save();
   if (G.shake > 0) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
   x.drawImage(G.ground, 0, 0);
+  if (G.map.theme === "blizzard") drawBlizzardWind(x, false);
   if (G.map.theme === "volcano" && G.map.veinGlow) {   // the lava cracks throb with heat, embers float up, and the cave edges glow dark red
     x.globalCompositeOperation = "lighter"; x.globalAlpha = 0.4 + 0.3 * Math.sin(G.time * 1.8);
     x.drawImage(G.map.veinGlow, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
@@ -5288,6 +5333,7 @@ function draw() {
       x.strokeStyle = `rgba(194,138,82,${0.8 * (1 - k)})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (0.4 + 0.6 * k), 0, Math.PI * 2); x.stroke();
     }
   }
+  if (G.map.theme === "blizzard") drawBlizzardWind(x, true);
   drawBonusLeaf(x);
   drawCrabSpot(x);
   drawInspect(x);
