@@ -828,6 +828,8 @@ SPR.crab = makeSprite(ART.crab, false, { r: "#e8553a", R: "#a8321e", o: "#ff9a6a
   SPR.acorndoubler = c;
 }
 SPR.hydra = makeSprite(ART.hydra, false, { L: "#163e36", l: "#2a6e5a", h: "#9cbc8c", v: "#e8dcc0", y: "#ff2a1a", r: "#5a0a0a", w: "#f4f0e0" });   // 32 x 32 three-headed Hydra with glowing red eyes
+// its 4th head (the Extra Bite upgrade): the same picture as its left head, cut out of the Hydra (11 x 8)
+SPR.hydrahead = makeSprite(ART.hydra.slice(6, 14).map((row) => row.slice(0, 11)), false, { L: "#163e36", l: "#2a6e5a", v: "#e8dcc0", y: "#ff2a1a", r: "#5a0a0a", w: "#f4f0e0" });
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 // Smooth (non-pixel) Pegasus drawn with canvas paths onto a 128 x 128 canvas, facing right.
 function makePegasusArt() {
@@ -3968,7 +3970,7 @@ function fire(t, s, target) {
     const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
     const bites = [target, ...G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && Math.hypot(rpos(r).x - cx, rpos(r).y - cy) <= R)
       .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, (s.targets || 3) - 1)];
-    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : [1, 0, 2][i % 3], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
+    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : (s.targets >= 4 ? [1, 0, 2, 3] : [1, 0, 2])[i % (s.targets >= 4 ? 4 : 3)], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
     Sound.play("tongue");
   } else if (t.kind === "water") {
     // The frog's tongue shoots out, smacks the robot, and snaps back.
@@ -4096,8 +4098,26 @@ function vinePoints(f, now) {
   return { pts, reach };
 }
 // The Hydra: one head stretches out on its long neck, bites, and pulls back.
-const HYDRA_HEADS = [[4, 11], [16, 6], [28, 11]];   // where the 3 heads' mouths are in its 32 x 32 picture
+const HYDRA_HEADS = [[4, 11], [16, 6], [28, 11], [0.5, 2.5]];   // where the heads' mouths are in its 32 x 32 picture (the 4th head grows with the Extra Bite upgrade)
 const HYDRA_EYES = [[5.5, 10.5], [14.5, 5.5], [17.5, 5.5], [25.5, 10.5]];   // its glowing eyes
+// The Hydra's 4th head (Extra Bite upgrade): a long neck rises from its body between the left and middle heads.
+function drawFourthHead(x, t) {
+  const sz = 32 * towerScale(t), k = sz / 32, cx = t.x * T + 16, by = t.y * T + 30, P = (ax, ay) => [cx + (ax - 16) * k, by - sz + ay * k];
+  const sway = Math.sin(G.time * 1.8 + t.x * 1.3) * 0.7;
+  const biting = G.fx.some((f) => f.kind === "bite" && f.tower === t && f.head === 3);
+  // the neck: up from the body, through the gap between the left and middle heads, to a head held high on the left
+  const hx0 = -0.5 + sway, hy0 = -3.5 + Math.abs(sway) * 0.3;   // the head's top-left corner, in Hydra pixels
+  const [ax, ay] = P(11.5, 18), [bx, by2] = P(12.5, 9), [nx, ny] = P(hx0 + 9.5, hy0 + 5);
+  x.lineCap = "round";
+  for (const [col, w] of [["#16191d", 5], ["#163e36", 3.4], ["#2a6e5a", 1.5]]) { x.strokeStyle = col; x.lineWidth = w * k; x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(bx, by2, nx, ny); x.stroke(); }
+  x.lineCap = "butt";
+  if (biting) return;   // while it bites, its head is out at the robot
+  const [hx, hy] = P(hx0, hy0);
+  x.drawImage(SPR.hydrahead, hx, hy, 11 * k, 8 * k);
+  const pulse = 0.55 + 0.45 * Math.sin(G.time * 4 + t.x * 1.7), [gx, gy] = P(hx0 + 5.5, hy0 + 4.5);   // its eyes glow like the others
+  const gr = x.createRadialGradient(gx, gy, 0, gx, gy, 4.5 * k + pulse * 1.5); gr.addColorStop(0, `rgba(255,40,20,${0.55 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,0,0,0)");
+  x.fillStyle = gr; x.fillRect(gx - 8, gy - 8, 16, 16);
+}
 function drawBite(x, f) {
   const t = f.tower, sz = 32 * towerScale(t), cx = t.x * T + 16, by = t.y * T + 30, [ax, ay] = HYDRA_HEADS[f.head];
   const hx = cx + (ax - 16) * sz / 32, hy = by - sz + ay * sz / 32;
@@ -4743,6 +4763,7 @@ function draw() {
       x.strokeStyle = `rgba(240,250,255,${0.9 * k})`; x.lineWidth = 1.5; x.strokeRect(bx, byy, bw, bh);
       x.fillStyle = `rgba(255,255,255,${0.8 * k})`; x.fillRect(bx + 2, byy + 2, bw * 0.3, 2); x.fillRect(bx + 2, byy + 2, 2, bh * 0.35);
     }
+    if (t.kind === "hydra" && (towerStatsBase(t).targets || 3) >= 4) drawFourthHead(x, t);   // Extra Bite: a 4th head
     if (t.kind === "hydra") {   // the Hydra's red eyes glow and throb
       const pulse = 0.55 + 0.45 * Math.sin(G.time * 4 + t.x * 1.7), k = s2 / 32;
       for (const [ex, ey] of HYDRA_EYES) {
