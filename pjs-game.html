@@ -789,7 +789,7 @@ const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity", "skyislands", "thunder"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
-const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "hacked", "phoenix"];
+const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix"];
 const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
@@ -1054,7 +1054,7 @@ const FROG_FACE = { k: "#16191d", w: "#ffffff", R: "#ff8fa8" };
 SPR.water = makeSprite(ART.water, false, { ...FROG_FACE, b: "#3d8fe0", B: "#1f5fa8", c: "#bfe6ff", h: "#7cc0ff", S: "#2a6fbf" });          // 32 x 32 frog
 SPR.water_swamp = makeSprite(ART.water, false, { ...FROG_FACE, b: "#8a5a2a", B: "#5a3a1a", c: "#e0c08a", h: "#b07a40", S: "#4e2d14" });
 // Towers drawn from the side (they face right in their pictures). When placed, they turn to face the nearest path.
-const SIDE_FACING = new Set(["wizard", "healer", "squirrel", "fire", "pegasus", "phoenix", "wolf", "hacked"]);
+const SIDE_FACING = new Set(["wizard", "healer", "squirrel", "fire", "pegasus", "phoenix", "wolf", "hacked", "nightowl"]);
 function pathFacing(tx, ty) {
   let best = Infinity, dir = 1;
   G.map.cells.forEach((row, y) => row.forEach((cell, x) => {
@@ -1509,6 +1509,7 @@ const Sound = {
       case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
       case "smash": this.tone(90, 0.35, "square", 0.14, 40); this.noise(0.3, 0.3, "lowpass", 400, 120); break;
       case "pegasus": if (this.ok(name, 150)) { this.tone(1320, 0.12, "sine", 0.06, 1760); this.tone(1760, 0.1, "triangle", 0.04, null, 0.05); } break;
+      case "nightowl": if (this.ok(name, 160)) this.noise(0.14, 0.06, "highpass", 2400, 5000); break;
       case "hacked": if (this.ok(name, 130)) { this.tone(1400, 0.08, "square", 0.04, 700); this.tone(2100, 0.05, "sine", 0.03, null, 0.03); } break;
       case "wolf": if (this.ok(name, 150)) { this.noise(0.12, 0.1, "lowpass", 700, 200); this.tone(260, 0.1, "sawtooth", 0.03, 180); } break;
       case "tongue": if (this.ok(name, 120)) this.tone(900, 0.09, "square", 0.05, 300); break;
@@ -2833,7 +2834,7 @@ function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 1
 // Bosses (and boss robots like the Sand Golem) are heavy: Owls can't push them, vines hold them only briefly.
 function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
 // Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (and the Wizard's Elemental Sphere).
-const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked"]);   // the Hydra only does half damage to flying robots
+const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked", "nightowl"]);   // the Hydra only does half damage to flying robots
 const canHit = (kind, r) => !r.under && (!r.flying || AIR_HUNTERS.has(kind));   // Lava Divers under the lava can't be hit at all
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
@@ -3413,6 +3414,7 @@ const TUT_TOWER = {
   squirrel: "<b>Squirrel:</b> it doesn't attack, but it gathers extra Maple Leaves for you after every wave. Build it early!",
   crab: "<b>Crab:</b> hurls seashells that splash and hurt every robot nearby. Great against big groups.",
   pegasus: "<b>Pegasus:</b> the Super Tower! It shoots golden stars at 3 robots at once.",
+  nightowl: "<b>Night Owl:</b> from the Night Owl's shop! A silent hunter that sees Hiders and hits flying robots. Every 5th attack is a swoop that does 3x damage.",
   hacked: "<b>Hacked Robot:</b> from the Defector's shop! Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward.",
   wolf: "<b>Wolf:</b> from the Night Owl's shop! It hits like a Fire Dragon, and every Wolf right next to it adds 15 damage to each attack. Build a pack!",
   hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads bites a different robot.",
@@ -3691,6 +3693,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
+  nightowl: "The shopkeeper's cousin: a dark, silent owl with glowing golden eyes. It sees Hiders and hits flying robots, and every 5th attack is a silent swoop that does 3x damage.",
   hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
   air: "A wise old owl. Its gusts of wind push robots back down the road. It can see Hiders and hit flying robots.",
@@ -3993,6 +3996,8 @@ function towerStatsBase(t) {
       if (c.fullFlying) out.fullFlying = true;   // (Hydra's Serpent Eyes: full damage to flying robots)
       if (c.targetsPlus) out.targets = (out.targets || 1) + c.targetsPlus;
       if (c.hackPlus) out.hackChance = (out.hackChance || 0) + c.hackPlus;
+      if (c.swoopEvery) out.swoopEvery = c.swoopEvery;
+      if (c.swoopTimes) out.swoopTimes = c.swoopTimes;
       if (c.packPlus) out.packBonusPlus = (out.packBonusPlus || 0) + c.packPlus;
       if (c.wolfCount) out.wolfCount = (out.wolfCount || 0) + c.wolfCount;
       if (c.holdSecondsPlus) out.holdSeconds = (out.holdSeconds || 0) + c.holdSecondsPlus;
@@ -4021,7 +4026,11 @@ function towerStatsBase(t) {
   return out;
 }
 function isFactory(x, y) { return G.map.factoryOrder.slice(0, G.factoryCount).some((c) => c.x === x && c.y === y); }
-function upgradePrice(t) { return t.level >= 3 ? null : Math.round(towerCost(t.kind) * SETTINGS.upgradeCost[t.level]); }
+function upgradePrice(t) {
+  if (t.level >= 3) return null;
+  if (t.kind === "wolf" && t.level === 0) { const s = slot(); if (s && s.materials && s.materials.wolfhowl) return 0; }   // Wolf Howl: the first upgrade is free
+  return Math.round(towerCost(t.kind) * SETTINGS.upgradeCost[t.level]);
+}
 
 function openPanel(t) {
   G.sel = t; G.pick = null; updateShelf();
@@ -4764,7 +4773,9 @@ function fire(t, s, target) {
     G.tongues.push({ tower: t, target, s, t: 0, dur: 0.3, hit: false, end: null });
     Sound.play("tongue");
   } else {
-    G.shots.push({ kind: t.kind, ice: !!t.ice, x: sx, y: sy, ox: sx, oy: sy, target, s, speed: (t.kind === "air" ? 7 : 10) * T });
+    let mult = 1;
+    if (s.swoopEvery) { t.swoopN = (t.swoopN || 0) + 1; if (t.swoopN % s.swoopEvery === 0) mult = s.swoopTimes || 3; }   // Night Owl: a silent swoop
+    G.shots.push({ kind: t.kind, ice: !!t.ice, x: sx, y: sy, ox: sx, oy: sy, target, s, mult, speed: (t.kind === "air" ? 7 : mult > 1 ? 14 : 10) * T });
     // Twin Gusts / Feather Storm: extra gusts at the next robots in range.
     if ((s.targets || 1) > 1) {
       const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
@@ -4792,7 +4803,8 @@ function landShot(sh) {
     G.fx.push({ kind: "splash", x: c.x, y: c.y, r: R, t: 0.3, col: sh.ice ? "170,225,255" : sh.kind === "fire" ? "255,140,50" : sh.kind === "air" ? "235,248,255" : sh.kind === "crab" ? "255,150,110" : "120,200,255" });
     if (sh.kind === "crab") { burst(c.x, c.y, "#ffb08a", 10); burst(c.x, c.y, "#e8f6ff", 8); G.shake = Math.max(G.shake, 0.05); }
   }
-  hurt(r, s.damage * plowMul(r, sh.ox, sh.oy), s.vision, false, sh.ice ? "ice" : sh.kind);
+  if (sh.mult > 1) { const q = rpos(r); floatText(q.x, q.y - 20, "Swoop!", "#c8b8ff", 0.8); burst(q.x, q.y, "#c8b8ff", 8); }
+  hurt(r, s.damage * (sh.mult || 1) * plowMul(r, sh.ox, sh.oy), s.vision, false, sh.ice ? "ice" : sh.kind);
   if (r.dead) return;
   if ((sh.kind === "fire" || sh.kind === "phoenix") && !sh.ice && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.ice) { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }   // the Ice Dragon's blast chills robots
@@ -5863,6 +5875,12 @@ function draw() {
       x.closePath(); x.fill(); x.fillStyle = "#fff8d6"; x.fillRect(-1, -1, 2, 2); x.restore();
     }
     else if (sh.kind === "water") { x.fillStyle = "#3d8fe0"; x.fillRect(sh.x - 3, sh.y - 4, 6, 8); x.fillStyle = "#cfeeff"; x.fillRect(sh.x - 1, sh.y - 3, 2, 2); }
+    else if (sh.kind === "nightowl") {   // a dark feather (a big glowing one for a swoop)
+      const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1), big = sh.mult > 1 ? 1.6 : 1;
+      x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.scale(big, big);
+      if (big > 1) { x.fillStyle = "rgba(200,184,255,0.35)"; x.beginPath(); x.arc(0, 0, 8, 0, Math.PI * 2); x.fill(); }
+      x.fillStyle = "#3a2458"; x.beginPath(); x.ellipse(0, 0, 7, 2.6, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#c8b8ff"; x.fillRect(-6, -0.5, 11, 1); x.restore();
+    }
     else if (sh.kind === "hacked") {   // a short teal laser bolt
       const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
       x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.fillStyle = "rgba(79,209,184,0.4)"; x.fillRect(-9, -3, 16, 6); x.fillStyle = "#9effe8"; x.fillRect(-8, -1.5, 14, 3); x.fillStyle = "#ffffff"; x.fillRect(-2, -0.5, 7, 1); x.restore();

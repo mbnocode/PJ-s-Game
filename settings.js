@@ -174,6 +174,17 @@ const SETTINGS = {
               ] },
     // The Wolf: unlock it in the Night Owl's shop. It hits like a Fire Dragon (without the burn, and it can't hit flying robots),
     // and packBonus = extra damage on every attack for each Wolf in the 8 squares around it.
+    // The Night Owl tower: from the Night Owl's shop. A silent hunter: every swoopEvery-th attack is a swoop that does swoopTimes damage.
+    nightowl: { name: "Night Owl", cost: 110, range: 3.2, damage: 12, attacksPerSecond: 1.2, vision: true, swoopEvery: 5, swoopTimes: 3, serpentUnlock: "nightowl",
+              about: "Unlocked in the Night Owl's shop. A silent hunter: it sees Hiders, hits flying robots, and every 5th attack is a swoop that does 3x damage.",
+              upgradeChoices: [
+                [ { name: "Sharp Talons", about: "Attacks do 40% more damage.", damageTimes: 1.4 },
+                  { name: "Wide Wings",   about: "Reaches 0.6 squares farther.", rangePlus: 0.6 } ],
+                [ { name: "Quiet Flight", about: "Attacks 30% faster.", speedTimes: 1.3 },
+                  { name: "Moon Swoop",   about: "Swoops every 3rd attack instead of every 5th.", swoopEvery: 3 } ],
+                [ { name: "Hunter's Moon", about: "Swoops do 5x damage instead of 3x.", swoopTimes: 5 },
+                  { name: "Twin Owls",     about: "Attacks 2 robots at once.", targetsPlus: 1 } ],
+              ] },
     // The Hacked Robot: from the Defector's shop. A reprogrammed Clanker with a laser.
     // hackChance: the chance a zap hacks the robot (not a Boss) so it walks backward hackSquares squares.
     hacked:   { name: "Hacked Robot", cost: 100, range: 2.6, damage: 13, attacksPerSecond: 1.6, hackChance: 0.2, hackSquares: 1.2, serpentUnlock: "hacked",
@@ -328,6 +339,8 @@ const SETTINGS = {
     // Add items here, just like the Serpent's Shop (name, cost, about, picture, shelf, unlock).
     // needs: the Wolf can only be bought after beating Blizzard Peak on Hard or Nightmare
     wolf: { name: "Wolf", cost: 700, unlock: true, shelf: 1, picture: "wolf", needs: { level: "blizzard", difficulties: ["hard", "nightmare"], text: "Beat Blizzard Peak on Hard or Nightmare first" }, about: "A snarling wolf tower with glowing red eyes! It hits as hard as a Fire Dragon, and every Wolf next to it adds 15 damage to each of its attacks. Unlock it and it joins your towers in every level." },
+    nightowl: { name: "Night Owl", cost: 600, unlock: true, shelf: 2, picture: "nightowl", about: "My cousin, a silent hunter of the night! It sees Hiders, hits flying robots, and every 5th attack is a silent swoop that does 3x damage. Unlock it and it joins your towers in every level." },
+    wolfhowl: { name: "Wolf Howl", cost: 350, unlock: true, shelf: 3, picture: "wolf", about: "A howl under the full moon! Every Wolf's first upgrade is free, in every level, forever." },
   },
   // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 4 },   // chance = how often the bump shows up in each break between waves
