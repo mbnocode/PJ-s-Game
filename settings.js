@@ -340,7 +340,7 @@ const SETTINGS = {
     // needs: the Wolf can only be bought after beating Blizzard Peak on Hard or Nightmare
     wolf: { name: "Wolf", cost: 700, unlock: true, shelf: 1, picture: "wolf", needs: { level: "blizzard", difficulties: ["hard", "nightmare"], text: "Beat Blizzard Peak on Hard or Nightmare first" }, about: "A snarling wolf tower with glowing red eyes! It hits as hard as a Fire Dragon, and every Wolf next to it adds 15 damage to each of its attacks. Unlock it and it joins your towers in every level." },
     nightowl: { name: "Night Owl", cost: 600, unlock: true, shelf: 2, picture: "nightowl", about: "My cousin, a silent hunter of the night! It sees Hiders, hits flying robots, and every 5th attack is a silent swoop that does 3x damage. Unlock it and it joins your towers in every level." },
-    wolfhowl: { name: "Wolf Howl", cost: 350, unlock: true, shelf: 3, picture: "wolf", about: "A howl under the full moon! Every Wolf's first upgrade is free, in every level, forever." },
+    wolfhowl: { name: "Wolf Howl", cost: 1000, unlock: true, shelf: 3, picture: "wolf", about: "A howl under the full moon! Every Wolf's first upgrade is free, in every level, forever." },
   },
   // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 4 },   // chance = how often the bump shows up in each break between waves
