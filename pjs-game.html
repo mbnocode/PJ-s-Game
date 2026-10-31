@@ -86,6 +86,9 @@ button.go:hover { background: #f58b42; }
 #s-levels #b-boards { --btn: #3fc4a8; --btn-dark: #1f7a68; }         /* Leaderboards: teal */
 button.big { font-size: 26px; padding: 14px 34px; }
 button.back { font-size: 19px; padding: 12px 28px; min-height: 52px; align-self: flex-start; margin: 0 0 4px; }   /* the Back buttons: at the top of every page */
+/* keep the top bar the same size all game long, so the board doesn't zoom in and out when a wave starts or ends */
+#b-wave { min-width: 11em; white-space: nowrap; }
+#lnum, #wnum { display: inline-block; min-width: 3.2em; } #tnum { display: inline-block; min-width: 2.6em; } .hud-acorns { min-width: 4.6em; text-align: center; }
 .diffchip { font-family: var(--display); font-size: 15px; padding: 4px 12px; border-radius: 14px; border: 2px solid #16191d; color: #10140f; white-space: nowrap; }
 .diffchip.easy { background: #8fd45f; } .diffchip.normal { background: #7cc8ff; } .diffchip.hard { background: #ffb347; } .diffchip.nightmare { background: #c0392b; color: #fff; }
 @media (max-width: 560px) { button.back { width: 100%; max-width: 340px; } }
