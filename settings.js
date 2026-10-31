@@ -746,12 +746,12 @@ const SETTINGS = {
     infinity: { name: "Infinity", acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Scores are worth 2.25x.", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
-              // The road loops around twice and crosses itself, like an infinity sign.
-              path: [[0, 9], [9, 9], [9, 1], [2, 1], [2, 5], [17, 5], [17, 1], [12, 1], [12, 9], [19, 9]],
+              // The road loops around twice and crosses itself, like an infinity sign. Both halves are mirror images.
+              path: [[0, 9], [8, 9], [8, 1], [2, 1], [2, 5], [17, 5], [17, 1], [11, 1], [11, 9], [19, 9]],
               // Trees are star crystals, mushrooms are moon rocks, tall grass is little glowing crystals.
-              trees:     [[5, 3], [14, 3], [5, 8], [14, 7], [19, 4], [11, 11]],
-              mushrooms: [[7, 7], [15, 7], [0, 3], [19, 11]],
-              tallGrass: [[4, 10], [11, 3], [16, 11], [7, 3], [19, 0]],
+              trees:     [[5, 3], [14, 3], [5, 7], [14, 7], [9, 7], [10, 7]],
+              mushrooms: [[0, 3], [19, 3], [5, 10], [14, 10]],
+              tallGrass: [[7, 3], [12, 3], [9, 11], [10, 11], [4, 11], [15, 11]],
               // Infinity's first 25 waves: robots from every world.
               waves: [
                 [["clanker", 8, 1.2], ["walker", 3, 1.4]],                              // 1
