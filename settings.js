@@ -279,6 +279,9 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
+    { name: "Floating Islands", look: "skyislands", about: "Green islands floating high in the sky, joined by rickety rope bridges. Waterfalls pour off the edges into the clouds!" },
+    { name: "Thunder Peaks", look: "thunder", about: "Rocky peaks floating in a dark storm. Lightning strikes towers and stuns them!" },
+    { name: "Eye of the Storm", look: "storm", about: "The calm center of a giant swirling storm. The Thunder Titan is waiting here…" },
   ],
 
   // ---------------- THE SERPENT'S SHOP ----------------

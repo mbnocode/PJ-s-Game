@@ -2165,6 +2165,50 @@ const SOON_PATHS = {
   blizzard: [[0, 6], [30, 6], [30, 18], [10, 18], [10, 34], [50, 34], [50, 14], [70, 14], [70, 42], [80, 42]],
   fortress: [[0, 10], [70, 10], [70, 18], [10, 18], [10, 26], [70, 26], [70, 34], [10, 34], [10, 42], [80, 42]],   // a long zigzag for 100 waves
 };
+// The Sky Islands levels: floating islands in the sky (sunny, stormy, or the eye of a giant storm)
+function drawSkyMini(cv, look) {
+  const W = 160, H = 96, sm = document.createElement("canvas"); sm.width = W; sm.height = H; const x = sm.getContext("2d");
+  let sd = look === "skyislands" ? 311 : look === "thunder" ? 733 : 977; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const px = (i, j, c) => { x.fillStyle = c; x.fillRect(i | 0, j | 0, 1, 1); };
+  const sunny = look === "skyislands", storm = look === "storm";
+  // the sky
+  const top = sunny ? [70, 150, 230] : storm ? [40, 34, 70] : [38, 40, 62], bot = sunny ? [170, 220, 255] : storm ? [90, 80, 130] : [80, 84, 110];
+  for (let j = 0; j < H; j++) { const k = j / H; x.fillStyle = `rgb(${top.map((c, n) => Math.round(c + (bot[n] - c) * k)).join(",")})`; x.fillRect(0, j, W, 1); }
+  if (storm) {   // a huge swirl of storm clouds around a calm, bright eye in the middle
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const dx = (i - 80) / 1.5, dy = j - 48, r = Math.hypot(dx, dy), a = Math.atan2(dy, dx) + r / 14;
+      const band = Math.sin(a * 3) * 0.5 + 0.5;
+      if (r < 13) { const k = r / 13; px(i, j, `rgb(${Math.round(255 - 60 * k)},${Math.round(240 - 50 * k)},${Math.round(200 - 10 * k)})`); }
+      else if (band > 0.55) px(i, j, band > 0.8 ? "#9a90c0" : "#6e6496");
+    }
+  }
+  // clouds
+  const cloud = (cx, cy, w, col, shade) => { for (let n = 0; n < w / 4; n++) { const ox = cx + (R() - 0.5) * w, oy = cy + (R() - 0.5) * 4, rr = 3 + R() * 5;
+    for (let j = -rr; j <= rr; j++) for (let i = -rr * 1.4; i <= rr * 1.4; i++) if ((i / 1.4) ** 2 + j * j <= rr * rr) px(ox + i, oy + j, j > rr * 0.4 ? shade : col); } };
+  const cc = sunny ? ["#ffffff", "#d8ecff"] : ["#5a5872", "#3e3c54"];
+  for (let n = 0; n < (storm ? 3 : 6); n++) cloud(R() * W, 6 + R() * (storm ? 12 : 30), 18 + R() * 20, cc[0], cc[1]);
+  // floating islands: grass (or rock) on top, a crumbly dirt underside, maybe a waterfall
+  const isl = sunny ? [[24, 30, 34], [76, 56, 38], [128, 30, 32], [126, 72, 24]] : storm ? [[22, 20, 28], [24, 72, 28], [136, 72, 28], [138, 20, 28]] : [[26, 38, 32], [80, 62, 36], [134, 34, 32]];
+  const top1 = sunny ? "#5fbf4a" : "#7a7f8c", top2 = sunny ? "#3f9a3a" : "#5a5f6c", dirt1 = sunny ? "#8a5a2a" : "#4a4a58", dirt2 = sunny ? "#5e3a1a" : "#30303c";
+  isl.forEach(([cx, cy, w], n) => {
+    for (let j = 0; j < 16; j++) { const half = (w / 2) * (1 - j / 16) * (1 - j / 16) + (j < 4 ? 0 : -1); for (let i = -half; i <= half; i++) px(cx + i, cy + j, j < 2 ? top1 : j < 4 ? top2 : (R() < 0.3 ? dirt2 : dirt1)); }
+    if (sunny) { for (let t = 0; t < 2; t++) { const tx = cx - w / 3 + R() * w * 0.6; for (let j = 0; j < 5; j++) px(tx, cy - j, "#5e3a1a"); for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) if (i * i + j * j < 10) px(tx + i, cy - 7 + j, R() < 0.5 ? "#3f9a3a" : "#5fbf4a"); } }
+    else for (let t = 0; t < 2; t++) { const tx = cx - w / 3 + R() * w * 0.6, h = 4 + R() * 6; for (let j = 0; j < h; j++) for (let i = -2 + j / 3; i <= 2 - j / 3; i++) px(tx + i, cy - j, j > h - 2 ? "#c8ccd6" : "#6a6f7c"); }   // rocky spires
+    if (sunny && n % 2 === 0) for (let j = 16; j < 40; j++) for (let i = 0; i < 3; i++) px(cx + w / 4 + i, cy + j, R() < 0.6 ? "#bfe6ff" : "#ffffff");   // a waterfall into the clouds
+  });
+  // rope bridges between the islands (the road)
+  for (let n = 0; n < isl.length - 1; n++) { const [ax, ay, aw] = isl[n], [bx, by, bw] = isl[n + 1], sx = ax + aw / 2, ex = bx - bw / 2, steps = Math.max(1, Math.abs(ex - sx));
+    for (let s = 0; s <= steps; s++) { const t = s / steps, ix = sx + (ex - sx) * t, iy = ay + (by - ay) * t + Math.sin(t * Math.PI) * 4; px(ix, iy, s % 2 ? "#a8743e" : "#7a4a24"); px(ix, iy - 2, "#5e3a1a"); } }
+  // lightning
+  if (!sunny) for (let n = 0; n < (storm ? 3 : 2); n++) { let lx = 30 + R() * 100, ly = storm ? 4 : 2;
+    while (ly < 60) { px(lx, ly, "#fff7a0"); px(lx + 1, ly, "#ffe066"); ly++; if (R() < 0.3) lx += R() < 0.5 ? -2 : 2; } }
+  const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.drawImage(sm, 0, 0, cv.width, cv.height);
+  if (!sunny) {   // a flash of lightning glow
+    c.globalCompositeOperation = "lighter"; const g = c.createRadialGradient(cv.width * 0.5, cv.height * (storm ? 0.5 : 0.3), 0, cv.width * 0.5, cv.height * 0.4, cv.width * 0.5);
+    g.addColorStop(0, storm ? "rgba(255,240,180,0.25)" : "rgba(200,200,255,0.15)"); g.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g; c.fillRect(0, 0, cv.width, cv.height); c.globalCompositeOperation = "source-over"; }
+  const v = c.createRadialGradient(cv.width / 2, cv.height / 2, cv.height * 0.35, cv.width / 2, cv.height / 2, cv.width * 0.62);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, sunny ? "rgba(20,60,120,0.25)" : "rgba(10,5,30,0.45)"); c.fillStyle = v; c.fillRect(0, 0, cv.width, cv.height);
+}
 // Infinity: a glowing infinity-shaped road floating in deep space, looping forever
 function drawInfinityMini(cv) {
   const W = 160, H = 96, sm = document.createElement("canvas"); sm.width = W; sm.height = H; const x = sm.getContext("2d");
@@ -2201,6 +2245,7 @@ function drawInfinityMini(cv) {
 /* "Coming soon" level pictures, drawn at double detail (160 x 96), blown up, then given a lava glow */
 function drawSoonMini(cv, look) {
   if (look === "infinity") return drawInfinityMini(cv);
+  if (look === "skyislands" || look === "thunder" || look === "storm") return drawSkyMini(cv, look);
   const W = 160, H = 96, sm = document.createElement("canvas"); sm.width = W; sm.height = H;
   const x = sm.getContext("2d"); let sd = 4242 + look.length * 31; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const hsh = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x5bd1e995; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
