@@ -279,8 +279,6 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "Floating Islands", look: "skyislands", about: "Green islands floating high in the sky, joined by rickety rope bridges. Waterfalls pour off the edges into the clouds!" },
-    { name: "Thunder Peaks", look: "thunder", about: "Rocky peaks floating in a dark storm. Lightning strikes towers and stuns them!" },
     { name: "Eye of the Storm", look: "storm", about: "The calm center of a giant swirling storm. The Thunder Titan is waiting here…" },
   ],
 
@@ -811,6 +809,84 @@ const SETTINGS = {
                 [["universegolem", 4, 9, null, 3], ["yetimech", 2, 9], [["tank", "snowplow", "obsidian", "mummy", "diver"], 32, 0.35]],   // 43
                 [["universegolem", 5, 8, null, 3], ["boss", 1, 0, 10000], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider"], 40, 0.3]],   // 44
                 [["universetitan", 1, 0]],                                              // 45: the Universe Titan (75,000 health)
+              ] },
+    // ---- The Sky Islands ----
+    // islands: [square across, square down, width, height] of each floating island. Everything else is open sky:
+    // nothing can be built there, and the road crosses it on rope bridges.
+    skyislands: { name: "Floating Islands", unlockAfter: "blizzard", acornDropChance: 0.08, about: "Green islands floating high in the sky, joined by rickety rope bridges. Waterfalls pour off the edges into the clouds! Scores are worth 4x.", theme: "skyislands",
+              robotHealth: 1.05,
+              lateToughness: { fromWave: 8, perWave: 0.055 },   // after wave 8, robots get 5.5% tougher every wave
+              scoreTimes: 4,
+              islands: [[0, 0, 6, 5], [8, 1, 5, 4], [14, 0, 6, 5], [2, 7, 5, 5], [9, 7, 6, 4], [16, 7, 4, 5]],
+              path: [[0, 2], [17, 2], [17, 4], [10, 4], [10, 9], [4, 9], [4, 11], [18, 11]],
+              waterfalls: [[1, 4], [19, 4], [12, 10], [8, 4]],   // waterfalls pour off the bottom of these island squares
+              trees:     [[2, 0], [4, 4], [9, 3], [15, 1], [19, 3], [3, 8], [13, 8], [19, 8]],
+              mushrooms: [[1, 4], [11, 3], [16, 9], [6, 7]],
+              tallGrass: [[5, 0], [18, 0], [12, 10], [2, 10]],
+              waves: [
+                [["clanker", 7, 1.1]],                                                  // 1
+                [["clanker", 6, 1.0], ["walker", 3, 1.3]],                              // 2
+                [[["scout", "clanker"], 10, 0.9]],                                      // 3
+                [["walker", 6, 1.0], ["drone", 2, 1.6]],                                // 4: the first Sky Drones
+                [[["walker", "hider"], 10, 0.9], ["drone", 2, 1.2]],                    // 5
+                [["boss", 1, 0, 1500], ["drone", 3, 0.7]],                              // 6: a Boss
+                [[["tesla", "tank", "drone"], 12, 0.8]],                                // 7
+                [["emberbat", 6, 0.35], [["walker", "repair"], 8, 0.9]],               // 8
+                [[["splitter", "snowdrone", "scout"], 15, 0.7]],                        // 9
+                [["sandboss", 1, 0], [["drone", "emberbat"], 6, 0.5]],                 // 10: the Sand Golem
+                [[["tank", "obsidian", "snowdrone", "hider"], 18, 0.6]],                // 11
+                [["snowdrone", 5, 0.6], ["drone", 5, 0.6]],                           // 12: the sky fills up!
+                [["yetimech", 1, 0, 2200], [["tesla", "tank", "repair"], 14, 0.7]],     // 13
+                [[["emberbat", "drone", "snowdrone"], 13, 0.3]],                        // 14
+                [["boss", 1, 0, 3500], [["obsidian", "splitter", "hider"], 16, 0.6]],   // 15
+                [[["tank", "snowplow", "tesla", "drone", "emberbat"], 24, 0.5]],        // 16
+                [["glaciergolem", 1, 0], [["snowdrone", "drone"], 8, 0.45]],           // 17
+                [[["mummy", "fireproof", "diver", "emberbat"], 24, 0.5]],               // 18
+                [["pillartitan", 1, 0], [["drone", "snowdrone", "emberbat"], 10, 0.4]], // 19
+                [[["tank", "obsidian", "tesla", "repair", "snowdrone"], 28, 0.45]],     // 20
+                [["magmaking", 1, 0], [["emberbat", "drone"], 11, 0.35]],               // 21
+                [[["snowplow", "tank", "hider", "drone", "snowdrone", "emberbat"], 32, 0.4]],   // 22
+                [["yetimech", 2, 8], ["boss", 1, 0, 5000], [["drone", "emberbat"], 10, 0.4]],   // 23
+                [[["emberbat", "drone", "snowdrone"], 20, 0.25]],                       // 24: a giant flock
+                [["universegolem", 1, 0], ["glaciergolem", 1, 0], [["tank", "obsidian", "tesla", "drone", "snowdrone", "emberbat"], 36, 0.35]],   // 25: the big finish
+              ] },
+    // Thunder Peaks: every so often, lightning strikes a tower and stuns it.
+    thunder: { name: "Thunder Peaks", acornDropChance: 0.08, about: "Rocky peaks floating in a dark storm. Lightning strikes towers and stuns them! Scores are worth 4.25x.", theme: "thunder",
+              robotHealth: 1.15,
+              lateToughness: { fromWave: 8, perWave: 0.06 },   // after wave 8, robots get 6% tougher every wave
+              scoreTimes: 4.25,
+              lightning: { every: 9, stunSeconds: 2.5, fromWave: 2 },   // during a wave, every 9 seconds lightning stuns a random tower for 2.5 seconds
+              islands: [[0, 7, 5, 5], [2, 1, 8, 4], [5, 7, 5, 5], [11, 5, 4, 6], [12, 0, 8, 4], [16, 7, 4, 5]],
+              path: [[0, 9], [3, 9], [3, 3], [8, 3], [8, 9], [13, 9], [13, 3], [18, 3], [18, 9], [19, 9]],
+              trees:     [[1, 8], [0, 11], [5, 2], [9, 1], [6, 10], [15, 0], [19, 0], [12, 7], [17, 10]],
+              mushrooms: [[2, 11], [7, 1], [14, 6], [19, 11]],
+              tallGrass: [[4, 11], [2, 2], [16, 1], [12, 10]],
+              waves: [
+                [["clanker", 7, 1.1]],                                                  // 1
+                [["walker", 5, 1.1], ["clanker", 4, 1.0]],                              // 2
+                [[["scout", "walker", "hider"], 10, 0.9]],                              // 3
+                [["tank", 1, 0], ["walker", 5, 1.0], ["drone", 2, 1.5]],                // 4
+                [[["tesla", "walker"], 10, 0.8], ["drone", 2, 1.2]],                    // 5
+                [["yetimech", 1, 0, 1600], ["drone", 3, 0.7]],                          // 6
+                [[["tank", "repair", "drone"], 14, 0.75]],                              // 7
+                [["emberbat", 7, 0.3], [["obsidian", "hider"], 8, 0.9]],               // 8
+                [[["splitter", "snowdrone", "fireproof"], 16, 0.7]],                    // 9
+                [["pillartitan", 1, 0], [["drone", "emberbat"], 6, 0.5]],              // 10: the Pillar Titan
+                [[["tank", "obsidian", "tesla", "snowplow"], 20, 0.6]],                 // 11
+                [["snowdrone", 6, 0.5], ["drone", 6, 0.5]],                           // 12
+                [["glaciergolem", 1, 0], [["tesla", "tank", "repair"], 14, 0.7]],       // 13
+                [[["emberbat", "drone", "snowdrone", "hider"], 28, 0.3]],               // 14
+                [["boss", 1, 0, 4000], [["obsidian", "splitter", "diver"], 18, 0.6]],   // 15
+                [[["tank", "snowplow", "tesla", "drone", "emberbat", "mummy"], 26, 0.5]],   // 16
+                [["magmaking", 1, 0], [["snowdrone", "drone"], 9, 0.45]],              // 17
+                [[["fireproof", "obsidian", "diver", "emberbat"], 26, 0.45]],           // 18
+                [["yetimech", 1, 0], [["drone", "snowdrone", "emberbat"], 11, 0.4]],    // 19
+                [["universegolem", 1, 0], [["tank", "obsidian", "tesla", "repair"], 24, 0.45]],   // 20: a Universe Golem!
+                [[["snowplow", "tank", "hider", "drone", "snowdrone", "emberbat"], 34, 0.38]],   // 21
+                [["glaciergolem", 2, 8], ["pillartitan", 1, 0], [["drone", "emberbat"], 10, 0.4]],   // 22
+                [["boss", 1, 0, 6000], ["yetimech", 2, 8], [["tank", "obsidian", "snowdrone", "tesla"], 28, 0.4]],   // 23
+                [[["emberbat", "drone", "snowdrone", "hider", "scout"], 44, 0.25]],     // 24
+                [["universegolem", 2, 10], ["magmaking", 1, 0], [["tank", "obsidian", "fireproof", "drone", "snowdrone", "emberbat", "tesla"], 40, 0.33]],   // 25: the big finish
               ] },
   },
 };

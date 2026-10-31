@@ -766,7 +766,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity", "skyislands", "thunder"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "phoenix"];
@@ -1119,6 +1119,13 @@ function makeTile(kind) {
     for (let n = 0; n < 30; n++) px(["#ffffff", "#dde8f4", "#f4f8fc"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
     if (rnd() < 0.35) { const i = 1 + rnd() * 10 | 0, j = 2 + rnd() * 11 | 0; x.fillStyle = "#d2e0ef"; x.fillRect(i, j, 5, 1); x.fillRect(i + 1, j + 1, 3, 1); }   // a little drift shadow
     if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ffffff", i, j); px("#bfe0f6", i + 1, j); }   // a sparkle
+  } else if (kind === "thunder") {
+    // Thunder Peaks: wet gray rock with patches of dark moss and puddles
+    x.fillStyle = "#6a6e78"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(["#5e626c", "#767a84", "#62666f", "#7e828c"][rnd() * 4 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.5) { const i = rnd() * 11 | 0, j = rnd() * 11 | 0; for (let n = 0; n < 9; n++) px(rnd() < 0.5 ? "#3f6a3a" : "#4f7a44", i + (rnd() * 5 | 0), j + (rnd() * 4 | 0)); }   // moss
+    if (rnd() < 0.25) { const i = 2 + rnd() * 9 | 0, j = 2 + rnd() * 11 | 0; x.fillStyle = "#4a5a6e"; x.fillRect(i, j, 4, 2); px("#9ab0c8", i + 1, j); }   // a puddle
+    if (rnd() < 0.3) { let i = rnd() * 14 | 0, j = rnd() * 10 | 0; for (let k = 0; k < 5; k++) { px("#4a4e58", i, j); i += rnd() < 0.5 ? 1 : 0; j++; } }   // a crack
   } else if (kind === "infinity") {
     // Infinity: deep space, with faint purple and blue clouds and twinkling stars
     x.fillStyle = "#140e2a"; x.fillRect(0, 0, 16, 16);
@@ -1358,6 +1365,7 @@ const SNOW = Array.from({ length: 8 }, () => makeTile("tundra"));
 const GLACIER_FLOOR = Array.from({ length: 8 }, () => makeTile("glacier"));
 const BLIZZ_SNOW = Array.from({ length: 8 }, () => makeTile("blizzard"));
 const SPACE = Array.from({ length: 8 }, () => makeTile("infinity"));
+const THUNDER_ROCK = Array.from({ length: 8 }, () => makeTile("thunder"));
 { // Frozen Tundra scenery: snowy pines, snowy rocks and ice crystals
   const ICE_ART = {
     snowpine: [".......k........", "......kwk.......", ".....kwLwk......", ".....kLLLk......", "....kwwLwwk.....", "....kLLLLLk.....", "...kwwLLLwwk....", "...kLLLLLLLk....", "..kwwwLLLwwwk...", "..kLLLLLLLLLk...", ".kwwLLLLLLLwwk..", ".kkkkkkNkkkkkk..", "......kNk.......", "......kNk.......", "....wwwwwww.....", "................"],
@@ -1371,6 +1379,7 @@ const SPACE = Array.from({ length: 8 }, () => makeTile("infinity"));
   SPR.starcrystal = makeSprite(ICE_ART.icecrystal, false, { U: "#f0dcff", c: "#a070ff", w: "#ffffff" });
   SPR.moonrock = makeSprite(ICE_ART.snowrock, false, { w: "#d8d4e8", g: "#6e6890", G: "#4e4870" });
   SPR.pinkcrystal = makeSprite(ICE_ART.icecrystal, false, { U: "#ffe0f4", c: "#ff7ad0", w: "#ffffff" });
+  SPR.snowrockgray = makeSprite(ICE_ART.snowrock, false, { w: "#a8acb6", g: "#6a6e78", G: "#4a4e58" });   // Thunder Peaks: a wet gray boulder
   // Glacier Caves scenery: ice stalagmites and glowing frost mushrooms
   SPR.icestalagmite = makeSprite(["......k.........",".....kwk........",".....kck........","....kwck........","....kUcBk..k....","....kUcBk.kwk...","....kwcBk.kck...","...kUUcbBkkck...","...kUUcbBkUcBk..","...kUwcbBkUcBk..","...kUUcbBkUcBk..","...kUUcbBUUcbBk.","..kUUUcbbUUcbBk.",".kwwwwwwwwwwwwk.",".ksxxxxxxxxxxsk.","..kkkkkkkkkkkk.."]);
   SPR.frostshroom = makeSprite(["................","................","................","................","....kkk.........","..kkUUckk.......",".kUUwUcbbk......","kcccccwbbbkkk...","kccccccbbbUUck..",".kkkkxkkkcwcwbk.","....kxskcccccbbk","....kxk.kkkxkkk.","....kxk...kxsk..","..kkkkkkkkkxkk..",".kwxxxxxxxxxxxk.","..kkkkkkkkkkkk.."]);
@@ -1407,7 +1416,8 @@ const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgra
   tundra: { tree: "snowpine", mushroom: "snowrock", tallgrass: "icecrystal" },
   glacier: { tree: "icestalagmite", mushroom: "frostshroom", tallgrass: "icecrystal" },
   blizzard: { tree: "snowpine", mushroom: "snowrock", tallgrass: "icecrystal" },
-  infinity: { tree: "starcrystal", mushroom: "moonrock", tallgrass: "pinkcrystal" } };
+  infinity: { tree: "starcrystal", mushroom: "moonrock", tallgrass: "pinkcrystal" },
+  thunder: { tree: "pine", mushroom: "snowrockgray", tallgrass: "fern" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -2125,7 +2135,7 @@ function renderSlots() {
 function unlocked(L) {
   if (SETTINGS.levels[L] && SETTINGS.levels[L].alwaysOpen) return true;   // (Infinity is always open)
   const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
-  const prev = slot().best[LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);
+  const prev = slot().best[(SETTINGS.levels[L] || {}).unlockAfter || LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);   // unlockAfter: beat that level to open this one
 }
 function renderLevels() {
   const box = $("level-cards"); box.innerHTML = "";
@@ -2136,7 +2146,7 @@ function renderLevels() {
     drawMini(mini, L);
     const starsLine = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
     b.appendChild(mini);
-    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
+    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
     if (open && savedGame(L)) b.insertAdjacentHTML("beforeend", `<span class="ribbon saved">Saved game</span>`);
     b.disabled = !open;
     b.onclick = () => openSetup(L);
@@ -2755,6 +2765,10 @@ function buildMap(L) {
     const a = { x: (g0.gx + (g0.flip ? 1 : -1) + 0.5) * T, y: (g0.gy + 0.5) * T }, b = { x: (bLeft + 1) * T, y: (bTop + 1) * T };
     const len = Math.hypot(b.x - a.x, b.y - a.y); return { segs: [{ a, b, start: 0, len }], total: len };
   });
+  if (lv.islands) {   // Sky Islands: every square that isn't on an island is open sky (nothing can be built there)
+    const onIsland = (x, y) => lv.islands.some(([ix, iy, iw, ih]) => x >= ix && x < ix + iw && y >= iy && y < iy + ih);
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (cells[y][x] === "grass" && !onIsland(x, y)) cells[y][x] = "sky";
+  }
   if (lv.cliff) for (let x = 0; x < COLS; x++) if (cells[ROWS - 1][x] === "grass") cells[ROWS - 1][x] = "cliff";   // Blizzard Peak: the bottom row is a cliff edge
   // Factory spreads from the Robots' side: the grass squares closest to a factory go first.
   const grass = [];
@@ -2773,7 +2787,7 @@ function buildMap(L) {
   const lava = new Set((lv.lava || []).map(([qx, qy]) => qx + "," + qy));   // glowing lava squares on the road
   const ice = new Set((lv.ice || []).map(([qx, qy]) => qx + "," + qy));   // icy road squares on the frozen lake
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { landmark: lv.landmark, quick, lava, ice, lake: lv.lake, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { islands: lv.islands, waterfalls: lv.waterfalls, landmark: lv.landmark, quick, lava, ice, lake: lv.lake, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 // Where a robot is right now (robots on a two-factory level each follow their own path).
 function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
@@ -2789,11 +2803,13 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : map.theme === "infinity" ? SPACE : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : map.theme === "infinity" ? SPACE : map.theme === "thunder" ? THUNDER_ROCK : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
+  if (map.islands) x.drawImage(skyBackdrop(map), 0, 0);
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
     const kind = map.cells[y][i], v = map.look[y][i];
+    if (kind === "sky" || (map.islands && kind === "path" && !onAnIsland(map, i, y))) continue;   // open sky (and bridges, drawn later)
     let img = tiles[v % tiles.length];
     if (fset.has(i + "," + y)) img = FACTORY_TILES[factoryTileAt(i, y)];
     x.drawImage(img, i * T, y * T, T, T);
@@ -2820,8 +2836,10 @@ function paintGround(x, map, factoryCount) {
   if (map.lake) drawFrozenLake(x, map, fset);
   if (map.theme === "glacier") drawCaveCeiling(x, map);
   if (map.cells[ROWS - 1].includes("cliff")) drawCliff(x, map);
+  if (map.islands) drawIslandEdges(x, map);
   map.pathImg = map.pathImg || makePathLayer(map);
   x.drawImage(map.pathImg, 0, 0, 640, 384);
+  if (map.islands) drawBridges(x, map);
   for (const key of map.quick || []) drawQuicksand(x, ...key.split(",").map(Number));
   for (const key of map.lava || []) drawLavaSquare(x, ...key.split(",").map(Number));
   for (const key of map.ice || []) drawIceSquare(x, ...key.split(",").map(Number));
@@ -2876,6 +2894,105 @@ function drawCliff(x, map) {
   // swirling snow mist rising from below the edge
   const g = x.createLinearGradient(0, top + T, 0, top + 8); g.addColorStop(0, "rgba(220,228,240,0.55)"); g.addColorStop(1, "rgba(220,228,240,0)");
   x.fillStyle = g; x.fillRect(0, top + 8, 640, T - 8);
+}
+/* ---------- The Sky Islands: sky, island edges, rope bridges ---------- */
+function onAnIsland(map, x, y) { return (map.islands || []).some(([ix, iy, iw, ih]) => x >= ix && x < ix + iw && y >= iy && y < iy + ih); }
+function skyBackdrop(map) {
+  if (map.skyImg) return map.skyImg;
+  const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
+  const dark = map.theme === "thunder", g = x.createLinearGradient(0, 0, 0, 384);
+  if (dark) { g.addColorStop(0, "#121420"); g.addColorStop(1, "#2a2c44"); } else { g.addColorStop(0, "#4a96e6"); g.addColorStop(1, "#bfe2ff"); }
+  x.fillStyle = g; x.fillRect(0, 0, 640, 384);
+  let sd = dark ? 91 : 57; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  x.imageSmoothingEnabled = false;
+  for (let n = 0; n < (dark ? 16 : 12); n++) {   // fluffy pixel clouds (dark storm clouds on Thunder Peaks)
+    const cx = R() * 680 - 20, cy = 20 + R() * 360, w = 50 + R() * 70;
+    for (let k = 0; k < 7; k++) { const ox = cx + (R() - 0.5) * w, oy = cy + (R() - 0.5) * 10, rr = 8 + R() * 12;
+      x.fillStyle = dark ? (k % 2 ? "#26283a" : "#30324a") : (k % 2 ? "#ffffff" : "#eef6ff"); x.beginPath(); x.arc(ox, oy, rr, 0, Math.PI * 2); x.fill();
+      x.fillStyle = dark ? "rgba(20,20,30,0.35)" : "rgba(170,205,240,0.45)"; x.beginPath(); x.arc(ox, oy + rr * 0.55, rr * 0.75, 0, Math.PI); x.fill(); }
+  }
+  if (!dark) for (let n = 0; n < 6; n++) { const bx = R() * 640, by = 30 + R() * 300; x.fillStyle = "#2a3a5a"; x.fillRect(bx, by, 2, 1); x.fillRect(bx - 2, by - 1, 2, 1); x.fillRect(bx + 2, by - 1, 2, 1); }   // little birds far away
+  return (map.skyImg = c);
+}
+// the dirt-and-rock underside of each island, hanging down into the sky, plus waterfalls
+function drawIslandEdges(x, map) {
+  const dark = map.theme === "thunder"; let sd = 23; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const sky = (i, y) => y >= ROWS || i < 0 || i >= COLS || (map.cells[y][i] === "sky") || (map.cells[y][i] === "path" && !onAnIsland(map, i, y));
+  for (const [ix, iy, iw, ih] of map.islands) {
+    const by = iy + ih;   // the row just under the island
+    for (let i = ix; i < ix + iw; i++) {
+      if (!sky(i, by)) continue;
+      const t = (i - ix + 0.5) / iw, depth = 10 + Math.round(Math.sin(t * Math.PI) * 22 + R() * 4);
+      for (let px = 0; px < T; px += 2) {
+        const tt = (i - ix + px / T) / iw, d = Math.max(4, Math.round(Math.sin(tt * Math.PI) * 26 + 6 + ((px + i * 7) % 5)));
+        for (let py = 0; py < d && by * T + py < 384; py += 2) {
+          const k = py / d; x.fillStyle = dark ? (k < 0.3 ? "#4a4e58" : k < 0.7 ? "#3a3d46" : "#2a2c33") : (k < 0.15 ? "#3f9a3a" : k < 0.45 ? "#8a5a2a" : k < 0.8 ? "#6e4520" : "#4e2f14");
+          if (R() < 0.08) x.fillStyle = dark ? "#5a5e68" : "#a07040";   // pebbles in the dirt
+          x.fillRect(i * T + px, by * T + py, 2, 2);
+        }
+      }
+    }
+    // a lit edge along the top and sides of the island so it looks like it's floating
+    x.fillStyle = dark ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.18)"; x.fillRect(ix * T, iy * T, iw * T, 2);
+    for (let j = iy; j < iy + ih; j++) { if (sky(ix - 1, j)) { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(ix * T, j * T, 3, T); } if (sky(ix + iw, j)) { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect((ix + iw) * T - 3, j * T, 3, T); } }
+  }
+  for (const [wx, wy] of map.waterfalls || []) {   // waterfalls pour off the island into the clouds below
+    const left = wx * T + 10; let y0 = (wy + 1) * T; while (y0 < 384 && !sky(wx, Math.floor(y0 / T))) y0 += T;
+    for (let y = y0; y < Math.min(384, y0 + 140); y += 2) for (let k = 0; k < 10; k += 2) { const fade = 1 - (y - y0) / 140; x.fillStyle = `rgba(${(k + y) % 6 ? "200,235,255" : "255,255,255"},${0.85 * fade})`; x.fillRect(left + k + ((y >> 3) % 2), y, 2, 2); }
+  }
+}
+// rope bridges where the road crosses open sky
+function drawBridges(x, map) {
+  const sky = skyBackdrop(map), isP = (i, y) => map.cells[y] && map.cells[y][i] === "path" || (map.cells[y] && (map.cells[y][i] === "base" || map.cells[y][i] === "gate"));
+  for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
+    if (map.cells[y][i] !== "path" || onAnIsland(map, i, y)) continue;
+    const X = i * T, Y = y * T; x.drawImage(sky, X, Y, T, T, X, Y, T, T);   // clear the road away: sky shows between the planks
+    const horiz = isP(i - 1, y) || isP(i + 1, y), vert = isP(i, y - 1) || isP(i, y + 1);
+    x.fillStyle = "rgba(0,0,0,0.18)"; if (horiz) x.fillRect(X, Y + 22, T, 4); else x.fillRect(X + 22, Y, 4, T);   // the bridge's shadow
+    for (let k = 0; k < T; k += 6) {   // wooden planks
+      x.fillStyle = (k / 6 + i + y) % 3 ? "#a8743e" : "#8a5a2a";
+      if (horiz) x.fillRect(X + k, Y + 6, 5, 20); else x.fillRect(X + 6, Y + k, 20, 5);
+      x.fillStyle = "#5e3a1a"; if (horiz) x.fillRect(X + k + 4, Y + 6, 1, 20); else x.fillRect(X + 6, Y + k + 4, 20, 1);
+    }
+    if (horiz && vert) { x.fillStyle = "#a8743e"; x.fillRect(X + 6, Y + 6, 20, 20); }   // a corner landing
+    x.fillStyle = "#d8c08a";   // the ropes on each side, with little posts
+    if (horiz) { x.fillRect(X, Y + 4, T, 2); x.fillRect(X, Y + 26, T, 2); x.fillStyle = "#5e3a1a"; x.fillRect(X + 1, Y + 2, 3, 6); x.fillRect(X + 1, Y + 24, 3, 6); }
+    else { x.fillRect(X + 4, Y, 2, T); x.fillRect(X + 26, Y, 2, T); x.fillStyle = "#5e3a1a"; x.fillRect(X + 2, Y + 1, 6, 3); x.fillRect(X + 24, Y + 1, 6, 3); }
+  }
+}
+// Thunder Peaks: every few seconds during a wave, lightning stuns a random tower
+function tickLightning(dt) {
+  const L = SETTINGS.levels[G.level].lightning; if (!L) return;
+  if (G.flash > 0) G.flash -= dt;
+  if (!G.waveActive || G.wave < (L.fromWave || 1)) return;
+  G.boltClock = (G.boltClock || 0) + dt;
+  if (G.boltClock < L.every) return;
+  G.boltClock = 0;
+  const ok = G.towers.filter((t) => t.kind !== "phoenix"); if (!ok.length) return;   // (the Phoenix can't be stunned)
+  const t = ok[Math.random() * ok.length | 0];
+  t.stunT = Math.max(t.stunT || 0, L.stunSeconds); t.zapT = L.stunSeconds;
+  const cx = t.x * T + 16, cy = t.y * T + 12;
+  G.fx.push({ kind: "bolt", x: cx, y: cy, t: 0.45, life: 0.45, seed: Math.random() * 1000 });
+  G.flash = 0.25; G.shake = Math.max(G.shake, 0.25); burst(cx, cy, "#fff7a0", 16); Sound.play("smash");
+  floatText(cx, cy - 22, "Zap!", "#fff7a0", 1);
+}
+function drawBolt(x, f) {
+  const a = f.t / f.life; let s = f.seed; const R = () => (s = (s * 16807 + 7) % 2147483647) / 2147483647;
+  x.save(); x.globalAlpha = Math.min(1, a * 1.6); x.lineJoin = "round";
+  for (const [col, w] of [["rgba(160,170,255,0.5)", 7], ["#fff7a0", 3], ["#ffffff", 1.5]]) {
+    s = f.seed; x.strokeStyle = col; x.lineWidth = w; x.beginPath(); let bx = f.x + (R() - 0.5) * 60, by = -10; x.moveTo(bx, by);
+    while (by < f.y) { by = Math.min(f.y, by + 18 + R() * 16); bx += (R() - 0.5) * 22; if (by >= f.y) bx = f.x; x.lineTo(bx, by); }
+    x.stroke();
+  }
+  x.restore();
+}
+// rain and the lightning flash on Thunder Peaks
+function drawStormRain(x) {
+  x.save(); x.strokeStyle = "rgba(190,205,235,0.35)"; x.lineWidth = 1; x.beginPath();
+  for (let i = 0; i < 70; i++) { const sp = 380 + (i % 5) * 40, yy = ((G.time * sp + i * 137.7) % 440) - 40, xx = ((i * 97.31) % 1) * 680 - 20 + yy * 0.25; x.moveTo(xx, yy); x.lineTo(xx + 3, yy + 10); }
+  x.stroke();
+  if (G.flash > 0) { x.fillStyle = `rgba(230,235,255,${0.5 * G.flash / 0.25})`; x.fillRect(0, 0, 640, 384); }
+  x.restore();
 }
 // The Glacier Caves: a dark band of cave ceiling along the top with icicles hanging down (they never cover the road)
 function drawCaveCeiling(x, map) {
@@ -2950,7 +3067,7 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity"].includes(map.theme);
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder"].includes(map.theme);
   const C = map.theme === "basalt"
     // an old crumbling stone road (the lava levels)
     ? { rim: hex("#16141a"), dirt: hex("#6a6874"), dark: hex("#56535f"), light: hex("#7e7b88"), edge: hex("#46444e"), stone: hex("#9a97a4"), rut: hex("#5a5764"), tuft: hex("#3c3944"), tuft2: hex("#2f2c34"), mortar: hex("#25232b") }
@@ -2959,6 +3076,9 @@ function makePathLayer(map) {
     : map.theme === "glacier"
     // an icy walkway: polished slabs of pale ice with frosty seams and shiny streaks, edged with packed snow
     ? { rim: hex("#163e62"), dirt: hex("#d6f0ff"), dark: hex("#bfe4f8"), light: hex("#eefaff"), edge: hex("#f4fbff"), stone: hex("#ffffff"), rut: hex("#a8d8f2"), tuft: hex("#eaf6ff"), tuft2: hex("#ffffff"), mortar: hex("#8ec6e8"), shine: hex("#ffffff") }
+    : map.theme === "thunder"
+    // a road of dark wet flagstones
+    ? { rim: hex("#14161c"), dirt: hex("#5a5e68"), dark: hex("#4a4e58"), light: hex("#767a86"), edge: hex("#3a3e48"), stone: hex("#8a8e9a"), rut: hex("#50545e"), tuft: hex("#3f6a3a"), tuft2: hex("#2f5a2a"), mortar: hex("#2a2d34") }
     : map.theme === "infinity"
     // a floating road of glowing purple starstone
     ? { rim: hex("#0a0618"), dirt: hex("#5a4e8a"), dark: hex("#4a3f78"), light: hex("#9a8ed8"), edge: hex("#3a2f66"), stone: hex("#b4a8ee"), rut: hex("#4e4380"), tuft: hex("#2a1f4a"), tuft2: hex("#1e1638"), mortar: hex("#2a2050") }
@@ -4243,7 +4363,7 @@ function startWave() {
   if (G.tutorial) tutorialEvent("wave" + G.wave);
   if (hasHider && !G.seenHider) tip("Hiders turn invisible for 3 seconds every time they get hit. Owls can still see them, and so can any tower with 3 upgrades.", undefined, "Heads up");
   else if (hasGolem && !G.seenGolem) tip(`A Sand Golem is rising from the dunes! Its sandstorms stop towers within ${SETTINGS.robots.sandboss.sandstormRadius} squares from attacking for ${SETTINGS.robots.sandboss.sandstormSeconds} seconds. Spread your towers out!`, undefined, "Heads up");
-  else if (hasDrone && !G.seenDrone) tip("Sky Drones are here! They fly straight over the sand to your treehouse. Only Owls, Dragons, the Pegasus and the Wizard's Elemental Sphere can hit them.", undefined, "Heads up");
+  else if (hasDrone && !G.seenDrone) tip("Sky Drones are here! They fly straight to your treehouse, right over everything. Only Owls, Dragons, the Pegasus and the Wizard's Elemental Sphere can hit them.", undefined, "Heads up");
   else if (hasMummy && !G.seenMummy) tip("Mummy Bots are here! When you destroy one, it unravels into 2 speedy Scouts. Watch out for the quicksand: it slows robots down, so build towers next to it!", undefined, "Heads up");
   else if (hasSplit && !G.seenSplit) tip("Junk Splitters are here! When you destroy one, it breaks into 3 Mini-Clankers. Splash towers like the Crab are great against them.", undefined, "Heads up");
   else if (hasRepair && !G.seenRepair) tip("Repair Bots are here! Every few seconds they heal the robots around them. Take them out first!", undefined, "Heads up");
@@ -4972,6 +5092,7 @@ function update(dt) {
   if (G.merge) tickMerge(dt);   // the Super Glacier Golem's merge cutscene
   { let k = 0; for (const r of G.robots) if (!r.dead && r.hp > 0) { const rs = (SETTINGS.robots[r.type] || {}).rangeShrink; if (rs > k) k = rs; } G.kingStorm = k; }   // the Blizzard King's blizzard
   tickCrabSpot(dt);
+  tickLightning(dt);   // Thunder Peaks
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
     const airK = r.flying && !f.fullAir ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage (unless it has Serpent Eyes)
@@ -5088,7 +5209,7 @@ function update(dt) {
       }
     }
     if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech
-    if (t.stunT > 0) { t.stunT -= dt; continue; }   // caught in a sandstorm: can't attack
+    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
     if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
@@ -5351,7 +5472,9 @@ function draw() {
     }
     x.imageSmoothingEnabled = false;
 
-    if (t.stunT > 0) {   // swirling sand: this tower can't attack right now
+    if (t.stunT > 0 && t.zapT > 0) {   // zapped by lightning: crackling sparks
+      for (let i = 0; i < 5; i++) { const a = G.time * 9 + i * 1.3, rr = 9 + (i % 3) * 3; x.fillStyle = i % 2 ? "#fff7a0" : "#9ab0ff"; x.fillRect(cx + Math.cos(a) * rr - 1, by - 14 + Math.sin(a * 1.7) * rr * 0.6 - 1, 2, 3); }
+    } else if (t.stunT > 0) {   // swirling sand: this tower can't attack right now
       for (let i = 0; i < 6; i++) { const a = G.time * 6 + i * 1.05, rr = 10 + (i % 3) * 3; x.fillStyle = i % 2 ? "#e0b06a" : "#c28a52"; x.fillRect(cx + Math.cos(a) * rr - 1.5, by - 14 + Math.sin(a) * rr * 0.5 - 1.5, 3, 3); }
     }
     if (t.boosted) { x.fillStyle = "#c8a2ff"; const a = G.time * 4 + t.x; x.fillRect(cx + Math.cos(a) * 12 - 1, by - 18 + Math.sin(a) * 6, 2, 2); }
@@ -5585,6 +5708,7 @@ function draw() {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
     else if (f.kind === "bite") drawBite(x, f);
+    else if (f.kind === "bolt") drawBolt(x, f);
     if (f.kind === "zap") drawZap(x, f);
     if (f.kind === "scorch") {   // a crater with glowing embers that cool down
       const a = Math.min(1, f.t / 1);
@@ -5616,6 +5740,7 @@ function draw() {
     }
   }
   if (G.map.theme === "blizzard") drawBlizzardWind(x, true);
+  if (G.map.theme === "thunder") drawStormRain(x);
   drawBonusLeaf(x);
   drawCrabSpot(x);
   drawInspect(x);

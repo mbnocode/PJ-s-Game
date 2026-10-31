@@ -35,7 +35,9 @@ insert into public.level_rules (level, waves, max_score) values
   ('tundra', 25, 1950000),
   ('glacier', 25, 2430000),
   ('blizzard', 25, 2640000),
-  ('infinity', 45, 6650000)
+  ('infinity', 45, 6650000),
+  ('skyislands', 25, 1610000),
+  ('thunder', 25, 2480000)
 on conflict (level) do update set waves = excluded.waves, max_score = excluded.max_score;
 
 -- Start a game (in a challenge or solo).
@@ -76,10 +78,10 @@ begin
   select * into rule from level_rules where level_rules.level = pl.level;
   waves := coalesce(rule.waves, 99); cap := coalesce(rule.max_score, 3000000);
   secs := extract(epoch from (now() - pl.created_at));
-  if p_wave < pl.wave or p_wave > waves then raise exception 'bad wave'; end if;   -- waves never go backwards or past the end
+  if p_wave < pl.wave or (rule.level is not null and p_wave > waves) then raise exception 'bad wave'; end if;   -- waves never go backwards or past the end
   if p_wave > floor(secs / 2) + 1 then raise exception 'too fast'; end if;        -- every wave takes at least 2 real seconds
   if p_score < 0 or p_score > cap then raise exception 'bad score'; end if;       -- more than is possible on this level
-  if p_status = 'won' and p_wave < waves then raise exception 'not finished'; end if;   -- you can only win on the last wave
+  if p_status = 'won' and rule.level is not null and p_wave < waves then raise exception 'not finished'; end if;   -- you can only win on the last wave (levels with no row yet skip this check)
   update players
      set wave = p_wave, health = greatest(0, least(p_health, 1000)), status = p_status, score = p_score,
          stars = case when p_status = 'won' then greatest(0, least(p_stars, 3)) else 0 end, updated_at = now()
