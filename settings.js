@@ -313,7 +313,8 @@ const SETTINGS = {
   titleBats: { everySeconds: [4, 8] },   // a bat flies across the title screen every 4 to 8 seconds   // seconds of waiting before dusk, how long night takes to fall, shelves in the shop
   nightOwlShop: {
     // Add items here, just like the Serpent's Shop (name, cost, about, picture, shelf, unlock).
-    wolf: { name: "Wolf", cost: 700, unlock: true, shelf: 1, picture: "wolf", about: "A snarling wolf tower with glowing red eyes! It hits as hard as a Fire Dragon, and every Wolf next to it adds 15 damage to each of its attacks. Unlock it and it joins your towers in every level." },
+    // needs: the Wolf can only be bought after beating Blizzard Peak on Hard or Nightmare
+    wolf: { name: "Wolf", cost: 700, unlock: true, shelf: 1, picture: "wolf", needs: { level: "blizzard", difficulties: ["hard", "nightmare"], text: "Beat Blizzard Peak on Hard or Nightmare first" }, about: "A snarling wolf tower with glowing red eyes! It hits as hard as a Fire Dragon, and every Wolf next to it adds 15 damage to each of its attacks. Unlock it and it joins your towers in every level." },
   },
   // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 3 },   // chance = how often the bump shows up in each break between waves

@@ -261,6 +261,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .setrow input[type=range] { width: 170px; accent-color: #7cc46a; }
 .setrow b { min-width: 40px; text-align: right; font-family: var(--body); }
 @media (max-width: 560px) { .setrow { grid-template-columns: 1fr auto; } .setrow > span { grid-column: 1 / -1; } .setrow .choices { grid-column: 1 / -1; justify-content: flex-start; } .setrow input[type=range] { width: 100%; } }
+.perk .needs { display: block; font-size: 13px; color: #ffd36b; margin: 4px 0; }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
 .choices button small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
@@ -1684,6 +1685,11 @@ function openSerpentShop() {
   if (!serpAnim) serpAnim = requestAnimationFrame(serpPortrait);
 }
 // Shelves for any secret shop. items = { key: { name, cost, about, picture, shelf, unlock, oneAtATime } }.
+// needs: { level, difficulties, text }: beat that level on one of those difficulties first
+function shopNeedsMet(it, s) {
+  const n = it.needs; if (!n) return true; if (!s) return false;
+  return (n.difficulties || DIFF_ORDER).some((d) => beat(s, n.level, d));
+}
 function renderShopShelves(shop, items, shelfCount, s, prefix, soonText, rerender) {
   shop.innerHTML = "";
   const shelves = Array(Math.max(shelfCount || 3, Object.keys(items || {}).length)).fill(null);
@@ -1698,14 +1704,16 @@ function renderShopShelves(shop, items, shelfCount, s, prefix, soonText, rerende
     }
     const [key, it] = entry;
     const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0, holding = it.oneAtATime && own > 0;
+    const locked = !done && !shopNeedsMet(it, s);   // some items have to be earned before you can buy them
     const d = document.createElement("div"); d.className = "perk" + (done ? " maxed" : "");
     d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
       ${done ? '<span class="owned">Unlocked!</span>' : holding ? `<span class="owned">${it.holdingText || "You have one!"}</span>` : `${own ? `<span class="owned">You have ${own}</span>` : ""}
-      <button class="go" id="${prefix}-buy-${key}" ${!s || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
+      ${locked ? `<span class="needs">🔒 ${it.needs.text}</span>` : ""}
+      <button class="go" id="${prefix}-buy-${key}" ${!s || locked || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
     if (it.picture && SPR[it.picture]) { const pc = spriteCanvas(it.picture, 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc); }
     if (done || holding) { shop.appendChild(d); return; }
     d.querySelector("button").onclick = () => {
-      if (!s || (s.acorns || 0) < it.cost) return;
+      if (!s || locked || (s.acorns || 0) < it.cost) return;
       s.acorns -= it.cost; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + 1;
       saveSlots(slots); Sound.play("upgrade"); rerender();
     };
@@ -1892,9 +1900,11 @@ function openOwlShop() {
 function renderOwlShop() {
   const has = slots.some((s) => s);
   renderShopSlotPicker($("owl-slots"), owlSlot, "owl", (i) => { owlSlot = i; renderOwlShop(); });
+  const s = slots[owlSlot], wolf = (SETTINGS.nightOwlShop || {}).wolf;
+  const wolfWaits = s && wolf && !(s.materials && s.materials.wolf) && !shopNeedsMet(wolf, s);
   $("owl-say").textContent = !has ? "“Hoo… who's there? Come back when you have a save slot and some Golden Acorns.”"
+    : wolfWaits ? "“Hoo… the Wolf only runs with the bravest. Beat Blizzard Peak on Hard or Nightmare, and then he'll follow you.”"
     : "“Hoo… hoo goes there? Only the patient find me, and only at night. I trade my moonlit treasures for Golden Acorns.”";
-  const s = slots[owlSlot];
   $("owl-acorns-row").hidden = !s; if (s) $("owl-acorns").textContent = s.acorns || 0;
   renderShopShelves($("owl-shop"), SETTINGS.nightOwlShop, (SETTINGS.nightOwl || {}).shelves || 3, s, "owl", "Coming soon. The owl is still collecting treasures under the moon…", renderOwlShop);
 }
