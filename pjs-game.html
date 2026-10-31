@@ -89,6 +89,8 @@ button.back { font-size: 19px; padding: 12px 28px; min-height: 52px; align-self:
 /* keep the top bar the same size all game long, so the board doesn't zoom in and out when a wave starts or ends */
 #b-wave { min-width: 9.6em; white-space: nowrap; }
 #tnum { display: inline-block; min-width: 2.6em; } .hud-acorns { min-width: 4em; text-align: center; }
+button.delsave { background: none; border: 2px solid #c0392b; color: #ff8a7a; box-shadow: none; font-size: 15px; padding: 6px 14px; }
+button.delsave[data-sure="1"] { background: #c0392b; color: #fff; }
 .diffchip { font-family: var(--display); font-size: 15px; padding: 4px 12px; border-radius: 14px; border: 2px solid #16191d; color: #10140f; white-space: nowrap; }
 .diffchip.easy { background: #8fd45f; } .diffchip.normal { background: #7cc8ff; } .diffchip.hard { background: #ffb347; } .diffchip.nightmare { background: #c0392b; color: #fff; }
 @media (max-width: 560px) { button.back { width: 100%; max-width: 340px; } }
@@ -593,6 +595,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <label class="field" for="nick">Your nickname<small id="nick-hint">Optional. You can also add one after you win, to get on the leaderboard.</small><input id="nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ"></label>
     <p class="err" id="setup-err" hidden></p>
     <button class="go big" id="b-resume" hidden>Resume game</button>
+    <button class="delsave" id="b-delsave" hidden>🗑 Delete saved game</button>
     <button class="go big" id="b-start">Start</button>
   </section>
 
@@ -2592,6 +2595,7 @@ function renderSetup() {
   rb.hidden = !sv;
   if (sv) rb.innerHTML = `Resume game<small>${SETTINGS.difficulties[sv.diffKey].name} · wave ${sv.wave + 1} of ${levelWaves(setup.level).length} · ${Math.round(sv.health)} health</small>`;
   $("b-start").textContent = sv ? "Start a new game" : "Start";
+  const del = $("b-delsave"); del.hidden = !sv; del.dataset.sure = ""; del.textContent = "🗑 Delete saved game";
 }
 $("mode-solo").onclick = () => { setup.mode = "solo"; renderSetup(); };
 $("mode-challenge").onclick = () => { setup.mode = "challenge"; renderSetup(); };
@@ -4446,6 +4450,12 @@ function resumeSaved(L) {
   renderShelf(); updateHud(); $("banner").hidden = true; tipQueue.length = 0;
   setTimeout(() => { if (G && G.level === L) showNextWave(); }, 0);
 }
+$("b-delsave").onclick = () => {   // tap once to ask, tap again to really delete
+  const b = $("b-delsave");
+  if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Tap again to delete it for good"; setTimeout(() => { if (b.dataset.sure) { b.dataset.sure = ""; b.textContent = "🗑 Delete saved game"; } }, 4000); return; }
+  const s = slot(); if (s && s.saved) { delete s.saved[setup.level]; saveSlots(slots); }
+  Sound.play("sell"); renderSetup();
+};
 $("b-resume").onclick = () => { Sound.init(); dadCheck($("nick").value, () => resumeSaved(setup.level)); };
 
 /* ---------- waves ---------- */
