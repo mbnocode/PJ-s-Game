@@ -3399,10 +3399,10 @@ function renderEnemies() {
       : k === "mummy" ? `Special: unravels into ${r.splitInto} speedy Scouts when destroyed. Shows up on The Lost Pyramid.`
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
-      : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage) and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
+      : k === "drone" ? "Special: flies straight to your treehouse instead of following the road. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage, or full with Serpent Eyes) and the Wizard's Elemental Sphere can hit it. Shows up on The Desert."
       : k === "crawler" ? `Special: leaves a burning trail. Towers next to the trail can't attack for ${r.trailStopsTowers} seconds. Shows up on The Magma Fields and Inside the Volcano.`
       : k === "obsidian" ? `Special: its shell makes it take half damage until one hit of ${r.crackHit} or more cracks it open. After that it's weak! Shows up on all three lava levels.`
-      : k === "emberbat" ? `Special: flies in swarms of ${r.swarm}, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage) and the Wizard's Elemental Sphere can hit it. Shows up on all three lava levels.`
+      : k === "emberbat" ? `Special: flies in swarms of ${r.swarm}, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage, or full with Serpent Eyes) and the Wizard's Elemental Sphere can hit it. Shows up on all three lava levels.`
       : k === "fireproof" ? `Special: Fire Dragons do no damage to it, but Water Frogs do ${r.waterTimes} times damage. Shows up on all three lava levels.`
       : k === "diver" ? `Special: every ${r.diveEvery} seconds it dives under the lava for ${r.diveSeconds} seconds. Nothing can hit it while it's under, and it pops up farther along the road. Shows up on all three lava levels.`
       : k === "pillartitan" ? `Special: every ${r.slamEvery} seconds it slams the ground and a basalt pillar shoots up on a tower square, blocking it for the rest of the wave. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Basalt Delta (also Inside the Volcano).`
@@ -3411,7 +3411,7 @@ function renderEnemies() {
       : k === "snowplow" ? `Special: its plow blocks ${Math.round((1 - r.frontArmor) * 100)}% of the damage from towers in front of it, and it shoves Nut Walls off the road. Shows up on The Frozen Tundra.`
       : k === "snowball" ? `Special: the farther it rolls, the bigger it gets: +${r.growPerSquare} health for every square. Stop it early! Shows up on The Frozen Tundra.`
       : k === "penguin" ? `Special: it belly-slides ${r.iceSpeed} times faster on icy road squares, then waddles slowly everywhere else. Shows up on The Frozen Tundra.`
-      : k === "snowdrone" ? `Special: flies straight to your treehouse and every ${r.dropEvery} seconds drops a snowball that freezes a tower for ${r.freezeSeconds} seconds. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage) and the Wizard's Elemental Sphere can hit it. Shows up on The Frozen Tundra.`
+      : k === "snowdrone" ? `Special: flies straight to your treehouse and every ${r.dropEvery} seconds drops a snowball that freezes a tower for ${r.freezeSeconds} seconds. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage, or full with Serpent Eyes) and the Wizard's Elemental Sphere can hit it. Shows up on The Frozen Tundra.`
       : k === "yetimech" ? `Special: every ${r.roarEvery} seconds it roars and throws a giant snowball that freezes every tower within ${r.freezeRadius} squares for ${r.freezeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Frozen Tundra.`
       : k === "superglaciergolem" ? `Special: on the last wave of The Glacier Caves, three Glacier Golems march in and merge into it! It has ${r.health.toLocaleString()} health and walks ${r.speed} square a second. Chunks of ice break off it too.`
       : k === "universegolem" ? `Special: stronger than the Glacier Golem! Every time it takes ${r.chunkEvery} damage, a Star Chunk breaks off and keeps marching. It drops NO Maple Leaves, and neither do its Star Chunks. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of Infinity.`
@@ -3717,6 +3717,7 @@ function towerStatsBase(t) {
       if (c.burnPlus) out.burnDamagePerSecond = (out.burnDamagePerSecond || 0) + c.burnPlus;
       if (c.burnSecondsPlus) out.burnSeconds = (out.burnSeconds || 0) + c.burnSecondsPlus;
       if (c.vision) out.vision = true;
+      if (c.fullFlying) out.fullFlying = true;   // (Hydra's Serpent Eyes: full damage to flying robots)
       if (c.targetsPlus) out.targets = (out.targets || 1) + c.targetsPlus;
       if (c.packPlus) out.packBonusPlus = (out.packBonusPlus || 0) + c.packPlus;
       if (c.wolfCount) out.wolfCount = (out.wolfCount || 0) + c.wolfCount;
@@ -4453,7 +4454,7 @@ function fire(t, s, target) {
     const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
     const bites = [target, ...G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && Math.hypot(rpos(r).x - cx, rpos(r).y - cy) <= R)
       .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, (s.targets || 3) - 1)];
-    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : (s.targets >= 4 ? [1, 0, 2, 3] : [1, 0, 2])[i % (s.targets >= 4 ? 4 : 3)], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision }); });
+    bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : (s.targets >= 4 ? [1, 0, 2, 3] : [1, 0, 2])[i % (s.targets >= 4 ? 4 : 3)], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision, fullAir: !!s.fullFlying }); });
     Sound.play("tongue");
   } else if (t.kind === "water") {
     // The frog's tongue shoots out, smacks the robot, and snaps back.
@@ -4909,7 +4910,7 @@ function update(dt) {
   tickCrabSpot(dt);
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
-    const airK = r.flying ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage
+    const airK = r.flying && !f.fullAir ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage (unless it has Serpent Eyes)
     if (!r.dead) { hurt(r, f.dmg * airK * plowMul(r, f.tower.x * T + 16, f.tower.y * T + 16), f.vision, false, "hydra"); const q = rpos(r); burst(q.x, q.y - 4, "#7fe0c8", 6); burst(q.x, q.y - 4, "#ffffff", 3); }
   }
   for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;

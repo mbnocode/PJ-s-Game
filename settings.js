@@ -192,7 +192,7 @@ const SETTINGS = {
                 [ { name: "Long Necks",     about: "Reaches 1 more square.", rangePlus: 1 },
                   { name: "Sharp Fangs",    about: "Bites 50% harder.", damageTimes: 1.5 } ],
                 [ { name: "Hungry Heads",   about: "Bites 50% faster.", speedTimes: 1.5 },
-                  { name: "Serpent Eyes",   about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
+                  { name: "Serpent Eyes",   about: "Can see Hiders, reaches a bit farther, and bites flying robots for full damage.", vision: true, rangePlus: 0.5, fullFlying: true } ],
                 [ { name: "Hydra's Fury",   about: "Bites twice as hard.", damageTimes: 2 },
                   { name: "Extra Bite",     about: "Grows a 4th head, so it bites 1 more robot each time (4 at once).", targetsPlus: 1 } ],
               ] },
