@@ -608,6 +608,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
         <p><span id="dad-name">Dadbot</span>, you have <b>a lot of work to do!</b> Emails to answer, meetings to go to, and chores to finish.</p>
         <p class="muted">Maybe finish your work first, then come back and defend the treehouse.</p>
         <div class="row"><button class="go" id="dad-no">Back to work</button><button id="dad-yes">Play anyway</button></div>
+        <button class="link" id="dad-never" hidden>Get rid of this message</button>
       </div>
       <div id="dad-hint" hidden>
         <div class="dad-icon" aria-hidden="true">🤫</div>
@@ -2491,11 +2492,20 @@ $("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
 // Grown-ups who should be working get asked first. (nickname in lowercase: name to show, the "keep playing" button, where the wrong answer sends you, and whether they get a secret hint)
 const WORK_NICKS = {
   "dadbot": { name: "Dadbot", yes: "Play anyway", sendTo: "slots" },
-  "i love tacos": { name: "I LOVE TACOS", yes: "Continue", sendTo: "title", hint: true },
+  "i love tacos": { name: "I LOVE TACOS", yes: "Continue", sendTo: "title", hint: true, canHide: true },   // canHide: from the 2nd time on, a button can get rid of the work question
 };
 function dadCheck(nick, go) {
-  const who = WORK_NICKS[(nick || "").trim().toLowerCase().replace(/\s+/g, " ")];
+  const key = (nick || "").trim().toLowerCase().replace(/\s+/g, " "), who = WORK_NICKS[key];
   if (!who) { go(); return; }
+  const store = (() => { try { return JSON.parse(localStorage.getItem("pjs-game-workcheck") || "{}"); } catch (e) { return {}; } })();
+  const saveStore = () => { try { localStorage.setItem("pjs-game-workcheck", JSON.stringify(store)); } catch (e) {} };
+  const st = store[key] = store[key] || { seen: 0, hidden: false };
+  const showHint = () => { $("dad-ask").hidden = true; $("dad-wrong").hidden = true; $("dad-hint").hidden = false; $("dadcheck").hidden = false; $("dad-hint-ok").focus();
+    $("dad-hint-ok").onclick = () => { $("dadcheck").hidden = true; go(); }; };
+  if (st.hidden) { if (who.hint) showHint(); else go(); return; }   // the work question was gotten rid of
+  st.seen++; saveStore();
+  $("dad-never").hidden = !(who.canHide && st.seen >= 2);
+  $("dad-never").onclick = () => { st.hidden = true; saveStore(); if (who.hint) showHint(); else { $("dadcheck").hidden = true; go(); } };
   $("dad-name").textContent = who.name; $("dad-yes").textContent = who.yes;
   $("dad-wrong-text").textContent = `Back to the ${who.sendTo === "title" ? "title screen" : "save slots"} you go, ${who.name}.`;
   $("dad-ask").hidden = false; $("dad-wrong").hidden = true; $("dad-hint").hidden = true;
@@ -2503,8 +2513,7 @@ function dadCheck(nick, go) {
   // the twist: "Back to work" starts the level (some players get a secret hint first)...
   $("dad-no").onclick = () => {
     if (!who.hint) { $("dadcheck").hidden = true; go(); return; }
-    $("dad-ask").hidden = true; $("dad-hint").hidden = false; $("dad-hint-ok").focus();
-    $("dad-hint-ok").onclick = () => { $("dadcheck").hidden = true; go(); };
+    showHint();
   };
   // ...and the other button is the wrong answer: back you go!
   $("dad-yes").onclick = () => {
