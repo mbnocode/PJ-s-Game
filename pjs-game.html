@@ -3703,6 +3703,7 @@ function towerStats(t) {
   }
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
   if (G.kingStorm && out.range) out.range *= 1 - G.kingStorm;   // the Blizzard King's howling blizzard shrinks every tower's range
+  if (out.maxDamage && out.damage > out.maxDamage) out.damage = out.maxDamage;   // (the Wolf can never hit harder than this, even with a big pack)
   return out;
 }
 function towerStatsBase(t) {
