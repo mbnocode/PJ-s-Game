@@ -177,11 +177,11 @@ const SETTINGS = {
     // The Night Owl tower: from the Night Owl's shop. It starts really weak, but every wave it gets stronger
     // (waveGrowth 0.1 = +10% damage for every wave so far), and its last upgrade is really, really strong.
     nightowl: { name: "Night Owl", cost: 110, range: 2.4, damage: 5, attacksPerSecond: 1.2, waveGrowth: 0.1, serpentUnlock: "nightowl",
-              about: "Unlocked in the Night Owl's shop. It starts out weak, but gets stronger every wave, and its last upgrade is really, really strong.",
+              about: "Unlocked in the Night Owl's shop. It hits flying robots. It starts out weak, but gets stronger every wave, and its last upgrade is really, really strong.",
               upgradeChoices: [
                 [ { name: "Fluffy Feathers", about: "Attacks do 10% more damage.", damageTimes: 1.1 },
                   { name: "Keen Ears",       about: "Reaches 0.3 squares farther.", rangePlus: 0.3 } ],
-                [ { name: "Night Vision",    about: "Attacks 10% faster.", speedTimes: 1.1 },
+                [ { name: "Night Vision",    about: "Attacks 10% faster and can see Hiders.", speedTimes: 1.1, vision: true },
                   { name: "Long Talons",     about: "Reaches 0.3 squares farther.", rangePlus: 0.3 } ],
                 [ { name: "Midnight Hunter", about: "Attacks do 8x damage!", damageTimes: 8 },
                   { name: "Full Moon Fury",  about: "Attacks do 5x damage and come 60% faster!", damageTimes: 5, speedTimes: 1.6 } ],

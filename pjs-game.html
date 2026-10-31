@@ -2834,7 +2834,7 @@ function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 1
 // Bosses (and boss robots like the Sand Golem) are heavy: Owls can't push them, vines hold them only briefly.
 function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
 // Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (and the Wizard's Elemental Sphere).
-const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked"]);   // the Hydra only does half damage to flying robots
+const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked", "nightowl"]);   // the Hydra only does half damage to flying robots
 const canHit = (kind, r) => !r.under && (!r.flying || AIR_HUNTERS.has(kind));   // Lava Divers under the lava can't be hit at all
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
@@ -3414,7 +3414,7 @@ const TUT_TOWER = {
   squirrel: "<b>Squirrel:</b> it doesn't attack, but it gathers extra Maple Leaves for you after every wave. Build it early!",
   crab: "<b>Crab:</b> hurls seashells that splash and hurt every robot nearby. Great against big groups.",
   pegasus: "<b>Pegasus:</b> the Super Tower! It shoots golden stars at 3 robots at once.",
-  nightowl: "<b>Night Owl:</b> from the Night Owl's shop! It starts out weak, but gets 10% stronger every wave. Save up for its last upgrade: it's really, really strong!",
+  nightowl: "<b>Night Owl:</b> from the Night Owl's shop! It can hit flying robots. It starts out weak, but gets 10% stronger every wave. Save up for its last upgrade: it's really, really strong!",
   hacked: "<b>Hacked Robot:</b> from the Defector's shop! Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward.",
   wolf: "<b>Wolf:</b> from the Night Owl's shop! It hits like a Fire Dragon, and every Wolf right next to it adds 15 damage to each attack. Build a pack!",
   hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads bites a different robot.",
@@ -3693,7 +3693,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
-  nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
+  nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It hits flying robots too. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
   hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
   air: "A wise old owl. Its gusts of wind push robots back down the road. It can see Hiders and hit flying robots.",
