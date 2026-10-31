@@ -248,6 +248,9 @@ const SETTINGS = {
     // fixedHealth: its health is exactly this on Normal (the level and late waves don't make it tougher; Easy/Hard/Nightmare still do).
     superglaciergolem: { name: "Super Glacier Golem", health: 6000, speed: 1, leaves: 400, points: 1800, baseHit: 80, isBoss: true, fixedHealth: true, chunkEvery: 500,
                          mergeIntro: { seconds: 5.5, atSquare: 6.5 } },   // the merge cutscene: how long the rest of the wave waits, and how many squares down the road they merge
+    // The Universe Golem (Infinity): stronger than the Glacier Golem, and it drops no Maple Leaves (neither do its Star Chunks).
+    universegolem: { name: "Universe Golem", health: 3600, speed: 0.8, leaves: 0, points: 1000, baseHit: 60, isBoss: true, chunkEvery: 450, chunkType: "starchunk" },
+    starchunk:     { name: "Star Chunk", health: 110, speed: 1.8, leaves: 0, points: 20 },
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).
     // fixedHealth: his health is exactly this on Normal (the level and late waves don't make him tougher; Easy/Hard/Nightmare still do).
@@ -743,7 +746,7 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Scores are worth 2.25x.", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Watch out for the Universe Golem! Scores are worth 2.25x.", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
               // The road loops around twice and crosses itself, like an infinity sign. Both halves are mirror images.
@@ -776,9 +779,9 @@ const SETTINGS = {
                 [["magmaking", 1, 0], [["obsidian", "tesla", "scout"], 14, 0.65]],      // 20: the Magma Cube King
                 [[["tank", "fireproof", "snowdrone", "splitter", "diver"], 22, 0.5]],   // 21
                 [["glaciergolem", 1, 0], ["sandboss", 1, 0], [["penguin", "walker", "repair"], 14, 0.6]],   // 22
-                [[["obsidian", "crawler", "drone", "snowball", "hider", "mummy"], 26, 0.45]],   // 23
+                [["universegolem", 1, 0], [["obsidian", "crawler", "drone", "snowball", "hider", "mummy"], 22, 0.45]],   // 23: the Universe Golem!
                 [["pillartitan", 1, 0], ["yetimech", 1, 0], [["emberbat", "diver", "tesla", "snowplow"], 20, 0.5]],   // 24
-                [["boss", 1, 0, 4000], ["magmaking", 1, 0], ["glaciergolem", 1, 0], [["tank", "obsidian", "fireproof", "splitter", "snowdrone", "crawler"], 30, 0.45]],   // 25: the big finish
+                [["boss", 1, 0, 4000], ["magmaking", 1, 0], ["universegolem", 1, 0], [["tank", "obsidian", "fireproof", "splitter", "snowdrone", "crawler"], 30, 0.45]],   // 25: the big finish
               ] },
   },
 };
