@@ -882,6 +882,10 @@ const ACORN_IMG = new Image(); ACORN_IMG.src = ACORN_URL;
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
 SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like little Clankers
+{ // the Universe Titan: a giant Universe Golem in deep violet, with golden cracks and a blazing sun for a heart
+  const TITAN = { "1": "#140a2a", "2": "#2e1856", "3": "#4c2a8a", A: "#6a2a7a", u: "#ffd36b", U: "#fff7c2", z: "#fff3b0", p: "#ff9a3c", P: "#c0502a", w: "#ffffff", "5": "#ffe9a8", "7": "#fff7c2" };
+  SPR.universetitan = makeSprite(ART.universegolem, false, TITAN); SPRF.universetitan = makeSprite(ART.universegolem, true, TITAN);
+}
 { // Star Chunks: the bits of space rock that break off the Universe Golem
   const STAR = { U: "#e6d8ff", c: "#7a5ad0", b: "#3e2a8a", w: "#ffffff", r: "#4fd1b8" };
   SPR.starchunk = makeSprite(ART.icechunk, false, STAR); SPRF.starchunk = makeSprite(ART.icechunk, true, STAR);
@@ -3277,10 +3281,10 @@ function playBoxOpening(prize, done) {
 }
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
-const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem"];
+const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem"]);
+const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -3308,6 +3312,7 @@ const FOE_ABOUT = {
   yetimech: "A huge shaggy robot-yeti with a metal face, glowing red eyes and a giant snowball in its claw.",
   superglaciergolem: "Three Glacier Golems merged into one enormous frozen giant, in deep blue ice with a blazing cold core.",
   glaciergolem: "A giant built from blocks of blue glacier ice, with cold glowing eyes.",
+  universetitan: "The biggest robot in the universe: a gigantic golem of deep violet space rock with golden cracks and a blazing sun for a heart.",
   universegolem: "A towering giant made of space rock from far across the universe, with glowing cracks, starry specks and a swirling galaxy in its chest.",
   blizzardking: "The ruler of the snowy peaks: an icy robot king with a crown and an ice scepter, riding in on a storm cloud.",
   volcanoheart: "The molten heart of the volcano, wrapped in armor plates, with fire roaring out of its vents. The final boss.",
@@ -3414,6 +3419,7 @@ function renderEnemies() {
       : k === "snowdrone" ? `Special: flies straight to your treehouse and every ${r.dropEvery} seconds drops a snowball that freezes a tower for ${r.freezeSeconds} seconds. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (half damage, or full with Serpent Eyes) and the Wizard's Elemental Sphere can hit it. Shows up on The Frozen Tundra.`
       : k === "yetimech" ? `Special: every ${r.roarEvery} seconds it roars and throws a giant snowball that freezes every tower within ${r.freezeRadius} squares for ${r.freezeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Frozen Tundra.`
       : k === "superglaciergolem" ? `Special: on the last wave of The Glacier Caves, three Glacier Golems march in and merge into it! It has ${r.health.toLocaleString()} health and walks ${r.speed} square a second. Chunks of ice break off it too.`
+      : k === "universetitan" ? `Special: the final boss of Infinity, waiting at the end of wave 45! It has ${r.health.toLocaleString()} health and is the biggest robot of all. Every ${r.chunkEvery.toLocaleString()} damage a Star Chunk breaks off and keeps marching. It drops NO Maple Leaves. Too heavy for Owls to push back. Always drops a Golden Acorn!`
       : k === "universegolem" ? `Special: stronger than the Glacier Golem! Every time it takes ${r.chunkEvery} damage, a Star Chunk breaks off and keeps marching. It drops NO Maple Leaves, and neither do its Star Chunks. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of Infinity.`
       : k === "glaciergolem" ? `Special: every time it takes ${r.chunkEvery} damage, a chunk of ice breaks off and keeps marching toward your treehouse. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Glacier Caves (and it visits The Frozen Tundra).`
       : k === "blizzardking" ? `Special: it brings a howling blizzard with it. Until it's destroyed, every tower's range shrinks by ${Math.round(r.rangeShrink * 100)}%. Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss of Blizzard Peak.`
@@ -4146,14 +4152,14 @@ function startWave() {
   G.waveSnap = snapshotGame();   // (for Save & exit in the middle of this wave)
   G.wave++; G.waveActive = true; G.waveClock = 0; G.queue = []; $("nextwave").hidden = true;
   let t = 0;
-  for (const [type, count, gap, hp] of levelWaves(G.level)[G.wave - 1]) {
+  for (const [type, count, gap, hp, glow] of levelWaves(G.level)[G.wave - 1]) {   // glow (optional): 1 blue, 2 purple, 3 orange: every robot in the group glows
     for (let i = 0; i < count; i++) {
       // a mixed group takes turns through its list of robots; the health number only changes Bosses in a mix
       const ty = Array.isArray(type) ? type[i % type.length] : type;
       let bhp = Array.isArray(type) && ty !== "boss" ? undefined : hp;
       const cap = SETTINGS.levels[G.level].maxBossHealth;   // some levels keep their Bosses smaller
       if (ty === "boss" && cap) bhp = Math.min(bhp || SETTINGS.robots.boss.health, cap);
-      G.queue.push({ at: t, type: ty, hp: bhp }); t += gap;
+      G.queue.push({ at: t, type: ty, hp: bhp || undefined, aura: glow || undefined }); t += gap;
     }
     t += 1.5;
   }
@@ -4226,8 +4232,9 @@ function spawn(q) {
   let aura = 0;
   const cap = Math.min(d.strongestAura, G.wave < 6 ? 1 : G.wave < 11 ? 2 : 3);
   if (cap > 0 && !base.fixedHealth && Math.random() < d.auraChance * Math.min(1, 0.3 + G.wave / 10)) aura = 1 + Math.floor(Math.random() * cap);
+  if (q.aura) aura = q.aura;   // the wave says this robot glows
   const A = SETTINGS.auras[aura];
-  const lt = SETTINGS.levels[G.level].lateToughness, late = lt ? 1 + Math.max(0, G.wave - lt.fromWave) * lt.perWave : 1;   // some levels' robots get tougher in the late waves
+  const lt = SETTINGS.levels[G.level].lateToughness, late = lt ? 1 + Math.max(0, Math.min(G.wave, lt.untilWave || 999) - lt.fromWave) * lt.perWave : 1;   // some levels' robots get tougher in the late waves
   const hp = base.fixedHealth ? (q.hp || base.health) * d.robotHealth   // a set amount of health (only the difficulty changes it)
     : (q.hp || base.health) * (SETTINGS.robotHealthBoost || 1) * d.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1) * late * (A ? A.health : 1);
   G.robots.push({
@@ -4341,7 +4348,8 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (RB.chunkEvery && !isBurn) {   // Glacier Golem: every so much damage, an ice chunk breaks off and keeps marching
     r.chunkDmg = (r.chunkDmg || 0) + amt;
     const star = RB.chunkType === "starchunk", col = star ? "#c9a8ff" : "#bfe6fa";
-    while (r.chunkDmg >= RB.chunkEvery) { r.chunkDmg -= RB.chunkEvery; spawn({ type: RB.chunkType || "icechunk", d: Math.max(0, r.d - 10), path: r.path }); const q = rpos(r); burst(q.x, q.y, col, 12); floatText(q.x, q.y - 30, "Crack!", col, 0.8); }
+    const every = RB.chunkEvery * ((SETTINGS.auras[r.aura] || {}).health || 1);   // (a glowing golem has more health, so its chunks come off less often)
+    while (r.chunkDmg >= every) { r.chunkDmg -= every; spawn({ type: RB.chunkType || "icechunk", d: Math.max(0, r.d - 10), path: r.path }); const q = rpos(r); burst(q.x, q.y, col, 12); floatText(q.x, q.y - 30, "Crack!", col, 0.8); }
   }
   if (RB.crackHit && !r.cracked) {   // Obsidian Shell: half damage until one big hit cracks it
     if (amt >= RB.crackHit) { r.cracked = true; const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
@@ -5342,7 +5350,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "universetitan" ? 100 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -5388,6 +5396,12 @@ function draw() {
       const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 4 + r.wob), gr = x.createRadialGradient(0, 2 * k, 0, 0, 2 * k, 12 * k);
       gr.addColorStop(0, `rgba(255,${r.healing ? 220 : 140},40,${0.45 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,100,20,0)");
       x.fillStyle = gr; x.beginPath(); x.arc(0, 2 * k, 12 * k, 0, Math.PI * 2); x.fill();
+    }
+    if (r.type === "universetitan" && !hidden) {   // a huge golden-violet glow, with sparks of starlight
+      const pulse = 0.5 + 0.5 * Math.sin(G.time * 2 + r.wob), gr = x.createRadialGradient(0, 0, 8, 0, 0, sz * 0.75);
+      gr.addColorStop(0, `rgba(255,200,110,${0.25 + 0.2 * pulse})`); gr.addColorStop(0.5, `rgba(170,90,255,${0.15 + 0.1 * pulse})`); gr.addColorStop(1, "rgba(120,60,255,0)");
+      x.fillStyle = gr; x.beginPath(); x.arc(0, 0, sz * 0.75, 0, Math.PI * 2); x.fill();
+      if (!G.paused && Math.random() < 0.6) G.particles.push({ kind: "spark", x: p.x + (Math.random() - 0.5) * sz, y: p.y - sz * 0.3 + (Math.random() - 0.5) * sz * 0.7, vx: 0, vy: -14, t: 0, life: 0.8, col: Math.random() < 0.5 ? "#ffe9a8" : "#d9b8ff" });
     }
     if (r.type === "universegolem" && !hidden) {   // a cosmic purple glow, and stars twinkling off it
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 2.4 + r.wob), gr = x.createRadialGradient(0, 0, 6, 0, 0, sz * 0.7);

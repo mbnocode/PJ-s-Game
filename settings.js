@@ -250,6 +250,8 @@ const SETTINGS = {
                          mergeIntro: { seconds: 5.5, atSquare: 6.5 } },   // the merge cutscene: how long the rest of the wave waits, and how many squares down the road they merge
     // The Universe Golem (Infinity): stronger than the Glacier Golem, and it drops no Maple Leaves (neither do its Star Chunks).
     universegolem: { name: "Universe Golem", health: 3600, speed: 0.8, leaves: 0, points: 1000, baseHit: 60, isBoss: true, chunkEvery: 450, chunkType: "starchunk" },
+    // The Universe Titan: the final boss of Infinity (wave 45). fixedHealth: exactly this much health on Normal.
+    universetitan: { name: "Universe Titan", health: 50000, speed: 0.6, leaves: 0, points: 8000, baseHit: 100, isBoss: true, fixedHealth: true, chunkEvery: 2500, chunkType: "starchunk" },
     starchunk:     { name: "Star Chunk", health: 110, speed: 1.8, leaves: 0, points: 20 },
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).
@@ -746,10 +748,10 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! 35 waves are ready (more coming soon), and the last 10 are harder than Blizzard Peak! Watch out for the Universe Golem! Scores are worth 2.25x.", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! 45 waves! Waves 26-35 are harder than Blizzard Peak, then come the orange Universe Golems and the Universe Titan. Watch out for the Universe Golem! Scores are worth 2.25x.", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
-              lateToughness: { fromWave: 25, perWave: 0.08 },   // after wave 25, robots get 8% tougher every wave (wave 35 = 1.8x)
+              lateToughness: { fromWave: 25, perWave: 0.08, untilWave: 35 },   // robots get 8% tougher every wave from wave 26 to 35 (1.8x), then stay that tough
               // The road loops around twice and crosses itself, like an infinity sign. Both halves are mirror images.
               path: [[0, 9], [8, 9], [8, 1], [2, 1], [2, 5], [17, 5], [17, 1], [11, 1], [11, 9], [19, 9]],
               // Trees are star crystals, mushrooms are moon rocks, tall grass is little glowing crystals.
@@ -793,7 +795,18 @@ const SETTINGS = {
                 [["boss", 1, 0, 6000], ["glaciergolem", 2, 8], [["emberbat", "snowdrone", "hider"], 24, 0.35]],   // 32
                 [[["scout", "penguin", "snowball", "emberbat", "drone"], 45, 0.25]],                     // 33: a speedy swarm
                 [["universegolem", 2, 9], ["yetimech", 2, 9], ["pillartitan", 1, 0], [["fireproof", "diver", "repair", "splitter"], 30, 0.4]],   // 34
-                [["universegolem", 3, 9], ["boss", 1, 0, 8000], ["magmaking", 1, 0], ["glaciergolem", 2, 8], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider", "mummy"], 44, 0.33]],   // 35: the big finish
+                [["universegolem", 3, 9], ["boss", 1, 0, 8000], ["magmaking", 1, 0], ["glaciergolem", 2, 8], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider", "mummy"], 44, 0.33]],   // 35
+                // Waves 36-45: the Universe Golems come glowing orange (the 5th number in a group, 3, makes them all glow orange: 4x health, 3x points).
+                [["universegolem", 1, 0, null, 3], [["tank", "obsidian", "fireproof", "snowplow"], 26, 0.45]],   // 36: the first orange Universe Golem
+                [["universegolem", 2, 10, null, 3], [["emberbat", "snowdrone", "drone"], 22, 0.3]],          // 37
+                [["universegolem", 1, 0, null, 3], ["yetimech", 2, 9], [["mummy", "splitter", "repair", "hider"], 26, 0.4]],   // 38
+                [["universegolem", 2, 10, null, 3], ["boss", 1, 0, 8000], [["crawler", "diver", "tesla"], 24, 0.4]],   // 39
+                [["universegolem", 3, 10, null, 3], [["scout", "penguin", "snowball", "emberbat"], 36, 0.25]],   // 40
+                [["universegolem", 2, 9, null, 3], ["magmaking", 2, 8], ["glaciergolem", 2, 8], [["obsidian", "fireproof", "tank"], 24, 0.4]],   // 41
+                [["universegolem", 3, 9, null, 3], ["pillartitan", 2, 8], [["snowdrone", "drone", "hider", "tesla"], 28, 0.35]],   // 42
+                [["universegolem", 4, 9, null, 3], ["yetimech", 2, 9], [["tank", "snowplow", "obsidian", "mummy", "diver"], 32, 0.35]],   // 43
+                [["universegolem", 5, 8, null, 3], ["boss", 1, 0, 10000], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider"], 40, 0.3]],   // 44
+                [["universetitan", 1, 0]],                                              // 45: the Universe Titan (50,000 health)
               ] },
   },
 };

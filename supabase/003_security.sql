@@ -35,7 +35,7 @@ insert into public.level_rules (level, waves, max_score) values
   ('tundra', 25, 1950000),
   ('glacier', 25, 2430000),
   ('blizzard', 25, 2640000),
-  ('infinity', 35, 2920000)
+  ('infinity', 45, 6650000)
 on conflict (level) do update set waves = excluded.waves, max_score = excluded.max_score;
 
 -- Start a game (in a challenge or solo).
