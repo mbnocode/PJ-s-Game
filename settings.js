@@ -814,7 +814,7 @@ const SETTINGS = {
     // islands: [square across, square down, width, height] of each floating island. Everything else is open sky:
     // nothing can be built there, and the road crosses it on rope bridges.
     skyislands: { name: "Floating Islands", unlockAfter: "blizzard", acornDropChance: 0.08, about: "Green islands floating high in the sky, joined by rickety rope bridges. Waterfalls pour off the edges into the clouds! Scores are worth 4x.", theme: "skyislands",
-              robotHealth: 1.05,
+              robotHealth: 1.6,
               lateToughness: { fromWave: 8, perWave: 0.055 },   // after wave 8, robots get 5.5% tougher every wave
               scoreTimes: 4,
               islands: [[0, 0, 6, 5], [8, 1, 5, 4], [14, 0, 6, 5], [2, 7, 5, 5], [9, 7, 6, 4], [16, 7, 4, 5]],
@@ -852,7 +852,7 @@ const SETTINGS = {
               ] },
     // Thunder Peaks: every so often, lightning strikes a tower and stuns it.
     thunder: { name: "Thunder Peaks", acornDropChance: 0.08, about: "Rocky peaks floating in a dark storm. Lightning strikes towers and stuns them! Scores are worth 4.25x.", theme: "thunder",
-              robotHealth: 1.15,
+              robotHealth: 1.25,
               lateToughness: { fromWave: 8, perWave: 0.06 },   // after wave 8, robots get 6% tougher every wave
               scoreTimes: 4.25,
               lightning: { every: 9, stunSeconds: 2.5, fromWave: 2 },   // during a wave, every 9 seconds lightning stuns a random tower for 2.5 seconds
