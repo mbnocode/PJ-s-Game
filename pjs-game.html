@@ -268,6 +268,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .setrow input[type=range] { width: 170px; accent-color: #7cc46a; }
 .setrow b { min-width: 40px; text-align: right; font-family: var(--body); }
 @media (max-width: 560px) { .setrow { grid-template-columns: 1fr auto; } .setrow > span { grid-column: 1 / -1; } .setrow .choices { grid-column: 1 / -1; justify-content: flex-start; } .setrow input[type=range] { width: 100%; } }
+.shellrow { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
+.ability.bottle { border-color: #7fd8c8; } .ability[hidden] { display: none; }
 .perk .needs { display: block; font-size: 13px; color: #ffd36b; margin: 4px 0; }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
@@ -761,6 +763,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
           <canvas class="ab-icon" id="fb-icon" width="40" height="40"></canvas>
           <span class="ab-name">Fireball</span><span class="ab-cost" id="fireball-cost">300</span><span class="ab-cool" id="fireball-cool" hidden></span>
         </button>
+        <button class="ability bottle" id="b-bottle" title="Message in a Bottle: open it before a wave for free Maple Leaves" hidden>
+          <canvas class="ab-icon" id="bt-icon" width="40" height="40"></canvas>
+          <span class="ab-name">Bottle</span><span class="ab-cost" id="bottle-n">0</span>
+        </button>
         <button class="ability ice" id="b-freeze" title="Freeze: tap it, then tap where to freeze the robots">
           <canvas class="ab-icon" id="fz-icon" width="40" height="40"></canvas>
           <span class="ab-name">Freeze</span><span class="ab-cost" id="freeze-cost">100</span><span class="ab-cool" id="freeze-cool" hidden></span>
@@ -906,6 +912,18 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   SPR.hacked = makeSprite(ART.clanker, false, HACK); SPRF.hacked = makeSprite(ART.clanker, true, HACK);
   SPR.blueprint = makeSprite(["................",".kkkkkkkkkkkkk..",".kbbbbbbbbbbbBk.",".kbcbbcccccbbBk.",".kbcbbcbbbcbbBk.",".kbccccbbbcbbBk.",".kbbbbcbbbcbbBk.",".kbcccccccccbBk.",".kbcbbbbbbbcbBk.",".kbcbwwbwwbcbBk.",".kbcbbbbbbbcbBk.",".kbcccccccccbBk.",".kbbbbbbbbbbbBk.",".kkkkkkkkkkkkkk.","................","................"]);
   SPR.battery = makeSprite(["................","......kkkk......","......kggk......","....kkkkkkkk....","....kllllllk....","....kllllllk....","....klllyllk....","....kllyyllk....","....klyyyylk....","....kllyyllk....","....kllyllLk....","....kLLLLLLk....","....kLLLLLLk....","....kkkkkkkk....","................","................"]);
+}
+{ // the Hermit Crab's treasures: Shell Armor, a Message in a Bottle, and the 5 seashells
+  SPR.shellarmor = makeSprite(["................",".....kkkkkk.....","...kkeeeeeekk...","..keeemeemeeek..",".keemeemmeemeek.",".kemeemeemeemek.","keemeemeemeemeek","kemmemmemmemmmek","keeeeeeeeeeeeeek",".kmmmmmmmmmmmmk.",".kmeemeemeemeek.","..kmmmmmmmmmmk..","...kkkkkkkkkk...","................","................","................"]);
+  SPR.bottle = makeSprite(["................","......kkk.......","......knk.......",".....kcck.......",".....kcck.......","....kccwck......","...kcceecck.....","...kcewwecck....","...kceweeecck...","...kceweeecck...","...kceeeeecck...","...kcceeeeck....","....kcccccck....",".....kkkkkk.....","................","................"], false, { e: "#f4e2c0", c: "#7fd8c8", w: "#ffffff", n: "#8a5a2a" });
+  const SH = {
+    scallop: ["................","................","......kkkk......","....kkoeoekk....","...koeoeoeoek...","..koeoeoeoeoek..","..keoeoeoeoeok..","..koeoeoeoeoek..","...koeoeoeoek...","....kkoeoekk....",".....koooook....","......kkkk......","................","................","................","................"],
+    conch: ["................","........kk......",".......kfek.....","......kfffek....",".....keffffk....","....keefrfek....","...keeffrrfk....","..keeefrrfek....","..keeeffffek....","...keeeeeek.....","....kkkeeek.....",".......kkk......","................","................","................","................"],
+    spiral: ["................","................",".....kkkkk......","....kzzzzzk.....","...kzppppzzk....","...kzpzzzpzk....","...kzpzkzpzk....","...kzpzzppzk....","...kzppppzk.....","....kzzzzk......",".....kkkk.......","................","................","................","................","................"],
+    clam: ["................","................","................","....kkkkkkk.....","...kxxsxxsxk....","..kxsxxsxxsxk...","..kssssssssk....","..kxxxxxxxxxk...","...kkkkkkkkk....","................","................","................","................","................","................","................"],
+    sanddollar: ["................","................",".....kkkkk......","....kmeeemk.....","...kmeemeemk....","...keemmmeek....","...kemmemmek....","...keemmmeek....","...kmeemeemk....","....kmeeemk.....",".....kkkkk......","................","................","................","................","................"] };
+  for (const [k, rows] of Object.entries(SH)) SPR["shell_" + k] = makeSprite(rows, false, { o: "#ff9a6a", e: "#ffe0c8", f: "#ffc8a8", r: "#e8786a", z: "#d9b8ff", p: "#9a5fd6", x: "#f4e2c0", s: "#c9a080", m: "#c8b490" });
+  SPR.seashell = SPR.shell_scallop;
 }
 { // Star Chunks: the bits of space rock that break off the Universe Golem
   const STAR = { U: "#e6d8ff", c: "#7a5ad0", b: "#3e2a8a", w: "#ffffff", r: "#4fd1b8" };
@@ -3343,7 +3361,7 @@ function startGame(L, d, tutorial, online, resuming) {
   G = {
     level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
     wave: 0, waveActive: false, waveClock: 0, queue: [],
-    health: SETTINGS.baseHealth + perkValue("baseHealth"), maxHealth: SETTINGS.baseHealth + perkValue("baseHealth"),
+    health: SETTINGS.baseHealth + perkValue("baseHealth") + crabItem("shellarmor", SETTINGS.shellArmorHealth), maxHealth: SETTINGS.baseHealth + perkValue("baseHealth") + crabItem("shellarmor", SETTINGS.shellArmorHealth),
     leaves: resuming ? 0 : diff.startLeaves + perkValue("startLeaves") + takeLeafBoost(), killPoints: 0,
     damageBonus: perkValue("damage"), cheaper: perkValue("cheaper"),
     towers: [], robots: [], shots: [], fx: [], particles: [], tongues: [],
@@ -3423,6 +3441,7 @@ function perkLevel(key) { const s = slot(); return (s && s.perks && s.perks[key]
 function perkValue(key) { return perkLevel(key) * ((SETTINGS.permanentUpgrades || {})[key] || {}).per || 0; }
 function wizardDiscount() { let d = 0; if (G) for (const t of G.towers) if (t.kind === "wizard") d += towerStatsBase(t).discount || 0; return d; }
 function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - Math.min(0.5, (G && G.cheaper || 0) + wizardDiscount()))); }
+function crabItem(key, value) { const s = slot(); return s && s.materials && s.materials[key] ? value : 0; }   // a Hermit Crab item you own: its value (or 0)
 function hasBlueprint() { const s = slot(); return !!(s && s.materials && s.materials.blueprint); }   // the Defector's Factory Blueprint
 function towerUnlocked(k) {
   const tw = SETTINGS.towers[k], s = slot();
@@ -3883,7 +3902,13 @@ function updateShelf() {
   });
 }
 let lastLeaves = 0;
+function updateBottle() {   // the Message in a Bottle button: shows up when you have bottles, works between waves
+  const b = $("b-bottle"); if (!b || !G) return;
+  const s = slot(), n = (s && s.materials && s.materials.bottle) || 0;
+  b.hidden = !n; $("bottle-n").textContent = "×" + n; b.disabled = G.waveActive || G.over;
+}
 function updateHud() {
+  updateBottle();
   if (G && $("diffchip")) { const dc = $("diffchip"); dc.textContent = G.diff.name; dc.className = "diffchip " + G.diffKey; }
   const h = Math.max(0, Math.round(G.health));
   $("hnum").textContent = h;
@@ -3933,6 +3958,7 @@ function towerStats(t) {
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
   if (t.overWave && t.overWave === G.wave && G.waveActive && out.attacksPerSecond) out.attacksPerSecond *= 2;   // Overcharge Battery: twice as fast this wave
   if (G.kingStorm && out.range) out.range *= 1 - G.kingStorm;   // the Blizzard King's howling blizzard shrinks every tower's range
+  if (t.kind === "crab" && out.damage && crabItem("clawsharpener", 1)) out.damage *= SETTINGS.clawSharpenerTimes || 1.25;   // the Crab Claw Sharpener
   if (out.maxDamage && out.damage > out.maxDamage) out.damage = out.maxDamage;   // (the Wolf can never hit harder than this, even with a big pack)
   return out;
 }
@@ -4276,7 +4302,8 @@ board.addEventListener("pointerdown", (e) => {
   const c = tileFromEvent(e); if (!c) return;
   G.hover = c;
   if (G.bonus && G.bonus.x === c.x && G.bonus.y === c.y) { collectBonusLeaf(); return; }
-  if (G.crabSpot && G.crabSpot.x === c.x && G.crabSpot.y === c.y) { openCrabShop(); return; }   // the Hermit Crab's secret shop
+  if (G.crabSpot && G.crabSpot.x === c.x && G.crabSpot.y === c.y) { openCrabShop(); return; }
+  if (G.shell && G.shell.x === c.x && G.shell.y === c.y) { collectShell(); return; }   // a seashell!   // the Hermit Crab's secret shop
   { const cg = G.map.gates.find((g) => g.castle);   // tap the robots' castle to overgrow it with plants
     if (cg && c.x >= cg.x && c.x < cg.x + 2 && c.y >= cg.y && c.y < cg.y + 2) { overgrowCastle(cg); return; } }
   const t = towerAt(c.x, c.y);
@@ -4357,6 +4384,15 @@ $("b-settings-reset").onclick = () => { Object.assign(PREFS, PREF_DEFAULTS); sav
 $("b-settings-back").onclick = () => { if (settingsFrom === "s-levels") renderLevels(); show(settingsFrom); };
 $("b-settings-title").onclick = () => openSettings("s-title");
 $("b-settings-levels").onclick = () => openSettings("s-levels");
+
+$("b-bottle").onclick = () => {
+  const s = slot(); if (!G || G.waveActive || G.over || !(s && s.materials && s.materials.bottle > 0)) return;
+  s.materials.bottle -= 1; saveSlots(slots);
+  const n = SETTINGS.bottleLeaves || 150; G.leaves += n; Sound.play("upgrade");
+  const bx = G.map.base.x * T + 32, by = G.map.base.y * T + 10; burst(bx, by, "#7fd8c8", 14); floatText(bx, by - 10, `Message in a Bottle! +${n} leaves`, "#c8fff4", 1.6);
+  updateHud(); updateShelf();
+};
+{ const c = $("bt-icon"), x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR.bottle, 4, 4, 32, 32); }
 
 /* ---------- Save & exit / Resume game ---------- */
 // A saved game is kept in the save slot, one per level. It's always saved between waves
@@ -4994,6 +5030,40 @@ function towerScale(t) {
   return [0.72, 0.84, 0.96, 1.1][t.level];
 }
 // Between waves on the Beach, sometimes a little bump moves in the sand. Tap it to find the Hermit Crab's secret shop.
+// Seashell Collection: between waves on the Beach, a shell sometimes washes up. Tap it to collect it.
+function tickShells(dt) {
+  const SC = SETTINGS.seashells, s = slot(); if (!SC || !SC.levels.includes(G.level) || !(s && s.materials && s.materials.shells)) return;
+  if (G.waveActive || G.over) { G.shell = null; return; }
+  if (G.wave < 1) return;
+  if (G.shellBreak !== G.wave) {
+    G.shellBreak = G.wave;
+    if (Math.random() < SC.chance) {
+      const free = [];
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (G.map.cells[y][x] === "grass" && !towerAt(x, y) && !G.map.scenery[x + "," + y] && !isFactory(x, y) && !(G.crabSpot && G.crabSpot.x === x && G.crabSpot.y === y) && !(G.bonus && G.bonus.x === x && G.bonus.y === y)) free.push({ x, y });
+      const kinds = ["scallop", "conch", "spiral", "clam", "sanddollar"], have = s.shells || {}, missing = kinds.filter((k) => !have[k]);
+      const pool = missing.length && Math.random() < 0.7 ? missing : kinds, kind = pool[Math.random() * pool.length | 0];   // (new shells are more likely)
+      if (free.length) G.shell = { ...free[Math.random() * free.length | 0], kind, t: 0 };
+    }
+  }
+  if (G.shell && (G.shell.t += dt) > SC.staySeconds) G.shell = null;   // the tide takes it back
+}
+function drawShell(x) {
+  const sh = G.shell; if (!sh) return;
+  const cx = sh.x * T + 16, cy = sh.y * T + 18 + Math.sin(G.time * 3) * 1.5, k = Math.min(1, sh.t / 0.4), fade = Math.max(0, Math.min(1, ((SETTINGS.seashells.staySeconds || 14) - sh.t) / 2));
+  x.save(); x.globalAlpha = fade;
+  x.fillStyle = "rgba(255,255,255,0.35)"; x.beginPath(); x.ellipse(cx, cy + 9, 13 * k, 4 * k, 0, 0, Math.PI * 2); x.fill();   // a little wash of foam
+  if ((G.time * 2) % 2 < 0.2) { x.fillStyle = "#ffffff"; x.fillRect(cx + 8, cy - 10, 2, 2); x.fillRect(cx + 7, cy - 9, 4, 0.8); }   // a sparkle
+  x.drawImage(SPR["shell_" + sh.kind], cx - 14 * k, cy - 14 * k, 28 * k, 28 * k); x.restore();
+}
+function collectShell() {
+  const sh = G.shell, s = slot(); if (!sh || !s) return;
+  const names = { scallop: "Scallop", conch: "Conch", spiral: "Spiral Shell", clam: "Clam", sanddollar: "Sand Dollar" };
+  s.shells = s.shells || {}; const isNew = !s.shells[sh.kind]; s.shells[sh.kind] = (s.shells[sh.kind] || 0) + 1; saveSlots(slots);
+  const n = Object.keys(s.shells).length; G.shell = null; Sound.play("heal");
+  burst(sh.x * T + 16, sh.y * T + 16, "#ffe0c8", 12);
+  floatText(sh.x * T + 16, sh.y * T, isNew ? `${names[sh.kind]}! (${n}/5 shells)` : `Another ${names[sh.kind]}`, "#ffe0c8", 1.6);
+  if (isNew && n === 5) setTimeout(() => popToast("seashell", "Full set of shells!", "Trade it to the Hermit Crab"), 400);
+}
 function tickCrabSpot(dt) {
   const CS = SETTINGS.hermitCrab; if (!CS || !CS.levels.includes(G.level)) return;
   if (G.waveActive || G.over) { G.crabSpot = null; return; }
@@ -5029,6 +5099,17 @@ function renderCrabShop() {
   const s = slot(); $("crab-acorns").textContent = (s && s.acorns) || 0;
   $("crab-say").textContent = "“Oh! You found me under the sand. Shh… I only come out between waves. I've got treasures from the bottom of the sea, for Golden Acorns.”";
   renderShopShelves($("crab-shop"), SETTINGS.hermitCrabShop, SETTINGS.hermitCrab.shelves || 3, s, "crab", "Coming soon. The crab is still digging up treasures from the sea…", renderCrabShop);
+  // the Seashell Collection card: which shells you've found, and a trade-in button for a full set
+  const card = $("crab-buy-shells") ? null : [...$("crab-shop").children].find((d) => d.textContent.includes("Seashell Collection"));
+  if (card && s && s.materials && s.materials.shells) {
+    const kinds = ["scallop", "conch", "spiral", "clam", "sanddollar"], have = s.shells || {}, full = kinds.every((k) => have[k]);
+    const row = document.createElement("div"); row.className = "shellrow";
+    kinds.forEach((k) => { const c = spriteCanvas("shell_" + k, 32); c.style.cssText = "width:32px;height:32px;image-rendering:pixelated;" + (have[k] ? "" : "filter:brightness(0) opacity(.35)"); row.appendChild(c); });
+    card.appendChild(row);
+    const b = document.createElement("button"); b.className = "go"; b.disabled = !full; b.textContent = full ? `Trade the set for ${SETTINGS.seashells.setPrize} Golden Acorns` : `${Object.keys(have).filter((k) => kinds.includes(k)).length}/5 shells found`;
+    b.onclick = () => { if (!kinds.every((k) => have[k])) return; kinds.forEach((k) => { have[k] -= 1; if (have[k] <= 0) delete have[k]; }); s.shells = have; s.acorns = (s.acorns || 0) + SETTINGS.seashells.setPrize; saveSlots(slots); Sound.play("win"); renderCrabShop(); updateHud(); };
+    card.appendChild(b);
+  }
 }
 function crabPortrait(now) {
   if ($("crabshop").hidden) { crabAnim = null; return; }
@@ -5180,6 +5261,7 @@ function update(dt) {
   { let k = 0; for (const r of G.robots) if (!r.dead && r.hp > 0) { const rs = (SETTINGS.robots[r.type] || {}).rangeShrink; if (rs > k) k = rs; } G.kingStorm = k; }   // the Blizzard King's blizzard
   tickCrabSpot(dt);
   tickLightning(dt);   // Thunder Peaks
+  tickShells(dt);      // Seashell Collection (the Beach)
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
     const airK = r.flying && !f.fullAir ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage (unless it has Serpent Eyes)
@@ -5834,6 +5916,7 @@ function draw() {
   if (G.map.theme === "thunder" && !PREFS.simple) drawStormRain(x);
   drawBonusLeaf(x);
   drawCrabSpot(x);
+  drawShell(x);
   drawInspect(x);
   updateRobotInfo();
   // Mega Fireball: the target circle while aiming, and the fireball falling from the sky
