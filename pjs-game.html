@@ -5921,13 +5921,20 @@ async function askForBoard(g, won, score, stars) {
     if (!nick) { msg.textContent = "Type a nickname first."; msg.hidden = false; $("o-nick").focus(); return; }
     $("o-submit").disabled = true; $("o-submit").textContent = "Adding…"; msg.hidden = true;
     try {
-      const rows = await rpc("join_game", { p_code: null, p_nickname: nick, p_level: g.level, p_difficulty: g.diffKey });
-      await rpc("update_progress", { p_id: rows[0].id, p_secret: rows[0].secret, p_wave: g.wave, p_health: Math.round(Math.max(0, g.health)), p_status: won ? "won" : "lost", p_score: score, p_stars: won ? stars : 0 });
+      const args = { p_nickname: nick, p_level: g.level, p_difficulty: g.diffKey, p_wave: g.wave, p_health: Math.round(Math.max(0, g.health)), p_status: won ? "won" : "lost", p_score: score, p_stars: won ? stars : 0 };
+      try { await rpc("submit_score", { ...args, p_seconds: Math.round(g.realTime || 0) }); }   // how long the game really took, so the leaderboard's cheat checks are happy
+      catch (e) {
+        if (!/submit_score|function/i.test(e.message || "")) throw e;   // (an older leaderboard without submit_score: the old way)
+        const rows = await rpc("join_game", { p_code: null, p_nickname: nick, p_level: g.level, p_difficulty: g.diffKey });
+        await rpc("update_progress", { p_id: rows[0].id, p_secret: rows[0].secret, ...Object.fromEntries(Object.entries(args).filter(([k]) => !["p_nickname", "p_level", "p_difficulty"].includes(k))) });
+      }
       rememberNick(nick);
       box.innerHTML = `<p class="muted">You're on the leaderboard for ${esc(lvName)} as <b>${esc(nick)}</b>! <button class="link" id="o-see">See it</button></p>`;
       $("o-see").onclick = () => { G = null; boardLevel = g.level; renderBoards(); show("s-boards"); };
     } catch (e) {
-      msg.textContent = "Couldn't reach the leaderboard. Check the internet and try again."; msg.hidden = false;
+      msg.textContent = /fetch|network|load failed/i.test(e.message || "") ? "Couldn't reach the leaderboard. Check the internet and try again."
+        : /too many/i.test(e.message || "") ? "The leaderboard is busy right now. Try again in a minute."
+        : "The leaderboard couldn't take this score (" + (e.message || "unknown problem") + ")."; msg.hidden = false;
       $("o-submit").disabled = false; $("o-submit").textContent = "Add to leaderboard";
     }
   };
