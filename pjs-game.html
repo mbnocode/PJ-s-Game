@@ -605,14 +605,20 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div id="dad-ask">
         <div class="dad-icon" aria-hidden="true">📋</div>
         <h2 id="dad-title">Are you sure you want to continue?</h2>
-        <p>Dadbot, you have <b>a lot of work to do!</b> Emails to answer, meetings to go to, and chores to finish.</p>
+        <p><span id="dad-name">Dadbot</span>, you have <b>a lot of work to do!</b> Emails to answer, meetings to go to, and chores to finish.</p>
         <p class="muted">Maybe finish your work first, then come back and defend the treehouse.</p>
         <div class="row"><button class="go" id="dad-no">Back to work</button><button id="dad-yes">Play anyway</button></div>
+      </div>
+      <div id="dad-hint" hidden>
+        <div class="dad-icon" aria-hidden="true">🤫</div>
+        <h2>Psst… a secret!</h2>
+        <p>There are <b>more secret shops</b> hiding in the game. Keep your eyes open!</p>
+        <div class="row"><button class="go" id="dad-hint-ok">Okay!</button></div>
       </div>
       <div id="dad-wrong" hidden>
         <div class="dad-icon" aria-hidden="true">❌</div>
         <h2>That was the wrong answer!</h2>
-        <p>Back to the save slots you go, Dadbot.</p>
+        <p id="dad-wrong-text">Back to the save slots you go, Dadbot.</p>
       </div>
     </div>
   </div>
@@ -2482,17 +2488,28 @@ $("mode-challenge").onclick = () => { setup.mode = "challenge"; renderSetup(); }
 $("tut-yes").onclick = () => { setup.tutorial = true; renderSetup(); };
 $("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
 /* A special message for Dadbot: before any level starts, make sure the work is done first! */
-const WORK_NICKS = ["dadbot"];
+// Grown-ups who should be working get asked first. (nickname in lowercase: name to show, the "keep playing" button, where the wrong answer sends you, and whether they get a secret hint)
+const WORK_NICKS = {
+  "dadbot": { name: "Dadbot", yes: "Play anyway", sendTo: "slots" },
+  "i love tacos": { name: "I LOVE TACOS", yes: "Continue", sendTo: "title", hint: true },
+};
 function dadCheck(nick, go) {
-  if (!WORK_NICKS.includes((nick || "").trim().toLowerCase())) { go(); return; }
-  $("dad-ask").hidden = false; $("dad-wrong").hidden = true;
+  const who = WORK_NICKS[(nick || "").trim().toLowerCase().replace(/\s+/g, " ")];
+  if (!who) { go(); return; }
+  $("dad-name").textContent = who.name; $("dad-yes").textContent = who.yes;
+  $("dad-wrong-text").textContent = `Back to the ${who.sendTo === "title" ? "title screen" : "save slots"} you go, ${who.name}.`;
+  $("dad-ask").hidden = false; $("dad-wrong").hidden = true; $("dad-hint").hidden = true;
   $("dadcheck").hidden = false; $("dad-no").focus();
-  // the twist: "Back to work" starts the level...
-  $("dad-no").onclick = () => { $("dadcheck").hidden = true; go(); };
-  // ...and "Play anyway" is the wrong answer: back to the save slots you go!
+  // the twist: "Back to work" starts the level (some players get a secret hint first)...
+  $("dad-no").onclick = () => {
+    if (!who.hint) { $("dadcheck").hidden = true; go(); return; }
+    $("dad-ask").hidden = true; $("dad-hint").hidden = false; $("dad-hint-ok").focus();
+    $("dad-hint-ok").onclick = () => { $("dadcheck").hidden = true; go(); };
+  };
+  // ...and the other button is the wrong answer: back you go!
   $("dad-yes").onclick = () => {
     Sound.play("nope"); $("dad-ask").hidden = true; $("dad-wrong").hidden = false;
-    setTimeout(() => { $("dadcheck").hidden = true; renderSlots(); show("s-slots"); startSlotScene(); }, 2200);
+    setTimeout(() => { $("dadcheck").hidden = true; if (who.sendTo === "title") show("s-title"); else { renderSlots(); show("s-slots"); startSlotScene(); } }, 2200);
   };
 }
 $("b-start").onclick = () => dadCheck($("nick").value, startLevel);
@@ -4107,7 +4124,7 @@ function resumeSaved(L) {
   renderShelf(); updateHud(); $("banner").hidden = true; tipQueue.length = 0;
   setTimeout(() => { if (G && G.level === L) showNextWave(); }, 0);
 }
-$("b-resume").onclick = () => { Sound.init(); resumeSaved(setup.level); };
+$("b-resume").onclick = () => { Sound.init(); dadCheck($("nick").value, () => resumeSaved(setup.level)); };
 
 /* ---------- waves ---------- */
 // Every level plays the 15 normal waves (or its own waves list, like The Beach), plus any extraWaves (The Swamp has 5 more).
