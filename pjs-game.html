@@ -247,6 +247,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .card.locked { opacity: .5; }
 .card.soon { opacity: .8; position: relative; cursor: default; }
 .card.soon canvas { filter: saturate(0.85); }
+.card .ribbon.saved { position: absolute; top: 18px; right: 18px; background: #7cc46a; color: #10240a; font-family: var(--body); font-weight: 700; font-size: 14px; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 0 #16191d; transform: rotate(4deg); }
+#b-resume small { display: block; font-size: 13px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
 .card.soon .ribbon { position: absolute; top: 18px; right: 18px; background: #ff7a1a; color: #2a1004; font-family: var(--body); font-weight: 700; font-size: 14px; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 0 #16191d; transform: rotate(4deg); }
 .stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
 .erase { align-self: flex-start; }
@@ -549,6 +551,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     </div>
     <label class="field" for="nick">Your nickname<small id="nick-hint">Optional. You can also add one after you win, to get on the leaderboard.</small><input id="nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ"></label>
     <p class="err" id="setup-err" hidden></p>
+    <button class="go big" id="b-resume" hidden>Resume game</button>
     <button class="go big" id="b-start">Start</button>
     <button class="link" id="b-setup-back">Back to levels</button>
   </section>
@@ -2063,6 +2066,7 @@ function renderLevels() {
     const starsLine = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
     b.appendChild(mini);
     b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
+    if (open && savedGame(L)) b.insertAdjacentHTML("beforeend", `<span class="ribbon saved">Saved game</span>`);
     b.disabled = !open;
     b.onclick = () => openSetup(L);
     box.appendChild(b);
@@ -2418,6 +2422,10 @@ function renderSetup() {
   $("nick-hint").textContent = setup.mode === "challenge" ? "So your friends know who you are." : "Optional. You can also add one after you win, to get on the leaderboard.";
   if (!$("nick").value) $("nick").value = savedNick();
   $("setup-err").hidden = true;
+  const sv = savedGame(setup.level), rb = $("b-resume");
+  rb.hidden = !sv;
+  if (sv) rb.innerHTML = `Resume game<small>${SETTINGS.difficulties[sv.diffKey].name} · wave ${sv.wave + 1} of ${levelWaves(setup.level).length} · ${Math.round(sv.health)} health</small>`;
+  $("b-start").textContent = sv ? "Start a new game" : "Start";
 }
 $("mode-solo").onclick = () => { setup.mode = "solo"; renderSetup(); };
 $("mode-challenge").onclick = () => { setup.mode = "challenge"; renderSetup(); };
@@ -3011,14 +3019,14 @@ function takeLeafBoost() {
   setTimeout(() => popToast("leaf", "Leaf Boost!", `+${n} Maple Leaves this game`), 600);
   return n;
 }
-function startGame(L, d, tutorial, online) {
+function startGame(L, d, tutorial, online, resuming) {
   if ($("robotinfo")) $("robotinfo").hidden = true;
   const diff = SETTINGS.difficulties[d];
   G = {
     level: L, diffKey: d, diff, map: buildMap(L), tutorial, tutStep: 0,
     wave: 0, waveActive: false, waveClock: 0, queue: [],
     health: SETTINGS.baseHealth + perkValue("baseHealth"), maxHealth: SETTINGS.baseHealth + perkValue("baseHealth"),
-    leaves: diff.startLeaves + perkValue("startLeaves") + takeLeafBoost(), killPoints: 0,
+    leaves: resuming ? 0 : diff.startLeaves + perkValue("startLeaves") + takeLeafBoost(), killPoints: 0,
     damageBonus: perkValue("damage"), cheaper: perkValue("cheaper"),
     towers: [], robots: [], shots: [], fx: [], particles: [], tongues: [],
     paused: false, speed: 1, pick: null, sel: null, hover: null, over: false,
@@ -3032,8 +3040,8 @@ function startGame(L, d, tutorial, online) {
   $("b-speed").textContent = "1×";
   tipQueue.length = 0;
   setTimeout(() => { if (G && G.level === L && G.wave === 0) showNextWave(); }, 0);
-  if (SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts hit harder and slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
-  if (SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`The castle sends out EXTRA robots! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer extras. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
+  if (!resuming && SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts hit harder and slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
+  if (!resuming && SETTINGS.levels[L].castle) setTimeout(() => G && G.level === L && tip(`The castle sends out EXTRA robots! Tap the castle to overgrow it with plants for ${SETTINGS.levels[L].castle.overgrowCost} leaves. Each time, it sends fewer extras. Overgrow it ${SETTINGS.levels[L].castle.overgrowSteps} times to stop it completely! Watch out: robots slide faster on the icy road.`, undefined, "Heads up"), 50);
   if (tutorial) tip("Welcome! Robots march down the road to your treehouse. Stop them with towers: tap a tower at the bottom, then tap the grass next to the road to place it. Try the Fire Dragon first.", 0);
   $("code-chip").hidden = true; $("friends").hidden = true;
   onlineStart(G);
@@ -3969,12 +3977,59 @@ document.addEventListener("keydown", (e) => {
 function overlay(html) { $("overlay-box").innerHTML = html; $("overlay").hidden = false; }
 function pause() {
   G.paused = true; updateHud();
-  overlay(`<h2>Paused</h2><div class="row"><button class="go" id="o-resume">Resume</button><button id="o-restart">Restart level</button><button id="o-menu">Quit to levels</button></div>`);
+  const canSave = !(G.online && G.online.code);   // challenges with friends can't be saved
+  overlay(`<h2>Paused</h2><div class="row"><button class="go" id="o-resume">Resume</button>${canSave ? '<button id="o-save">Save &amp; exit</button>' : ""}<button id="o-restart">Restart level</button><button id="o-menu">Quit to levels</button></div>
+    ${canSave && G.waveActive ? `<p class="muted" style="margin-top:10px">Saving in the middle of a wave saves your game from just before wave ${G.wave} started.</p>` : ""}`);
   $("o-resume").onclick = resume;
+  if (canSave) $("o-save").onclick = saveAndExit;
   $("o-restart").onclick = () => startGame(G.level, G.diffKey, false);
   $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
 }
 function resume() { G.paused = false; $("overlay").hidden = true; updateHud(); }
+
+/* ---------- Save & exit / Resume game ---------- */
+// A saved game is kept in the save slot, one per level. It's always saved between waves
+// (in the middle of a wave, it saves the game from just before that wave started).
+const SNAP_SKIP = new Set(["map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
+  "merge", "bonus", "bonusTimer", "flashTiles", "waveSnap", "paused", "over", "takeover", "aim", "aimPos", "meteors", "burns", "walls", "crabSpot", "shake", "kingStorm", "slotDirty", "waveActive", "waveClock"]);
+const plain = (v) => v === null || ["number", "string", "boolean"].includes(typeof v);
+function snapshotGame() {
+  const snap = { savedAt: Date.now() };
+  for (const [k, v] of Object.entries(G)) {
+    if (SNAP_SKIP.has(k) || v === undefined) continue;
+    if (plain(v)) snap[k] = v;
+    else if (v instanceof Set) snap[k] = { set: [...v] };
+    else if (Array.isArray(v) && v.every(plain)) snap[k] = [...v];
+    else if (v && typeof v === "object" && !Array.isArray(v) && Object.values(v).every(plain)) snap[k] = { ...v };
+  }
+  // each tower: just its own plain numbers, words and upgrade picks (not who it's aiming at right now)
+  snap.towers = G.towers.map((t) => { const o = {}; for (const [k, v] of Object.entries(t)) if (plain(v) || (Array.isArray(v) && v.every(plain))) o[k] = Array.isArray(v) ? [...v] : v; o.cool = 0.2; o.stunT = 0; return o; });
+  snap.online = G.online && !G.online.code ? { nick: G.online.nick, id: G.online.id, secret: G.online.secret } : null;   // your nickname (and leaderboard entry) for this game
+  return snap;
+}
+function savedGame(L) { const s = slot(); return (s && s.saved && s.saved[L]) || null; }
+function saveAndExit() {
+  const s = slot(); if (!s || !G) return;
+  const snap = G.waveActive && G.waveSnap ? G.waveSnap : snapshotGame();
+  s.saved = s.saved || {}; s.saved[G.level] = snap; saveSlots(slots);
+  G = null; $("overlay").hidden = true; renderLevels(); show("s-levels");
+  popToast("tree", "Game saved!", "Tap the level, then Resume game");
+}
+function resumeSaved(L) {
+  const sv = savedGame(L); if (!sv) return;
+  startGame(L, sv.diffKey, false, sv.online ? { code: null, ...sv.online } : null, true);
+  for (const [k, v] of Object.entries(sv)) {
+    if (["savedAt", "towers", "online", "level", "diffKey"].includes(k)) continue;
+    G[k] = v && typeof v === "object" && v.set ? new Set(v.set) : v;
+  }
+  G.towers = sv.towers.map((t) => ({ ...t, picks: t.picks ? [...t.picks] : t.picks }));
+  G.fromSave = true; G.waveActive = false; G.paused = false; G.speed = 1; $("b-speed").textContent = "1×";
+  const cg = G.map.gates.find((g) => g.castle); if (cg && G.overgrow) cg.img = castleImage(cg.door, G.overgrow);   // the castle stays overgrown
+  G.factoryCount = 0; redrawGround(); G.flashTiles = [];
+  renderShelf(); updateHud(); $("banner").hidden = true; tipQueue.length = 0;
+  setTimeout(() => { if (G && G.level === L) showNextWave(); }, 0);
+}
+$("b-resume").onclick = () => { Sound.init(); resumeSaved(setup.level); };
 
 /* ---------- waves ---------- */
 // Every level plays the 15 normal waves (or its own waves list, like The Beach), plus any extraWaves (The Swamp has 5 more).
@@ -3982,6 +4037,7 @@ function levelWaves(L) { const lv = SETTINGS.levels[L] || {}; return (lv.waves |
 function startWave() {
   if (!G || G.waveActive || G.over || G.wave >= levelWaves(G.level).length) return;
   Sound.init();
+  G.waveSnap = snapshotGame();   // (for Save & exit in the middle of this wave)
   G.wave++; G.waveActive = true; G.waveClock = 0; G.queue = []; $("nextwave").hidden = true;
   let t = 0;
   for (const [type, count, gap, hp] of levelWaves(G.level)[G.wave - 1]) {
@@ -5426,6 +5482,7 @@ function draw() {
 /* ---------- finish ---------- */
 function finish(won) {
   if (G.over) return;
+  if (G.fromSave) { const s = slot(); if (s && s.saved) { delete s.saved[G.level]; G.slotDirty = true; } }   // a resumed game that's over: its save is used up
   if (G.slotDirty) { saveSlots(slots); G.slotDirty = false; }
   G.over = true; G.waveActive = false; G.sel = null; $("tpanel").hidden = true; $("banner").hidden = true; updateHud();
   const score = currentScore();
