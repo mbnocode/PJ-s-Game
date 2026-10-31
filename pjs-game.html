@@ -5876,15 +5876,15 @@ function finish(won) {
          <p class="muted scoremath">${scoreMath()}</p>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left · Time ${fmtTime(G.realTime || 0)}</p>
-         ${boardBits(on, true)}
-         <div class="row">${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`
+         <div class="row"><button id="o-menu">← Back to levels</button>${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}</div>
+         ${boardBits(on, true)}`
       : `<h2>The Factory took over</h2>
          <p class="muted">The robots got through on Wave ${G.wave} of ${levelWaves(G.level).length}. Time ${fmtTime(G.realTime || 0)}</p>
          <div class="scoreline">Score ${score.toLocaleString()}</div>
          <p class="muted scoremath">${scoreMath()}</p>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
-         ${boardBits(on, false)}
-         <div class="row"><button class="go" id="o-again">Try again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}<button id="o-menu">Levels</button></div>`);
+         <div class="row"><button id="o-menu">← Back to levels</button><button class="go" id="o-again">Try again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}</div>
+         ${boardBits(on, false)}`);
     $("o-again").onclick = () => startGame(G.level, G.diffKey, false, on ? { code: on.code, nick: on.nick } : null);
     if ($("o-boards")) $("o-boards").onclick = () => { const c = on && on.code; G = null; renderBoards(c || undefined); show("s-boards"); };
     $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
