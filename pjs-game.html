@@ -253,6 +253,14 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
 .erase { align-self: flex-start; }
 
+.settings { display: flex; flex-direction: column; gap: 14px; width: min(640px, 100%); }
+.setrow { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px 16px; background: var(--panel); border: 2px solid #16191d; border-radius: 8px; padding: 12px 16px; text-align: left; font-family: var(--display); font-size: 18px; }
+.setrow small { display: block; font-family: var(--body); font-size: 13px; color: var(--muted); margin-top: 3px; }
+.setrow .choices { grid-column: 2 / 4; justify-content: flex-end; flex-wrap: nowrap; }
+.setrow .choices button { min-width: 58px; }
+.setrow input[type=range] { width: 170px; accent-color: #7cc46a; }
+.setrow b { min-width: 40px; text-align: right; font-family: var(--body); }
+@media (max-width: 560px) { .setrow { grid-template-columns: 1fr auto; } .setrow > span { grid-column: 1 / -1; } .setrow .choices { grid-column: 1 / -1; justify-content: flex-start; } .setrow input[type=range] { width: 100%; } }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
 .choices button small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
@@ -502,6 +510,22 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     </div>
     <p class="muted">The robots want to turn your meadow into a factory. Build animal towers along the path and stop them before they reach your treehouse.</p>
     <button class="go big" id="b-play">Play</button>
+    <button id="b-settings-title">Settings</button>
+  </section>
+
+  <!-- Settings (for everyone on this computer, not just one save slot) -->
+  <section class="screen menu" id="s-settings" hidden>
+    <h2>Settings</h2>
+    <div class="settings">
+      <label class="setrow" for="set-volume"><span>Sound volume<small>Tower attacks, robots and buttons</small></span><input type="range" id="set-volume" min="0" max="100" step="5"><b id="set-volume-n"></b></label>
+      <label class="setrow" for="set-music"><span>Music volume<small>The little tune that plays in the background</small></span><input type="range" id="set-music" min="0" max="100" step="5"><b id="set-music-n"></b></label>
+      <div class="setrow"><span>Tips<small>"Heads up" tips about new robots and levels (the tutorial is turned on or off when you pick a level)</small></span><div class="choices" id="set-tips"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+      <div class="setrow"><span>Screen shake<small>The board shakes when big things happen</small></span><div class="choices" id="set-shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+      <div class="setrow"><span>Starting speed<small>How fast each game starts (you can still change it while you play)</small></span><div class="choices" id="set-speed"><button data-v="1">1×</button><button data-v="2">2×</button><button data-v="3">3×</button></div></div>
+      <div class="setrow"><span>Floating numbers<small>Damage, leaves and other numbers that pop up over the board</small></span><div class="choices" id="set-floats"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+    </div>
+    <button id="b-settings-reset">Reset to normal</button>
+    <button class="link" id="b-settings-back">Back</button>
   </section>
 
   <!-- Save slots -->
@@ -519,7 +543,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button></div>
+    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
     <button class="link" id="b-levels-back">Back to save slots</button>
   </section>
 
@@ -1387,19 +1411,20 @@ const Sound = {
     if (this.ctx) return;
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this.master = this.ctx.createGain(); this.master.gain.value = this.on ? 0.6 : 0; this.master.connect(this.ctx.destination);
+      this.master = this.ctx.createGain(); this.master.gain.value = this.on ? 0.6 * PREFS.volume / 100 : 0; this.master.connect(this.ctx.destination);
+      this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.on ? 0.6 * PREFS.music / 100 : 0; this.musicGain.connect(this.ctx.destination);
       this.noiseBuf = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
       const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       this.music();
     } catch (e) { this.ctx = null; }
   },
-  setOn(v) { this.on = v; if (this.master) this.master.gain.value = v ? 0.6 : 0; },
+  setOn(v) { this.on = v; if (this.master) this.master.gain.value = v ? 0.6 * PREFS.volume / 100 : 0; if (this.musicGain) this.musicGain.gain.value = v ? 0.6 * PREFS.music / 100 : 0; },
   ok(key, gap) { if (!this.ctx) return false; const t = performance.now(); if (this.last[key] && t - this.last[key] < gap) return false; this.last[key] = t; return true; },
-  tone(f, dur, type = "square", vol = 0.15, f2, delay = 0) {
+  tone(f, dur, type = "square", vol = 0.15, f2, delay = 0, out) {
     const c = this.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.02);
+    o.connect(g); g.connect(out || this.master); o.start(t); o.stop(t + dur + 0.02);
   },
   noise(dur, vol, ftype, f1, f2) {
     const c = this.ctx, t = c.currentTime, s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
@@ -1445,10 +1470,10 @@ const Sound = {
       if (!this.ctx) return;
       while (next < this.ctx.currentTime + 0.6) {
         const t = next - this.ctx.currentTime;
-        if (step % 8 === 0) this.tone(bass[(step / 8 | 0) % 4], beat * 7.5, "triangle", 0.035, null, t);
+        if (step % 8 === 0) this.tone(bass[(step / 8 | 0) % 4], beat * 7.5, "triangle", 0.035, null, t, this.musicGain);
         if (Math.random() < 0.7) {
           i = Math.max(0, Math.min(notes.length - 1, i + [-2, -1, 1, 2, 0][Math.random() * 5 | 0]));
-          this.tone(notes[i], beat * 0.9, "triangle", 0.022, null, t);
+          this.tone(notes[i], beat * 0.9, "triangle", 0.022, null, t, this.musicGain);
         }
         step++; next += beat;
       }
@@ -1456,6 +1481,11 @@ const Sound = {
     setInterval(sched, 150);
   },
 };
+
+/* ---------- settings (for everyone on this computer) ---------- */
+const PREF_DEFAULTS = { volume: 100, music: 100, tips: true, shake: true, speed: 1, floats: true };
+const PREFS = (() => { try { return { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem("pjs-game-prefs") || "{}") }; } catch (e) { return { ...PREF_DEFAULTS }; } })();
+function savePrefs() { try { localStorage.setItem("pjs-game-prefs", JSON.stringify(PREFS)); } catch (e) {} Sound.setOn(Sound.on); }
 
 /* ---------- saves (kept in this browser) ---------- */
 const SAVE_KEY = "pjs-game-slots-v1";
@@ -1560,7 +1590,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "game"];
+const SCREENS = ["s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
 
 function spriteCanvas(name, size = 16) {
@@ -3053,7 +3083,7 @@ function startGame(L, d, tutorial, online, resuming) {
   redrawGround();
   $("tpanel").hidden = true; $("overlay").hidden = true; $("banner").hidden = true;
   renderShelf(); updateHud(); show("game"); fitBoard();
-  $("b-speed").textContent = "1×";
+  G.speed = PREFS.speed || 1; $("b-speed").textContent = G.speed + "×";
   tipQueue.length = 0;
   setTimeout(() => { if (G && G.level === L && G.wave === 0) showNextWave(); }, 0);
   if (!resuming && SETTINGS.towers.fire.iceDragon && SETTINGS.towers.fire.iceDragon.themes.includes(SETTINGS.levels[L].theme)) setTimeout(() => G && G.level === L && tip(`Snowy level bonus: tap a Fire Dragon to turn it into an Ice Dragon for ${SETTINGS.towers.fire.iceDragon.cost} leaves. Its icy blasts hit harder and slow robots down like a Water Frog!`, undefined, "Heads up"), 60);
@@ -3076,6 +3106,8 @@ const tipQueue = [];
 function showTip(t) { $("banner-text").innerHTML = `<span class="who">${t.who}</span>${t.text}`; $("banner").hidden = false; }
 function tip(text, step, who = "Tutorial") {
   if (step !== undefined) G.tutStep = step;
+  if (G && G.level === "infinity") return;   // Infinity has no tips at all
+  if (!PREFS.tips && who !== "Tutorial") return;   // tips switched off in Settings
   if ($("banner").hidden) showTip({ text, who }); else tipQueue.push({ text, who });
 }
 $("banner-ok").onclick = () => { if (tipQueue.length) showTip(tipQueue.shift()); else $("banner").hidden = true; };
@@ -3994,14 +4026,35 @@ function overlay(html) { $("overlay-box").innerHTML = html; $("overlay").hidden 
 function pause() {
   G.paused = true; updateHud();
   const canSave = !(G.online && G.online.code);   // challenges with friends can't be saved
-  overlay(`<h2>Paused</h2><div class="row"><button class="go" id="o-resume">Resume</button>${canSave ? '<button id="o-save">Save &amp; exit</button>' : ""}<button id="o-restart">Restart level</button><button id="o-menu">Quit to levels</button></div>
+  overlay(`<h2>Paused</h2><div class="row"><button class="go" id="o-resume">Resume</button>${canSave ? '<button id="o-save">Save &amp; exit</button>' : ""}<button id="o-restart">Restart level</button><button id="o-settings">Settings</button><button id="o-menu">Quit to levels</button></div>
     ${canSave && G.waveActive ? `<p class="muted" style="margin-top:10px">Saving in the middle of a wave saves your game from just before wave ${G.wave} started.</p>` : ""}`);
   $("o-resume").onclick = resume;
   if (canSave) $("o-save").onclick = saveAndExit;
+  $("o-settings").onclick = () => openSettings("game");
   $("o-restart").onclick = () => startGame(G.level, G.diffKey, false);
   $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
 }
 function resume() { G.paused = false; $("overlay").hidden = true; updateHud(); }
+
+/* ---------- Settings screen ---------- */
+let settingsFrom = "s-title";
+function openSettings(from) { settingsFrom = from; renderSettings(); show("s-settings"); }
+function renderSettings() {
+  $("set-volume").value = PREFS.volume; $("set-volume-n").textContent = PREFS.volume + "%";
+  $("set-music").value = PREFS.music; $("set-music-n").textContent = PREFS.music + "%";
+  const pick = (id, v) => $(id).querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+  pick("set-tips", PREFS.tips ? "on" : "off"); pick("set-shake", PREFS.shake ? "on" : "off"); pick("set-speed", String(PREFS.speed));
+  pick("set-floats", PREFS.floats ? "on" : "off");
+}
+$("set-volume").oninput = (e) => { PREFS.volume = +e.target.value; savePrefs(); renderSettings(); };
+$("set-volume").onchange = () => { Sound.init(); Sound.play("place"); };   // a little beep so you can hear how loud it is
+$("set-music").oninput = (e) => { Sound.init(); PREFS.music = +e.target.value; savePrefs(); renderSettings(); };
+for (const [id, key, conv] of [["set-tips", "tips", (v) => v === "on"], ["set-shake", "shake", (v) => v === "on"], ["set-speed", "speed", Number], ["set-floats", "floats", (v) => v === "on"]])
+  $(id).querySelectorAll("button").forEach((b) => (b.onclick = () => { PREFS[key] = conv(b.dataset.v); savePrefs(); renderSettings(); Sound.init(); Sound.play("place"); }));
+$("b-settings-reset").onclick = () => { Object.assign(PREFS, PREF_DEFAULTS); savePrefs(); renderSettings(); };
+$("b-settings-back").onclick = () => { if (settingsFrom === "s-levels") renderLevels(); show(settingsFrom); };
+$("b-settings-title").onclick = () => openSettings("s-title");
+$("b-settings-levels").onclick = () => openSettings("s-levels");
 
 /* ---------- Save & exit / Resume game ---------- */
 // A saved game is kept in the save slot, one per level. It's always saved between waves
@@ -4039,7 +4092,7 @@ function resumeSaved(L) {
     G[k] = v && typeof v === "object" && v.set ? new Set(v.set) : v;
   }
   G.towers = sv.towers.map((t) => ({ ...t, picks: t.picks ? [...t.picks] : t.picks }));
-  G.fromSave = true; G.waveActive = false; G.paused = false; G.speed = 1; $("b-speed").textContent = "1×";
+  G.fromSave = true; G.waveActive = false; G.paused = false; G.speed = PREFS.speed || 1; $("b-speed").textContent = G.speed + "×";
   const cg = G.map.gates.find((g) => g.castle); if (cg && G.overgrow) cg.img = castleImage(cg.door, G.overgrow);   // the castle stays overgrown
   G.factoryCount = 0; redrawGround(); G.flashTiles = [];
   renderShelf(); updateHud(); $("banner").hidden = true; tipQueue.length = 0;
@@ -4733,7 +4786,7 @@ function drawFireball(x, sh) {
 function burst(x, y, col, n) {
   for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = 30 + Math.random() * 90; G.particles.push({ kind: "spark", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0, life: 0.35 + Math.random() * 0.3, col }); }
 }
-function floatText(x, y, text, col, life = 1.1) { G.fx.push({ kind: "text", x, y, text, col, t: life, life }); }
+function floatText(x, y, text, col, life = 1.1) { if (!PREFS.floats) return; G.fx.push({ kind: "text", x, y, text, col, t: life, life }); }
 
 /* ---------- update ---------- */
 /* ---------- snow robot powers ---------- */
@@ -5027,7 +5080,7 @@ function drawBlizzardWind(x, front) {
 function draw() {
   const x = ctx;
   x.save();
-  if (G.shake > 0) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
+  if (G.shake > 0 && PREFS.shake) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
   x.drawImage(G.ground, 0, 0);
   if (G.map.theme === "blizzard") drawBlizzardWind(x, false);
   if (G.map.theme === "volcano" && G.map.veinGlow) {   // the lava cracks throb with heat, embers float up, and the cave edges glow dark red
