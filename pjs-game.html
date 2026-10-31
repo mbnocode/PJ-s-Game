@@ -775,7 +775,7 @@ const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity", "skyislands", "thunder"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
-const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "phoenix"];
+const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "hacked", "phoenix"];
 const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
@@ -892,6 +892,12 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
 { // the Universe Titan: a giant Universe Golem in deep violet, with golden cracks and a blazing sun for a heart
   const TITAN = { "1": "#140a2a", "2": "#2e1856", "3": "#4c2a8a", A: "#6a2a7a", u: "#ffd36b", U: "#fff7c2", z: "#fff3b0", p: "#ff9a3c", P: "#c0502a", w: "#ffffff", "5": "#ffe9a8", "7": "#fff7c2" };
   SPR.universetitan = makeSprite(ART.universegolem, false, TITAN); SPRF.universetitan = makeSprite(ART.universegolem, true, TITAN);
+}
+{ // the Defector's shop: the Hacked Robot (a Clanker painted green, with a leaf-green core), the Factory Blueprint and the Overcharge Battery
+  const HACK = { f: "#c8f0a0", y: "#5fbf4a", Y: "#2f7d32", r: "#4fd1b8", c: "#9effe8", b: "#2a8a78", n: "#8fd45f", o: "#c8fff4", G: "#3a5524", g: "#6a8a50", s: "#a8d890" };
+  SPR.hacked = makeSprite(ART.clanker, false, HACK); SPRF.hacked = makeSprite(ART.clanker, true, HACK);
+  SPR.blueprint = makeSprite(["................",".kkkkkkkkkkkkk..",".kbbbbbbbbbbbBk.",".kbcbbcccccbbBk.",".kbcbbcbbbcbbBk.",".kbccccbbbcbbBk.",".kbbbbcbbbcbbBk.",".kbcccccccccbBk.",".kbcbbbbbbbcbBk.",".kbcbwwbwwbcbBk.",".kbcbbbbbbbcbBk.",".kbcccccccccbBk.",".kbbbbbbbbbbbBk.",".kkkkkkkkkkkkkk.","................","................"]);
+  SPR.battery = makeSprite(["................","......kkkk......","......kggk......","....kkkkkkkk....","....kllllllk....","....kllllllk....","....klllyllk....","....kllyyllk....","....klyyyylk....","....kllyyllk....","....kllyllLk....","....kLLLLLLk....","....kLLLLLLk....","....kkkkkkkk....","................","................"]);
 }
 { // Star Chunks: the bits of space rock that break off the Universe Golem
   const STAR = { U: "#e6d8ff", c: "#7a5ad0", b: "#3e2a8a", w: "#ffffff", r: "#4fd1b8" };
@@ -1022,7 +1028,7 @@ const FROG_FACE = { k: "#16191d", w: "#ffffff", R: "#ff8fa8" };
 SPR.water = makeSprite(ART.water, false, { ...FROG_FACE, b: "#3d8fe0", B: "#1f5fa8", c: "#bfe6ff", h: "#7cc0ff", S: "#2a6fbf" });          // 32 x 32 frog
 SPR.water_swamp = makeSprite(ART.water, false, { ...FROG_FACE, b: "#8a5a2a", B: "#5a3a1a", c: "#e0c08a", h: "#b07a40", S: "#4e2d14" });
 // Towers drawn from the side (they face right in their pictures). When placed, they turn to face the nearest path.
-const SIDE_FACING = new Set(["wizard", "healer", "squirrel", "fire", "pegasus", "phoenix", "wolf"]);
+const SIDE_FACING = new Set(["wizard", "healer", "squirrel", "fire", "pegasus", "phoenix", "wolf", "hacked"]);
 function pathFacing(tx, ty) {
   let best = Infinity, dir = 1;
   G.map.cells.forEach((row, y) => row.forEach((cell, x) => {
@@ -1477,6 +1483,7 @@ const Sound = {
       case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
       case "smash": this.tone(90, 0.35, "square", 0.14, 40); this.noise(0.3, 0.3, "lowpass", 400, 120); break;
       case "pegasus": if (this.ok(name, 150)) { this.tone(1320, 0.12, "sine", 0.06, 1760); this.tone(1760, 0.1, "triangle", 0.04, null, 0.05); } break;
+      case "hacked": if (this.ok(name, 130)) { this.tone(1400, 0.08, "square", 0.04, 700); this.tone(2100, 0.05, "sine", 0.03, null, 0.03); } break;
       case "wolf": if (this.ok(name, 150)) { this.noise(0.12, 0.1, "lowpass", 700, 200); this.tone(260, 0.1, "sawtooth", 0.03, 180); } break;
       case "tongue": if (this.ok(name, 120)) this.tone(900, 0.09, "square", 0.05, 300); break;
       case "air": if (this.ok(name, 160)) this.tone(520, 0.28, "sine", 0.08, 280); break;
@@ -2800,7 +2807,7 @@ function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 1
 // Bosses (and boss robots like the Sand Golem) are heavy: Owls can't push them, vines hold them only briefly.
 function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
 // Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (and the Wizard's Elemental Sphere).
-const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra"]);   // the Hydra only does half damage to flying robots
+const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked"]);   // the Hydra only does half damage to flying robots
 const canHit = (kind, r) => !r.under && (!r.flying || AIR_HUNTERS.has(kind));   // Lava Divers under the lava can't be hit at all
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
@@ -3380,6 +3387,7 @@ const TUT_TOWER = {
   squirrel: "<b>Squirrel:</b> it doesn't attack, but it gathers extra Maple Leaves for you after every wave. Build it early!",
   crab: "<b>Crab:</b> hurls seashells that splash and hurt every robot nearby. Great against big groups.",
   pegasus: "<b>Pegasus:</b> the Super Tower! It shoots golden stars at 3 robots at once.",
+  hacked: "<b>Hacked Robot:</b> from the Defector's shop! Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward.",
   wolf: "<b>Wolf:</b> from the Night Owl's shop! It hits like a Fire Dragon, and every Wolf right next to it adds 15 damage to each attack. Build a pack!",
   hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads bites a different robot.",
 };
@@ -3407,6 +3415,7 @@ function perkLevel(key) { const s = slot(); return (s && s.perks && s.perks[key]
 function perkValue(key) { return perkLevel(key) * ((SETTINGS.permanentUpgrades || {})[key] || {}).per || 0; }
 function wizardDiscount() { let d = 0; if (G) for (const t of G.towers) if (t.kind === "wizard") d += towerStatsBase(t).discount || 0; return d; }
 function towerCost(k) { return Math.round(SETTINGS.towers[k].cost * (1 - Math.min(0.5, (G && G.cheaper || 0) + wizardDiscount()))); }
+function hasBlueprint() { const s = slot(); return !!(s && s.materials && s.materials.blueprint); }   // the Defector's Factory Blueprint
 function towerUnlocked(k) {
   const tw = SETTINGS.towers[k], s = slot();
   if (tw.serpentUnlock) return !!(s && s.materials && s.materials[tw.serpentUnlock]);   // bought in the Serpent's Shop
@@ -3655,6 +3664,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
+  hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
   air: "A wise old owl. Its gusts of wind push robots back down the road. It can see Hiders and hit flying robots.",
   wizard: "A helper. It doesn't attack, but its magic makes nearby towers attack faster.",
@@ -3913,6 +3923,7 @@ function towerStats(t) {
     if (ic.damageTimes && out.damage) out.damage *= ic.damageTimes;
   }
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
+  if (t.overWave && t.overWave === G.wave && G.waveActive && out.attacksPerSecond) out.attacksPerSecond *= 2;   // Overcharge Battery: twice as fast this wave
   if (G.kingStorm && out.range) out.range *= 1 - G.kingStorm;   // the Blizzard King's howling blizzard shrinks every tower's range
   if (out.maxDamage && out.damage > out.maxDamage) out.damage = out.maxDamage;   // (the Wolf can never hit harder than this, even with a big pack)
   return out;
@@ -3947,6 +3958,7 @@ function towerStatsBase(t) {
       if (c.vision) out.vision = true;
       if (c.fullFlying) out.fullFlying = true;   // (Hydra's Serpent Eyes: full damage to flying robots)
       if (c.targetsPlus) out.targets = (out.targets || 1) + c.targetsPlus;
+      if (c.hackPlus) out.hackChance = (out.hackChance || 0) + c.hackPlus;
       if (c.packPlus) out.packBonusPlus = (out.packBonusPlus || 0) + c.packPlus;
       if (c.wolfCount) out.wolfCount = (out.wolfCount || 0) + c.wolfCount;
       if (c.holdSecondsPlus) out.holdSeconds = (out.holdSeconds || 0) + c.holdSecondsPlus;
@@ -4028,6 +4040,7 @@ function openPanel(t) {
     ${choices ? `<span class="s">Pick an upgrade · ${price} leaves</span><div class="pick">${choices.map((c, i) =>
       `<button class="go" id="p-pick-${i}" ${G.leaves < price ? "disabled" : ""}><b>${c.name}</b><small>${c.about}</small></button>`).join("")}</div>` : ""}
     ${iceOK ? `<button class="go wallbtn icebtn" id="p-ice" ${G.leaves < ice.cost ? "disabled" : ""}>Turn into Ice Dragon · ${ice.cost}<small>Its icy blasts hit ${Math.round(((ice.damageTimes || 1) - 1) * 100)}% harder and slow robots like a Water Frog (instead of burning them).</small></button>` : ""}
+    ${overchargeButton(t, s)}
     ${s.nutWall ? `<button class="go wallbtn" id="p-wall">Build Nut Wall<small>The squirrel jumps onto the nearest path and blocks robots. It's gone for good.</small></button>` : ""}
     <div class="row">
       ${choices ? "" : `<button class="go" id="p-up" ${price === null || G.leaves < price ? "disabled" : ""}>${price === null ? "Max" : "Upgrade " + price}</button>`}
@@ -4052,6 +4065,12 @@ function openPanel(t) {
   (choices || []).forEach((c, i) => ($("p-pick-" + i).onclick = () => doUpgrade(i)));
   if (aims) TARGET_MODES.forEach(([k]) => ($("p-aim-" + k).onclick = () => { t.target = k; Sound.play("place"); openPanel(t); }));
   if ($("p-wall")) $("p-wall").onclick = () => { buildNutWall(t, s.nutWall); p.hidden = true; G.sel = null; updateHud(); };
+  if ($("p-over")) $("p-over").onclick = () => {
+    const sl = slot(); if (!sl || !(sl.materials && sl.materials.battery > 0) || t.overWave >= G.wave + (G.waveActive ? 0 : 1)) return;
+    sl.materials.battery -= 1; saveSlots(slots);
+    t.overWave = G.waveActive ? G.wave : G.wave + 1;   // this wave (or the next one, if you're between waves)
+    Sound.play("upgrade"); burst(t.x * T + 16, t.y * T + 12, "#fff7a0", 16); floatText(t.x * T + 16, t.y * T - 6, "Overcharged!", "#fff7a0", 1.2); openPanel(t);
+  };
   if ($("p-ice")) $("p-ice").onclick = () => {
     if (G.leaves < ice.cost) return;
     G.leaves -= ice.cost; t.spent += ice.cost; t.ice = true; Sound.play("upgrade");
@@ -4062,6 +4081,16 @@ function openPanel(t) {
     G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t); updateShelf();
     Sound.play("sell"); p.hidden = true; G.sel = null; updateHud();
   };
+}
+
+// The Overcharge Battery button in a tower's panel (only for towers that attack, and only if you have a battery)
+function overchargeButton(t, s) {
+  const sl = slot(), n = (sl && sl.materials && sl.materials.battery) || 0;
+  if (!s.attacksPerSecond) return "";
+  const target = G.waveActive ? G.wave : G.wave + 1;
+  if (t.overWave && t.overWave >= target) return `<p class="s" style="color:#fff7a0">⚡ Overcharged for wave ${t.overWave}: twice as fast!</p>`;
+  if (!n) return "";
+  return `<button class="go wallbtn" id="p-over">⚡ Overcharge · ${n} batter${n === 1 ? "y" : "ies"} left<small>This tower attacks twice as fast for ${G.waveActive ? "the rest of this wave" : "the next wave"}.</small></button>`;
 }
 
 /* ---------- input ---------- */
@@ -4463,7 +4492,7 @@ function spawn(q) {
     type: q.type, aura, hp, maxHp: hp, speed: base.speed * d.robotSpeed, d: q.d || 0,
     flying: !!base.flying,
     path: q.path || (base.flying ? G.map.flights : G.map.paths)[(G.spawnN = (G.spawnN || 0) + 1) % G.map.paths.length],   // two factories take turns
-    leaves: Math.round(base.leaves * (A ? A.leaves : 1)), points: Math.round(base.points * (A ? A.points : 1)),
+    leaves: Math.round(base.leaves * (A ? A.leaves : 1) * (hasBlueprint() ? 1.1 : 1)), points: Math.round(base.points * (A ? A.points : 1)),
     slowT: 0, slowBy: 0, rootT: 0, burnT: 0, burnDps: 0, hideT: 0, dead: false, wob: Math.random() * 6, hitT: 0, fromMummy: !!q.fromMummy,
   });
 }
@@ -4724,7 +4753,10 @@ function landShot(sh) {
   if ((sh.kind === "fire" || sh.kind === "phoenix") && !sh.ice && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.ice) { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }   // the Ice Dragon's blast chills robots
   if (sh.kind === "water") { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }
-  if (sh.kind === "air" && !isHeavy(r)) r.knock = (r.knock || 0) + s.pushBack * T;   // slides back over a moment (Bosses are too heavy to push)
+  if (sh.kind === "air" && !isHeavy(r)) r.knock = (r.knock || 0) + s.pushBack * T;
+  if (sh.kind === "hacked" && !isHeavy(r) && !r.dead && Math.random() < (s.hackChance || 0)) {   // hacked! the robot walks backward for a moment
+    r.knock = (r.knock || 0) + (s.hackSquares || 1) * T; const q = rpos(r); floatText(q.x, q.y - 18, "Hacked!", "#4fd1b8", 0.8); burst(q.x, q.y, "#4fd1b8", 6);
+  }   // slides back over a moment (Bosses are too heavy to push)
   const p = rpos(r);
   burst(p.x, p.y, sh.ice ? "#bfe6fa" : sh.kind === "fire" || sh.kind === "phoenix" ? "#ff9a3c" : sh.kind === "water" ? "#7cc8ff" : sh.kind === "healer" ? "#ffd36b" : "#ffffff", sh.kind === "healer" ? 9 : 5);
 }
@@ -5741,6 +5773,10 @@ function draw() {
       x.closePath(); x.fill(); x.fillStyle = "#fff8d6"; x.fillRect(-1, -1, 2, 2); x.restore();
     }
     else if (sh.kind === "water") { x.fillStyle = "#3d8fe0"; x.fillRect(sh.x - 3, sh.y - 4, 6, 8); x.fillStyle = "#cfeeff"; x.fillRect(sh.x - 1, sh.y - 3, 2, 2); }
+    else if (sh.kind === "hacked") {   // a short teal laser bolt
+      const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
+      x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.fillStyle = "rgba(79,209,184,0.4)"; x.fillRect(-9, -3, 16, 6); x.fillStyle = "#9effe8"; x.fillRect(-8, -1.5, 14, 3); x.fillStyle = "#ffffff"; x.fillRect(-2, -0.5, 7, 1); x.restore();
+    }
     else if (sh.kind === "wolf") {   // three pale-blue claw slashes flying at the robot
       const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
       x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.lineCap = "round";

@@ -174,6 +174,18 @@ const SETTINGS = {
               ] },
     // The Wolf: unlock it in the Night Owl's shop. It hits like a Fire Dragon (without the burn, and it can't hit flying robots),
     // and packBonus = extra damage on every attack for each Wolf in the 8 squares around it.
+    // The Hacked Robot: from the Defector's shop. A reprogrammed Clanker with a laser.
+    // hackChance: the chance a zap hacks the robot (not a Boss) so it walks backward hackSquares squares.
+    hacked:   { name: "Hacked Robot", cost: 100, range: 2.6, damage: 13, attacksPerSecond: 1.6, hackChance: 0.2, hackSquares: 1.2, serpentUnlock: "hacked",
+              about: "Unlocked in the Defector's shop. Its laser zaps robots, even flying ones, and some zaps make a robot walk backward.",
+              upgradeChoices: [
+                [ { name: "Faster Chips",   about: "Zaps 30% faster.", speedTimes: 1.3 },
+                  { name: "Long Antenna",   about: "Reaches 0.6 squares farther.", rangePlus: 0.6 } ],
+                [ { name: "Laser Upgrade",  about: "Zaps do 50% more damage.", damageTimes: 1.5 },
+                  { name: "Computer Virus", about: "Hacks robots twice as often.", hackPlus: 0.2 } ],
+                [ { name: "Mega Laser",     about: "Zaps do double damage.", damageTimes: 2 },
+                  { name: "Robot Army",     about: "Zaps 2 robots at once.", targetsPlus: 1 } ],
+              ] },
     wolf:     { name: "Wolf", cost: 120, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, maxDamage: 250,   // maxDamage: a Wolf's hit is never more than this serpentUnlock: "wolf",
               about: "Unlocked in the Night Owl's shop. Hits like a Fire Dragon, and gets stronger next to other Wolves.",
               upgradeChoices: [
@@ -325,7 +337,10 @@ const SETTINGS = {
   // The Defector Robot: a robot who switched to nature's side. On the Enemies page, one robot card (this one) has a loose screw: tap it!
   defector: { card: "clanker", shelves: 3 },
   defectorShop: {
-    // Add items here, just like the Serpent's Shop.
+    // Stolen robot tech. "unlock" items are bought once; the battery can be bought again and again.
+    hacked: { name: "Hacked Robot", cost: 450, unlock: true, shelf: 1, picture: "hacked", about: "A Clanker the Defector reprogrammed to fight for nature! Its laser zaps robots (even flying ones), and some zaps hack a robot so it walks backward. Unlock it and it joins your towers in every level." },
+    blueprint: { name: "Factory Blueprint", cost: 350, unlock: true, shelf: 2, picture: "blueprint", about: "The robots' secret plans! Now you know where to hit them: every robot drops 10% more Maple Leaves, in every level, forever." },
+    battery: { name: "Overcharge Battery", cost: 60, shelf: 3, picture: "battery", about: "During a game, tap a tower and press Overcharge: it attacks twice as fast for a whole wave. Each battery works once, and you can buy as many as you like." },
   },
 
   // Leaderboard resets: a level's leaderboard only counts scores from after this time (UTC).
