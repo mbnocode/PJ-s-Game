@@ -335,14 +335,14 @@ const SETTINGS = {
     // Treasures from the bottom of the sea. "unlock" items are bought once; bottles can be bought again and again.
     shellarmor: { name: "Shell Armor", cost: 300, unlock: true, shelf: 1, picture: "shellarmor", about: "A big tough shell for your treehouse: +15 max health in every level, forever." },
     bottle: { name: "Message in a Bottle", cost: 40, shelf: 2, picture: "bottle", about: "Before a wave, tap the bottle button next to the board: it pops open with 150 Maple Leaves inside! Each bottle works once." },
-    clawsharpener: { name: "Crab Claw Sharpener", cost: 250, unlock: true, shelf: 3, picture: "crab", about: "Sharper claws for every Crab you build: Crabs do 25% more damage, forever." },
-    shells: { name: "Seashell Collection", cost: 100, unlock: true, shelf: 4, picture: "seashell", about: "Seashells start washing up on the Beach between waves: tap them to collect them! Find all 5 kinds and trade the set back to me for 250 Golden Acorns." },
+    clawsharpener: { name: "Crab Claw Sharpener", cost: 250, unlock: true, shelf: 3, picture: "crab", about: "Sharper claws for every Crab you build: Crabs do 50% more damage, forever." },
+    shells: { name: "Seashell Collection", cost: 800, unlock: true, shelf: 4, picture: "seashell", about: "Seashells start washing up on the Beach between waves: tap them to collect them! Find all 5 kinds and trade the set back to me for 250 Golden Acorns." },
   },
   // Seashell Collection: on these levels, between waves, a shell washes up this often (and stays this many seconds).
   seashells: { levels: ["beach"], chance: 0.6, staySeconds: 14, setPrize: 250, kinds: ["Scallop", "Conch", "Spiral Shell", "Clam", "Sand Dollar"] },
   bottleLeaves: 150,          // Maple Leaves in a Message in a Bottle
   shellArmorHealth: 15,       // extra max health from Shell Armor
-  clawSharpenerTimes: 1.25,   // Crab damage with the Crab Claw Sharpener
+  clawSharpenerTimes: 1.5,    // Crab damage with the Crab Claw Sharpener (1.5 = 50% more)
   // The Defector Robot: a robot who switched to nature's side. On the Enemies page, one robot card (this one) has a loose screw: tap it!
   defector: { card: "clanker", shelves: 3 },
   defectorShop: {
