@@ -346,7 +346,7 @@ const SETTINGS = {
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 4 },   // chance = how often the bump shows up in each break between waves
   hermitCrabShop: {
     // Treasures from the bottom of the sea. "unlock" items are bought once; bottles can be bought again and again.
-    shellarmor: { name: "Shell Armor", cost: 300, unlock: true, shelf: 1, picture: "shellarmor", about: "A big tough shell for your treehouse: +15 max health in every level, forever." },
+    shellarmor: { name: "Shell Armor", cost: 1000, unlock: true, shelf: 1, picture: "shellarmor", about: "A big tough shell for your treehouse: +15 max health in every level, forever." },
     bottle: { name: "Message in a Bottle", cost: 40, shelf: 2, picture: "bottle", about: "Before a wave, tap the bottle button next to the board: it pops open with 150 Maple Leaves inside! Each bottle works once." },
     clawsharpener: { name: "Crab Claw Sharpener", cost: 250, unlock: true, shelf: 3, picture: "crab", about: "Sharper claws for every Crab you build: Crabs do 50% more damage, forever." },
     shells: { name: "Seashell Collection", cost: 800, unlock: true, shelf: 4, picture: "seashell", about: "Seashells start washing up on the Beach between waves: tap them to collect them! Find all 5 kinds and trade the set back to me for 250 Golden Acorns." },
