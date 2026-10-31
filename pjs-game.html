@@ -388,9 +388,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .soundcol { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .hud { position: relative; }
 /* Golden Acorns sit in the top middle of the screen */
-.hud-acorns { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 22px;
+.hud-acorns { position: static; transform: none; font-size: 22px; margin-right: 4px;
   background: rgba(0, 0, 0, .25); border: 2px solid rgba(255, 211, 77, .35); border-radius: 20px; padding: 2px 12px 2px 8px; pointer-events: none; }
-@media (max-width: 900px) { .hud-acorns { position: static; transform: none; font-size: 18px; } }
+@media (max-width: 900px) { .hud-acorns { font-size: 18px; } }
 .hud-acorns.bump { animation: acorn-bump .5s; }
 @keyframes acorn-bump { 40% { transform: translate(-50%, -50%) scale(1.35); } }
 @media (max-width: 900px) { @keyframes acorn-bump { 40% { transform: scale(1.35); } } }
@@ -731,13 +731,13 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="stat" title="Time played (real time, even at 2x or 3x speed)"><span class="lbl">Time</span><span id="tnum">0:00</span></div>
       <span class="chip" id="code-chip" hidden></span>
       <div class="spacer"></div>
+      <span class="acorns hud-acorns" id="hud-acorns" title="Golden Acorns in this save slot">0</span>
       <button class="go" id="b-wave">Start Wave</button>
       <button id="b-speed" title="Game speed">1×</button>
       <button id="b-pause">Pause</button>
       <div class="soundcol">
         <button id="b-sound" title="Sound">Sound on</button>
       </div>
-      <span class="acorns hud-acorns" id="hud-acorns" title="Golden Acorns in this save slot">0</span>
     </div>
     <div id="stage">
       <canvas id="board" width="640" height="384"></canvas>
