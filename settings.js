@@ -746,9 +746,10 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Watch out for the Universe Golem! Scores are worth 2.25x.", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! 35 waves are ready (more coming soon), and the last 10 are harder than Blizzard Peak! Watch out for the Universe Golem! Scores are worth 2.25x.", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
+              lateToughness: { fromWave: 25, perWave: 0.08 },   // after wave 25, robots get 8% tougher every wave (wave 35 = 1.8x)
               // The road loops around twice and crosses itself, like an infinity sign. Both halves are mirror images.
               path: [[0, 9], [8, 9], [8, 1], [2, 1], [2, 5], [17, 5], [17, 1], [11, 1], [11, 9], [19, 9]],
               // Trees are star crystals, mushrooms are moon rocks, tall grass is little glowing crystals.
@@ -781,7 +782,18 @@ const SETTINGS = {
                 [["glaciergolem", 1, 0], ["sandboss", 1, 0], [["penguin", "walker", "repair"], 14, 0.6]],   // 22
                 [["universegolem", 1, 0], [["obsidian", "crawler", "drone", "snowball", "hider", "mummy"], 22, 0.45]],   // 23: the Universe Golem!
                 [["pillartitan", 1, 0], ["yetimech", 1, 0], [["emberbat", "diver", "tesla", "snowplow"], 20, 0.5]],   // 24
-                [["boss", 1, 0, 4000], ["magmaking", 1, 0], ["universegolem", 1, 0], [["tank", "obsidian", "fireproof", "splitter", "snowdrone", "crawler"], 30, 0.45]],   // 25: the big finish
+                [["boss", 1, 0, 4000], ["magmaking", 1, 0], ["universegolem", 1, 0], [["tank", "obsidian", "fireproof", "splitter", "snowdrone", "crawler"], 30, 0.45]],   // 25
+                // Waves 26-35: harder than Blizzard Peak! (robots also get tougher every wave from here: see lateToughness)
+                [["universegolem", 1, 0], [["obsidian", "fireproof", "tank", "snowplow"], 26, 0.45]],   // 26
+                [[["emberbat", "snowdrone", "drone"], 24, 0.3], [["hider", "tesla"], 10, 0.6]],          // 27: a sky full of flyers
+                [["yetimech", 2, 8], ["pillartitan", 1, 0], [["mummy", "splitter", "repair"], 22, 0.45]],   // 28
+                [[["tank", "obsidian", "diver", "snowplow", "hider", "crawler", "tesla", "mummy"], 34, 0.38]],   // 29
+                [["universegolem", 2, 10], ["sandboss", 1, 0], [["crawler", "diver", "snowball"], 24, 0.45]],   // 30
+                [["magmaking", 2, 8], [["tank", "obsidian", "fireproof", "snowplow", "tesla"], 30, 0.4]],   // 31
+                [["boss", 1, 0, 6000], ["glaciergolem", 2, 8], [["emberbat", "snowdrone", "hider"], 24, 0.35]],   // 32
+                [[["scout", "penguin", "snowball", "emberbat", "drone"], 45, 0.25]],                     // 33: a speedy swarm
+                [["universegolem", 2, 9], ["yetimech", 2, 9], ["pillartitan", 1, 0], [["fireproof", "diver", "repair", "splitter"], 30, 0.4]],   // 34
+                [["universegolem", 3, 9], ["boss", 1, 0, 8000], ["magmaking", 1, 0], ["glaciergolem", 2, 8], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider", "mummy"], 44, 0.33]],   // 35: the big finish
               ] },
   },
 };
