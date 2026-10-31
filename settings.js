@@ -274,7 +274,6 @@ const SETTINGS = {
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
   comingSoon: [
-    { name: "Infinity", look: "infinity", about: "The waves never stop. Every wave is tougher than the last. How long can you survive?" },
   ],
 
   // ---------------- THE SERPENT'S SHOP ----------------
@@ -743,6 +742,43 @@ const SETTINGS = {
                 [["yetimech", 1, 0], ["boss", 1, 0, 4500], [["snowplow", "snowball", "snowdrone", "penguin", "tesla"], 30, 0.42]],   // 23
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
+              ] },
+    infinity: { name: "Infinity", acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Scores are worth 2.25x.", theme: "infinity",
+              robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
+              scoreTimes: 2.25,
+              // The road loops around twice and crosses itself, like an infinity sign.
+              path: [[0, 9], [9, 9], [9, 1], [2, 1], [2, 5], [17, 5], [17, 1], [12, 1], [12, 9], [19, 9]],
+              // Trees are star crystals, mushrooms are moon rocks, tall grass is little glowing crystals.
+              trees:     [[5, 3], [14, 3], [5, 8], [14, 7], [19, 4], [11, 11]],
+              mushrooms: [[7, 7], [15, 7], [0, 3], [19, 11]],
+              tallGrass: [[4, 10], [11, 3], [16, 11], [7, 3], [19, 0]],
+              // Infinity's first 25 waves: robots from every world.
+              waves: [
+                [["clanker", 8, 1.2], ["walker", 3, 1.4]],                              // 1
+                [["scout", 8, 0.8], ["penguin", 4, 1.0]],                               // 2
+                [[["walker", "magmasmall", "snowball"], 11, 1.0]],                       // 3
+                [["hider", 4, 1.5], ["repair", 1, 0], ["walker", 7, 1.0]],              // 4
+                [["drone", 4, 1.2], ["obsidian", 3, 2.0], ["clanker", 7, 0.8]],         // 5
+                [["tank", 3, 2.0], ["tesla", 1, 0], [["scout", "penguin"], 8, 0.7]],    // 6
+                [["mummy", 6, 1.4], ["diver", 4, 1.5]],                                 // 7
+                [["splitter", 4, 1.6], ["emberbat", 7, 0.5], ["snowplow", 3, 1.5]],     // 8
+                [[["crawler", "hider", "snowball", "walker"], 17, 0.8]],                // 9
+                [["boss", 1, 0, 1200], [["scout", "drone", "penguin"], 11, 0.8]],        // 10: a Boss
+                [[["fireproof", "obsidian", "tank"], 14, 1.0]],                         // 11
+                [["snowdrone", 6, 1.0], [["mummy", "splitter", "repair"], 13, 0.9]],     // 12
+                [["sandboss", 1, 0], [["walker", "magmasmall", "penguin"], 10, 0.7]],   // 13: the Sand Golem
+                [[["tesla", "tank", "diver", "snowplow"], 14, 0.8]],                    // 14
+                [["emberbat", 10, 0.35], [["hider", "crawler"], 8, 0.9]],               // 15
+                [["pillartitan", 1, 0], [["obsidian", "mummy", "snowball"], 12, 0.8]],  // 16: the Pillar Titan
+                [[["splitter", "fireproof", "drone", "penguin", "repair"], 18, 0.6]],   // 17
+                [["yetimech", 1, 0, 2000], [["tank", "diver"], 10, 0.8]],               // 18: a Yeti Mech
+                [[["crawler", "snowplow", "hider", "emberbat", "mummy"], 20, 0.55]],    // 19
+                [["magmaking", 1, 0], [["obsidian", "tesla", "scout"], 14, 0.65]],      // 20: the Magma Cube King
+                [[["tank", "fireproof", "snowdrone", "splitter", "diver"], 22, 0.5]],   // 21
+                [["glaciergolem", 1, 0], ["sandboss", 1, 0], [["penguin", "walker", "repair"], 14, 0.6]],   // 22
+                [[["obsidian", "crawler", "drone", "snowball", "hider", "mummy"], 26, 0.45]],   // 23
+                [["pillartitan", 1, 0], ["yetimech", 1, 0], [["emberbat", "diver", "tesla", "snowplow"], 20, 0.5]],   // 24
+                [["boss", 1, 0, 4000], ["magmaking", 1, 0], ["glaciergolem", 1, 0], [["tank", "obsidian", "fireproof", "splitter", "snowdrone", "crawler"], 30, 0.45]],   // 25: the big finish
               ] },
   },
 };
