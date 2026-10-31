@@ -823,7 +823,7 @@ const SETTINGS = {
                 [["universegolem", 3, 9, null, 3], ["pillartitan", 2, 8], [["snowdrone", "drone", "hider", "tesla"], 28, 0.35]],   // 42
                 [["universegolem", 4, 9, null, 3], ["yetimech", 2, 9], [["tank", "snowplow", "obsidian", "mummy", "diver"], 32, 0.35]],   // 43
                 [["universegolem", 5, 8, null, 3], ["boss", 1, 0, 10000], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider"], 40, 0.3]],   // 44
-                [["universetitan", 1, 0]],                                              // 45: the Universe Titan (75,000 health)
+                [["universetitan", 1, 0, null, 3]],                                     // 45: the Universe Titan (75,000 health), always glowing orange
               ] },
     // ---- The Sky Islands ----
     // islands: [square across, square down, width, height] of each floating island. Everything else is open sky:
