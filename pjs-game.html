@@ -2096,6 +2096,7 @@ function renderSlots() {
 }
 
 function unlocked(L) {
+  if (SETTINGS.levels[L] && SETTINGS.levels[L].alwaysOpen) return true;   // (Infinity is always open)
   const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
   const prev = slot().best[LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);
 }

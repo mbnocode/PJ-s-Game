@@ -743,7 +743,7 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Scores are worth 2.25x.", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! The first 25 waves are ready (more coming soon). Scores are worth 2.25x.", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
               // The road loops around twice and crosses itself, like an infinity sign. Both halves are mirror images.
