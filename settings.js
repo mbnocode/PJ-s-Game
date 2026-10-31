@@ -749,7 +749,7 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "A starry road that loops like an infinity sign, floating in space. Robots from every world march here! 45 waves! Waves 26-35 are harder than Blizzard Peak, then come the orange Universe Golems and the Universe Titan. Watch out for the Universe Golem! Scores are worth 2.25x.", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "The road loops forever through space. Can you survive all 45 waves?", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
               lateToughness: { fromWave: 25, perWave: 0.08, untilWave: 35 },   // robots get 8% tougher every wave from wave 26 to 35 (1.8x), then stay that tough
