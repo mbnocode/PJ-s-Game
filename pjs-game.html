@@ -85,6 +85,8 @@ button.go:hover { background: #f58b42; }
 #s-levels #b-join { --btn: #4a9ae0; --btn-dark: #1f5fa8; --btn-ink: #f4faff; }   /* Join a friend's challenge: blue */
 #s-levels #b-boards { --btn: #3fc4a8; --btn-dark: #1f7a68; }         /* Leaderboards: teal */
 button.big { font-size: 26px; padding: 14px 34px; }
+button.back { font-size: 19px; padding: 12px 28px; min-height: 52px; margin-top: 6px; }   /* the Back buttons on every page */
+@media (max-width: 560px) { button.back { width: 100%; max-width: 340px; } }
 button.link { background: none; border: none; box-shadow: none; color: var(--muted); font-family: var(--body); font-weight: 400; font-size: 15px; text-decoration: underline; padding: 6px; }
 
 .lineup { display: flex; align-items: flex-end; gap: clamp(4px, 2vw, 16px); }
@@ -526,7 +528,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="setrow"><span>Floating numbers<small>Damage, leaves and other numbers that pop up over the board</small></span><div class="choices" id="set-floats"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     </div>
     <button id="b-settings-reset">Reset to normal</button>
-    <button class="link" id="b-settings-back">Back</button>
+    <button class="back" id="b-settings-back">←&nbsp; Back</button>
   </section>
 
   <!-- Save slots -->
@@ -537,7 +539,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="cards" id="slot-cards"></div>
     </div>
     <button id="b-serpent" aria-label="Something is hiding behind the tree…" title="Something is hiding behind the tree…" hidden></button>
-    <button class="link" id="b-slots-back">Back</button>
+    <button class="back" id="b-slots-back">←&nbsp; Back</button>
   </section>
 
   <!-- Levels -->
@@ -545,7 +547,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Pick a level</h2>
     <div class="cards" id="level-cards"></div>
     <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
-    <button class="link" id="b-levels-back">Back to save slots</button>
+    <button class="back" id="b-levels-back">←&nbsp; Back to save slots</button>
   </section>
 
   <!-- Setup -->
@@ -578,7 +580,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="err" id="setup-err" hidden></p>
     <button class="go big" id="b-resume" hidden>Resume game</button>
     <button class="go big" id="b-start">Start</button>
-    <button class="link" id="b-setup-back">Back to levels</button>
+    <button class="back" id="b-setup-back">←&nbsp; Back to levels</button>
   </section>
 
   <!-- Permanent upgrades for this save slot -->
@@ -590,7 +592,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="gift"><label class="field" for="gift-code">Have a gift code?<small>Each code works once per save slot.</small>
       <input id="gift-code" maxlength="20" autocomplete="off" spellcheck="false" placeholder="Type the code"></label>
       <button class="go" id="b-gift">Use code</button><p class="muted" id="gift-msg" hidden></p></div>
-    <button class="link" id="b-perks-back">Back to levels</button>
+    <button class="back" id="b-perks-back">←&nbsp; Back to levels</button>
   </section>
 
   <div class="achtoast" id="achtoast" hidden></div>
@@ -633,7 +635,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="muted">Earn achievements to fill the boxes. Tap a ? box to see what to do. More are coming soon!</p>
     <div class="ach-grid" id="ach-grid"></div>
     <p class="ach-hint" id="ach-hint" hidden></p>
-    <button class="link" id="b-achievements-back">Back to levels</button>
+    <button class="back" id="b-achievements-back">←&nbsp; Back to levels</button>
   </section>
 
   <!-- The Serpent's Shop: a secret shop reached by tapping the serpent on the save slot screen -->
@@ -643,7 +645,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="muted" id="def-say"></p>
     <div class="acorns" id="def-acorns-row"><span id="def-acorns">0</span> Golden Acorns</div>
     <div class="perks" id="def-shop"></div>
-    <button class="link" id="b-defector-back">Back to Enemies</button>
+    <button class="back" id="b-defector-back">←&nbsp; Back to Enemies</button>
   </section>
 
   <section class="screen menu" id="s-owl" hidden>
@@ -653,7 +655,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="choices" id="owl-slots"></div>
     <div class="acorns" id="owl-acorns-row"><span id="owl-acorns">0</span> Golden Acorns</div>
     <div class="perks" id="owl-shop"></div>
-    <button class="link" id="b-owl-back">Back to the title screen</button>
+    <button class="back" id="b-owl-back">←&nbsp; Back to the title screen</button>
   </section>
 
   <section class="screen menu" id="s-serpent" hidden>
@@ -663,7 +665,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="choices" id="serp-slots"></div>
     <div class="acorns" id="serp-acorns-row"><span id="serp-acorns">0</span> Golden Acorns</div>
     <div class="perks" id="serp-shop"></div>
-    <button class="link" id="b-serpent-back">Back to save slots</button>
+    <button class="back" id="b-serpent-back">←&nbsp; Back to save slots</button>
   </section>
 
   <!-- Towers: what each tower does and its starting statistics (per save slot) -->
@@ -671,7 +673,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Towers</h2>
     <p class="muted" id="tower-perks">Every tower's starting statistics, before upgrades. Bars compare the towers with each other.</p>
     <div class="foes" id="tower-list"></div>
-    <button class="link" id="b-towers-back">Back to levels</button>
+    <button class="back" id="b-towers-back">←&nbsp; Back to levels</button>
   </section>
 
   <!-- Enemies: the robots and their statistics (per save slot) -->
@@ -679,7 +681,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Enemies</h2>
     <p class="muted">Know your robots. Bars compare each robot to the others. "Defeated" counts every robot you've destroyed in this save slot.</p>
     <div class="foes" id="foe-list"></div>
-    <button class="link" id="b-enemies-back">Back to levels</button>
+    <button class="back" id="b-enemies-back">←&nbsp; Back to levels</button>
   </section>
 
   <!-- Join a challenge -->
@@ -690,7 +692,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <label class="field" for="join-nick">Your nickname<input id="join-nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ"></label>
     <p class="err" id="join-err" hidden></p>
     <button class="go big" id="b-join-go">Join</button>
-    <button class="link" id="b-join-back">Back to levels</button>
+    <button class="back" id="b-join-back">←&nbsp; Back to levels</button>
   </section>
 
   <!-- Challenge lobby -->
@@ -719,7 +721,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <label class="field" for="board-code">See a challenge<input id="board-code" class="code" maxlength="12" autocomplete="off" spellcheck="false" placeholder="LEAF-42"></label>
       <button id="b-board-code">Show</button>
     </div>
-    <button class="link" id="b-boards-back">Back to levels</button>
+    <button class="back" id="b-boards-back">←&nbsp; Back to levels</button>
   </section>
 
   <!-- Game -->
