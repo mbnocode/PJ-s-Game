@@ -2486,6 +2486,63 @@ function drawVolcano(x, R) {
   for (const [a, w] of [[cx - 34, 18], [cx + 44, 16]]) { x.fillStyle = "rgba(255,110,30,0.35)"; x.beginPath(); x.ellipse(a, base + 2, w + 6, 6, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, base + 2, w, 3.5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - w * 0.4, base + 1, w * 0.8, 1.5);
     for (let k = 0; k < 3; k++) { x.fillStyle = `rgba(220,210,215,${0.22 - k * 0.06})`; x.beginPath(); x.arc(a + k * 4, base - 6 - k * 9, 4 + k * 3, 0, Math.PI * 2); x.fill(); } }
 }
+// The snowy mountain range: far-off peaks fading into the haze, then big craggy peaks with sunlit and shady sides,
+// jagged snow caps, rocky ridges and cliffs, all rising out of misty snowy foothills so they melt into the snowfield.
+function drawMountains(x, R) {
+  const peak = (a, footY, w, h, seed, far) => {   // one mountain: a jagged outline from the left foot, up to the top, down to the right foot
+    let sd = seed; const Rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const left = [], right = [], N = 9;
+    for (let k = 0; k <= N; k++) { const t = k / N, y = footY - h * t, j = k && k < N ? (Rn() - 0.5) * w * 0.12 : 0, bump = k && k < N ? (Rn() - 0.3) * h * 0.04 : 0;
+      left.push([a - w * (1 - t) * (1 - 0.18 * Math.sin(t * Math.PI)) + j, y + bump]); }
+    for (let k = N - 1; k >= 0; k--) { const t = k / N, y = footY - h * t, j = k ? (Rn() - 0.5) * w * 0.12 : 0, bump = k ? (Rn() - 0.3) * h * 0.04 : 0;
+      right.push([a + w * (1 - t) * (1 - 0.12 * Math.sin(t * Math.PI)) + j, y + bump]); }
+    const outline = [...left, ...right], p = new Path2D(); outline.forEach(([u, v], k) => (k ? p.lineTo(u, v) : p.moveTo(u, v))); p.closePath();
+    const top = [a, footY - h];
+    // the shady side (right), then the sunlit side (left, the sun is over the grass world)
+    x.fillStyle = far ? far[1] : (() => { const g = x.createLinearGradient(0, footY - h, 0, footY); g.addColorStop(0, "#6e7c98"); g.addColorStop(1, "#4e5a74"); return g; })(); x.fill(p);
+    x.save(); x.clip(p);
+    const lit = new Path2D(); lit.moveTo(left[0][0], footY + 2); left.forEach(([u, v]) => lit.lineTo(u, v));
+    let zx = top[0], zy = top[1]; for (let k = 1; k <= 8; k++) { zy = top[1] + (footY - top[1]) * k / 8; zx = top[0] + Math.sin(k * 1.9 + seed) * w * 0.07 - w * 0.04 * k / 8; lit.lineTo(zx, zy); }   // the crooked ridge line down the middle
+    lit.lineTo(zx, footY + 2); lit.closePath();
+    x.fillStyle = far ? far[0] : (() => { const g = x.createLinearGradient(a - w, 0, a, 0); g.addColorStop(0, "#9aa8c0"); g.addColorStop(1, "#b8c4d8"); return g; })(); x.fill(lit);
+    if (!far) {
+      for (let k = 0; k < 7; k++) {   // rocky ridges and gullies running down the faces
+        const sideL = k % 2 === 0, f = 0.15 + Rn() * 0.7, sx = top[0] + (sideL ? -1 : 1) * w * f * 0.25, sy = top[1] + h * (0.2 + f * 0.25);
+        x.strokeStyle = sideL ? "rgba(70,82,110,0.45)" : "rgba(30,38,58,0.45)"; x.lineWidth = 1.3; x.beginPath(); x.moveTo(sx, sy);
+        x.lineTo(sx + (sideL ? -1 : 1) * w * 0.12, sy + h * 0.25); x.lineTo(sx + (sideL ? -1 : 1) * w * (0.2 + Rn() * 0.15), footY); x.stroke();
+      }
+      for (let n = 0; n < h * 1.4; n++) { const u = a + (Rn() - 0.5) * w * 1.6, v = top[1] + Rn() * h; x.fillStyle = Rn() < 0.5 ? "rgba(40,48,70,0.35)" : "rgba(230,236,248,0.3)"; x.fillRect(u, v, 1.3, 1.3); }   // rough rock
+      for (let n = 0; n < 2; n++) { const u = a + (Rn() - 0.5) * w * 0.7, v = top[1] + h * (0.5 + Rn() * 0.25); x.fillStyle = "rgba(40,46,66,0.35)"; x.beginPath(); x.moveTo(u, v); x.lineTo(u + 9, v + 3); x.lineTo(u + 3, v + 12); x.lineTo(u - 2, v + 6); x.fill(); }   // shadowy cliff faces
+    }
+    // the snow cap: a jagged lower edge with long streaks of snow running down the gullies
+    const capY = top[1] + h * (far ? 0.42 : 0.4), cap = new Path2D(); cap.moveTo(a - w * 1.2, top[1] - 5); cap.lineTo(a + w * 1.2, top[1] - 5); cap.lineTo(a + w * 1.2, capY);
+    for (let k = 12; k >= 0; k--) { const u = a - w * 1.2 + (k / 12) * w * 2.4, drip = (k % 2 ? 0.12 : 0) + (k % 3 === 0 ? 0.2 : 0) + Rn() * 0.08; cap.lineTo(u, capY + h * drip); cap.lineTo(u - w * 0.08, capY + h * 0.02); }
+    cap.closePath(); x.save(); x.clip(cap);
+    x.fillStyle = far ? "rgba(240,244,252,0.85)" : "#dfe8f6"; x.fill(p);
+    x.fillStyle = far ? "rgba(255,255,255,0.9)" : "#ffffff"; x.fill(lit);   // bright on the sunny side, soft blue in the shade
+    x.restore();
+    if (!far) { x.strokeStyle = "rgba(255,255,255,0.7)"; x.lineWidth = 1; x.beginPath(); x.moveTo(left[left.length - 3][0], left[left.length - 3][1]); left.slice(-3).forEach(([u, v]) => x.lineTo(u, v)); x.stroke(); }   // a bright edge where the sun hits
+    x.restore();
+    if (!far) for (let n = 0; n < 2; n++) { x.fillStyle = "rgba(255,255,255,0.55)"; x.beginPath(); x.ellipse(top[0] + 10 + n * 8, top[1] + 3 + n * 4, 9 - n * 3, 2, -0.3, 0, Math.PI * 2); x.fill(); }   // snow blowing off the top
+  };
+  // far-away peaks: pale and bluish, fading into the sky
+  for (const [a, w, h, sd] of [[620, 40, 125, 11], [668, 46, 150, 23], [735, 52, 170, 37], [820, 60, 215, 41], [860, 46, 160, 53]]) peak(a, 290, w, h, sd, ["rgba(196,206,226,0.92)", "rgba(170,182,208,0.92)"]);
+  const haze = x.createLinearGradient(0, 120, 0, 260); haze.addColorStop(0, "rgba(200,210,235,0)"); haze.addColorStop(1, "rgba(225,232,246,0.6)"); x.fillStyle = haze; x.fillRect(600, 120, 280, 140);
+  // the big peaks
+  peak(650, 292, 46, 110, 101); peak(700, 286, 66, 154, 202); peak(778, 286, 80, 212, 303);   // (their feet go down under the foothills)   // the tallest one is Blizzard Peak
+  // misty snowy foothills in front, so the mountains rise out of the snowfield instead of sitting on it
+  const hillTop = (u) => 238 + Math.sin(u / 23) * 6 + Math.sin(u / 9) * 2 + Math.max(0, (u - 800) * 0.9);   // (slopes away on the right, into the clouds)
+  const hill = new Path2D(); hill.moveTo(604, 322); for (let u = 604; u <= 816; u += 4) hill.lineTo(u, hillTop(u)); hill.lineTo(816, 322); hill.closePath();
+  let g = x.createLinearGradient(0, 230, 0, 322); g.addColorStop(0, "rgba(248,251,255,1)"); g.addColorStop(0.8, "rgba(244,248,253,1)"); g.addColorStop(1, "rgba(240,245,252,0)"); x.fillStyle = g; x.fill(hill);   // fades into the snowfield below
+  x.strokeStyle = "rgba(170,190,220,0.6)"; x.lineWidth = 1.5; x.beginPath(); for (let u = 604; u <= 800; u += 4) u === 604 ? x.moveTo(u, hillTop(u)) : x.lineTo(u, hillTop(u)); x.stroke();
+  for (let n = 0; n < 7; n++) { const u = 615 + R() * 190, v = 250 + R() * 30; x.strokeStyle = "rgba(150,175,215,0.45)"; x.lineWidth = 1; x.beginPath(); x.moveTo(u, v); x.quadraticCurveTo(u + 12, v - 5, u + 26, v); x.stroke(); }   // drift lines
+  g = x.createLinearGradient(0, 205, 0, 250); g.addColorStop(0, "rgba(235,240,250,0)"); g.addColorStop(1, "rgba(235,240,250,0.5)"); x.fillStyle = g; x.fillRect(606, 205, 200, 45);   // low mist around the mountains' feet
+  // on the right, the range fades away into the storm clouds of the sky world
+  { const fc = document.createElement("canvas"); fc.width = 88; fc.height = 340; const f = fc.getContext("2d");   // (soft on every edge, so there's no line where the fade starts)
+    g = f.createLinearGradient(0, 0, 58, 0); g.addColorStop(0, "rgba(120,118,160,0)"); g.addColorStop(0.6, "rgba(104,100,148,0.85)"); g.addColorStop(1, "rgba(98,94,140,0.97)"); f.fillStyle = g; f.fillRect(0, 0, 88, 340);
+    f.globalCompositeOperation = "destination-in"; g = f.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,1)"); f.fillStyle = g; f.fillRect(0, 0, 88, 340);
+    x.drawImage(fc, 792, 110); }
+}
 function drawWorldMap() {
   const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
   const x = c.getContext("2d"), W = 1000, H = 450; x.scale(2, 2);   // drawn at double detail so it stays sharp on a big screen
@@ -2583,13 +2640,7 @@ function drawWorldMap() {
   drawVolcano(x, R);   // the erupting volcano (Inside the Volcano)
   for (const [a, b] of [[455, 395], [500, 335], [548, 415]]) { x.fillStyle = "rgba(255,120,40,0.3)"; x.beginPath(); x.ellipse(a, b, 22, 8, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, b, 15, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - 5, b - 1, 10, 2); }
   // snow world: shaded mountains with snow caps, a glacier cave, a frozen lake and sparkles
-  const mtn = (a, b, w, h) => { x.fillStyle = "#a8b4c8"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a, b - h); x.lineTo(a + w, b); x.fill();
-    x.fillStyle = "#7c88a0"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w, b); x.lineTo(a + w * 0.15, b); x.fill();
-    x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(a - w * 0.35, b - h * 0.62); x.lineTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.lineTo(a - w * 0.16, b - h * 0.55); x.fill();
-    x.fillStyle = "#dfe8f6"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.fill();
-    x.strokeStyle = "rgba(70,80,100,0.35)"; x.lineWidth = 1; for (let k = 1; k <= 3; k++) { x.beginPath(); x.moveTo(a - w * 0.1 * k, b - h * (0.6 - k * 0.04)); x.lineTo(a - w * 0.25 * k, b - h * 0.2); x.lineTo(a - w * 0.3 * k, b); x.stroke(); }   // rocky ridges
-    x.fillStyle = "rgba(255,255,255,0.75)"; for (let k = 0; k < 4; k++) { const t = 0.35 + k * 0.12; x.beginPath(); x.moveTo(a - w * (1 - t) * 0.8, b - h * t); x.lineTo(a - w * (1 - t) * 0.65, b - h * t + 2); x.lineTo(a - w * (1 - t) * 0.72, b - h * (t - 0.1)); x.fill(); } };   // snow streaks
-  mtn(648, 252, 42, 74); mtn(700, 242, 62, 118); mtn(778, 218, 74, 160);
+  drawMountains(x, R);   // the snowy mountain range (Blizzard Peak is the tallest)
   x.fillStyle = "#3f86bb"; x.beginPath(); x.ellipse(712, 238, 16, 12, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#1a3a5a"; x.beginPath(); x.ellipse(712, 238, 10, 8, 0, Math.PI, Math.PI * 2); x.fill();   // the glacier cave
   for (let k = 0; k < 5; k++) { x.fillStyle = "#bfe6fa"; x.fillRect(700 + k * 6, 226, 2, 4 + (k % 2) * 3); }
   x.fillStyle = lin(0, 380, 0, 420, [[0, "#bfe0f6"], [1, "#8ec6e8"]]); x.beginPath(); x.ellipse(690, 405, 48, 16, 0, 0, Math.PI * 2); x.fill();   // the frozen lake
