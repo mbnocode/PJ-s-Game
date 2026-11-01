@@ -3043,6 +3043,47 @@ function drawBridges(x, map) {
     else { x.fillRect(X + 4, Y, 2, T); x.fillRect(X + 26, Y, 2, T); x.fillStyle = "#5e3a1a"; x.fillRect(X + 2, Y + 1, 6, 3); x.fillRect(X + 24, Y + 1, 6, 3); }
   }
 }
+// The Owl's gust: a spinning swirl of wind with a fading tail, and a little feather caught in it
+function drawGust(x, sh) {
+  const tr = sh.trail || (sh.trail = []); if (!tr.length || tr[tr.length - 1][0] !== sh.x || tr[tr.length - 1][1] !== sh.y) tr.push([sh.x, sh.y]); if (tr.length > 7) tr.shift();
+  const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1), big = (sh.s.targets || 1) > 1 ? 0.85 : 1;
+  x.save(); x.lineCap = "round";
+  for (let i = 1; i < tr.length; i++) {   // the wind's wake
+    const k = i / tr.length; x.strokeStyle = `rgba(220,240,255,${0.45 * k})`; x.lineWidth = 2 + 6 * k * big;
+    x.beginPath(); x.moveTo(tr[i - 1][0], tr[i - 1][1]); x.lineTo(tr[i][0], tr[i][1]); x.stroke();
+  }
+  x.translate(sh.x, sh.y); x.rotate(a);
+  const spin = G.time * 16;
+  for (let j = 0; j < 3; j++) {   // three curling wind crescents spinning around the middle
+    x.strokeStyle = j === 1 ? "rgba(160,215,255,0.9)" : "rgba(255,255,255,0.95)"; x.lineWidth = j === 1 ? 2 : 2.5;
+    x.beginPath(); x.arc(0, 0, (5 + j * 2.5) * big, spin + j * 2.1, spin + j * 2.1 + 2.4); x.stroke();
+  }
+  x.fillStyle = "rgba(235,248,255,0.55)"; x.beginPath(); x.arc(0, 0, 3.2 * big, 0, Math.PI * 2); x.fill();
+  x.rotate(spin * 0.5); x.fillStyle = "#c9a27a"; x.beginPath(); x.ellipse(7 * big, 0, 3.2, 1.2, 0.4, 0, Math.PI * 2); x.fill();   // a little owl feather tumbling along
+  x.fillStyle = "#f4e2c0"; x.fillRect(5 * big, -0.4, 4, 0.8);
+  x.restore();
+}
+// The Night Owl's feather: a dark violet feather leaving a trail of glowing moon-sparkles
+function drawNightFeather(x, sh) {
+  const tr = sh.trail || (sh.trail = []); if (!tr.length || tr[tr.length - 1][0] !== sh.x || tr[tr.length - 1][1] !== sh.y) tr.push([sh.x, sh.y]); if (tr.length > 12) tr.shift();
+  const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
+  x.save();
+  for (let i = 0; i < tr.length - 1; i++) {   // the sparkly trail
+    const k = (i + 1) / tr.length, [px, py] = tr[i];
+    x.fillStyle = `rgba(150,110,255,${0.5 * k})`; x.beginPath(); x.arc(px, py, 1.5 + 5 * k, 0, Math.PI * 2); x.fill();
+    if (i % 2 === 0) { x.fillStyle = `rgba(255,240,180,${0.8 * k})`; x.fillRect(px + Math.sin(i * 7.1 + G.time * 9) * 4 - 1, py + Math.cos(i * 5.3) * 4 - 1, 2, 2); }
+  }
+  const g = x.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 11); g.addColorStop(0, "rgba(190,160,255,0.55)"); g.addColorStop(1, "rgba(120,80,255,0)");
+  x.fillStyle = g; x.beginPath(); x.arc(sh.x, sh.y, 11, 0, Math.PI * 2); x.fill();
+  x.translate(sh.x, sh.y); x.rotate(a);
+  x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(0, 0, 8.5, 3.6, 0, 0, Math.PI * 2); x.fill();   // the feather, outlined
+  x.fillStyle = "#3a2458"; x.beginPath(); x.ellipse(0, 0, 7.5, 2.7, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#6a4aa8"; x.beginPath(); x.ellipse(1, -0.8, 5.5, 1.1, 0, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = "#e8dcff"; x.lineWidth = 0.9; x.beginPath(); x.moveTo(-8, 0); x.lineTo(7, 0); x.stroke();   // the shining quill
+  for (const o of [-4, -1, 2]) { x.strokeStyle = "rgba(232,220,255,0.6)"; x.beginPath(); x.moveTo(o, 0); x.lineTo(o - 2, -2.4); x.moveTo(o, 0); x.lineTo(o - 2, 2.4); x.stroke(); }   // barbs
+  x.fillStyle = "#fff4b0"; x.fillRect(6, -0.6, 2, 1.2);   // a glowing golden tip
+  x.restore();
+}
 // Thunder Peaks: every few seconds during a wave, lightning stuns a random tower
 function tickLightning(dt) {
   const L = SETTINGS.levels[G.level].lightning; if (!L) return;
@@ -5886,12 +5927,7 @@ function draw() {
       x.closePath(); x.fill(); x.fillStyle = "#fff8d6"; x.fillRect(-1, -1, 2, 2); x.restore();
     }
     else if (sh.kind === "water") { x.fillStyle = "#3d8fe0"; x.fillRect(sh.x - 3, sh.y - 4, 6, 8); x.fillStyle = "#cfeeff"; x.fillRect(sh.x - 1, sh.y - 3, 2, 2); }
-    else if (sh.kind === "nightowl") {   // a dark feather (a big glowing one for a swoop)
-      const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1), big = sh.mult > 1 ? 1.6 : 1;
-      x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.scale(big, big);
-      if (big > 1) { x.fillStyle = "rgba(200,184,255,0.35)"; x.beginPath(); x.arc(0, 0, 8, 0, Math.PI * 2); x.fill(); }
-      x.fillStyle = "#3a2458"; x.beginPath(); x.ellipse(0, 0, 7, 2.6, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#c8b8ff"; x.fillRect(-6, -0.5, 11, 1); x.restore();
-    }
+    else if (sh.kind === "nightowl") drawNightFeather(x, sh);
     else if (sh.kind === "hacked") {   // a short teal laser bolt
       const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
       x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.fillStyle = "rgba(79,209,184,0.4)"; x.fillRect(-9, -3, 16, 6); x.fillStyle = "#9effe8"; x.fillRect(-8, -1.5, 14, 3); x.fillStyle = "#ffffff"; x.fillRect(-2, -0.5, 7, 1); x.restore();
@@ -5902,6 +5938,7 @@ function draw() {
       for (const [col, w] of [["rgba(22,25,29,0.8)", 3.5], ["#cfeaff", 1.8]]) { x.strokeStyle = col; x.lineWidth = w; for (const o of [-4, 0, 4]) { x.beginPath(); x.arc(-4, o, 6, -0.9, 0.9); x.stroke(); } }
       x.restore(); x.lineCap = "butt";
     }
+    else if (sh.kind === "air") drawGust(x, sh);
     else { x.strokeStyle = "rgba(255,255,255,0.85)"; x.lineWidth = 2; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 12, G.time * 12 + 4); x.stroke(); }
   }
   // Wizard Elemental Spheres float above everything on the ground
