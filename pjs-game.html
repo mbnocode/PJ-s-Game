@@ -443,6 +443,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 @media (max-width: 900px) { @keyframes acorn-bump { 40% { transform: scale(1.35); } } }
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
 .acorns::before, .perk .cost::before { content: ""; width: 1.05em; height: 1.18em; background: var(--acorn) center / contain no-repeat; display: inline-block; filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.45)); }
+.def-deep { flex-shrink: 0; height: 2600px; width: 6px; border-radius: 3px; background: repeating-linear-gradient(to bottom, rgba(122,128,137,0.16) 0 14px, rgba(122,128,137,0) 14px 26px); position: relative; }   /* an old vacuum hose trailing down the page */
+.def-deep span { position: absolute; top: 55%; left: 16px; color: rgba(160,170,180,0.25); font-size: 13px; }
+#def-vac .perk { border-color: #5fbf4a; box-shadow: 0 0 18px rgba(95,191,74,0.25); }
+#def-vac .pips { font-size: 18px; }
 .perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; width: min(820px, 100%); }
 .perk { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
 .perk.maxed { border-color: var(--moss-dark); }
@@ -695,6 +699,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="muted" id="def-say"></p>
     <div class="acorns" id="def-acorns-row"><span id="def-acorns">0</span> Golden Acorns</div>
     <div class="perks" id="def-shop"></div>
+    <div class="def-deep" aria-hidden="true"><span>…</span></div>   <!-- a long, long way down: the Leaf Vacuum is hidden at the very bottom -->
+    <div class="perks" id="def-vac"></div>
   </section>
 
   <section class="screen menu" id="s-owl" hidden>
@@ -951,6 +957,25 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   const TITANT = { R: "#3a3f78", r: "#6a74c8", g: "#4a5a8a", G: "#2c3458", s: "#8a90a8", y: "#fff066", Y: "#c9a020", o: "#7ff3ff", w: "#ffffff", f: "#ffffff" };
   for (const [k, base, pal] of [["gustrunner", "scout", GUST], ["staticbot", "tesla", STATIC], ["thunderbird", "emberbat", BIRD], ["thunderbird_mid", "emberbat_mid", BIRD], ["thunderbird_down", "emberbat_down", BIRD], ["cyclonegolem", "glaciergolem", CYCLONE], ["thundertitan", "boss", TITANT]]) {
     SPR[k] = makeSprite(ART[base], false, pal); SPRF[k] = makeSprite(ART[base], true, pal); }
+}
+{ // the Leaf Vacuum: a green vacuum with a leaf-stuffed bag, a long hose and a nozzle slurping up a maple leaf
+  SPR.leafvacuum = makeSprite([
+    "................",
+    "...kkkkk........",
+    "..klllllk.......",
+    ".kllohllLk......",
+    ".klhlllolLk.....",
+    ".klllhlllLk.....",
+    ".kllollhlLk.kk..",
+    ".kLlllllLLkkGGk.",
+    ".kgggggggGkGk.kk",
+    ".kgwggggGGkGk..k",
+    ".kgggggggGkGk..k",
+    "..kkkkkkkkkGk.ko",
+    "..kGk..kGk.kGkoo",
+    "..kkk..kkk..kooo",
+    "............kko.",
+    "................"], false, { h: "#ffd36b" });
 }
 { // the Defector's shop: the Hacked Robot (a Clanker painted green, with a leaf-green core), the Factory Blueprint and the Overcharge Battery
   const HACK = { f: "#c8f0a0", y: "#5fbf4a", Y: "#2f7d32", r: "#4fd1b8", c: "#9effe8", b: "#2a8a78", n: "#8fd45f", o: "#c8fff4", G: "#3a5524", g: "#6a8a50", s: "#a8d890" };
@@ -4086,7 +4111,29 @@ function renderDefectorShop() {
   const s = slot(); $("def-acorns").textContent = (s && s.acorns) || 0;
   $("def-say").textContent = "“Welcome, welcome! Everything here was smuggled right out of the robots' factory. Shh, they still think I'm on their side.”";
   renderShopShelves($("def-shop"), SETTINGS.defectorShop, (SETTINGS.defector || {}).shelves || 3, s, "def", "Coming soon. The Defector is still sneaking things out of the factory…", renderDefectorShop);
+  renderLeafVacuum(s);
 }
+// The Leaf Vacuum: hidden way down at the bottom of the Defector's shop. Buy it, then upgrade it twice.
+function renderLeafVacuum(s) {
+  const V = SETTINGS.leafVacuum, box = $("def-vac"); box.innerHTML = ""; if (!V) return;
+  const lvl = vacuumLevel(s), maxed = lvl >= V.costs.length, cost = V.costs[lvl], pct = (n) => Math.round(V.collect[n] * 100) + "%";
+  const d = document.createElement("div"); d.className = "perk" + (maxed ? " maxed" : "");
+  d.innerHTML = `<span class="pic"></span><span class="k">${V.name}</span>
+    <span class="s">“You found my secret! I stole this from the factory's cleaning robot.” It sucks up the Maple Leaves that pop up on the grass, so you don't have to tap them.
+    ${lvl ? `Right now it collects them for <b>${pct(lvl - 1)}</b> of their value.` : `It starts out collecting them for ${pct(0)} of their value.`}
+    ${maxed ? "" : lvl ? `Upgrade it to collect ${pct(lvl)}.` : `Upgrade it twice to collect the full value.`} You can still tap a leaf quickly yourself to get all of it.</span>
+    <span class="pips">${V.costs.map((_, n) => n < lvl ? "●" : "○").join(" ")}</span>
+    ${maxed ? '<span class="owned">Fully upgraded!</span>' : `<button class="go" id="def-buy-leafvacuum" ${(s && s.acorns || 0) < cost ? "disabled" : ""}>${lvl ? "Upgrade" : "Buy"} <span class="cost">${cost}</span></button>`}`;
+  const pc = spriteCanvas("leafvacuum", 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc);
+  const b = d.querySelector("button");
+  if (b) b.onclick = () => {
+    if (!s || (s.acorns || 0) < cost) return;
+    s.acorns -= cost; s.materials = s.materials || {}; s.materials.leafvacuum = lvl + 1;
+    saveSlots(slots); Sound.play("upgrade"); renderDefectorShop();
+  };
+  box.appendChild(d);
+}
+function vacuumLevel(s) { return Math.min(((s && s.materials && s.materials.leafvacuum) || 0), (SETTINGS.leafVacuum || { costs: [] }).costs.length); }
 function defPortrait(now) {
   if ($("s-defector").hidden) { defAnim = null; return; }
   const c = $("def-portrait").getContext("2d"), t = now / 1000; c.imageSmoothingEnabled = false; c.clearRect(0, 0, 64, 64);
@@ -5318,6 +5365,8 @@ const nextBonusIn = () => { const b = SETTINGS.bonusLeaf; return (b.everySeconds
 function tickBonusLeaf(dt) {
   if (!SETTINGS.bonusLeaf) return;
   if (G.bonus) { G.bonus.t += dt; if (G.bonus.t >= G.bonus.stay) G.bonus = null; }
+  const vac = vacuumLevel(slot()), V = SETTINGS.leafVacuum;   // the Leaf Vacuum (Defector's shop) sucks up leaves nobody tapped
+  if (vac && G.bonus && G.bonus.t >= (V.waitSeconds || 1)) collectBonusLeaf(V.collect[vac - 1]);
   if (!G.waveActive) return;   // new leaves only appear during a Wave
   // The countdown keeps running while a leaf is showing, so a new one appears every few seconds.
   G.bonusTimer = (G.bonusTimer ?? nextBonusIn()) - dt;
@@ -5328,11 +5377,12 @@ function tickBonusLeaf(dt) {
     if (G.map.cells[y][x] === "grass" && !towerAt(x, y) && !G.map.scenery[x + "," + y] && !isFactory(x, y)) free.push({ x, y });
   if (free.length) { const c = free[Math.random() * free.length | 0]; const pk = squirrelLeafPerks(); G.bonus = { x: c.x, y: c.y, t: 0, stay: SETTINGS.bonusLeaf.staySeconds + pk.stay, amt: SETTINGS.bonusLeaf.leaves + pk.value, gold: pk.value > 0 }; Sound.play("place"); }
 }
-function collectBonusLeaf() {
-  const b = G.bonus, amt = b.amt || SETTINGS.bonusLeaf.leaves; G.bonus = null;
-  G.leaves += amt; updateHud(); addStat("grassTaps", 1);
+function collectBonusLeaf(vacuum) {   // vacuum: the Leaf Vacuum collected it, for this much of its value
+  const b = G.bonus, amt = Math.max(1, Math.round((b.amt || SETTINGS.bonusLeaf.leaves) * (vacuum || 1))); G.bonus = null;
+  G.leaves += amt; updateHud(); if (!vacuum) addStat("grassTaps", 1);
   const px = b.x * T + 16, py = b.y * T + 14;
-  floatText(px, py - 6, "+" + amt, "#ffd34d");
+  floatText(px, py - 6, (vacuum ? "Vroom! +" : "+") + amt, "#ffd34d");
+  if (vacuum) { for (let i = 0; i < 10; i++) { const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 10; G.particles.push({ kind: "spark", x: px + Math.cos(a) * d, y: py + Math.sin(a) * d, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, t: 0, life: 0.3, col: "#e6f4ff" }); } Sound.play("place"); return; }
   for (let i = 0; i < 4; i++) G.particles.push({ kind: "leaf", x: px + (Math.random() - 0.5) * 14, y: py, t: 0, life: 0.55 + Math.random() * 0.2, sx: px, sy: py });
   burst(px, py, "#ffb347", 12);
   Sound.play("heal");

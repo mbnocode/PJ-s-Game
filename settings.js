@@ -376,6 +376,12 @@ const SETTINGS = {
     battery: { name: "Overcharge Battery", cost: 60, shelf: 3, picture: "battery", about: "During a game, tap a tower and press Overcharge: it attacks twice as fast for a whole wave. Each battery works once, and you can buy as many as you like." },
   },
 
+  // The Leaf Vacuum: the Defector's secret item, hidden way down at the bottom of his shop (keep scrolling!).
+  // It sucks up the Maple Leaves that pop up on the grass for you. costs: buy it, then 2 upgrades (Golden Acorns).
+  // collect: how much of each leaf's value it gets at each level (0.5 = half). waitSeconds: how long a leaf sits before it gets
+  // vacuumed, so you can still tap it yourself for the full value.
+  leafVacuum: { name: "Leaf Vacuum", costs: [500, 750, 1000], collect: [0.5, 0.75, 1], waitSeconds: 1.2 },
+
   // Leaderboard resets: a level's leaderboard only counts scores from after this time (UTC).
   // The old scores aren't deleted. Remove a line to bring that level's old scores back.
   leaderboardResets: {
