@@ -311,6 +311,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 @media (max-width: 560px) { .wm-node .nm { display: none; } }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
+.choices button.lvtab { background: linear-gradient(to bottom, color-mix(in srgb, var(--tab) 80%, #fff), var(--tab) 55%); border: 2px solid var(--tab2); color: var(--tab-ink); box-shadow: 0 3px 0 var(--tab2); text-shadow: none; opacity: 0.88; }   /* leaderboard level buttons: the color of the level's terrain */
+.choices button.lvtab:hover { opacity: 1; filter: brightness(1.08); }
+.choices button.lvtab[aria-pressed="true"] { opacity: 1; border-color: #fff; box-shadow: 0 3px 0 var(--tab2), 0 0 0 3px var(--tab2), 0 0 14px color-mix(in srgb, var(--tab) 70%, transparent); transform: translateY(-2px); }
 .choices button small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
 .choices button[aria-pressed="true"] small { color: var(--ink); }
 .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -3314,10 +3317,20 @@ async function levelTop(level, fields) {
   }
   return out;
 }
+// Leaderboard level buttons, colored like each level's terrain: [main color, darker edge color, text color]
+const BOARD_TAB_COLORS = {
+  meadow: ["#8fd45f", "#3f8a34", "#16300c"], forest: ["#3f9a3a", "#1e5a22", "#effbe6"], swamp: ["#7a944a", "#3a4a1e", "#f4fae6"],
+  beach: ["#ffe08a", "#5aa8e8", "#3a2a08"], desert: ["#f2c27a", "#a8742e", "#3a2408"], pyramid: ["#d9a85a", "#7a5420", "#2e1c06"],
+  basalt: ["#77707f", "#2e2a36", "#f4f0f8"], magma: ["#ff8a3c", "#a8400e", "#2a0e02"], volcano: ["#c8321e", "#5a1008", "#fff0e8"],
+  tundra: ["#eef4fb", "#8aa0bc", "#1e2c40"], glacier: ["#8fd3ff", "#2f78b8", "#0c2a48"], blizzard: ["#c4cee0", "#5a6a84", "#1e2636"],
+  infinity: ["#7a4ac0", "#2e1856", "#f6efff"], skyislands: ["#7cc8ff", "#3f9a3a", "#0c2a48"], thunder: ["#5a5e78", "#24263a", "#fff7a0"],
+  storm: ["#4a3a8a", "#1a1430", "#e8e0ff"],
+};
 async function renderBoards(code) {
   const tabs = $("board-tabs"); tabs.innerHTML = "";
   LEVEL_ORDER.forEach((L) => {
     const b = document.createElement("button"); b.id = "board-" + L; b.textContent = SETTINGS.levels[L].name;
+    const c = BOARD_TAB_COLORS[L]; if (c) { b.className = "lvtab"; b.style.cssText = `--tab:${c[0]};--tab2:${c[1]};--tab-ink:${c[2]}`; }   // each level's button is the color of its terrain
     b.setAttribute("aria-pressed", String(!code && boardLevel === L));
     b.onclick = () => { boardLevel = L; renderBoards(); };
     tabs.appendChild(b);
