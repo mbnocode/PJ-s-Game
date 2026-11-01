@@ -2275,7 +2275,7 @@ const WORLD_MAP = {
   meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
   beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
   basalt: [455, 310, "#a08a9a"], magma: [520, 375, "#ff8a3c"], volcano: [585, 265, "#e0443a"],
-  tundra: [650, 345, "#dde8f4"], glacier: [715, 260, "#8fd3ff"], blizzard: [770, 165, "#c8d4e2"],
+  tundra: [650, 345, "#dde8f4"], glacier: [712, 292, "#8fd3ff"], blizzard: [770, 165, "#c8d4e2"],
   skyislands: [840, 120, "#7cc8ff"], thunder: [905, 195, "#9a90c0"], storm: [925, 72, "#d9b8ff"],
   infinity: [480, 70, "#b48aff"],
 };
@@ -2543,6 +2543,57 @@ function drawMountains(x, R) {
     f.globalCompositeOperation = "destination-in"; g = f.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,1)"); f.fillStyle = g; f.fillRect(0, 0, 88, 340);
     x.drawImage(fc, 792, 110); }
 }
+// The Glacier Caves on the world map: a big chunk of blue glacier ice with a glowing cave mouth, hanging icicles and ice crystals
+function drawGlacierCave(x, R) {
+  const cx = 712, by = 262;   // the middle of the cave mouth, and the ground in front of it
+  const rad = (a, b, r0, r1, st) => { const g = x.createRadialGradient(a, b, r0, a, b, r1); st.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
+  // a cold blue glow around the whole glacier
+  x.fillStyle = rad(cx, by - 22, 10, 80, [[0, "rgba(140,220,255,0.45)"], [1, "rgba(140,220,255,0)"]]); x.fillRect(cx - 90, by - 110, 180, 140);
+  // the glacier: a big lumpy wall of ice, made of tilted blocks with lit tops and shady sides
+  const wall = [[cx - 60, by + 2], [cx - 58, by - 22], [cx - 50, by - 30], [cx - 44, by - 46], [cx - 30, by - 52], [cx - 22, by - 66], [cx - 8, by - 62], [cx + 4, by - 74], [cx + 18, by - 64], [cx + 30, by - 68], [cx + 42, by - 50], [cx + 52, by - 40], [cx + 60, by - 20], [cx + 62, by + 2]];   // craggy, with sharp ice towers
+  const wp = new Path2D(); wall.forEach(([a, b], k) => (k ? wp.lineTo(a, b) : wp.moveTo(a, b))); wp.closePath();
+  let g = x.createLinearGradient(cx - 60, 0, cx + 60, 0); g.addColorStop(0, "#9fdcff"); g.addColorStop(0.5, "#5cb4ea"); g.addColorStop(1, "#2f78b8"); x.fillStyle = g; x.fill(wp);
+  x.save(); x.clip(wp);
+  for (let k = 0; k < 9; k++) {   // facets of ice: bright planes catching the light, and dark cracks between them
+    const a = cx - 56 + k * 14 + (R() - 0.5) * 6, b = by - 58 + (R() - 0.5) * 8;
+    x.fillStyle = k % 2 ? "rgba(255,255,255,0.22)" : "rgba(20,70,130,0.22)"; x.beginPath(); x.moveTo(a, b); x.lineTo(a + 12, b + 4); x.lineTo(a + 8, by + 4); x.lineTo(a - 3, by + 4); x.closePath(); x.fill();
+    x.strokeStyle = "rgba(20,60,110,0.45)"; x.lineWidth = 1; x.beginPath(); x.moveTo(a + 12, b + 4); x.lineTo(a + 10 + (R() - 0.5) * 4, by - 20); x.lineTo(a + 8, by + 4); x.stroke();   // crevasses
+  }
+  x.fillStyle = "rgba(255,255,255,0.18)"; x.beginPath(); x.moveTo(cx - 56, by - 26); x.lineTo(cx - 30, by - 50); x.lineTo(cx - 22, by - 20); x.lineTo(cx - 50, by); x.fill();   // a big sunlit face on the left
+  x.fillStyle = "rgba(10,40,90,0.25)"; x.beginPath(); x.moveTo(cx + 36, by - 50); x.lineTo(cx + 58, by - 22); x.lineTo(cx + 60, by + 2); x.lineTo(cx + 28, by + 2); x.fill();   // and a deep shadow on the right
+  x.restore();
+  // a thick lumpy blanket of snow on top
+  x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(wall[1][0], wall[1][1]);
+  for (let k = 1; k < wall.length - 1; k++) { const [a, b] = wall[k], [c, d] = wall[k + 1]; x.quadraticCurveTo((a + c) / 2, Math.min(b, d) - 7, c, d); }
+  for (let k = wall.length - 2; k >= 1; k--) { const [a, b] = wall[k]; x.lineTo(a, b + 5 + (k % 3) * 2); } x.closePath(); x.fill();
+  x.fillStyle = "rgba(160,200,235,0.6)"; for (let k = 2; k < wall.length - 2; k++) { const [a, b] = wall[k]; x.beginPath(); x.ellipse(a + 3, b + 4, 5, 1.6, 0, 0, Math.PI * 2); x.fill(); }   // soft blue shadows under the snow
+  // the cave mouth: a deep arch glowing from somewhere far inside
+  const mouth = new Path2D(); mouth.moveTo(cx - 26, by + 1);
+  for (let k = 0; k <= 16; k++) { const t = Math.PI - (k / 16) * Math.PI, rr = 1 + (k % 2 ? 0.05 : -0.03); mouth.lineTo(cx + Math.cos(t) * 26 * rr, by + 1 - Math.sin(t) * 36 * rr); }
+  mouth.closePath();
+  x.fillStyle = "#0e2c4e"; x.fill(mouth);
+  x.save(); x.clip(mouth);
+  for (let k = 0; k < 5; k++) { x.strokeStyle = `rgba(110,200,255,${0.18 + k * 0.08})`; x.lineWidth = 2; x.beginPath(); x.ellipse(cx, by + 1, 24 - k * 4.5, 33 - k * 6, 0, Math.PI, Math.PI * 2); x.stroke(); }   // rings of ice going deeper into the tunnel
+  x.fillStyle = rad(cx, by - 10, 1, 22, [[0, "rgba(220,250,255,0.95)"], [0.35, "rgba(120,220,255,0.6)"], [1, "rgba(60,150,230,0)"]]); x.beginPath(); x.arc(cx, by - 10, 22, 0, Math.PI * 2); x.fill();   // the glow deep inside
+  for (const [a, h] of [[cx - 14, 9], [cx + 13, 12], [cx - 4, 6]]) { x.fillStyle = "rgba(200,245,255,0.85)"; x.beginPath(); x.moveTo(a - 3, by + 1); x.lineTo(a, by + 1 - h); x.lineTo(a + 3, by + 1); x.fill(); }   // ice stalagmites inside
+  x.restore();
+  x.strokeStyle = "#dff6ff"; x.lineWidth = 3; x.stroke(mouth); x.strokeStyle = "rgba(255,255,255,0.9)"; x.lineWidth = 1; x.stroke(mouth);   // a frosty rim
+  // icicles hanging from the arch
+  for (let k = 0; k < 13; k++) {
+    const t = 0.12 + (k / 12) * 0.76, a = cx - Math.cos(t * Math.PI) * 25, b = by + 1 - Math.sin(t * Math.PI) * 35, len = 4 + ((k * 7) % 5) * 2.4 + (k % 3 === 0 ? 4 : 0);
+    x.fillStyle = "#e8faff"; x.beginPath(); x.moveTo(a - 2, b); x.lineTo(a + 2, b); x.lineTo(a + 0.3, b + len); x.closePath(); x.fill();
+    x.fillStyle = "rgba(120,200,240,0.8)"; x.fillRect(a + 0.6, b, 0.9, len * 0.7);
+  }
+  // clusters of glowing ice crystals on each side of the entrance
+  const crystals = (a, b, s) => { for (const [dx, h, ang] of [[-5, 16, -0.35], [0, 22, 0], [5, 14, 0.4], [9, 9, 0.7], [-9, 8, -0.7]]) {
+    x.save(); x.translate(a + dx * s, b); x.rotate(ang); x.fillStyle = "rgba(160,235,255,0.35)"; x.beginPath(); x.moveTo(-4 * s, 0); x.lineTo(0, -(h + 4) * s); x.lineTo(4 * s, 0); x.fill();
+    x.fillStyle = "#bff0ff"; x.beginPath(); x.moveTo(-2.4 * s, 0); x.lineTo(0, -h * s); x.lineTo(2.4 * s, 0); x.fill(); x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(-0.6 * s, 0); x.lineTo(0, -h * s); x.lineTo(1 * s, -h * 0.3 * s); x.fill(); x.restore(); } };
+  crystals(cx - 40, by + 2, 0.9); crystals(cx + 40, by + 3, 0.8);
+  // packed snow in front, and sparkles of frost
+  x.fillStyle = "#f4f9ff"; x.beginPath(); x.ellipse(cx, by + 4, 50, 6, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "rgba(150,190,230,0.5)"; x.beginPath(); x.ellipse(cx, by + 3, 24, 2.5, 0, 0, Math.PI * 2); x.fill();
+  for (let n = 0; n < 14; n++) { const a = cx - 55 + R() * 110, b = by - 60 + R() * 64, sz = 1 + R() * 1.6; x.fillStyle = "rgba(255,255,255,0.95)"; x.fillRect(a - sz, b, sz * 2 + 1, 1); x.fillRect(a, b - sz, 1, sz * 2 + 1); }
+}
 function drawWorldMap() {
   const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
   const x = c.getContext("2d"), W = 1000, H = 450; x.scale(2, 2);   // drawn at double detail so it stays sharp on a big screen
@@ -2641,8 +2692,7 @@ function drawWorldMap() {
   for (const [a, b] of [[455, 395], [500, 335], [548, 415]]) { x.fillStyle = "rgba(255,120,40,0.3)"; x.beginPath(); x.ellipse(a, b, 22, 8, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, b, 15, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - 5, b - 1, 10, 2); }
   // snow world: shaded mountains with snow caps, a glacier cave, a frozen lake and sparkles
   drawMountains(x, R);   // the snowy mountain range (Blizzard Peak is the tallest)
-  x.fillStyle = "#3f86bb"; x.beginPath(); x.ellipse(712, 238, 16, 12, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#1a3a5a"; x.beginPath(); x.ellipse(712, 238, 10, 8, 0, Math.PI, Math.PI * 2); x.fill();   // the glacier cave
-  for (let k = 0; k < 5; k++) { x.fillStyle = "#bfe6fa"; x.fillRect(700 + k * 6, 226, 2, 4 + (k % 2) * 3); }
+  drawGlacierCave(x, R);   // the Glacier Caves: a big glowing ice cave in a glacier at the foot of the mountains
   x.fillStyle = lin(0, 380, 0, 420, [[0, "#bfe0f6"], [1, "#8ec6e8"]]); x.beginPath(); x.ellipse(690, 405, 48, 16, 0, 0, Math.PI * 2); x.fill();   // the frozen lake
   x.strokeStyle = "#ffffff"; x.lineWidth = 1; x.beginPath(); x.moveTo(660, 402); x.lineTo(680, 408); x.lineTo(696, 400); x.moveTo(690, 412); x.lineTo(712, 404); x.stroke();
   [[630, 300], [688, 300], [742, 380], [790, 330], [640, 430]].forEach(([a, b]) => pine(a, b, 1, "#2f6a46", true));
@@ -4408,6 +4458,7 @@ $("b-towers").onclick = () => { Sound.init(); renderTowersInfo(); show("s-towers
 /* ---------- achievements (per save slot) ---------- */
 const GRASS_LEVELS = ["meadow", "forest", "swamp"];
 const SAND_LEVELS = ["beach", "desert", "pyramid"];
+const LAVA_LEVELS = ["basalt", "magma", "volcano"];
 const beat = (s, L, d) => !!(s.best && s.best[L] && (d ? s.best[L][d] : Object.keys(s.best[L]).length));
 const ACHIEVEMENTS = [
   { id: "firststeps", name: "First Steps", about: "Beat the Meadow.", pic: "tree", check: (s) => beat(s, "meadow") },
@@ -4446,6 +4497,22 @@ const ACHIEVEMENTS = [
   { id: "desertnightmare", name: "Desert Nightmare", about: "Beat all 3 sand levels on Nightmare.", pic: "sandboss", check: (s) => SAND_LEVELS.every((L) => beat(s, L, "nightmare")) },
   { id: "sandyperfect", name: "Sandy Perfect", about: "Beat all 3 sand levels without losing any health.", pic: "starfish", check: (s) => SAND_LEVELS.every((L) => s.perfect && s.perfect[L]) },
   { id: "sunbaked", name: "Sun-Baked", about: "Play 10 games on the sand levels.", pic: "tumbleweed", goal: ["sandGames", 10] },
+  // lava-level achievements
+  { id: "heartbreaker", name: "Heartbreaker", about: "Defeat the Volcano Heart.", pic: "volcanoheart" },
+  { id: "coldheart", name: "Cold Heart", about: "Defeat the Volcano Heart without letting it heal on the lava even once.", pic: "flamevent" },
+  { id: "shellcracker", name: "Shell Cracker", about: "Crack the shells of 50 Obsidian Shells.", pic: "obsidian", goal: ["obsidianCracks", 50] },
+  { id: "batsmasher", name: "Bat Smasher", about: "Destroy 100 Ember Bats.", pic: "emberbat", goal: ["emberbatKills", 100] },
+  { id: "hotwater", name: "Hot Water", about: "Finish off 25 Fire-Proof Bots with Water Frogs.", pic: "fireproof", goal: ["frogFireproof", 25] },
+  { id: "firewalker", name: "Fire Walker", about: "Destroy a Magma Crawler before its burning trail heats up any of your towers.", pic: "crawler" },
+  { id: "unbreakable", name: "Unbreakable", about: "Beat a lava level where a Pillar Titan shows up, without it trapping any of your towers.", pic: "pillartitan" },
+  { id: "cubecrusher", name: "Cube Crusher", about: "Destroy 200 Magma Cubes (big ones and small ones).", pic: "magmacube", goal: ["cubeKills", 200] },
+  { id: "diverdown", name: "Diver Down", about: "Destroy 40 Lava Divers.", pic: "diver", goal: ["diverKills", 40] },
+  { id: "magmamaster", name: "Magma Master", about: "Beat the Magma Fields on Hard (or Nightmare).", pic: "magmaking", check: (s) => beat(s, "magma", "hard") || beat(s, "magma", "nightmare") },
+  { id: "moltengold", name: "Molten Gold", about: "Collect 15 Golden Acorns on the lava levels.", pic: "magmarock", goal: ["lavaAcorns", 15] },
+  { id: "hotstuff", name: "Hot Stuff", about: "Play 10 games on the lava levels.", pic: "lavapool", goal: ["lavaGames", 10] },
+  { id: "lavachampion", name: "Lava Champion", about: "Beat all 3 lava levels: the Basalt Delta, the Magma Fields and Inside the Volcano.", pic: "basaltpillar", check: (s) => LAVA_LEVELS.every((L) => beat(s, L)) },
+  { id: "volcanicnightmare", name: "Volcanic Nightmare", about: "Beat all 3 lava levels on Nightmare.", pic: "stalagmite", check: (s) => LAVA_LEVELS.every((L) => beat(s, L, "nightmare")) },
+  { id: "lavaperfect", name: "Lava Perfect", about: "Beat all 3 lava levels without losing any health.", pic: "obsidianrock", check: (s) => LAVA_LEVELS.every((L) => s.perfect && s.perfect[L]) },
   { id: "boxopener", name: "Box Opener", about: "Open the Mystery Box 10 times.", pic: "mysteryboxopen", check: (s) => (s.boxOpened || 0) >= 10 },
   { id: "jackpot", name: "Jackpot!", about: "Find the secret jackpot in the Mystery Box.", pic: "phoenix", check: (s) => !!(s.box && s.box.found && s.box.found.phoenix) },
 ];
@@ -5307,6 +5374,7 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (r.dead) return;
   if (r.hideT > 0 && !vision) return;
   if (r.under || r.spinning) return;   // a Lava Diver under the lava (or a spinning Cyclone Golem) can't be hit
+  if (kind) r.lastKind = kind;   // which tower hit it last (for the Hot Water achievement)
   const RB = SETTINGS.robots[r.type] || {};
   if (RB.waterTimes) {   // Fire-Proof Bot: Dragon fire does nothing, Frogs hit extra hard
     if (kind === "fire" || kind === "phoenix" || isBurn) { if (!isBurn && Math.random() < 0.3) { const q = rpos(r); floatText(q.x, q.y - 16, "Fire-proof!", "#c9ced6", 0.6); } return; }
@@ -5319,7 +5387,7 @@ function hurt(r, amt, vision, isBurn, kind) {
     while (r.chunkDmg >= every) { r.chunkDmg -= every; spawn({ type: RB.chunkType || "icechunk", d: Math.max(0, r.d - 10), path: r.path }); const q = rpos(r); burst(q.x, q.y, col, 12); floatText(q.x, q.y - 30, "Crack!", col, 0.8); }
   }
   if (RB.crackHit && !r.cracked) {   // Obsidian Shell: half damage until one big hit cracks it
-    if (amt >= RB.crackHit) { r.cracked = true; const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
+    if (amt >= RB.crackHit) { r.cracked = true; addStat("obsidianCracks", 1, null); const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
     else amt *= 0.5;
   }
   r.hp -= amt; r.hitT = 0.12;
@@ -5346,6 +5414,13 @@ function kill(r) {
   if (r.type === "drone") addStat("desertDrones", 1, ["desert"]);
   if (r.type === "mummy" || r.fromMummy) addStat("mummyKills", 1, null);
   if (r.sinking) addStat("quicksandKills", 1, null);
+  // lava-level achievements
+  if (r.type === "volcanoheart") { earnAch("heartbreaker"); if (!r.healedOnce) earnAch("coldheart"); }
+  if (r.type === "emberbat") addStat("emberbatKills", 1, null);
+  if (r.type === "fireproof" && r.lastKind === "water") addStat("frogFireproof", 1, null);
+  if (r.type === "crawler" && !(r.heated && r.heated.size)) earnAch("firewalker");
+  if (r.type === "magmacube" || r.type === "magmasmall") addStat("cubeKills", 1, null);
+  if (r.type === "diver") addStat("diverKills", 1, null);
   const p = rpos(r);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
@@ -5353,7 +5428,7 @@ function kill(r) {
   const bossDrop = isHeavy(r) && SETTINGS.bossDropsAcorn;
   if (bossDrop || (chance && Math.random() < chance)) {
     addStat("pyramidAcorns", acornTimes(slot()), ["pyramid"]);
-    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got; addStat("grassAcorns", got);
+    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got; addStat("grassAcorns", got); addStat("lavaAcorns", got, LAVA_LEVELS);
     floatText(p.x, p.y - 18, got > 1 ? `+${got} Golden Acorns!` : "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
     burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
@@ -5940,12 +6015,13 @@ function lavaPowers(dt) {
       if (!r.under && r.diveT <= 0) { r.under = true; r.diveT = RS.diver.diveSeconds; burst(q.x, q.y, "#ff8a24", 10); }
       else if (r.under && r.diveT <= 0) { r.under = false; r.diveT = RS.diver.diveEvery; burst(q.x, q.y, "#ff8a24", 12); burst(q.x, q.y, "#ffd36b", 6); }
     } else if (r.type === "pillartitan") {   // Pillar Titan: slams the ground and a pillar traps the nearest tower until the wave ends
+      G.sawPillar = true;   // (for the Unbreakable achievement)
       r.slamT = (r.slamT ?? RS.pillartitan.slamEvery * 0.6) - dt;
       if (r.slamT <= 0) {
         r.slamT = RS.pillartitan.slamEvery;
         const t = G.towers.filter((t) => !t.pillar && t.kind !== "phoenix" && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= 3.5 * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - q.y) - Math.hypot(b.x * T - q.x, b.y * T - q.y))[0];
         G.fx.push({ kind: "splash", x: q.x, y: q.y, r: 1.6 * T, t: 0.35, col: "110,105,120" }); G.shake = Math.max(G.shake, 0.2); Sound.play("smash");
-        if (t) { t.pillar = 1; floatText(t.x * T + 16, t.y * T - 4, "Trapped!", "#c9c4d6"); burst(t.x * T + 16, t.y * T + 24, "#5a5664", 16); }
+        if (t) { t.pillar = 1; G.trapped = true; floatText(t.x * T + 16, t.y * T - 4, "Trapped!", "#c9c4d6"); burst(t.x * T + 16, t.y * T + 24, "#5a5664", 16); }
         floatText(q.x, q.y - 34, "SLAM!", "#c9c4d6");
       }
     } else if (r.type === "snowdrone") {   // Snow Drone: drops a snowball that freezes a tower below it
@@ -5969,7 +6045,7 @@ function lavaPowers(dt) {
       if (G.map.lava && G.map.lava.has(tx + "," + ty) && !(r.freezeT > 0) && r.hp < r.maxHp) {
         r.hp = Math.min(r.maxHp, r.hp + RS.volcanoheart.healPerSecond * (SETTINGS.levels[G.level].robotHealth || 1) * G.diff.robotHealth * dt);
         if (Math.random() < 0.3) G.particles.push({ kind: "spark", x: q.x + (Math.random() - 0.5) * 30, y: q.y, vx: 0, vy: -40, t: 0, life: 0.6, col: Math.random() < 0.5 ? "#ffd36b" : "#ff8a24" });
-        r.healing = true;
+        r.healing = true; r.healedOnce = true;
       } else r.healing = false;
     }
   }
@@ -6723,6 +6799,7 @@ function finish(won) {
   if (!won) { G.takeover = { t: 0, from: G.factoryCount, n: G.factoryCount, done: false, dur: Math.max(1, (G.map.grassOrder.length - G.factoryCount) / 40) }; Sound.play("horn"); }
   sendProgress(true, won ? "won" : "lost", stars, score);
   addStat("sandGames", 1, SAND_LEVELS);   // (Sun-Baked)
+  addStat("lavaGames", 1, LAVA_LEVELS);   // (Hot Stuff)
   const on = G.online;
   // Golden Acorns for the save slot: 1 per Wave you got through, plus some for each star.
   if (won) {
@@ -6733,7 +6810,8 @@ function finish(won) {
       best = !prev || score > prev.score;
     }
     { const L = G.level, kinds = Object.keys(G.placedKinds || {});
-      if (!G.hurtBase && (GRASS_LEVELS.includes(L) || SAND_LEVELS.includes(L))) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect / Sandy Perfect
+      if (!G.hurtBase && (GRASS_LEVELS.includes(L) || SAND_LEVELS.includes(L) || LAVA_LEVELS.includes(L))) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect / Sandy Perfect / Lava Perfect
+      if (LAVA_LEVELS.includes(L) && G.sawPillar && !G.trapped) earnAch("unbreakable");
       if (L === "beach" && kinds.length && kinds.every((k) => k === "crab")) earnAch("shellshocked");
       if (L === "desert" && (!G.hurtFrom || G.hurtFrom.size < 2)) earnAch("twofront");
       if (L === "pyramid" && !G.nearPyramid) earnAch("pharaoh");
