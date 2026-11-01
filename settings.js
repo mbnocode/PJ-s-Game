@@ -276,6 +276,18 @@ const SETTINGS = {
     universegolem: { name: "Universe Golem", health: 3600, speed: 0.8, leaves: 0, points: 1000, baseHit: 60, isBoss: true, chunkEvery: 450, chunkType: "starchunk" },
     // The Universe Titan: the final boss of Infinity (wave 45). fixedHealth: exactly this much health on Normal.
     universetitan: { name: "Universe Titan", health: 75000, speed: 1.5, leaves: 0, points: 8000, baseHit: 100, isBoss: true, fixedHealth: true, chunkEvery: 2500, chunkType: "starchunk" },
+    // ---- Eye of the Storm robots ----
+    // Gust Runner: every dashEvery seconds a gust of wind pushes it dashSpeed times faster for dashSeconds.
+    gustrunner:  { name: "Gust Runner", health: 70, speed: 3.0, leaves: 9, points: 30, dashEvery: 4, dashSeconds: 0.7, dashSpeed: 2.5 },
+    // Static Bot: every zapEvery seconds it zaps the closest tower within zapRadius squares, stunning it for zapSeconds.
+    staticbot:   { name: "Static Bot", health: 230, speed: 1.3, leaves: 16, points: 45, zapEvery: 6, zapRadius: 2, zapSeconds: 1.5 },
+    // Thunderbird Drone: a fast flying robot that comes in flocks. Only towers that hit flying robots can hit it.
+    thunderbird: { name: "Thunderbird Drone", health: 50, speed: 3.4, leaves: 8, points: 25, flying: true, baseHit: 6, swarm: 4 },
+    // Cyclone Golem (a Boss): every spinEvery seconds it spins into a tornado for spinSeconds. Nothing can hurt it while it spins, and it moves spinSpeed times faster.
+    cyclonegolem: { name: "Cyclone Golem", health: 3000, speed: 0.85, leaves: 180, points: 700, baseHit: 55, isBoss: true, spinEvery: 7, spinSeconds: 2, spinSpeed: 1.6 },
+    // The Thunder Titan: the final boss of the Eye of the Storm (wave 30). Every strikeEvery seconds it calls lightning
+    // down on strikeTowers towers within strikeRadius squares, stunning them for strikeSeconds. fixedHealth: exactly this much health on Normal.
+    thundertitan: { name: "Thunder Titan", health: 30000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5 },
     starchunk:     { name: "Star Chunk", health: 110, speed: 1.8, leaves: 0, points: 20 },
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).
@@ -302,9 +314,7 @@ const SETTINGS = {
 
   // ---------------- COMING SOON LEVELS ----------------
   // These show on the level picker as locked "Coming soon" cards. They can't be played yet.
-  comingSoon: [
-    { name: "Eye of the Storm", look: "storm", about: "The calm center of a giant swirling storm. The Thunder Titan is waiting here…" },
-  ],
+  comingSoon: [],
 
   // ---------------- THE SERPENT'S SHOP ----------------
   // The secret shop you reach by tapping the serpent hiding behind a tree on the save slot screen.
@@ -925,6 +935,50 @@ const SETTINGS = {
                 [["boss", 1, 0, 6000], ["yetimech", 2, 8], [["tank", "obsidian", "snowdrone", "tesla"], 28, 0.4]],   // 23
                 [[["emberbat", "drone", "snowdrone", "hider", "scout"], 44, 0.25]],     // 24
                 [["universegolem", 2, 10], ["magmaking", 1, 0], [["tank", "obsidian", "fireproof", "drone", "snowdrone", "emberbat", "tesla"], 40, 0.33]],   // 25: the big finish
+              ] },
+    // The Eye of the Storm: the road spirals in through a giant storm to the calm eye in the middle, where your treehouse is.
+    // Lightning strikes towers out in the storm, but never towers inside the calm eye (within calmRadius squares of the treehouse).
+    storm: { name: "Eye of the Storm", acornDropChance: 0.08, about: "The road spirals through a giant swirling storm to the calm eye in the middle. Lightning strikes towers out in the storm, but towers in the calm eye are safe. The Thunder Titan is waiting! Scores are worth 4.5x.", theme: "storm",
+              robotHealth: 1.35,
+              lateToughness: { fromWave: 8, perWave: 0.065 },   // after wave 8, robots get 6.5% tougher every wave
+              scoreTimes: 4.5,
+              lightning: { every: 8, stunSeconds: 2.5, fromWave: 2, calmRadius: 3 },
+              islands: [[0, 0, 9, 3], [10, 0, 10, 3], [17, 4, 3, 5], [9, 9, 11, 3], [0, 9, 8, 3], [0, 4, 3, 4], [4, 4, 11, 4]],   // a ring of islands around the calm eye island in the middle
+              path: [[0, 1], [18, 1], [18, 10], [2, 10], [2, 4], [15, 4], [15, 7], [9, 7]],
+              trees:     [[4, 2], [13, 2], [19, 0], [17, 6], [0, 10], [12, 11], [19, 11], [5, 6]],
+              mushrooms: [[1, 5], [7, 9], [16, 9], [11, 2], [12, 5]],
+              tallGrass: [[8, 0], [3, 11], [14, 6], [19, 2], [6, 2], [0, 7]],
+              waves: [
+                [["clanker", 8, 1.0]],                                                  // 1
+                [["walker", 6, 1.0], ["gustrunner", 3, 1.2]],                           // 2: the first Gust Runners
+                [[["scout", "walker", "hider"], 12, 0.85]],                             // 3
+                [["tank", 2, 3], ["thunderbird", 4, 0.4]],                              // 4: the first Thunderbird Drones
+                [[["gustrunner", "walker"], 12, 0.7], ["drone", 3, 1.0]],               // 5
+                [["staticbot", 3, 2], ["walker", 6, 0.8]],                              // 6: the first Static Bots
+                [["yetimech", 1, 0, 1800], [["thunderbird", "drone"], 6, 0.5]],         // 7
+                [[["tank", "repair", "staticbot"], 14, 0.7]],                           // 8
+                [["thunderbird", 10, 0.3], [["obsidian", "hider"], 10, 0.8]],           // 9
+                [["cyclonegolem", 1, 0], [["gustrunner", "thunderbird"], 8, 0.5]],      // 10: the Cyclone Golem
+                [[["tank", "obsidian", "tesla", "snowplow", "staticbot"], 22, 0.55]],   // 11
+                [["snowdrone", 6, 0.5], ["thunderbird", 8, 0.35]],                      // 12
+                [["glaciergolem", 1, 0], [["staticbot", "tank", "repair"], 16, 0.65]],  // 13
+                [[["gustrunner", "scout", "emberbat", "thunderbird"], 34, 0.28]],       // 14
+                [["boss", 1, 0, 4500], [["obsidian", "splitter", "diver"], 20, 0.55]],  // 15
+                [[["tank", "snowplow", "staticbot", "drone", "thunderbird", "mummy"], 28, 0.48]],   // 16
+                [["cyclonegolem", 2, 10], [["snowdrone", "thunderbird"], 10, 0.4]],     // 17
+                [[["fireproof", "obsidian", "diver", "gustrunner"], 28, 0.42]],         // 18
+                [["yetimech", 2, 8], [["drone", "snowdrone", "thunderbird"], 12, 0.38]],   // 19
+                [["universegolem", 1, 0], [["tank", "obsidian", "staticbot", "repair"], 26, 0.42]],   // 20
+                [[["snowplow", "tank", "hider", "thunderbird", "snowdrone", "gustrunner"], 36, 0.36]],   // 21
+                [["cyclonegolem", 2, 8], ["pillartitan", 1, 0], [["thunderbird", "emberbat"], 12, 0.35]],   // 22
+                [["boss", 1, 0, 6500], ["yetimech", 2, 8], [["tank", "obsidian", "staticbot", "tesla"], 30, 0.38]],   // 23
+                [[["thunderbird", "drone", "snowdrone", "hider", "gustrunner"], 46, 0.24]],   // 24
+                [["universegolem", 2, 10], ["cyclonegolem", 1, 0], [["tank", "obsidian", "fireproof", "staticbot", "thunderbird", "tesla"], 40, 0.32]],   // 25
+                [["glaciergolem", 2, 8], [["gustrunner", "staticbot", "thunderbird"], 36, 0.3]],   // 26
+                [["cyclonegolem", 3, 8], ["magmaking", 1, 0], [["thunderbird", "snowdrone"], 14, 0.32]],   // 27
+                [["boss", 1, 0, 9000], ["universegolem", 2, 9], [["tank", "snowplow", "obsidian", "staticbot", "mummy"], 36, 0.32]],   // 28
+                [[["thunderbird", "emberbat", "drone", "snowdrone", "gustrunner", "hider", "scout"], 56, 0.2]],   // 29: the whole storm at once
+                [["thundertitan", 1, 0]],                                               // 30: the Thunder Titan
               ] },
   },
 };

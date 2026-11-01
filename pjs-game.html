@@ -821,7 +821,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 <script>
 
 const COLS = 20, ROWS = 12, T = 32;
-const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity", "skyislands", "thunder"];
+const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity", "skyislands", "thunder", "storm"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix"];
@@ -941,6 +941,15 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
 { // the Universe Titan: a giant Universe Golem in deep violet, with golden cracks and a blazing sun for a heart
   const TITAN = { "1": "#140a2a", "2": "#2e1856", "3": "#4c2a8a", A: "#6a2a7a", u: "#ffd36b", U: "#fff7c2", z: "#fff3b0", p: "#ff9a3c", P: "#c0502a", w: "#ffffff", "5": "#ffe9a8", "7": "#fff7c2" };
   SPR.universetitan = makeSprite(ART.universegolem, false, TITAN); SPRF.universetitan = makeSprite(ART.universegolem, true, TITAN);
+}
+{ // the Eye of the Storm robots, made from storm-colored versions of other robots
+  const GUST = { s: "#eef6ff", g: "#a8c8e8", G: "#5a7aa8", x: "#ffffff", b: "#4fd1ff", c: "#c8f4ff", B: "#2a8ac8", r: "#7ff3ff", R: "#2aa8d8", y: "#e8f4ff", Y: "#9ab8d8", T: "#3a4a6a", w: "#ffffff" };
+  const STATIC = { z: "#fff7a0", p: "#ffe066", P: "#c9a020", e: "#4a5a7a", m: "#6a7a9a", j: "#3a4660", n: "#8a9aba", N: "#2a3450", s: "#9aa4c0", g: "#5a6480", G: "#343c58", U: "#fff7c2", c: "#ffe066", y: "#7ff3ff", Y: "#2aa8d8" };
+  const BIRD = { d: "#3a3e6a", D: "#22264a", E: "#7ff3ff", o: "#fff066", f: "#ffffff", w: "#fff7a0" };
+  const CYCLONE = { U: "#d4dae8", c: "#9aa4bc", b: "#6e7894", B: "#454c66", u: "#fff066", w: "#ffffff", x: "#c8d0e0" };
+  const TITANT = { R: "#3a3f78", r: "#6a74c8", g: "#4a5a8a", G: "#2c3458", s: "#8a90a8", y: "#fff066", Y: "#c9a020", o: "#7ff3ff", w: "#ffffff", f: "#ffffff" };
+  for (const [k, base, pal] of [["gustrunner", "scout", GUST], ["staticbot", "tesla", STATIC], ["thunderbird", "emberbat", BIRD], ["thunderbird_mid", "emberbat_mid", BIRD], ["thunderbird_down", "emberbat_down", BIRD], ["cyclonegolem", "glaciergolem", CYCLONE], ["thundertitan", "boss", TITANT]]) {
+    SPR[k] = makeSprite(ART[base], false, pal); SPRF[k] = makeSprite(ART[base], true, pal); }
 }
 { // the Defector's shop: the Hacked Robot (a Clanker painted green, with a leaf-green core), the Factory Blueprint and the Overcharge Battery
   const HACK = { f: "#c8f0a0", y: "#5fbf4a", Y: "#2f7d32", r: "#4fd1b8", c: "#9effe8", b: "#2a8a78", n: "#8fd45f", o: "#c8fff4", G: "#3a5524", g: "#6a8a50", s: "#a8d890" };
@@ -1192,6 +1201,14 @@ function makeTile(kind) {
     for (let n = 0; n < 30; n++) px(["#ffffff", "#dde8f4", "#f4f8fc"][rnd() * 3 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
     if (rnd() < 0.35) { const i = 1 + rnd() * 10 | 0, j = 2 + rnd() * 11 | 0; x.fillStyle = "#d2e0ef"; x.fillRect(i, j, 5, 1); x.fillRect(i + 1, j + 1, 3, 1); }   // a little drift shadow
     if (rnd() < 0.2) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ffffff", i, j); px("#bfe0f6", i + 1, j); }   // a sparkle
+  } else if (kind === "storm") {
+    // Eye of the Storm: dark storm-slate with violet tints, rain puddles and glowing charged crystal veins
+    x.fillStyle = "#4e4c62"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 32; n++) px(["#46445a", "#5a586e", "#504e66", "#626078", "#3e3c50"][rnd() * 5 | 0], rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.4) { const i = rnd() * 11 | 0, j = rnd() * 11 | 0; for (let n = 0; n < 8; n++) px(rnd() < 0.5 ? "#4a6a5a" : "#3e5a4e", i + (rnd() * 5 | 0), j + (rnd() * 4 | 0)); }   // wet storm moss
+    if (rnd() < 0.3) { const i = 2 + rnd() * 9 | 0, j = 2 + rnd() * 11 | 0; x.fillStyle = "#3a3e5e"; x.fillRect(i, j, 4, 2); px("#a8b4e0", i + 1, j); }   // a puddle reflecting the sky
+    if (rnd() < 0.3) { let i = rnd() * 14 | 0, j = rnd() * 10 | 0; for (let k = 0; k < 5; k++) { px(k % 2 ? "#9a8aff" : "#c8bcff", i, j); i += rnd() < 0.5 ? 1 : 0; j++; } }   // a glowing charged vein
+    if (rnd() < 0.12) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#fff7a0", i, j); }   // a spark
   } else if (kind === "thunder") {
     // Thunder Peaks: wet gray rock with patches of dark moss and puddles
     x.fillStyle = "#6a6e78"; x.fillRect(0, 0, 16, 16);
@@ -1439,6 +1456,7 @@ const GLACIER_FLOOR = Array.from({ length: 8 }, () => makeTile("glacier"));
 const BLIZZ_SNOW = Array.from({ length: 8 }, () => makeTile("blizzard"));
 const SPACE = Array.from({ length: 8 }, () => makeTile("infinity"));
 const THUNDER_ROCK = Array.from({ length: 8 }, () => makeTile("thunder"));
+const STORM_ROCK = Array.from({ length: 8 }, () => makeTile("storm"));
 { // Frozen Tundra scenery: snowy pines, snowy rocks and ice crystals
   const ICE_ART = {
     snowpine: [".......k........", "......kwk.......", ".....kwLwk......", ".....kLLLk......", "....kwwLwwk.....", "....kLLLLLk.....", "...kwwLLLwwk....", "...kLLLLLLLk....", "..kwwwLLLwwwk...", "..kLLLLLLLLLk...", ".kwwLLLLLLLwwk..", ".kkkkkkNkkkkkk..", "......kNk.......", "......kNk.......", "....wwwwwww.....", "................"],
@@ -1452,7 +1470,9 @@ const THUNDER_ROCK = Array.from({ length: 8 }, () => makeTile("thunder"));
   SPR.starcrystal = makeSprite(ICE_ART.icecrystal, false, { U: "#f0dcff", c: "#a070ff", w: "#ffffff" });
   SPR.moonrock = makeSprite(ICE_ART.snowrock, false, { w: "#d8d4e8", g: "#6e6890", G: "#4e4870" });
   SPR.pinkcrystal = makeSprite(ICE_ART.icecrystal, false, { U: "#ffe0f4", c: "#ff7ad0", w: "#ffffff" });
-  SPR.snowrockgray = makeSprite(ICE_ART.snowrock, false, { w: "#a8acb6", g: "#6a6e78", G: "#4a4e58" });   // Thunder Peaks: a wet gray boulder
+  SPR.snowrockgray = makeSprite(ICE_ART.snowrock, false, { w: "#a8acb6", g: "#6a6e78", G: "#4a4e58" });
+  SPR.stormpine = makeSprite(ICE_ART.snowpine, false, { L: "#2e4a4a", w: "#8a96c8", N: "#3a2a20" });              // Eye of the Storm: a dark, rain-soaked pine
+  SPR.chargecrystal = makeSprite(ICE_ART.icecrystal, false, { U: "#fff7c2", c: "#b49aff", w: "#ffffff" });     // a crystal humming with stored lightning   // Thunder Peaks: a wet gray boulder
   // Glacier Caves scenery: ice stalagmites and glowing frost mushrooms
   SPR.icestalagmite = makeSprite(["......k.........",".....kwk........",".....kck........","....kwck........","....kUcBk..k....","....kUcBk.kwk...","....kwcBk.kck...","...kUUcbBkkck...","...kUUcbBkUcBk..","...kUwcbBkUcBk..","...kUUcbBkUcBk..","...kUUcbBUUcbBk.","..kUUUcbbUUcbBk.",".kwwwwwwwwwwwwk.",".ksxxxxxxxxxxsk.","..kkkkkkkkkkkk.."]);
   SPR.frostshroom = makeSprite(["................","................","................","................","....kkk.........","..kkUUckk.......",".kUUwUcbbk......","kcccccwbbbkkk...","kccccccbbbUUck..",".kkkkxkkkcwcwbk.","....kxskcccccbbk","....kxk.kkkxkkk.","....kxk...kxsk..","..kkkkkkkkkxkk..",".kwxxxxxxxxxxxk.","..kkkkkkkkkkkk.."]);
@@ -1490,7 +1510,8 @@ const SCENERY_LOOK = { swamp: { tree: "cypress", mushroom: "glowshroom", tallgra
   glacier: { tree: "icestalagmite", mushroom: "frostshroom", tallgrass: "icecrystal" },
   blizzard: { tree: "snowpine", mushroom: "snowrock", tallgrass: "icecrystal" },
   infinity: { tree: "starcrystal", mushroom: "moonrock", tallgrass: "pinkcrystal" },
-  thunder: { tree: "pine", mushroom: "snowrockgray", tallgrass: "fern" } };
+  thunder: { tree: "pine", mushroom: "snowrockgray", tallgrass: "fern" },
+  storm: { tree: "stormpine", mushroom: "snowrockgray", tallgrass: "chargecrystal" } };
 const DIRT = Array.from({ length: 4 }, () => makeTile("path"));
 // Factory squares, drawn so they join up into one big factory floor.
 const FACTORY_TILES = Object.fromEntries(["floor", "beltH", "beltCrate", "pipeV", "pipeCross", "machine", "vent", "gear"].map((k) => [k, makeTile(k)]));
@@ -2488,7 +2509,7 @@ function drawWorldMap() {
   for (const [a, b] of [[836, 128], [928, 84]]) tree(a, b, 0.6);
   for (const [lx, ly] of [[960, 130], [870, 270]]) { x.strokeStyle = "rgba(255,247,160,0.4)"; x.lineWidth = 7; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx - 10, ly + 22); x.lineTo(lx, ly + 24); x.lineTo(lx - 14, ly + 50); x.stroke(); x.strokeStyle = "#fff7a0"; x.lineWidth = 2.5; x.stroke(); }   // lightning bolts
   // ---- the trail between the levels: a glowing dotted path ----
-  const order = LEVEL_ORDER.filter((L) => L !== "infinity").concat(["storm"]);
+  const order = LEVEL_ORDER.filter((L) => L !== "infinity" && WORLD_MAP[L]);
   const trail = () => { x.beginPath(); order.forEach((L, i) => { const [a, b] = WORLD_MAP[L]; i ? x.lineTo(a, b) : x.moveTo(a, b); }); };
   x.setLineDash([]); x.lineWidth = 12; x.strokeStyle = "rgba(60,40,20,0.25)"; trail(); x.stroke();
   x.setLineDash([2, 9]); x.lineWidth = 6; x.strokeStyle = "rgba(255,248,225,0.98)"; trail(); x.stroke();
@@ -3186,7 +3207,7 @@ function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 1
 function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
 // Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (and the Wizard's Elemental Sphere).
 const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked", "nightowl"]);   // the Hydra only does half damage to flying robots
-const canHit = (kind, r) => !r.under && (!r.flying || AIR_HUNTERS.has(kind));   // Lava Divers under the lava can't be hit at all
+const canHit = (kind, r) => !r.under && !r.spinning && (!r.flying || AIR_HUNTERS.has(kind));   // Lava Divers under the lava can't be hit at all
 function posAt(map, d) {
   d = Math.max(0, Math.min(map.total, d));
   for (const s of map.segs) if (d <= s.start + s.len) { const f = (d - s.start) / s.len; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
@@ -3194,7 +3215,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : map.theme === "infinity" ? SPACE : map.theme === "thunder" ? THUNDER_ROCK : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : map.theme === "infinity" ? SPACE : map.theme === "thunder" ? THUNDER_ROCK : map.theme === "storm" ? STORM_ROCK : GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   let gx = x, layer = null;
@@ -3206,10 +3227,15 @@ function paintGround(x, map, factoryCount) {
     const kind = map.cells[y][i], v = map.look[y][i];
     if (kind === "sky" || (map.islands && kind === "path" && !onAnIsland(map, i, y))) continue;   // open sky (and bridges, drawn later)
     let img = tiles[v % tiles.length];
+    if (map.theme === "storm" && map.islands) { const e = map.islands[map.islands.length - 1]; if (i >= e[0] && i < e[0] + e[2] && y >= e[1] && y < e[1] + e[3]) img = GRASS[v % GRASS.length]; }   // the calm eye (the last island): green grass in the sunshine
     if (fset.has(i + "," + y)) img = FACTORY_TILES[factoryTileAt(i, y)];
     gx.drawImage(img, i * T, y * T, T, T);
   }
   if (layer) drawRoundIslands(x, map, layer);
+  if (map.theme === "storm") {   // sunshine pouring down into the calm eye
+    const ex = (map.base.x + 1) * T, ey = (map.base.y + 1) * T - 16, g = x.createRadialGradient(ex, ey, 10, ex, ey, 190);
+    g.addColorStop(0, "rgba(255,246,200,0.28)"); g.addColorStop(0.6, "rgba(255,246,200,0.1)"); g.addColorStop(1, "rgba(255,246,200,0)"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);
+  }
   // A hazard-striped wall around the edge of the factory, so it reads as one building.
   const isF = (i, y) => fset.has(i + "," + y) || (map.cells[y] && map.cells[y][i] === "gate");
   for (const key of fset) {
@@ -3296,6 +3322,7 @@ function onAnIsland(map, x, y) { return (map.islands || []).some(([ix, iy, iw, i
 function skyBackdrop(map) {
   if (map.skyImg) return map.skyImg;
   const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
+  if (map.theme === "storm") return (map.skyImg = stormBackdrop(map));
   const dark = map.theme === "thunder", g = x.createLinearGradient(0, 0, 0, 384);
   if (dark) { g.addColorStop(0, "#121420"); g.addColorStop(1, "#2a2c44"); } else { g.addColorStop(0, "#4a96e6"); g.addColorStop(1, "#bfe2ff"); }
   x.fillStyle = g; x.fillRect(0, 0, 640, 384);
@@ -3333,7 +3360,7 @@ function islandShape(map, n) {
   return { path: p, X0, X1, Y0, Y1, atB };
 }
 function drawRoundIslands(x, map, layer) {
-  const dark = map.theme === "thunder", shapes = map.islands.map((_, n) => islandShape(map, n));
+  const dark = map.theme === "thunder" || map.theme === "storm", shapes = map.islands.map((_, n) => islandShape(map, n));
   let sd = 23; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   // 1. the undersides: a big rounded cone of dirt and rock under each island
   for (const sh of shapes) {
@@ -3439,13 +3466,23 @@ function tickLightning(dt) {
   G.boltClock = (G.boltClock || 0) + dt;
   if (G.boltClock < L.every) return;
   G.boltClock = 0;
-  const ok = G.towers.filter((t) => t.kind !== "phoenix"); if (!ok.length) return;   // (the Phoenix can't be stunned)
+  const eye = { x: (G.map.base.x + 1) * T, y: (G.map.base.y + 1) * T };
+  const ok = G.towers.filter((t) => t.kind !== "phoenix" && !(L.calmRadius && Math.hypot(t.x * T + 16 - eye.x, t.y * T + 16 - eye.y) <= L.calmRadius * T)); if (!ok.length) return;   // (the Phoenix can't be stunned, and nothing in the calm eye gets struck)
   const t = ok[Math.random() * ok.length | 0];
   t.stunT = Math.max(t.stunT || 0, L.stunSeconds); t.zapT = L.stunSeconds;
   const cx = t.x * T + 16, cy = t.y * T + 12;
   G.fx.push({ kind: "bolt", x: cx, y: cy, t: 0.45, life: 0.45, seed: Math.random() * 1000 });
   G.flash = 0.25; G.shake = Math.max(G.shake, 0.25); burst(cx, cy, "#fff7a0", 16); Sound.play("smash");
   floatText(cx, cy - 22, "Zap!", "#fff7a0", 1);
+}
+// a crackling arc of electricity between two points (the Static Bot zapping a tower)
+function drawArc(x, f) {
+  const a = f.t / f.life; x.save(); x.globalAlpha = Math.min(1, a * 1.8); x.lineJoin = "round";
+  for (const [col, w] of [["rgba(160,170,255,0.5)", 5], ["#fff7a0", 2], ["#ffffff", 1]]) {
+    x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(f.x1, f.y1);
+    for (let k = 1; k < 6; k++) { const t = k / 6, j = Math.sin(f.seed + k * 7.3 + G.time * 40) * 6; x.lineTo(f.x1 + (f.x2 - f.x1) * t + j, f.y1 + (f.y2 - f.y1) * t - j * 0.5); }
+    x.lineTo(f.x2, f.y2); x.stroke(); }
+  x.restore();
 }
 function drawBolt(x, f) {
   const a = f.t / f.life; let s = f.seed; const R = () => (s = (s * 16807 + 7) % 2147483647) / 2147483647;
@@ -3457,10 +3494,37 @@ function drawBolt(x, f) {
   }
   x.restore();
 }
-// rain and the lightning flash on Thunder Peaks
+// The Eye of the Storm's sky: a giant swirl of storm clouds spinning around a calm, sunny eye over the treehouse
+function stormBackdrop(map) {
+  const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
+  const cx = (map.base.x + 1) * T, cy = (map.base.y + 1) * T;
+  let g = x.createLinearGradient(0, 0, 0, 384); g.addColorStop(0, "#1a1630"); g.addColorStop(1, "#2e2848"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);
+  const img = x.getImageData(0, 0, 640, 384), D = img.data;
+  for (let j = 0; j < 384; j += 2) for (let i = 0; i < 640; i += 2) {   // spiral bands of cloud, curling in toward the eye
+    const dx = (i - cx) / 1.25, dy = j - cy, rr = Math.hypot(dx, dy), a = Math.atan2(dy, dx) + rr / 70;
+    const band = 0.5 + 0.5 * Math.sin(a * 4 + Math.sin(rr / 23) * 0.6), wisp = 0.5 + 0.5 * Math.sin(a * 11 + rr / 9);
+    let v = band * 0.75 + wisp * 0.25; const calm = Math.max(0, 1 - rr / 105);
+    let R = 44 + v * 84, Gc = 38 + v * 74, B = 72 + v * 100;
+    if (v > 0.78) { R += 30; Gc += 26; B += 34; }   // the bright tops of the cloud bands
+    R = R * (1 - calm) + (150 + 60 * (1 - rr / 105)) * calm; Gc = Gc * (1 - calm) + (200 + 30 * (1 - rr / 105)) * calm; B = B * (1 - calm) + 245 * calm;   // the calm blue eye
+    for (let q = 0; q < 2; q++) for (let p = 0; p < 2; p++) { const o = ((j + q) * 640 + i + p) * 4; D[o] = R; D[o + 1] = Gc; D[o + 2] = B; D[o + 3] = 255; }
+  }
+  x.putImageData(img, 0, 0);
+  g = x.createRadialGradient(cx, cy, 10, cx, cy, 130); g.addColorStop(0, "rgba(255,250,210,0.45)"); g.addColorStop(1, "rgba(255,250,210,0)"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);   // sunlight pouring down into the eye
+  g = x.createRadialGradient(cx, cy, 95, cx, cy, 125); g.addColorStop(0, "rgba(220,225,255,0)"); g.addColorStop(0.5, "rgba(220,225,255,0.22)"); g.addColorStop(1, "rgba(220,225,255,0)"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);   // the eye wall
+  let sd = 4041; const Rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let n = 0; n < 9; n++) { const a = Rn() * Math.PI * 2, d = 150 + Rn() * 220, px = cx + Math.cos(a) * d * 1.25, py = cy + Math.sin(a) * d;   // faraway lightning inside the clouds
+    const gl = x.createRadialGradient(px, py, 0, px, py, 34); gl.addColorStop(0, "rgba(200,190,255,0.35)"); gl.addColorStop(1, "rgba(200,190,255,0)"); x.fillStyle = gl; x.fillRect(px - 34, py - 34, 68, 68); }
+  for (let n = 0; n < 5; n++) { const bx = cx + (Rn() - 0.5) * 90, by = cy - 30 + (Rn() - 0.5) * 60; x.fillStyle = "#3a4a6a"; x.fillRect(bx, by, 2, 1); x.fillRect(bx - 2, by - 1, 2, 1); x.fillRect(bx + 2, by - 1, 2, 1); }   // birds resting in the calm
+  return c;
+}
+// rain and the lightning flash on Thunder Peaks (on the Eye of the Storm the rain swirls, and it never rains in the calm eye)
 function drawStormRain(x) {
   x.save(); x.strokeStyle = "rgba(190,205,235,0.35)"; x.lineWidth = 1; x.beginPath();
-  for (let i = 0; i < 70; i++) { const sp = 380 + (i % 5) * 40, yy = ((G.time * sp + i * 137.7) % 440) - 40, xx = ((i * 97.31) % 1) * 680 - 20 + yy * 0.25; x.moveTo(xx, yy); x.lineTo(xx + 3, yy + 10); }
+  const eye = G.map.theme === "storm" ? { x: (G.map.base.x + 1) * T, y: (G.map.base.y + 1) * T } : null;
+  for (let i = 0; i < (eye ? 110 : 70); i++) { const sp = 380 + (i % 5) * 40, yy = ((G.time * sp + i * 137.7) % 440) - 40, xx = ((i * 97.31) % 1) * 680 - 20 + yy * 0.25;
+    if (eye) { const dx = xx - eye.x, dy = yy - eye.y, d = Math.hypot(dx, dy); if (d < 100) continue; const tx = -dy / d, ty = dx / d; x.moveTo(xx, yy); x.lineTo(xx + tx * 9 + 2, yy + ty * 9 + 5); continue; }   // blown sideways around the eye
+    x.moveTo(xx, yy); x.lineTo(xx + 3, yy + 10); }
   x.stroke();
   if (G.flash > 0) { x.fillStyle = `rgba(230,235,255,${0.5 * G.flash / 0.25})`; x.fillRect(0, 0, 640, 384); }
   x.restore();
@@ -3538,7 +3602,7 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder"].includes(map.theme);
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder", "storm"].includes(map.theme);
   const C = map.theme === "basalt"
     // an old crumbling stone road (the lava levels)
     ? { rim: hex("#16141a"), dirt: hex("#6a6874"), dark: hex("#56535f"), light: hex("#7e7b88"), edge: hex("#46444e"), stone: hex("#9a97a4"), rut: hex("#5a5764"), tuft: hex("#3c3944"), tuft2: hex("#2f2c34"), mortar: hex("#25232b") }
@@ -3547,6 +3611,9 @@ function makePathLayer(map) {
     : map.theme === "glacier"
     // an icy walkway: polished slabs of pale ice with frosty seams and shiny streaks, edged with packed snow
     ? { rim: hex("#163e62"), dirt: hex("#d6f0ff"), dark: hex("#bfe4f8"), light: hex("#eefaff"), edge: hex("#f4fbff"), stone: hex("#ffffff"), rut: hex("#a8d8f2"), tuft: hex("#eaf6ff"), tuft2: hex("#ffffff"), mortar: hex("#8ec6e8"), shine: hex("#ffffff") }
+    : map.theme === "storm"
+    // a road of rain-slick violet flagstones
+    ? { rim: hex("#121020"), dirt: hex("#625e7a"), dark: hex("#524e6a"), light: hex("#8a84a6"), edge: hex("#423e58"), stone: hex("#a49ec0"), rut: hex("#58546e"), tuft: hex("#4a6a5a"), tuft2: hex("#3a5a4a"), mortar: hex("#2c2a3c") }
     : map.theme === "thunder"
     // a road of dark wet flagstones
     ? { rim: hex("#14161c"), dirt: hex("#5a5e68"), dark: hex("#4a4e58"), light: hex("#767a86"), edge: hex("#3a3e48"), stone: hex("#8a8e9a"), rut: hex("#50545e"), tuft: hex("#3f6a3a"), tuft2: hex("#2f5a2a"), mortar: hex("#2a2d34") }
@@ -3932,9 +3999,10 @@ function playBoxOpening(prize, done) {
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
-const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES];
+const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "cyclonegolem", "thundertitan"];
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"]);
+const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "cyclonegolem", "thundertitan"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -3965,6 +4033,11 @@ const FOE_ABOUT = {
   universetitan: "The biggest robot in the universe: a gigantic golem of deep violet space rock with golden cracks and a blazing sun for a heart.",
   universegolem: "A towering giant made of space rock from far across the universe, with glowing cracks, starry specks and a swirling galaxy in its chest.",
   blizzardking: "The ruler of the snowy peaks: an icy robot king with a crown and an ice scepter, riding in on a storm cloud.",
+  gustrunner: "A sleek, pale-blue runner bot with a glowing cyan visor. It rides the storm winds.",
+  staticbot: "A walking battery wrapped in coils, buzzing and crackling with stored lightning.",
+  thunderbird: "A small dark flying bot with glowing blue wings that flies in flocks through the storm clouds.",
+  cyclonegolem: "A huge golem of gray storm-stone with glowing yellow eyes. Sometimes it spins so fast it turns into a tornado.",
+  thundertitan: "The ruler of the storm: a gigantic dark-blue war machine with golden horns, crackling with lightning. The final boss of the Eye of the Storm.",
   volcanoheart: "The molten heart of the volcano, wrapped in armor plates, with fire roaring out of its vents. The final boss.",
 };
 /* ---------- the Defector Robot (a secret on the Enemies page) ---------- */
@@ -4073,6 +4146,11 @@ function renderEnemies() {
       : k === "universegolem" ? `Special: stronger than the Glacier Golem! Every time it takes ${r.chunkEvery} damage, a Star Chunk breaks off and keeps marching. It drops NO Maple Leaves, and neither do its Star Chunks. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of Infinity.`
       : k === "glaciergolem" ? `Special: every time it takes ${r.chunkEvery} damage, a chunk of ice breaks off and keeps marching toward your treehouse. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Glacier Caves (and it visits The Frozen Tundra).`
       : k === "blizzardking" ? `Special: it brings a howling blizzard with it. Until it's destroyed, every tower's range shrinks by ${Math.round(r.rangeShrink * 100)}%. Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss of Blizzard Peak.`
+      : k === "gustrunner" ? `Special: every ${r.dashEvery} seconds a gust of wind pushes it ${r.dashSpeed} times faster for a moment. Shows up on the Eye of the Storm.`
+      : k === "staticbot" ? `Special: every ${r.zapEvery} seconds it zaps the closest tower within ${r.zapRadius} squares, so that tower can't attack for ${r.zapSeconds} seconds. Shows up on the Eye of the Storm.`
+      : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
+      : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
+      : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col, grows]) => { const v = f(k);
@@ -4911,6 +4989,11 @@ function startWave() {
     diver: "Lava Divers dive under the lava, where nothing can hit them, and pop back up farther along the road.",
     pillartitan: "The Pillar Titan is coming! Every few seconds it slams the ground and traps the closest tower under a basalt pillar until the wave ends.",
     magmaking: "The Magma Cube King is coming! When you destroy it, it splits into Magma Cubes, and those split into small cubes!",
+    gustrunner: "Gust Runners are here! Every few seconds the storm wind pushes them forward super fast.",
+    staticbot: "Static Bots are here! Every few seconds they zap the closest tower, so it can't attack for a moment.",
+    thunderbird: "Thunderbird Drones fly in flocks straight at your treehouse. Only towers that hit flying robots can stop them.",
+    cyclonegolem: "The Cyclone Golem is coming! Sometimes it spins into a tornado, and nothing can hurt it until it stops.",
+    thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Towers in the calm eye still get hit by the Titan!",
     volcanoheart: "The Volcano Heart is coming! It heals while it's on the glowing lava squares. Freeze it there to stop the healing!",
   };
   G.seenLava = G.seenLava || {};
@@ -5042,7 +5125,7 @@ function endWave() {
 function hurt(r, amt, vision, isBurn, kind) {
   if (r.dead) return;
   if (r.hideT > 0 && !vision) return;
-  if (r.under) return;   // a Lava Diver under the lava can't be hit
+  if (r.under || r.spinning) return;   // a Lava Diver under the lava (or a spinning Cyclone Golem) can't be hit
   const RB = SETTINGS.robots[r.type] || {};
   if (RB.waterTimes) {   // Fire-Proof Bot: Dragon fire does nothing, Frogs hit extra hard
     if (kind === "fire" || kind === "phoenix" || isBurn) { if (!isBurn && Math.random() < 0.3) { const q = rpos(r); floatText(q.x, q.y - 16, "Fire-proof!", "#c9ced6", 0.6); } return; }
@@ -5610,6 +5693,47 @@ function phoenixRebirth(t) {
   for (const r of G.robots) { if (r.dead) continue; const q = rpos(r); if (Math.hypot(q.x - cx, q.y - cy) <= R.radius * T) { hurt(r, R.damage, true, false, "phoenix"); if (!r.dead && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = 2; r.burnDps = 8; } } }
 }
 function freezeTower(t, sec) { if (t.kind === "phoenix") { phoenixRebirth(t); return; } t.stunT = Math.max(t.stunT || 0, sec); t.iceT = Math.max(t.iceT || 0, sec); burst(t.x * T + 16, t.y * T + 12, "#e6f6ff", 10); }
+/* ---------- Eye of the Storm robot powers ---------- */
+function stormPowers(dt) {
+  const RS = SETTINGS.robots;
+  for (const r of G.robots) {
+    if (r.dead) continue;
+    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.spinEvery && !S.strikeEvery) continue;
+    const q = rpos(r);
+    if (S.dashEvery) {   // Gust Runner: a gust of wind pushes it forward
+      r.dashT = (r.dashT ?? S.dashEvery * (0.4 + Math.random() * 0.6)) - dt;
+      if (r.dashT <= 0) { r.dashT = S.dashEvery; r.dashLeft = S.dashSeconds; if (!PREFS.simple) for (let i = 0; i < 6; i++) G.particles.push({ kind: "spark", x: q.x, y: q.y, vx: (q.dx < 0 ? 1 : -1) * (40 + Math.random() * 40), vy: (Math.random() - 0.5) * 20, t: 0, life: 0.35, col: "#e6f4ff" }); }
+    }
+    if (S.zapEvery) {   // Static Bot: zaps the closest tower
+      r.zapT = (r.zapT ?? S.zapEvery * 0.5) - dt;
+      if (r.zapT <= 0) {
+        const t = G.towers.filter((t) => !(t.stunT > 0) && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.zapRadius * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - q.y) - Math.hypot(b.x * T - q.x, b.y * T - q.y))[0];
+        if (!t) r.zapT = 0.4;
+        else {
+          r.zapT = S.zapEvery; const tx = t.x * T + 16, ty = t.y * T + 12;
+          G.fx.push({ kind: "arc", x1: q.x, y1: q.y - 10, x2: tx, y2: ty, t: 0.35, life: 0.35, seed: Math.random() * 100 }); Sound.play("hit");
+          if (t.kind === "phoenix") phoenixRebirth(t);
+          else { t.stunT = Math.max(t.stunT || 0, S.zapSeconds); t.zapT = S.zapSeconds; floatText(tx, ty - 16, "Zapped!", "#fff7a0", 0.7); burst(tx, ty, "#fff7a0", 8); }
+        }
+      }
+    }
+    if (S.spinEvery) {   // Cyclone Golem: spins into a tornado, and nothing can hurt it
+      r.spinT = (r.spinT ?? S.spinEvery * 0.6) - dt;
+      if (!r.spinning && r.spinT <= 0) { r.spinning = true; r.spinT = S.spinSeconds; floatText(q.x, q.y - 36, "Tornado!", "#dfe6ff"); burst(q.x, q.y, "#dfe6ff", 14); }
+      else if (r.spinning && r.spinT <= 0) { r.spinning = false; r.spinT = S.spinEvery; burst(q.x, q.y, "#dfe6ff", 10); }
+    }
+    if (S.strikeEvery) {   // Thunder Titan: calls lightning down on towers around it
+      r.strikeT = (r.strikeT ?? S.strikeEvery * 0.5) - dt;
+      if (r.strikeT <= 0) {
+        r.strikeT = S.strikeEvery;
+        const near = G.towers.filter((t) => t.kind !== "phoenix" && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.strikeRadius * T).sort(() => Math.random() - 0.5).slice(0, S.strikeTowers);
+        for (const t of near) { const cx = t.x * T + 16, cy = t.y * T + 12; t.stunT = Math.max(t.stunT || 0, S.strikeSeconds); t.zapT = S.strikeSeconds;
+          G.fx.push({ kind: "bolt", x: cx, y: cy, t: 0.45, life: 0.45, seed: Math.random() * 1000 }); burst(cx, cy, "#fff7a0", 14); }
+        if (near.length) { G.flash = 0.25; G.shake = Math.max(G.shake, 0.3); Sound.play("smash"); floatText(q.x, q.y - 56, "THUNDER!", "#fff7a0"); }
+      }
+    }
+  }
+}
 /* ---------- lava-level robot powers ---------- */
 function lavaPowers(dt) {
   const RS = SETTINGS.robots;
@@ -5719,6 +5843,7 @@ function update(dt) {
     floatText(c.x, c.y - 30, "Sandstorm!", "#f2c27a"); G.shake = Math.max(G.shake, 0.15); Sound.play("smash");
   }
   lavaPowers(dt);
+  stormPowers(dt);
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
   const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => rpos(r));
   for (const r of G.robots) {
@@ -5736,6 +5861,8 @@ function update(dt) {
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
     if (r.under) sp *= 1.5;   // Lava Divers swim fast under the lava
+    if (r.dashLeft > 0) { r.dashLeft -= dt; sp *= (SETTINGS.robots[r.type] || {}).dashSpeed || 2.5; }   // a Gust Runner dashing on the wind
+    if (r.spinning) sp *= (SETTINGS.robots[r.type] || {}).spinSpeed || 1.5;   // a Cyclone Golem spinning as a tornado
     if (G.map.ice && G.map.ice.size && !r.flying) { const q = rpos(r); r.sliding = G.map.ice.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sliding) sp *= (SETTINGS.robots[r.type] || {}).iceSpeed || SETTINGS.levels[G.level].iceSpeed || 1.4; }   // sliding on the ice (Penguin Bots belly-slide extra fast)
     if (G.map.quick && G.map.quick.size && !r.flying) { const q = rpos(r); r.sinking = G.map.quick.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sinking) sp *= 1 - (SETTINGS.quicksandSlow ?? 0.5); }
     // Owl gusts: the robot gets blown backwards along the path, quickly but not instantly.
@@ -6109,7 +6236,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "universetitan" ? 100 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "universetitan" || r.type === "thundertitan" ? 100 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -6132,10 +6259,16 @@ function draw() {
     else { x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(p.x - sz * 0.35, p.y + sz * 0.32 - 4, sz * 0.7, 4); }
     x.globalAlpha = r.under ? 0 : hidden ? 0.16 + 0.08 * Math.sin(G.time * 20) : 1;
     let frame = r.type;
-    if (r.type === "emberbat") {   // Ember Bats flap slowly: wings up, level, down, level, up...
+    if (r.type === "emberbat" || r.type === "thunderbird") {   // Ember Bats flap slowly: wings up, level, down, level, up... (Thunderbirds flap faster)
       if (r.flapAt === undefined) r.flapAt = Math.random() * 6;   // each bat starts at its own point, so a swarm doesn't flap in sync
-      const f = Math.sin(G.time * 3.2 + r.flapAt);
-      frame = f > 0.45 ? "emberbat" : f < -0.45 ? "emberbat_down" : "emberbat_mid";
+      const f = Math.sin(G.time * (r.type === "thunderbird" ? 6 : 3.2) + r.flapAt);
+      frame = r.type + (f > 0.45 ? "" : f < -0.45 ? "_down" : "_mid");
+    }
+    if (r.spinning && !PREFS.simple) {   // the Cyclone Golem spinning as a tornado: a funnel of wind whirls around it
+      x.save(); x.translate(p.x, p.y - 12);
+      for (let k = 0; k < 6; k++) { const yy = 26 - k * 9, w = 10 + k * 5, a = G.time * 14 + k; x.strokeStyle = `rgba(220,230,255,${0.75 - k * 0.08})`; x.lineWidth = 2.5;
+        x.beginPath(); x.ellipse(0, yy, w, w * 0.28, 0, a % (Math.PI * 2), (a % (Math.PI * 2)) + 4.2); x.stroke(); }
+      x.restore();
     }
     const img = (p.dx < 0 ? SPRF : SPR)[frame];
     x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0));   // robots sink a little in quicksand
@@ -6155,6 +6288,18 @@ function draw() {
       const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 4 + r.wob), gr = x.createRadialGradient(0, 2 * k, 0, 0, 2 * k, 12 * k);
       gr.addColorStop(0, `rgba(255,${r.healing ? 220 : 140},40,${0.45 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,100,20,0)");
       x.fillStyle = gr; x.beginPath(); x.arc(0, 2 * k, 12 * k, 0, Math.PI * 2); x.fill();
+    }
+    if ((r.type === "thundertitan" || r.type === "staticbot" || r.type === "thunderbird") && !hidden && !PREFS.simple) {   // crackling with electricity
+      const big = r.type === "thundertitan", pulse = 0.5 + 0.5 * Math.sin(G.time * (big ? 3 : 6) + r.wob), gr = x.createRadialGradient(0, 0, 4, 0, 0, sz * 0.7);
+      gr.addColorStop(0, `rgba(255,240,140,${(big ? 0.25 : 0.18) + 0.18 * pulse})`); gr.addColorStop(0.6, `rgba(130,150,255,${0.1 + 0.08 * pulse})`); gr.addColorStop(1, "rgba(120,140,255,0)");
+      x.fillStyle = gr; x.beginPath(); x.arc(0, 0, sz * 0.7, 0, Math.PI * 2); x.fill();
+      if (r.type !== "thunderbird" && Math.random() < (big ? 0.5 : 0.25)) {   // a little arc of lightning jumping across it
+        x.strokeStyle = Math.random() < 0.5 ? "#fff7a0" : "#cfe8ff"; x.lineWidth = big ? 2 : 1.2; x.beginPath(); let ax = (Math.random() - 0.5) * sz * 0.6, ay = (Math.random() - 0.5) * sz * 0.6; x.moveTo(ax, ay);
+        for (let k = 0; k < 4; k++) { ax += (Math.random() - 0.5) * sz * 0.3; ay += (Math.random() - 0.5) * sz * 0.3; x.lineTo(ax, ay); } x.stroke(); }
+    }
+    if (r.type === "gustrunner" && !hidden && !PREFS.simple) {   // streaks of wind trailing behind it (longer while it dashes)
+      const dir = p.dx < 0 ? 1 : -1, n = r.dashLeft > 0 ? 4 : 2; x.strokeStyle = "rgba(230,245,255,0.75)"; x.lineWidth = 1.5;
+      for (let k = 0; k < n; k++) { const yy = -6 + k * 4, len = (r.dashLeft > 0 ? 16 : 8) + ((G.time * 40 + k * 7) % 6); x.beginPath(); x.moveTo(dir * 8, yy); x.lineTo(dir * (8 + len), yy); x.stroke(); }
     }
     if (r.type === "universetitan" && !hidden && !PREFS.simple) {   // a huge golden-violet glow, with sparks of starlight
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 2 + r.wob), gr = x.createRadialGradient(0, 0, 8, 0, 0, sz * 0.75);
@@ -6295,6 +6440,7 @@ function draw() {
     if (f.kind === "vine") drawVine(x, f);
     else if (f.kind === "bite") drawBite(x, f);
     else if (f.kind === "bolt") drawBolt(x, f);
+    else if (f.kind === "arc") drawArc(x, f);
     if (f.kind === "zap") drawZap(x, f);
     if (f.kind === "scorch") {   // a crater with glowing embers that cool down
       const a = Math.min(1, f.t / 1);
@@ -6326,7 +6472,7 @@ function draw() {
     }
   }
   if (G.map.theme === "blizzard" && !PREFS.simple) drawBlizzardWind(x, true);
-  if (G.map.theme === "thunder" && !PREFS.simple) drawStormRain(x);
+  if ((G.map.theme === "thunder" || G.map.theme === "storm") && !PREFS.simple) drawStormRain(x);
   drawBonusLeaf(x);
   drawCrabSpot(x);
   drawShell(x);
