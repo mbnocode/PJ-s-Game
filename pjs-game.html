@@ -3220,7 +3220,7 @@ function paintGround(x, map, factoryCount) {
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   let gx = x, layer = null;
   if (map.islands) {   // Sky Islands: the ground goes on its own layer first, so it can be cut into rounded island shapes
-    x.drawImage(skyBackdrop(map), 0, 0);
+    if (!map.liveSky) x.drawImage(skyBackdrop(map), 0, 0);   // (on the Eye of the Storm the game draws a slowly spinning sky underneath instead)
     layer = document.createElement("canvas"); layer.width = 640; layer.height = 384; gx = layer.getContext("2d"); gx.imageSmoothingEnabled = false;
   }
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
@@ -3403,7 +3403,7 @@ function drawBridges(x, map) {
   const sky = skyBackdrop(map), isP = (i, y) => map.cells[y] && map.cells[y][i] === "path" || (map.cells[y] && (map.cells[y][i] === "base" || map.cells[y][i] === "gate"));
   for (let y = 0; y < ROWS; y++) for (let i = 0; i < COLS; i++) {
     if (map.cells[y][i] !== "path" || onAnIsland(map, i, y)) continue;
-    const X = i * T, Y = y * T; x.drawImage(sky, X, Y, T, T, X, Y, T, T);   // clear the road away: sky shows between the planks
+    const X = i * T, Y = y * T; if (map.liveSky) x.clearRect(X, Y, T, T); else x.drawImage(sky, X, Y, T, T, X, Y, T, T);   // clear the road away: sky shows between the planks
     const horiz = isP(i - 1, y) || isP(i + 1, y), vert = isP(i, y - 1) || isP(i, y + 1);
     x.fillStyle = "rgba(0,0,0,0.18)"; if (horiz) x.fillRect(X, Y + 22, T, 4); else x.fillRect(X + 22, Y, 4, T);   // the bridge's shadow
     for (let k = 0; k < T; k += 6) {   // wooden planks
@@ -3495,25 +3495,27 @@ function drawBolt(x, f) {
   x.restore();
 }
 // The Eye of the Storm's sky: a giant swirl of storm clouds spinning around a calm, sunny eye over the treehouse
-function stormBackdrop(map) {
-  const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
-  const cx = (map.base.x + 1) * T, cy = (map.base.y + 1) * T;
-  let g = x.createLinearGradient(0, 0, 0, 384); g.addColorStop(0, "#1a1630"); g.addColorStop(1, "#2e2848"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);
-  const img = x.getImageData(0, 0, 640, 384), D = img.data;
-  for (let j = 0; j < 384; j += 2) for (let i = 0; i < 640; i += 2) {   // spiral bands of cloud, curling in toward the eye
-    const dx = (i - cx) / 1.25, dy = j - cy, rr = Math.hypot(dx, dy), a = Math.atan2(dy, dx) + rr / 70;
+// (spin: true makes a big square version centered on the eye, which the game slowly turns underneath the islands)
+function stormBackdrop(map, spin) {
+  const W = spin ? 840 : 640, H = spin ? 840 : 384;
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const cx = spin ? W / 2 : (map.base.x + 1) * T, cy = spin ? H / 2 : (map.base.y + 1) * T, sx = spin ? 1 : 1.25;
+  let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#1a1630"); g.addColorStop(1, "#2e2848"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const img = x.getImageData(0, 0, W, H), D = img.data;
+  for (let j = 0; j < H; j += 2) for (let i = 0; i < W; i += 2) {   // spiral bands of cloud, curling in toward the eye
+    const dx = (i - cx) / sx, dy = j - cy, rr = Math.hypot(dx, dy), a = Math.atan2(dy, dx) + rr / 70;
     const band = 0.5 + 0.5 * Math.sin(a * 4 + Math.sin(rr / 23) * 0.6), wisp = 0.5 + 0.5 * Math.sin(a * 11 + rr / 9);
     let v = band * 0.75 + wisp * 0.25; const calm = Math.max(0, 1 - rr / 105);
     let R = 44 + v * 84, Gc = 38 + v * 74, B = 72 + v * 100;
     if (v > 0.78) { R += 30; Gc += 26; B += 34; }   // the bright tops of the cloud bands
     R = R * (1 - calm) + (150 + 60 * (1 - rr / 105)) * calm; Gc = Gc * (1 - calm) + (200 + 30 * (1 - rr / 105)) * calm; B = B * (1 - calm) + 245 * calm;   // the calm blue eye
-    for (let q = 0; q < 2; q++) for (let p = 0; p < 2; p++) { const o = ((j + q) * 640 + i + p) * 4; D[o] = R; D[o + 1] = Gc; D[o + 2] = B; D[o + 3] = 255; }
+    for (let q = 0; q < 2; q++) for (let p = 0; p < 2; p++) { const o = ((j + q) * W + i + p) * 4; D[o] = R; D[o + 1] = Gc; D[o + 2] = B; D[o + 3] = 255; }
   }
   x.putImageData(img, 0, 0);
-  g = x.createRadialGradient(cx, cy, 10, cx, cy, 130); g.addColorStop(0, "rgba(255,250,210,0.45)"); g.addColorStop(1, "rgba(255,250,210,0)"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);   // sunlight pouring down into the eye
-  g = x.createRadialGradient(cx, cy, 95, cx, cy, 125); g.addColorStop(0, "rgba(220,225,255,0)"); g.addColorStop(0.5, "rgba(220,225,255,0.22)"); g.addColorStop(1, "rgba(220,225,255,0)"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);   // the eye wall
+  g = x.createRadialGradient(cx, cy, 10, cx, cy, 130); g.addColorStop(0, "rgba(255,250,210,0.45)"); g.addColorStop(1, "rgba(255,250,210,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);   // sunlight pouring down into the eye
+  g = x.createRadialGradient(cx, cy, 95, cx, cy, 125); g.addColorStop(0, "rgba(220,225,255,0)"); g.addColorStop(0.5, "rgba(220,225,255,0.22)"); g.addColorStop(1, "rgba(220,225,255,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);   // the eye wall
   let sd = 4041; const Rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  for (let n = 0; n < 9; n++) { const a = Rn() * Math.PI * 2, d = 150 + Rn() * 220, px = cx + Math.cos(a) * d * 1.25, py = cy + Math.sin(a) * d;   // faraway lightning inside the clouds
+  for (let n = 0; n < (spin ? 16 : 9); n++) { const a = Rn() * Math.PI * 2, d = 150 + Rn() * (spin ? 260 : 220), px = cx + Math.cos(a) * d * sx, py = cy + Math.sin(a) * d;   // faraway lightning inside the clouds
     const gl = x.createRadialGradient(px, py, 0, px, py, 34); gl.addColorStop(0, "rgba(200,190,255,0.35)"); gl.addColorStop(1, "rgba(200,190,255,0)"); x.fillStyle = gl; x.fillRect(px - 34, py - 34, 68, 68); }
   for (let n = 0; n < 5; n++) { const bx = cx + (Rn() - 0.5) * 90, by = cy - 30 + (Rn() - 0.5) * 60; x.fillStyle = "#3a4a6a"; x.fillRect(bx, by, 2, 1); x.fillRect(bx - 2, by - 1, 2, 1); x.fillRect(bx + 2, by - 1, 2, 1); }   // birds resting in the calm
   return c;
@@ -3845,6 +3847,7 @@ function startGame(L, d, tutorial, online, resuming) {
 function redrawGround() {
   const fc = Math.round((1 - G.health / G.maxHealth) * SETTINGS.factorySquares);
   const before = G.factoryCount; G.factoryCount = Math.max(0, Math.min(SETTINGS.factorySquares, fc));
+  G.map.liveSky = G.map.theme === "storm";   // the Eye of the Storm's sky slowly spins underneath the islands
   const x = G.ground.getContext("2d"); x.clearRect(0, 0, 640, 384); paintGround(x, G.map, G.factoryCount);
   if (G.factoryCount > before) G.map.factoryOrder.slice(before, G.factoryCount).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.6, col: "255,140,40" }));
   if (G.factoryCount < before) G.map.factoryOrder.slice(G.factoryCount, before).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.8, col: "150,255,140" }));
@@ -6012,6 +6015,11 @@ function draw() {
   const x = ctx;
   x.save();
   if (G.shake > 0 && PREFS.shake) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
+  if (G.map.liveSky) {   // the Eye of the Storm: the whole storm slowly turns around the calm eye, underneath the islands
+    const sw = G.map.spinSky || (G.map.spinSky = stormBackdrop(G.map, true));
+    if (!PREFS.simple) G.skyTurn = G.time * 0.05;   // about one full turn every 2 minutes (it stops when the game is paused; Simple effects keeps it still)
+    x.save(); x.translate((G.map.base.x + 1) * T, (G.map.base.y + 1) * T); x.scale(1.25, 1); x.rotate(-(G.skyTurn || 0)); x.drawImage(sw, -sw.width / 2, -sw.height / 2); x.restore();
+  }
   x.drawImage(G.ground, 0, 0);
   if (G.map.theme === "blizzard" && !PREFS.simple) drawBlizzardWind(x, false);
   if (G.map.theme === "volcano" && G.map.veinGlow && !PREFS.simple) {   // the lava cracks throb with heat, embers float up, and the cave edges glow dark red
