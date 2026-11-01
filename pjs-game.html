@@ -351,6 +351,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ability.ice.on { background: #7cd4ff; color: #062033; border-color: #e8faff; box-shadow: 0 0 18px rgba(160,230,255,0.85); }
 .ability.ice.on .ab-cost { color: #062033; }
 @media (max-width: 760px) { .abilities { position: absolute; right: 6px; bottom: 6px; margin: 0; } .ability { width: 70px; font-size: 12px; } }
+.abilities.two { display: grid; grid-template-columns: repeat(2, auto); }   /* too many buttons for one column: two columns */
+.abilities.row { position: absolute; left: 50%; right: auto; bottom: 6px; transform: translateX(-50%); flex-direction: row; gap: 6px; margin: 0; }   /* narrow phones: a row under the board */
 #board.aiming { cursor: crosshair; }
 #board { image-rendering: pixelated; display: block; border: 3px solid #0b130e; border-radius: 4px; touch-action: none; cursor: pointer; }
 .shelf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-bottom: 2px; }
@@ -4622,7 +4624,7 @@ function updateVacuumBtn() {   // the Leaf Vacuum button: shows up when you own 
   b.hidden = !own; b.classList.toggle("off", !on); b.setAttribute("aria-pressed", String(on)); $("vacuum-state").textContent = on ? "On" : "Off";
 }
 function updateHud() {
-  updateBottle(); updateVacuumBtn();
+  updateBottle(); updateVacuumBtn(); refitIfAbilitiesChanged();
   if (G && $("diffchip")) { const dc = $("diffchip"); dc.textContent = G.diff.name; dc.className = "diffchip " + G.diffKey; }
   const h = Math.max(0, Math.round(G.health));
   $("hnum").textContent = h;
@@ -6925,13 +6927,28 @@ function tickTakeover(dt) {
 }
 
 /* ---------- loop & sizing ---------- */
+// The ability buttons (Fireball, Bottle, Vacuum, Freeze) always fit in the space they have: beside the board they shrink to fit
+// its height (and go into 2 columns if there are too many to fit in one); on a narrow phone they sit in a row under the board.
+function fitAbilities() {
+  const box = $("abilities"), st = $("stage"); if (!box || !st.clientHeight) return { side: 0, bottom: 0 };
+  const n = [...box.children].filter((b) => !b.hidden).length || 1;
+  box.style.zoom = 1; box.classList.remove("two", "row");
+  if (innerWidth <= 760) {   // a row under the board
+    box.classList.add("row"); const z = Math.min(1, (st.clientWidth - 12) / box.scrollWidth, (st.clientHeight * 0.3) / box.offsetHeight);
+    box.style.zoom = z; return { side: 0, bottom: box.offsetHeight * z + 12 };
+  }
+  const H = st.clientHeight - 8; let z = Math.min(1, H / box.offsetHeight);
+  if (z < 0.62 && n > 2) { box.classList.add("two"); z = Math.min(1, H / box.offsetHeight); }
+  box.style.zoom = z; return { side: box.offsetWidth * z + 18, bottom: 0 };
+}
 function fitBoard() {
   const st = $("stage"), w = st.clientWidth, h = st.clientHeight;
   if (!w || !h) return;
-  const side = innerWidth > 760 ? 100 : 0;   // room for the ability buttons beside the board
-  const k = Math.min((w - 8 - side) / 640, (h - 8) / 384);
-  board.style.width = Math.floor(640 * k) + "px"; board.style.height = Math.floor(384 * k) + "px";
+  const f = fitAbilities();   // room for the ability buttons beside (or under) the board
+  const k = Math.min((w - 8 - f.side) / 640, (h - 8 - f.bottom) / 384);
+  board.style.width = Math.floor(640 * k) + "px"; board.style.height = Math.floor(384 * k) + "px"; board.style.marginBottom = f.bottom ? f.bottom + "px" : "";
 }
+function refitIfAbilitiesChanged() { const key = [...$("abilities").children].map((b) => b.hidden ? 0 : 1).join(""); if (key !== refitIfAbilitiesChanged.key) { refitIfAbilitiesChanged.key = key; fitBoard(); } }
 new ResizeObserver(fitBoard).observe($("stage"));
 let lastT = performance.now();
 // The timer counts real seconds (not sped up at 2x or 3x), and stops while the game is paused or over.
