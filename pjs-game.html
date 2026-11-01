@@ -276,7 +276,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .setrow b { min-width: 40px; text-align: right; font-family: var(--body); }
 @media (max-width: 560px) { .setrow { grid-template-columns: 1fr auto; } .setrow > span { grid-column: 1 / -1; } .setrow .choices { grid-column: 1 / -1; justify-content: flex-start; } .setrow input[type=range] { width: 100%; } }
 .shellrow { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
-.ability.bottle { border-color: #7fd8c8; } .ability[hidden] { display: none; }
+.ability.bottle { border-color: #7fd8c8; }
+#b-vacuum.ability { background: #16301a; border-color: #5fbf4a; color: #e6ffd8; box-shadow: 0 0 12px rgba(95,191,74,0.35); }
+#b-vacuum.ability:hover { background: #1e3e22; }
+.ability.vacuum .ab-cost { color: #a8f08a; } #b-vacuum .ab-cost::after { display: none; }   /* (no cost: it just says On or Off) */
+#b-vacuum.ability.off { background: #2a2c30; border-color: #6a6e78; color: #a8acb6; box-shadow: none; }
+.ability.vacuum.off .ab-cost { color: #a8acb6; } .ability.vacuum.off .ab-icon { filter: grayscale(1); opacity: 0.6; } .ability[hidden] { display: none; }
 .perk .needs { display: block; font-size: 13px; color: #ffd36b; margin: 4px 0; }
 /* the world map on the levels page */
 .worldmap { position: relative; flex-shrink: 0; width: min(100%, calc((100vh - 130px) * 1000 / 450), 2000px); width: min(100%, calc((100dvh - 130px) * 1000 / 450), 2000px);   /* as big as the screen allows, while still fitting top to bottom */ aspect-ratio: 1000 / 450; border: 3px solid #16191d; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 0 #16191d; }
@@ -808,6 +813,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
         <button class="ability bottle" id="b-bottle" title="Message in a Bottle: open it before a wave for free Maple Leaves" hidden>
           <canvas class="ab-icon" id="bt-icon" width="40" height="40"></canvas>
           <span class="ab-name">Bottle</span><span class="ab-cost" id="bottle-n">0</span>
+        </button>
+        <button class="ability vacuum" id="b-vacuum" title="Leaf Vacuum: tap to turn it on or off" aria-pressed="true" hidden>
+          <canvas class="ab-icon" id="vc-icon" width="40" height="40"></canvas>
+          <span class="ab-name">Vacuum</span><span class="ab-cost" id="vacuum-state">On</span>
         </button>
         <button class="ability ice" id="b-freeze" title="Freeze: tap it, then tap where to freeze the robots">
           <canvas class="ab-icon" id="fz-icon" width="40" height="40"></canvas>
@@ -2416,6 +2425,67 @@ function drawIsle(x, R, a, b, w) {
   x.fillStyle = "rgba(220,240,255,0.9)"; x.fillRect(a + w * 0.5, b + 3, 3, w * 1.4); x.fillStyle = "rgba(255,255,255,0.6)"; x.beginPath(); x.ellipse(a + w * 0.5 + 1.5, b + w * 1.45, 5, 2, 0, 0, Math.PI * 2); x.fill();   // a waterfall with mist
   for (const [dx, dy, s] of [[-0.5, 1.5, 4], [0.3, 1.7, 3]]) { const px = a + dx * w, py = b + dy * w; x.fillStyle = "#6e4a26"; x.beginPath(); x.moveTo(px - s, py); x.lineTo(px + s, py); x.lineTo(px, py + s * 1.4); x.fill(); x.fillStyle = "#4aa83e"; x.fillRect(px - s, py - 1, s * 2, 2); }   // tiny floating rocks
 }
+// The erupting volcano on the world map: a rugged cone with gullies and lit slopes, rivers of lava running down it,
+// a glowing crater, a fountain of lava, a huge ash cloud lit orange from below (with volcanic lightning) and flying lava bombs.
+function drawVolcano(x, R) {
+  const cx = 590, top = 192, base = 306, cw = 15;   // crater middle, crater height, foot of the mountain, crater half-width
+  const lin = (x0, y0, x1, y1, st) => { const g = x.createLinearGradient(x0, y0, x1, y1); st.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
+  const rad = (a, b, r0, r1, st) => { const g = x.createRadialGradient(a, b, r0, a, b, r1); st.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
+  // a warm glow behind the whole mountain
+  x.fillStyle = rad(cx, top + 10, 10, 150, [[0, "rgba(255,140,50,0.45)"], [0.5, "rgba(255,90,30,0.15)"], [1, "rgba(255,80,20,0)"]]); x.fillRect(cx - 160, top - 140, 320, 280);
+  // the cone: concave slopes (steep near the top, spreading out at the bottom), with a rough bumpy outline
+  const side = (dir) => { const pts = []; for (let k = 0; k <= 20; k++) { const t = k / 20, y = top + (base - top) * t, spread = cw + Math.pow(t, 1.6) * 70 + Math.sin(k * 2.7 + dir) * 2.5 + (k % 4 === 2 ? 3 : 0); pts.push([cx + dir * spread, y]); } return pts; };
+  const L = side(-1), Rt = side(1), cone = new Path2D(); cone.moveTo(L[L.length - 1][0], base); L.slice().reverse().forEach(([a, b]) => cone.lineTo(a, b));
+  cone.quadraticCurveTo(cx - 6, top - 5, cx, top - 3); cone.quadraticCurveTo(cx + 6, top - 5, Rt[0][0], Rt[0][1]); Rt.forEach(([a, b]) => cone.lineTo(a, b)); cone.closePath();
+  x.fillStyle = lin(cx - 80, 0, cx + 80, 0, [[0, "#6a4a46"], [0.35, "#4e3436"], [0.6, "#36242a"], [1, "#1e1216"]]); x.fill(cone);
+  x.save(); x.clip(cone);
+  x.fillStyle = lin(0, top, 0, base, [[0, "rgba(255,120,50,0.35)"], [0.35, "rgba(255,120,50,0)"], [0.8, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0.35)"]]); x.fillRect(cx - 100, top - 10, 200, base - top + 10);   // lit near the crater, dark at the foot
+  for (let k = 0; k < 11; k++) {   // gullies and ridges running down the slopes
+    const f = (k - 5) / 5, x0 = cx + f * cw * 0.8, x1 = cx + f * 80 + Math.sin(k * 3.1) * 6;
+    x.strokeStyle = k % 2 ? "rgba(20,10,12,0.45)" : "rgba(140,100,95,0.28)"; x.lineWidth = k % 2 ? 2 : 1.4;
+    x.beginPath(); x.moveTo(x0, top + 4); x.bezierCurveTo(x0 + f * 12 + 3, top + 40, x1 - f * 10, base - 50, x1, base + 2); x.stroke();
+  }
+  for (let n = 0; n < 160; n++) { const a = cx + (R() - 0.5) * 150, b = top + R() * (base - top); x.fillStyle = R() < 0.5 ? "rgba(0,0,0,0.25)" : "rgba(160,120,110,0.2)"; x.fillRect(a, b, 1.5, 1.5); }   // rough rocky texture
+  for (let n = 0; n < 9; n++) { const a = cx + (R() - 0.5) * 120, b = top + 50 + R() * (base - top - 60); x.fillStyle = "#2a1a1e"; x.beginPath(); x.moveTo(a - 5, b + 3); x.lineTo(a - 1, b - 4); x.lineTo(a + 5, b + 3); x.fill(); x.fillStyle = "rgba(170,120,110,0.5)"; x.fillRect(a - 2, b - 2, 2, 2); }   // jagged boulders
+  // rivers of lava pouring down the slopes, each with a soft glow, a hot orange body and a bright yellow core
+  const flows = [[[cx - 6, top + 2], [cx - 16, top + 40], [cx - 6, top + 70], [cx - 34, base + 2]], [[cx + 5, top + 2], [cx + 14, top + 30], [cx + 30, top + 70], [cx + 44, base + 2]], [[cx - 1, top + 2], [cx + 2, top + 30], [cx - 4, top + 60], [cx + 6, top + 82]]];
+  for (const [w, col] of [[14, "rgba(255,110,30,0.25)"], [7, "#e0501a"], [4, "#ff8c1a"], [1.6, "#ffe48a"]]) for (const [a, b, c, d] of flows) {
+    x.strokeStyle = col; x.lineWidth = w * (a === flows[2][0] ? 0.7 : 1); x.lineCap = "round"; x.beginPath(); x.moveTo(...a); x.bezierCurveTo(...b, ...c, ...d); x.stroke(); }
+  x.strokeStyle = "#ff8c1a"; x.lineWidth = 2.5; x.beginPath(); x.moveTo(cx - 12, top + 52); x.quadraticCurveTo(cx - 30, top + 70, cx - 52, top + 96); x.stroke();   // a smaller branch of lava
+  x.strokeStyle = "#ffe48a"; x.lineWidth = 0.8; x.stroke();
+  x.restore();
+  // the crater: a dark rocky rim around a pool of glowing magma
+  x.fillStyle = "#2a1a1e"; x.beginPath(); x.ellipse(cx, top, cw + 3, 5.5, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = rad(cx, top, 1, cw, [[0, "#fff4b0"], [0.4, "#ffc94d"], [0.8, "#ff7a1a"], [1, "#c8400e"]]); x.beginPath(); x.ellipse(cx, top, cw, 3.6, 0, 0, Math.PI * 2); x.fill();
+  // a fountain of lava shooting up out of the crater, falling back in glowing arcs
+  for (let k = 0; k < 9; k++) {
+    const dir = (k - 4) / 4, h = 34 + (4 - Math.abs(k - 4)) * 9, w = dir * 30;
+    x.strokeStyle = `rgba(255,${150 + (k % 3) * 30},40,0.85)`; x.lineWidth = 2.2 - Math.abs(dir) * 0.8; x.beginPath(); x.moveTo(cx + dir * 4, top);
+    x.quadraticCurveTo(cx + w * 0.5, top - h * 2, cx + w, top - h * 0.2 + Math.abs(dir) * 30); x.stroke();
+    x.fillStyle = k % 2 ? "#ffd36b" : "#ff7a1a"; x.beginPath(); x.arc(cx + w, top - h * 0.2 + Math.abs(dir) * 30, 2.2, 0, Math.PI * 2); x.fill();
+  }
+  x.fillStyle = rad(cx, top - 12, 2, 46, [[0, "rgba(255,240,170,0.95)"], [0.35, "rgba(255,150,50,0.55)"], [1, "rgba(255,90,20,0)"]]); x.beginPath(); x.arc(cx, top - 12, 46, 0, Math.PI * 2); x.fill();
+  // the ash cloud: big billowing puffs drifting up and to the right, lit orange from underneath by the eruption
+  const puffs = [];   // lots of small, soft, lumpy puffs piled together (like cauliflower), growing as the cloud rises and drifts
+  for (let k = 0; k < 40; k++) { const t = k / 39, sp = 6 + t * 30; puffs.push([cx + t * 75 + Math.sin(k * 1.7) * 6 + (R() - 0.5) * sp, top - 30 - t * 125 + (R() - 0.5) * sp * 0.8, 6 + t * 12 + R() * 5]); }
+  puffs.sort((p, q) => q[1] - p[1]);   // lower puffs first, so the higher ones billow over them
+  for (const [a, b, rr] of puffs) {
+    const glow = Math.max(0, 1 - (top - b) / 110);
+    x.fillStyle = rad(a - rr * 0.35, b - rr * 0.45, rr * 0.05, rr, [[0, "rgba(150,132,138,0.95)"], [0.55, "rgba(92,76,84,0.9)"], [1, "rgba(58,44,52,0)"]]); x.beginPath(); x.arc(a, b, rr, 0, Math.PI * 2); x.fill();
+    if (glow > 0) { x.fillStyle = rad(a, b + rr * 0.8, 1, rr, [[0, `rgba(255,130,50,${0.55 * glow})`], [1, "rgba(255,120,40,0)"]]); x.beginPath(); x.arc(a, b, rr, 0, Math.PI * 2); x.fill(); }   // the orange underglow
+  }
+  for (const [lx, ly] of [[cx + 30, top - 110], [cx + 62, top - 140]]) {   // volcanic lightning crackling inside the ash
+    for (const [col, w] of [["rgba(200,170,255,0.5)", 4], ["#f4ecff", 1.4]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx + 6, ly + 8); x.lineTo(lx + 1, ly + 11); x.lineTo(lx + 8, ly + 22); x.stroke(); } }
+  // glowing lava bombs flying out, with smoky trails
+  for (const [a, b, dx] of [[cx - 46, top - 30, -1], [cx + 52, top - 22, 1], [cx - 26, top - 58, -1], [cx + 36, top - 62, 1], [cx - 62, top + 4, -1]]) {
+    x.strokeStyle = "rgba(80,60,60,0.5)"; x.lineWidth = 2; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a - dx * 10, b - 14, a - dx * 22, b - 8); x.stroke();
+    x.fillStyle = "rgba(255,140,40,0.4)"; x.beginPath(); x.arc(a, b, 5, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff8c1a"; x.beginPath(); x.arc(a, b, 2.6, 0, Math.PI * 2); x.fill(); x.fillStyle = "#fff0a0"; x.fillRect(a - 1, b - 1, 1.5, 1.5);
+  }
+  for (let n = 0; n < 26; n++) { x.fillStyle = R() < 0.5 ? "#ffd36b" : "#ff7a1a"; const a = cx - 50 + R() * 110, b = top - 90 + R() * 110; x.fillRect(a, b, 1.6, 1.6); }   // embers
+  // where the lava pools at the foot of the mountain, with steam rising
+  for (const [a, w] of [[cx - 34, 18], [cx + 44, 16]]) { x.fillStyle = "rgba(255,110,30,0.35)"; x.beginPath(); x.ellipse(a, base + 2, w + 6, 6, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, base + 2, w, 3.5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - w * 0.4, base + 1, w * 0.8, 1.5);
+    for (let k = 0; k < 3; k++) { x.fillStyle = `rgba(220,210,215,${0.22 - k * 0.06})`; x.beginPath(); x.arc(a + k * 4, base - 6 - k * 9, 4 + k * 3, 0, Math.PI * 2); x.fill(); } }
+}
 function drawWorldMap() {
   const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
   const x = c.getContext("2d"), W = 1000, H = 450; x.scale(2, 2);   // drawn at double detail so it stays sharp on a big screen
@@ -2510,11 +2580,7 @@ function drawWorldMap() {
   x.strokeStyle = "#ff7a1a"; x.lineWidth = 7; x.beginPath(); x.moveTo(592, 212); x.bezierCurveTo(600, 280, 540, 320, 520, 450); x.stroke();   // a lava river from the volcano
   x.strokeStyle = "#ffd36b"; x.lineWidth = 2; x.beginPath(); x.moveTo(592, 212); x.bezierCurveTo(600, 280, 540, 320, 520, 450); x.stroke();
   x.fillStyle = "rgba(255,120,40,0.22)"; x.beginPath(); x.ellipse(560, 330, 50, 120, 0.3, 0, Math.PI * 2); x.fill();
-  x.fillStyle = lin(530, 0, 650, 0, [[0, "#4a3438"], [0.55, "#3a262c"], [1, "#24161a"]]); x.beginPath(); x.moveTo(525, 305); x.lineTo(578, 190); x.lineTo(602, 190); x.lineTo(655, 305); x.fill();
-  x.fillStyle = "#ff7a1a"; x.beginPath(); x.moveTo(580, 190); x.lineTo(600, 190); x.lineTo(608, 236); x.lineTo(594, 220); x.lineTo(588, 250); x.lineTo(583, 222); x.fill();
-  x.fillStyle = rad(590, 186, 2, 40, [[0, "rgba(255,200,90,0.9)"], [0.4, "rgba(255,120,40,0.5)"], [1, "rgba(255,80,20,0)"]]); x.beginPath(); x.arc(590, 186, 40, 0, Math.PI * 2); x.fill();
-  for (let k = 0; k < 7; k++) { x.fillStyle = `rgba(70,60,70,${0.6 - k * 0.07})`; x.beginPath(); x.arc(590 + k * 7 + Math.sin(k) * 6, 170 - k * 15, 8 + k * 3, 0, Math.PI * 2); x.fill(); }   // ash cloud
-  for (let n = 0; n < 16; n++) { x.fillStyle = R() < 0.5 ? "#ffd36b" : "#ff7a1a"; x.fillRect(570 + R() * 50, 120 + R() * 70, 2, 2); }   // embers
+  drawVolcano(x, R);   // the erupting volcano (Inside the Volcano)
   for (const [a, b] of [[455, 395], [500, 335], [548, 415]]) { x.fillStyle = "rgba(255,120,40,0.3)"; x.beginPath(); x.ellipse(a, b, 22, 8, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, b, 15, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - 5, b - 1, 10, 2); }
   // snow world: shaded mountains with snow caps, a glacier cave, a frozen lake and sparkles
   const mtn = (a, b, w, h) => { x.fillStyle = "#a8b4c8"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a, b - h); x.lineTo(a + w, b); x.fill();
@@ -4432,8 +4498,13 @@ function updateBottle() {   // the Message in a Bottle button: shows up when you
   const s = slot(), n = (s && s.materials && s.materials.bottle) || 0;
   b.hidden = !n; $("bottle-n").textContent = "×" + n; b.disabled = G.waveActive || G.over;
 }
+function updateVacuumBtn() {   // the Leaf Vacuum button: shows up when you own the vacuum; tap it to turn it on or off
+  const b = $("b-vacuum"); if (!b || !G) return;
+  const s = slot(), own = vacuumLevel(s) > 0, on = own && !s.vacuumOff;
+  b.hidden = !own; b.classList.toggle("off", !on); b.setAttribute("aria-pressed", String(on)); $("vacuum-state").textContent = on ? "On" : "Off";
+}
 function updateHud() {
-  updateBottle();
+  updateBottle(); updateVacuumBtn();
   if (G && $("diffchip")) { const dc = $("diffchip"); dc.textContent = G.diff.name; dc.className = "diffchip " + G.diffKey; }
   const h = Math.max(0, Math.round(G.health));
   $("hnum").textContent = h;
@@ -4925,6 +4996,13 @@ $("b-bottle").onclick = () => {
   updateHud(); updateShelf();
 };
 { const c = $("bt-icon"), x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR.bottle, 4, 4, 32, 32); }
+$("b-vacuum").onclick = () => {
+  const s = slot(); if (!G || !s || !vacuumLevel(s)) return;
+  s.vacuumOff = !s.vacuumOff; saveSlots(slots); Sound.play(s.vacuumOff ? "place" : "upgrade");
+  floatText(G.map.base.x * T + 32, G.map.base.y * T + 4, s.vacuumOff ? "Leaf Vacuum off" : "Leaf Vacuum on: Vroom!", s.vacuumOff ? "#c9ced6" : "#a8f08a", 1.2);
+  updateVacuumBtn();
+};
+{ const c = $("vc-icon"), x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR.leafvacuum, 4, 4, 32, 32); }
 
 /* ---------- Save & exit / Resume game ---------- */
 // A saved game is kept in the save slot, one per level. It's always saved between waves
@@ -5365,7 +5443,7 @@ const nextBonusIn = () => { const b = SETTINGS.bonusLeaf; return (b.everySeconds
 function tickBonusLeaf(dt) {
   if (!SETTINGS.bonusLeaf) return;
   if (G.bonus) { G.bonus.t += dt; if (G.bonus.t >= G.bonus.stay) G.bonus = null; }
-  const vac = vacuumLevel(slot()), V = SETTINGS.leafVacuum;   // the Leaf Vacuum (Defector's shop) sucks up leaves nobody tapped
+  const vac = slot() && !slot().vacuumOff ? vacuumLevel(slot()) : 0, V = SETTINGS.leafVacuum;   // (it can be turned off with the Vacuum button)   // the Leaf Vacuum (Defector's shop) sucks up leaves nobody tapped
   if (vac && G.bonus && G.bonus.t >= (V.waitSeconds || 1)) collectBonusLeaf(V.collect[vac - 1]);
   if (!G.waveActive) return;   // new leaves only appear during a Wave
   // The countdown keeps running while a leaf is showing, so a new one appears every few seconds.
