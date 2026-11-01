@@ -3678,7 +3678,7 @@ function tickLightning(dt) {
   const eye = { x: (G.map.base.x + 1) * T, y: (G.map.base.y + 1) * T };
   const ok = G.towers.filter((t) => t.kind !== "phoenix" && !(L.calmRadius && Math.hypot(t.x * T + 16 - eye.x, t.y * T + 16 - eye.y) <= L.calmRadius * T)); if (!ok.length) return;   // (the Phoenix can't be stunned, and nothing in the calm eye gets struck)
   const t = ok[Math.random() * ok.length | 0];
-  t.stunT = Math.max(t.stunT || 0, L.stunSeconds); t.zapT = L.stunSeconds;
+  t.stunT = Math.max(t.stunT || 0, L.stunSeconds); t.zapT = L.stunSeconds; G.struckAny = true; addStat("lightningStrikes", 1, null);
   const cx = t.x * T + 16, cy = t.y * T + 12;
   G.fx.push({ kind: "bolt", x: cx, y: cy, t: 0.45, life: 0.45, seed: Math.random() * 1000 });
   G.flash = 0.25; G.shake = Math.max(G.shake, 0.25); burst(cx, cy, "#fff7a0", 16); Sound.play("smash");
@@ -4474,6 +4474,8 @@ $("b-towers").onclick = () => { Sound.init(); renderTowersInfo(); show("s-towers
 const GRASS_LEVELS = ["meadow", "forest", "swamp"];
 const SAND_LEVELS = ["beach", "desert", "pyramid"];
 const LAVA_LEVELS = ["basalt", "magma", "volcano"];
+const ICE_LEVELS = ["tundra", "glacier", "blizzard"];
+const SKY_LEVELS = ["skyislands", "thunder", "storm"];
 const beat = (s, L, d) => !!(s.best && s.best[L] && (d ? s.best[L][d] : Object.keys(s.best[L]).length));
 const ACHIEVEMENTS = [
   { id: "firststeps", name: "First Steps", about: "Beat the Meadow.", pic: "tree", check: (s) => beat(s, "meadow") },
@@ -4528,6 +4530,35 @@ const ACHIEVEMENTS = [
   { id: "lavachampion", name: "Lava Champion", about: "Beat all 3 lava levels: the Basalt Delta, the Magma Fields and Inside the Volcano.", pic: "basaltpillar", check: (s) => LAVA_LEVELS.every((L) => beat(s, L)) },
   { id: "volcanicnightmare", name: "Volcanic Nightmare", about: "Beat all 3 lava levels on Nightmare.", pic: "stalagmite", check: (s) => LAVA_LEVELS.every((L) => beat(s, L, "nightmare")) },
   { id: "lavaperfect", name: "Lava Perfect", about: "Beat all 3 lava levels without losing any health.", pic: "obsidianrock", check: (s) => LAVA_LEVELS.every((L) => s.perfect && s.perfect[L]) },
+  // icy-level achievements
+  { id: "snowballstopper", name: "Snowball Stopper", about: "Destroy a Snowball Roller before it rolls 3 squares.", pic: "snowball" },
+  { id: "penguinparade", name: "Penguin Parade", about: "Destroy 50 Penguin Bots.", pic: "penguin", goal: ["penguinKills", 50] },
+  { id: "slipnslide", name: "Slip 'n' Slide", about: "Destroy 75 robots while they're sliding on ice.", pic: "icecrystal", goal: ["slideKills", 75] },
+  { id: "icebreaker", name: "Icebreaker", about: "Destroy 100 Ice Chunks.", pic: "icechunk", goal: ["iceChunkKills", 100] },
+  { id: "snowday", name: "Snow Day", about: "Destroy 40 Snow Drones.", pic: "snowdrone", goal: ["snowDroneKills", 40] },
+  { id: "yetihunter", name: "Yeti Hunter", about: "Defeat a Yeti Mech before it gets to roar.", pic: "yetimech" },
+  { id: "defrosted", name: "Defrosted", about: "Beat an icy level without any of your towers getting frozen.", pic: "frostshroom" },
+  { id: "meltdown", name: "Meltdown", about: "Defeat the Super Glacier Golem.", pic: "superglaciergolem" },
+  { id: "kingofthemountain", name: "King of the Mountain", about: "Defeat the Blizzard King.", pic: "blizzardking" },
+  { id: "snowgold", name: "Snow Gold", about: "Collect 15 Golden Acorns on the icy levels.", pic: "snowrock", goal: ["iceAcorns", 15] },
+  { id: "frostbite", name: "Frostbite", about: "Play 10 games on the icy levels.", pic: "snowpine", goal: ["iceGames", 10] },
+  { id: "icechampion", name: "Ice Champion", about: "Beat all 3 icy levels: the Frozen Tundra, the Glacier Caves and Blizzard Peak.", pic: "icestalagmite", check: (s) => ICE_LEVELS.every((L) => beat(s, L)) },
+  { id: "frozennightmare", name: "Frozen Nightmare", about: "Beat all 3 icy levels on Nightmare.", pic: "glaciergolem", check: (s) => ICE_LEVELS.every((L) => beat(s, L, "nightmare")) },
+  { id: "iceperfect", name: "Ice Perfect", about: "Beat all 3 icy levels without losing any health.", pic: "snowplow", check: (s) => ICE_LEVELS.every((L) => s.perfect && s.perfect[L]) },
+  // sky-island achievements
+  { id: "birdwatcher", name: "Bird Watcher", about: "Destroy 150 Thunderbird Drones.", pic: "thunderbird", goal: ["thunderbirdKills", 150] },
+  { id: "grounded", name: "Grounded", about: "Destroy 150 flying robots on the sky levels.", pic: "drone", goal: ["skyFlyKills", 150] },
+  { id: "gustbuster", name: "Gust Buster", about: "Destroy 25 Gust Runners while the wind is pushing them.", pic: "gustrunner", goal: ["dashKills", 25] },
+  { id: "staticshock", name: "Static Shock", about: "Destroy a Static Bot before it zaps any of your towers.", pic: "staticbot" },
+  { id: "eyeofthetornado", name: "Eye of the Tornado", about: "Defeat a Cyclone Golem before it ever spins into a tornado.", pic: "cyclonegolem" },
+  { id: "stormchaser", name: "Storm Chaser", about: "Get your towers struck by lightning 100 times.", pic: "chargecrystal", goal: ["lightningStrikes", 100] },
+  { id: "calmeye", name: "Calm in the Storm", about: "Beat the Eye of the Storm without the storm's lightning striking any of your towers.", pic: "tree" },
+  { id: "titantoppler", name: "Titan Toppler", about: "Defeat the Thunder Titan.", pic: "thundertitan" },
+  { id: "silverlining", name: "Silver Lining", about: "Collect 15 Golden Acorns on the sky levels.", pic: "stormpine", goal: ["skyAcorns", 15] },
+  { id: "headintheclouds", name: "Head in the Clouds", about: "Play 10 games on the sky levels.", pic: "pine", goal: ["skyGames", 10] },
+  { id: "skychampion", name: "Sky Champion", about: "Beat all 3 sky levels: the Floating Islands, Thunder Peaks and the Eye of the Storm.", pic: "pegasus", check: (s) => SKY_LEVELS.every((L) => beat(s, L)) },
+  { id: "stormnightmare", name: "Storm Nightmare", about: "Beat all 3 sky levels on Nightmare.", pic: "snowrockgray", check: (s) => SKY_LEVELS.every((L) => beat(s, L, "nightmare")) },
+  { id: "skyperfect", name: "Sky Perfect", about: "Beat all 3 sky levels without losing any health.", pic: "air", check: (s) => SKY_LEVELS.every((L) => s.perfect && s.perfect[L]) },
   { id: "boxopener", name: "Box Opener", about: "Open the Mystery Box 10 times.", pic: "mysteryboxopen", check: (s) => (s.boxOpened || 0) >= 10 },
   { id: "jackpot", name: "Jackpot!", about: "Find the secret jackpot in the Mystery Box.", pic: "phoenix", check: (s) => !!(s.box && s.box.found && s.box.found.phoenix) },
 ];
@@ -5436,6 +5467,22 @@ function kill(r) {
   if (r.type === "crawler" && !(r.heated && r.heated.size)) earnAch("firewalker");
   if (r.type === "magmacube" || r.type === "magmasmall") addStat("cubeKills", 1, null);
   if (r.type === "diver") addStat("diverKills", 1, null);
+  // icy-level achievements
+  if (r.type === "snowball" && (r.grown || 0) < 3) earnAch("snowballstopper");
+  if (r.type === "penguin") addStat("penguinKills", 1, null);
+  if (r.sliding) addStat("slideKills", 1, null);
+  if (r.type === "icechunk") addStat("iceChunkKills", 1, null);
+  if (r.type === "snowdrone") addStat("snowDroneKills", 1, null);
+  if (r.type === "yetimech" && !r.roared) earnAch("yetihunter");
+  if (r.type === "superglaciergolem") earnAch("meltdown");
+  if (r.type === "blizzardking") earnAch("kingofthemountain");
+  // sky-island achievements
+  if (r.type === "thunderbird") addStat("thunderbirdKills", 1, null);
+  if (r.flying) addStat("skyFlyKills", 1, SKY_LEVELS);
+  if (r.type === "gustrunner" && r.dashLeft > 0) addStat("dashKills", 1, null);
+  if (r.type === "staticbot" && !r.zappedAny) earnAch("staticshock");
+  if (r.type === "cyclonegolem" && !r.spunOnce) earnAch("eyeofthetornado");
+  if (r.type === "thundertitan") earnAch("titantoppler");
   const p = rpos(r);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
@@ -5443,7 +5490,7 @@ function kill(r) {
   const bossDrop = isHeavy(r) && SETTINGS.bossDropsAcorn;
   if (bossDrop || (chance && Math.random() < chance)) {
     addStat("pyramidAcorns", acornTimes(slot()), ["pyramid"]);
-    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got; addStat("grassAcorns", got); addStat("lavaAcorns", got, LAVA_LEVELS);
+    const s = slot(), got = acornTimes(s); s.acorns = (s.acorns || 0) + got; saveSlots(slots); G.acornsFound = (G.acornsFound || 0) + got; addStat("grassAcorns", got); addStat("lavaAcorns", got, LAVA_LEVELS); addStat("iceAcorns", got, ICE_LEVELS); addStat("skyAcorns", got, SKY_LEVELS);
     floatText(p.x, p.y - 18, got > 1 ? `+${got} Golden Acorns!` : "+1 Golden Acorn!", "#ffd34d", 1.6);
     G.particles.push({ kind: "acorn", x: p.x, y: p.y, t: 0, life: 0.8 });
     burst(p.x, p.y, "#ffd34d", 14); Sound.play("upgrade");
@@ -5966,7 +6013,7 @@ function phoenixRebirth(t) {
   G.fx.push({ kind: "splash", x: cx, y: cy, r: R.radius * T, t: 0.35, col: "255,140,40" });
   for (const r of G.robots) { if (r.dead) continue; const q = rpos(r); if (Math.hypot(q.x - cx, q.y - cy) <= R.radius * T) { hurt(r, R.damage, true, false, "phoenix"); if (!r.dead && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = 2; r.burnDps = 8; } } }
 }
-function freezeTower(t, sec) { if (t.kind === "phoenix") { phoenixRebirth(t); return; } t.stunT = Math.max(t.stunT || 0, sec); t.iceT = Math.max(t.iceT || 0, sec); burst(t.x * T + 16, t.y * T + 12, "#e6f6ff", 10); }
+function freezeTower(t, sec) { if (t.kind === "phoenix") { phoenixRebirth(t); return; } G.frozeAny = true; t.stunT = Math.max(t.stunT || 0, sec); t.iceT = Math.max(t.iceT || 0, sec); burst(t.x * T + 16, t.y * T + 12, "#e6f6ff", 10); }
 /* ---------- Eye of the Storm robot powers ---------- */
 function stormPowers(dt) {
   const RS = SETTINGS.robots;
@@ -5987,13 +6034,13 @@ function stormPowers(dt) {
           r.zapT = S.zapEvery; const tx = t.x * T + 16, ty = t.y * T + 12;
           G.fx.push({ kind: "arc", x1: q.x, y1: q.y - 10, x2: tx, y2: ty, t: 0.35, life: 0.35, seed: Math.random() * 100 }); Sound.play("hit");
           if (t.kind === "phoenix") phoenixRebirth(t);
-          else { t.stunT = Math.max(t.stunT || 0, S.zapSeconds); t.zapT = S.zapSeconds; floatText(tx, ty - 16, "Zapped!", "#fff7a0", 0.7); burst(tx, ty, "#fff7a0", 8); }
+          else { r.zappedAny = true; t.stunT = Math.max(t.stunT || 0, S.zapSeconds); t.zapT = S.zapSeconds; floatText(tx, ty - 16, "Zapped!", "#fff7a0", 0.7); burst(tx, ty, "#fff7a0", 8); }
         }
       }
     }
     if (S.spinEvery) {   // Cyclone Golem: spins into a tornado, and nothing can hurt it
       r.spinT = (r.spinT ?? S.spinEvery * 0.6) - dt;
-      if (!r.spinning && r.spinT <= 0) { r.spinning = true; r.spinT = S.spinSeconds; floatText(q.x, q.y - 36, "Tornado!", "#dfe6ff"); burst(q.x, q.y, "#dfe6ff", 14); }
+      if (!r.spinning && r.spinT <= 0) { r.spinning = true; r.spunOnce = true; r.spinT = S.spinSeconds; floatText(q.x, q.y - 36, "Tornado!", "#dfe6ff"); burst(q.x, q.y, "#dfe6ff", 14); }
       else if (r.spinning && r.spinT <= 0) { r.spinning = false; r.spinT = S.spinEvery; burst(q.x, q.y, "#dfe6ff", 10); }
     }
     if (S.strikeEvery) {   // Thunder Titan: calls lightning down on towers around it
@@ -6001,7 +6048,7 @@ function stormPowers(dt) {
       if (r.strikeT <= 0) {
         r.strikeT = S.strikeEvery;
         const near = G.towers.filter((t) => t.kind !== "phoenix" && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.strikeRadius * T).sort(() => Math.random() - 0.5).slice(0, S.strikeTowers);
-        for (const t of near) { const cx = t.x * T + 16, cy = t.y * T + 12; t.stunT = Math.max(t.stunT || 0, S.strikeSeconds); t.zapT = S.strikeSeconds;
+        for (const t of near) { addStat("lightningStrikes", 1, null); const cx = t.x * T + 16, cy = t.y * T + 12; t.stunT = Math.max(t.stunT || 0, S.strikeSeconds); t.zapT = S.strikeSeconds;
           G.fx.push({ kind: "bolt", x: cx, y: cy, t: 0.45, life: 0.45, seed: Math.random() * 1000 }); burst(cx, cy, "#fff7a0", 14); }
         if (near.length) { G.flash = 0.25; G.shake = Math.max(G.shake, 0.3); Sound.play("smash"); floatText(q.x, q.y - 56, "THUNDER!", "#fff7a0"); }
       }
@@ -6050,7 +6097,7 @@ function lavaPowers(dt) {
     } else if (r.type === "yetimech") {   // Yeti Mech: roars and throws a giant snowball that freezes towers around it
       r.roarT = (r.roarT ?? RS.yetimech.roarEvery * 0.5) - dt;
       if (r.roarT <= 0) {
-        r.roarT = RS.yetimech.roarEvery; const R = RS.yetimech.freezeRadius * T;
+        r.roarT = RS.yetimech.roarEvery; r.roared = true; const R = RS.yetimech.freezeRadius * T;
         for (const t of G.towers) if (Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= R) freezeTower(t, RS.yetimech.freezeSeconds);
         G.fx.push({ kind: "splash", x: q.x, y: q.y, r: R, t: 0.4, col: "230,246,255" }); G.fx.push({ kind: "splash", x: q.x, y: q.y, r: R * 0.6, t: 0.4, col: "190,230,255" });
         for (let i = 0; i < 26; i++) { const a = Math.random() * Math.PI * 2, v = 50 + Math.random() * 90; G.particles.push({ kind: "spark", x: q.x, y: q.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6 - 30, t: 0, life: 0.6, col: Math.random() < 0.6 ? "#ffffff" : "#bfe6fa" }); }
@@ -6815,6 +6862,7 @@ function finish(won) {
   sendProgress(true, won ? "won" : "lost", stars, score);
   addStat("sandGames", 1, SAND_LEVELS);   // (Sun-Baked)
   addStat("lavaGames", 1, LAVA_LEVELS);   // (Hot Stuff)
+  addStat("iceGames", 1, ICE_LEVELS); addStat("skyGames", 1, SKY_LEVELS);   // (Frostbite, Head in the Clouds)
   const on = G.online;
   // Golden Acorns for the save slot: 1 per Wave you got through, plus some for each star.
   if (won) {
@@ -6825,8 +6873,10 @@ function finish(won) {
       best = !prev || score > prev.score;
     }
     { const L = G.level, kinds = Object.keys(G.placedKinds || {});
-      if (!G.hurtBase && (GRASS_LEVELS.includes(L) || SAND_LEVELS.includes(L) || LAVA_LEVELS.includes(L))) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect / Sandy Perfect / Lava Perfect
+      if (!G.hurtBase && (GRASS_LEVELS.includes(L) || SAND_LEVELS.includes(L) || LAVA_LEVELS.includes(L) || ICE_LEVELS.includes(L) || SKY_LEVELS.includes(L))) { s.perfect = s.perfect || {}; s.perfect[L] = true; }   // for Grass Perfect / Sandy Perfect / Lava Perfect
       if (LAVA_LEVELS.includes(L) && G.sawPillar && !G.trapped) earnAch("unbreakable");
+      if (ICE_LEVELS.includes(L) && !G.frozeAny) earnAch("defrosted");
+      if (L === "storm" && !G.struckAny) earnAch("calmeye");
       if (L === "beach" && kinds.length && kinds.every((k) => k === "crab")) earnAch("shellshocked");
       if (L === "desert" && (!G.hurtFrom || G.hurtFrom.size < 2)) earnAch("twofront");
       if (L === "pyramid" && !G.nearPyramid) earnAch("pharaoh");
