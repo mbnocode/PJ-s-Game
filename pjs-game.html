@@ -281,7 +281,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .worldmap { position: relative; flex-shrink: 0; width: min(1100px, 100%); aspect-ratio: 1000 / 450; border: 3px solid #16191d; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 0 #16191d; }
 .worldmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: auto; }
 .wm-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; box-shadow: none; padding: 0; cursor: pointer; min-height: 0; }
-.wm-node .dot { width: clamp(22px, 3.6vw, 40px); height: clamp(22px, 3.6vw, 40px); border-radius: 50%; border: 3px solid #16191d; display: grid; place-items: center; font-family: var(--display); font-size: clamp(11px, 1.5vw, 17px); color: #16191d; box-shadow: 0 3px 0 #16191d; }
+.wm-node .dot { --c: #8fd45f; --ring: rgba(255,255,255,0.55); width: clamp(24px, 3.9vw, 44px); height: clamp(24px, 3.9vw, 44px); border-radius: 50%; border: 3px solid #16191d; display: grid; place-items: center; font-family: var(--display); font-size: clamp(11px, 1.5vw, 17px); color: #16191d; text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  background: radial-gradient(circle at 34% 28%, rgba(255,255,255,0.75) 0 10%, rgba(255,255,255,0) 38%), radial-gradient(circle at 50% 125%, rgba(0,0,0,0.4), rgba(0,0,0,0) 62%), var(--c);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.22), 0 0 0 2px var(--ring), 0 0 0 4px #16191d, 0 5px 0 #16191d, 0 8px 8px rgba(0,0,0,0.45); }
+.wm-node .dot .ic { position: absolute; right: -9px; top: -9px; width: 1.25em; height: 1.25em; border-radius: 50%; background: #fff8e6; border: 2px solid #16191d; display: grid; place-items: center; font-size: clamp(8px, 0.95vw, 12px); line-height: 1; text-shadow: none; box-shadow: 0 2px 0 #16191d; pointer-events: none; }
+.wm-node.done .dot { --ring: #ffd34d; }
+.wm-node .dot .shine { position: absolute; inset: 3px; border-radius: 50%; border: 1px dashed rgba(22,25,29,0.25); pointer-events: none; }
 @media (hover: hover) { .wm-node:hover .dot { transform: scale(1.15); }
 /* no button box on the map: just the circle. And a bigger area to tap around each level */
 .wm-node, .wm-node:hover, .wm-node:active, .wm-node:focus { background: none !important; box-shadow: none !important; border: none !important; }
@@ -293,10 +298,10 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .wm-node .dot { position: relative; } .wm-node .dot::after { content: ""; position: absolute; inset: -10px; border-radius: 50%; }   /* a bigger area to tap */
 .wm-node .nm { font-family: var(--display); font-size: clamp(8px, 1.05vw, 13px); color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
 .wm-node .st { font-size: clamp(8px, 1vw, 12px); color: #ffd34d; text-shadow: 0 1px 0 #000, 0 0 3px #000; letter-spacing: -1px; }
-.wm-node.locked { cursor: default; } .wm-node.locked .dot { background: #6a6e78 !important; color: #2a2c32; }
-.wm-node.soon { cursor: default; opacity: .8; } .wm-node.soon .dot { background: #8a8ea0 !important; border-style: dashed; }
+.wm-node.locked { cursor: default; } .wm-node.locked .dot { --c: #6a6e78 !important; --ring: rgba(255,255,255,0.2); color: #2a2c32; }
+.wm-node.soon { cursor: default; opacity: .8; } .wm-node.soon .dot { --c: #8a8ea0 !important; border-style: dashed; }
 .wm-node.here .dot { animation: wm-pulse 1.2s ease-in-out infinite; }
-@keyframes wm-pulse { 50% { box-shadow: 0 3px 0 #16191d, 0 0 0 6px rgba(255,211,77,.55); } }
+@keyframes wm-pulse { 50% { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.22), 0 0 0 2px #fff, 0 0 0 4px #16191d, 0 5px 0 #16191d, 0 0 0 10px rgba(255,211,77,.55); } }
 @media (max-width: 560px) { .wm-node .nm { display: none; } }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
@@ -2209,6 +2214,7 @@ function unlocked(L) {
 }
 /* ---------- the world map ---------- */
 // Where each level sits on the map (out of 1000 across, 450 down), and its color.
+const WORLD_MAP_ICON = { meadow: "🌼", forest: "🌲", swamp: "🐸", beach: "🐚", desert: "🌵", pyramid: "🔺", basalt: "🪨", magma: "🔥", volcano: "🌋", tundra: "❄️", glacier: "🧊", blizzard: "🌨️", skyislands: "☁️", thunder: "⚡", storm: "🌀", infinity: "✨" };
 const WORLD_MAP = {
   meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
   beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
@@ -2269,6 +2275,100 @@ function drawGrassWorld(x, R) {
   const sg = x.createLinearGradient(0, 230, 0, H); sg.addColorStop(0, "#f4dca6"); sg.addColorStop(1, "#d8b478"); x.fillStyle = sg; x.fill(edge);
   for (let py = yTop + 8; py < H; py += 9) { x.strokeStyle = "rgba(70,150,50,0.8)"; x.lineWidth = 1.2; const bx = 243 + Math.sin(py / 13) * 4; x.beginPath(); x.moveTo(bx, py); x.lineTo(bx + 3, py - 4); x.moveTo(bx + 1, py); x.lineTo(bx + 5, py - 2); x.stroke(); }
 }
+// ---- realistic detail for the other worlds (sand, lava, snow and sky), in the same style as the grass world ----
+function mapRegion(x0, x1, base, amp) { const p = new Path2D(); p.moveTo(x0, 450); for (let px = x0; px <= x1; px += 4) p.lineTo(px, base + Math.sin(px / 47) * amp + Math.sin(px / 19) * amp * 0.4); p.lineTo(x1, 450); p.closePath(); return p; }
+function layeredHills(x, x0, x1, layers, ridge) {
+  for (const [base, amp, c1, c2, f] of layers) {
+    const p = new Path2D(); p.moveTo(x0, 450);
+    for (let px = x0; px <= x1; px += 4) p.lineTo(px, base + Math.sin(px / (55 * f) + base) * amp + Math.sin(px / 21 + base * 0.1) * amp * 0.35); p.lineTo(x1, 450); p.closePath();
+    const g = x.createLinearGradient(0, base - amp, 0, base + 70); g.addColorStop(0, c1); g.addColorStop(1, c2);
+    x.fillStyle = "rgba(0,0,0,0.16)"; x.save(); x.translate(0, -4); x.fill(p); x.restore();   // a soft shadow where it overlaps the layer behind
+    x.fillStyle = g; x.fill(p); if (ridge) { x.strokeStyle = ridge; x.lineWidth = 2; x.stroke(p); }
+  }
+}
+function drawSandWorld(x, R) {
+  const X0 = 232, X1 = 432; x.save(); x.clip(mapRegion(X0, X1, 245, 10));
+  // far-off dunes, then closer dunes: each with a sunlit crest and a shady side
+  layeredHills(x, X0, X1, [[262, 12, "#f6e2b0", "#e2c088", 0.8], [300, 16, "#f3d8a0", "#d9b476", 1.2], [345, 14, "#f0d294", "#d2a868", 0.9], [395, 12, "#eccb88", "#c99c5c", 1.1]], "rgba(255,248,220,0.55)");
+  for (let n = 0; n < 7; n++) { const a = X0 + R() * 200, b = 270 + R() * 160, w = 30 + R() * 30;   // the sharp crest of a dune with its shadowed back side
+    let g = x.createLinearGradient(a, b, a + w, b + 14); g.addColorStop(0, "rgba(150,100,50,0.28)"); g.addColorStop(1, "rgba(150,100,50,0)");
+    x.fillStyle = g; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w * 0.5, b - 10, a + w, b + 2); x.quadraticCurveTo(a + w * 0.6, b + 14, a + w * 0.1, b + 10); x.fill();
+    x.strokeStyle = "rgba(255,250,225,0.7)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w * 0.5, b - 10, a + w, b + 2); x.stroke(); }
+  // sun from the left, heat haze up top, deeper color near the front
+  let g = x.createRadialGradient(250, 240, 10, 250, 240, 220); g.addColorStop(0, "rgba(255,250,210,0.35)"); g.addColorStop(1, "rgba(255,250,210,0)"); x.fillStyle = g; x.fillRect(X0, 230, 200, 220);
+  g = x.createLinearGradient(0, 330, 0, 450); g.addColorStop(0, "rgba(120,70,20,0)"); g.addColorStop(1, "rgba(120,70,20,0.22)"); x.fillStyle = g; x.fillRect(X0, 330, 200, 120);
+  // wind ripples in the sand
+  for (let n = 0; n < 60; n++) { const a = X0 + R() * 200, b = 255 + R() * 190, near = (b - 255) / 190, w = 6 + near * 10;
+    x.strokeStyle = `rgba(170,120,60,${0.18 + near * 0.2})`; x.lineWidth = 1; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w / 2, b - 2, a + w, b); x.stroke();
+    x.strokeStyle = `rgba(255,245,215,${0.25 + near * 0.2})`; x.beginPath(); x.moveTo(a, b - 1); x.quadraticCurveTo(a + w / 2, b - 3, a + w, b - 1); x.stroke(); }
+  // sand grains and little pebbles
+  for (let n = 0; n < 700; n++) { const a = X0 + R() * 200, b = 250 + R() * 200; x.fillStyle = R() < 0.5 ? "rgba(255,250,230,0.45)" : "rgba(150,105,55,0.35)"; x.fillRect(a, b, 1, 1); }
+  for (let n = 0; n < 14; n++) { const a = X0 + R() * 200, b = 290 + R() * 150, w = 1.5 + R() * 2.5; x.fillStyle = "rgba(0,0,0,0.18)"; x.beginPath(); x.ellipse(a + 1, b + w * 0.4, w, w * 0.35, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = R() < 0.5 ? "#a88a6a" : "#c4a684"; x.beginPath(); x.ellipse(a, b, w, w * 0.7, 0, 0, Math.PI * 2); x.fill(); }
+  // dry desert grass tufts and an old bleached bone
+  for (const [a, b] of [[290, 300], [340, 420], [380, 350], [262, 395], [415, 290], [320, 268]]) { x.strokeStyle = "#b09a5a"; x.lineWidth = 1; x.beginPath(); for (let k = -3; k <= 3; k++) { x.moveTo(a, b); x.lineTo(a + k * 1.6, b - 5 - Math.abs(3 - Math.abs(k)) * 1.2); } x.stroke(); }
+  x.fillStyle = "#f4efe0"; x.fillRect(298, 433, 9, 2); x.beginPath(); x.arc(298, 434, 2, 0, Math.PI * 2); x.arc(307, 434, 2, 0, Math.PI * 2); x.fill();
+  x.restore();
+}
+function drawLavaWorld(x, R) {
+  const X0 = 418, X1 = 622; x.save(); x.clip(mapRegion(X0, X1, 235, 10));
+  // jagged layers of dark volcanic rock, lit from below by the lava
+  layeredHills(x, X0, X1, [[255, 14, "#5a4650", "#3a2a30", 0.6], [295, 16, "#4e3c44", "#2e2026", 0.4], [345, 12, "#45343a", "#261a1e", 0.5], [395, 10, "#3c2c32", "#1e1418", 0.3]], "rgba(255,140,70,0.35)");
+  // rock texture: speckles and rough plates with glowing seams between them
+  for (let n = 0; n < 600; n++) { const a = X0 + R() * 204, b = 240 + R() * 210; x.fillStyle = R() < 0.5 ? "rgba(0,0,0,0.25)" : "rgba(160,130,140,0.18)"; x.fillRect(a, b, 1 + (R() < 0.2), 1); }
+  for (let n = 0; n < 22; n++) { const a = X0 + R() * 204, b = 260 + R() * 180, w = 8 + R() * 14, h = 4 + R() * 6;
+    x.fillStyle = "rgba(255,255,255,0.05)"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a - w * 0.3, b - h); x.lineTo(a + w * 0.6, b - h * 0.8); x.lineTo(a + w, b); x.lineTo(a + w * 0.2, b + h * 0.6); x.closePath(); x.fill();
+    x.strokeStyle = "rgba(255,110,30,0.35)"; x.lineWidth = 1; x.stroke(); }
+  // a hot glow rising from the lava below, and hazy smoke drifting over it
+  let g = x.createLinearGradient(0, 300, 0, 450); g.addColorStop(0, "rgba(255,90,20,0)"); g.addColorStop(1, "rgba(255,90,20,0.28)"); x.fillStyle = g; x.fillRect(X0, 300, 204, 150);
+  for (let n = 0; n < 6; n++) { const a = X0 + R() * 204, b = 260 + R() * 160; g = x.createRadialGradient(a, b, 2, a, b, 30); g.addColorStop(0, "rgba(90,80,90,0.25)"); g.addColorStop(1, "rgba(90,80,90,0)"); x.fillStyle = g; x.beginPath(); x.ellipse(a, b, 40, 14, 0, 0, Math.PI * 2); x.fill(); }
+  // cooled lava rocks with a glowing heart
+  for (let n = 0; n < 10; n++) { const a = X0 + R() * 204, b = 290 + R() * 150, w = 3 + R() * 4;
+    x.fillStyle = "rgba(0,0,0,0.3)"; x.beginPath(); x.ellipse(a + 1, b + w * 0.5, w, w * 0.35, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#2a1c20"; x.beginPath(); x.ellipse(a, b, w, w * 0.7, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#ff8a3c"; x.fillRect(a - 1, b - w * 0.35, 2, 1); }
+  x.restore();
+}
+function drawSnowWorld(x, R) {
+  const X0 = 606, X1 = 812; x.save(); x.clip(mapRegion(X0, X1, 205, 10));
+  // soft snow drifts with blue shadows
+  layeredHills(x, X0, X1, [[225, 12, "#ffffff", "#d6e2f0", 0.9], [275, 16, "#fbfdff", "#cddbec", 1.3], [330, 14, "#ffffff", "#c8d8ea", 0.8], [385, 12, "#f8fbff", "#bfd0e6", 1.1]], "rgba(255,255,255,0.9)");
+  for (let n = 0; n < 8; n++) { const a = X0 + R() * 200, b = 250 + R() * 180, w = 26 + R() * 30;   // the shady underside of each wind drift
+    const g = x.createLinearGradient(0, b, 0, b + 12); g.addColorStop(0, "rgba(120,150,200,0.32)"); g.addColorStop(1, "rgba(120,150,200,0)");
+    x.fillStyle = g; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w * 0.5, b - 6, a + w, b); x.quadraticCurveTo(a + w * 0.5, b + 12, a, b); x.fill(); }
+  // pale light up top and a cold blue shade toward the front
+  let g = x.createLinearGradient(0, 300, 0, 450); g.addColorStop(0, "rgba(90,120,180,0)"); g.addColorStop(1, "rgba(90,120,180,0.2)"); x.fillStyle = g; x.fillRect(X0, 300, 206, 150);
+  // snow texture, and glittering sparkles where the light catches the ice
+  for (let n = 0; n < 500; n++) { const a = X0 + R() * 206, b = 210 + R() * 240; x.fillStyle = R() < 0.6 ? "rgba(150,175,215,0.3)" : "rgba(255,255,255,0.8)"; x.fillRect(a, b, 1, 1); }
+  for (let n = 0; n < 26; n++) { const a = X0 + R() * 206, b = 230 + R() * 210, s = 1 + R() * 2; x.fillStyle = "rgba(255,255,255,0.95)"; x.fillRect(a - s, b, s * 2 + 1, 1); x.fillRect(a, b - s, 1, s * 2 + 1); }
+  // gray rocks poking out of the snow, with snow on top
+  for (const [a, b, w] of [[655, 380, 8], [765, 300, 7], [720, 430, 9], [625, 330, 6]]) { x.fillStyle = "rgba(80,100,140,0.25)"; x.beginPath(); x.ellipse(a + 2, b + 2, w * 1.1, w * 0.3, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#6c7480"; x.beginPath(); x.ellipse(a, b, w, w * 0.6, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#4e5560"; x.beginPath(); x.ellipse(a + w * 0.4, b, w * 0.5, w * 0.45, 0, Math.PI, Math.PI * 2); x.fill();
+    x.fillStyle = "#ffffff"; x.beginPath(); x.ellipse(a - w * 0.1, b - w * 0.5, w * 0.7, w * 0.2, 0, 0, Math.PI * 2); x.fill(); }
+  // little footprints of a snow fox
+  x.fillStyle = "rgba(110,140,190,0.45)"; for (let k = 0; k < 9; k++) x.fillRect(740 + k * 7, 410 - k * 3 + (k % 2) * 3, 2, 2);
+  x.restore();
+  // the snowy land fades into misty clouds where it meets the sky world, instead of a hard edge
+  g = x.createLinearGradient(790, 0, 835, 0); g.addColorStop(0, "rgba(225,232,245,0)"); g.addColorStop(0.5, "rgba(205,212,232,0.85)"); g.addColorStop(1, "rgba(160,160,200,0)"); x.fillStyle = g; x.fillRect(790, 180, 45, 270);
+}
+// a floating island with layered rock, hanging roots and vines, grass tufts and wisps of cloud under it
+function drawIsle(x, R, a, b, w) {
+  x.fillStyle = "rgba(255,255,255,0.35)"; x.beginPath(); x.ellipse(a, b + w * 0.9, w * 0.9, w * 0.18, 0, 0, Math.PI * 2); x.fill();   // a cloud wisp below
+  const under = new Path2D(); under.moveTo(a - w, b);
+  for (let k = 0; k <= 10; k++) { const t = k / 10, px = a - w + t * 2 * w, depth = Math.sin(t * Math.PI) * w * 1.2 * (0.85 + ((k * 7) % 5) * 0.06); under.lineTo(px, b + depth); }
+  under.lineTo(a + w, b); under.closePath();
+  let g = x.createLinearGradient(a - w, 0, a + w, 0); g.addColorStop(0, "#9a6a3a"); g.addColorStop(0.5, "#7a5028"); g.addColorStop(1, "#4a2e14"); x.fillStyle = g; x.fill(under);
+  x.save(); x.clip(under);
+  for (let k = 1; k < 5; k++) { x.strokeStyle = k % 2 ? "rgba(60,35,15,0.5)" : "rgba(190,140,90,0.35)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(a - w, b + k * w * 0.2); for (let px = a - w; px <= a + w; px += 4) x.lineTo(px, b + k * w * 0.2 + Math.sin(px / 6 + k) * 1.5); x.stroke(); }   // rock layers
+  for (let n = 0; n < 8; n++) { const px = a - w * 0.8 + R() * w * 1.6, py = b + 4 + R() * w * 0.7; x.fillStyle = "rgba(160,160,170,0.6)"; x.beginPath(); x.ellipse(px, py, 2.5, 1.6, 0, 0, Math.PI * 2); x.fill(); }   // stones in the dirt
+  g = x.createLinearGradient(0, b, 0, b + w * 1.2); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.35)"); x.fillStyle = g; x.fillRect(a - w, b, w * 2, w * 1.3);
+  x.restore();
+  x.strokeStyle = "rgba(90,60,30,0.85)"; x.lineWidth = 1; for (let k = 0; k < 5; k++) { const px = a - w * 0.6 + k * w * 0.3; x.beginPath(); x.moveTo(px, b + w * 0.5); x.quadraticCurveTo(px + 3, b + w * 0.9, px - 1, b + w * 1.25 + (k % 2) * 5); x.stroke(); }   // hanging roots
+  x.strokeStyle = "#3f9a3a"; x.lineWidth = 1.5; for (const k of [-0.85, -0.4, 0.7]) { const px = a + k * w; x.beginPath(); x.moveTo(px, b + 2); x.lineTo(px + 1, b + w * 0.35); x.stroke(); x.fillStyle = "#5fbf4a"; x.fillRect(px - 1, b + w * 0.2, 3, 2); }   // vines
+  x.fillStyle = "#2f7d32"; x.beginPath(); x.ellipse(a, b, w, w * 0.25, 0, 0, Math.PI * 2); x.fill();
+  g = x.createLinearGradient(0, b - w * 0.2, 0, b + w * 0.1); g.addColorStop(0, "#8ad85f"); g.addColorStop(1, "#4aa83e"); x.fillStyle = g; x.beginPath(); x.ellipse(a - w * 0.05, b - w * 0.05, w * 0.9, w * 0.18, 0, 0, Math.PI * 2); x.fill();
+  for (let n = 0; n < w * 1.5; n++) { const px = a - w * 0.95 + R() * w * 1.9; x.strokeStyle = R() < 0.5 ? "#2f7d32" : "#7cd45f"; x.lineWidth = 1; x.beginPath(); x.moveTo(px, b + w * 0.12); x.lineTo(px + (R() - 0.5) * 2, b + w * 0.12 - 2 - R() * 3); x.stroke(); }   // grass on the edge
+  x.fillStyle = "rgba(220,240,255,0.9)"; x.fillRect(a + w * 0.5, b + 3, 3, w * 1.4); x.fillStyle = "rgba(255,255,255,0.6)"; x.beginPath(); x.ellipse(a + w * 0.5 + 1.5, b + w * 1.45, 5, 2, 0, 0, Math.PI * 2); x.fill();   // a waterfall with mist
+  for (const [dx, dy, s] of [[-0.5, 1.5, 4], [0.3, 1.7, 3]]) { const px = a + dx * w, py = b + dy * w; x.fillStyle = "#6e4a26"; x.beginPath(); x.moveTo(px - s, py); x.lineTo(px + s, py); x.lineTo(px, py + s * 1.4); x.fill(); x.fillStyle = "#4aa83e"; x.fillRect(px - s, py - 1, s * 2, 2); }   // tiny floating rocks
+}
 function drawWorldMap() {
   const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
   const x = c.getContext("2d"), W = 1000, H = 450; let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
@@ -2311,6 +2411,7 @@ function drawWorldMap() {
   hill(418, 622, 235, lin(0, 235, 0, H, [[0, "#5a4448"], [1, "#2e2026"]]));
   hill(606, 812, 205, lin(0, 205, 0, H, [[0, "#f6f9fe"], [1, "#cfdcec"]]));
   drawGrassWorld(x, R);   // the grass world's detailed hills, grass and meadows
+  drawSandWorld(x, R); drawLavaWorld(x, R); drawSnowWorld(x, R);   // and the same kind of detail for the other worlds
   // soft blends where the worlds meet
   for (const [bx, a, b] of [[425, "", ""], [614, "", ""]]) {
     x.fillStyle = lin(bx - 14, 0, bx + 14, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.18)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 14, 200, 28, H - 200); }
@@ -2371,7 +2472,9 @@ function drawWorldMap() {
   const mtn = (a, b, w, h) => { x.fillStyle = "#a8b4c8"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a, b - h); x.lineTo(a + w, b); x.fill();
     x.fillStyle = "#7c88a0"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w, b); x.lineTo(a + w * 0.15, b); x.fill();
     x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(a - w * 0.35, b - h * 0.62); x.lineTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.lineTo(a - w * 0.16, b - h * 0.55); x.fill();
-    x.fillStyle = "#dfe8f6"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.fill(); };
+    x.fillStyle = "#dfe8f6"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.fill();
+    x.strokeStyle = "rgba(70,80,100,0.35)"; x.lineWidth = 1; for (let k = 1; k <= 3; k++) { x.beginPath(); x.moveTo(a - w * 0.1 * k, b - h * (0.6 - k * 0.04)); x.lineTo(a - w * 0.25 * k, b - h * 0.2); x.lineTo(a - w * 0.3 * k, b); x.stroke(); }   // rocky ridges
+    x.fillStyle = "rgba(255,255,255,0.75)"; for (let k = 0; k < 4; k++) { const t = 0.35 + k * 0.12; x.beginPath(); x.moveTo(a - w * (1 - t) * 0.8, b - h * t); x.lineTo(a - w * (1 - t) * 0.65, b - h * t + 2); x.lineTo(a - w * (1 - t) * 0.72, b - h * (t - 0.1)); x.fill(); } };   // snow streaks
   mtn(648, 252, 42, 74); mtn(700, 242, 62, 118); mtn(778, 218, 74, 160);
   x.fillStyle = "#3f86bb"; x.beginPath(); x.ellipse(712, 238, 16, 12, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#1a3a5a"; x.beginPath(); x.ellipse(712, 238, 10, 8, 0, Math.PI, Math.PI * 2); x.fill();   // the glacier cave
   for (let k = 0; k < 5; k++) { x.fillStyle = "#bfe6fa"; x.fillRect(700 + k * 6, 226, 2, 4 + (k % 2) * 3); }
@@ -2380,10 +2483,7 @@ function drawWorldMap() {
   [[630, 300], [688, 300], [742, 380], [790, 330], [640, 430]].forEach(([a, b]) => pine(a, b, 1, "#2f6a46", true));
   for (let n = 0; n < 40; n++) { x.fillStyle = "rgba(255,255,255,0.9)"; x.fillRect(610 + R() * 200, 120 + R() * 320, 2, 2); }   // falling snow
   // sky world: floating islands with waterfalls and rope bridges, under a stormy sky with lightning
-  const isle = (a, b, w) => { x.fillStyle = lin(0, b, 0, b + w, [[0, "#8a5a2a"], [1, "#4e2f14"]]); x.beginPath(); x.moveTo(a - w, b); x.quadraticCurveTo(a - w * 0.3, b + w * 1.1, a, b + w * 1.2); x.quadraticCurveTo(a + w * 0.3, b + w * 1.1, a + w, b); x.fill();
-    x.fillStyle = "#3f9a3a"; x.beginPath(); x.ellipse(a, b, w, w * 0.25, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6cc04c"; x.beginPath(); x.ellipse(a - w * 0.1, b - w * 0.06, w * 0.8, w * 0.15, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = "rgba(220,240,255,0.85)"; x.fillRect(a + w * 0.5, b + 3, 3, w * 1.4); };   // a waterfall off the edge
-  isle(840, 140, 36); isle(905, 215, 30); isle(925, 94, 26);
+  drawIsle(x, R, 840, 140, 36); drawIsle(x, R, 905, 215, 30); drawIsle(x, R, 925, 94, 26);
   x.strokeStyle = "#d8c08a"; x.lineWidth = 2; x.beginPath(); x.moveTo(870, 144); x.quadraticCurveTo(890, 170, 880, 212); x.stroke(); x.beginPath(); x.moveTo(908, 100); x.quadraticCurveTo(880, 120, 860, 132); x.stroke();   // rope bridges
   for (const [a, b] of [[836, 128], [928, 84]]) tree(a, b, 0.6);
   for (const [lx, ly] of [[960, 130], [870, 270]]) { x.strokeStyle = "rgba(255,247,160,0.4)"; x.lineWidth = 7; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx - 10, ly + 22); x.lineTo(lx, ly + 24); x.lineTo(lx - 14, ly + 50); x.stroke(); x.strokeStyle = "#fff7a0"; x.lineWidth = 2.5; x.stroke(); }   // lightning bolts
@@ -2406,10 +2506,10 @@ function renderWorldMap() {
   for (const [L, name, soon, num] of nodes) {
     const pos = WORLD_MAP[L]; if (!pos) continue;
     const open = !soon && unlocked(L), best = (!soon && s.best[L]) || {}, stars = Math.max(0, ...DIFF_ORDER.map((d) => (best[d] && best[d].stars) || 0));
-    const b = document.createElement("button"); b.className = "wm-node" + (soon ? " soon" : open ? "" : " locked") + (L === here ? " here" : ""); b.id = "map-" + L;
+    const b = document.createElement("button"); b.className = "wm-node" + (soon ? " soon" : open ? "" : " locked") + (L === here ? " here" : "") + (Object.keys(best).length ? " done" : ""); b.id = "map-" + L;
     b.style.left = pos[0] / 10 + "%"; b.style.top = pos[1] / 4.5 + "%";
     b.title = soon ? name + " (coming soon)" : open ? name : name + " (locked)";
-    b.innerHTML = `<span class="dot" style="background:${pos[2]}">${soon ? "?" : open ? (L === "infinity" ? "∞" : num) : "🔒"}</span><span class="nm">${name}</span>${Object.keys(best).length ? `<span class="st">${starText(stars)}</span>` : ""}`;
+    b.innerHTML = `<span class="dot" style="--c:${pos[2]}"><span class="shine"></span>${soon ? "?" : open ? (L === "infinity" ? "∞" : num) : "🔒"}${open || soon ? `<span class="ic">${WORLD_MAP_ICON[L] || ""}</span>` : ""}</span><span class="nm">${name}</span>${Object.keys(best).length ? `<span class="st">${starText(stars)}</span>` : ""}`;
     if (open) { b.type = "button"; b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); Sound.init(); openSetup(L); }); } else b.disabled = soon || !open;
     box.appendChild(b);
   }
