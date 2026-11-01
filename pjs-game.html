@@ -2212,6 +2212,58 @@ const WORLD_MAP = {
   skyislands: [840, 120, "#7cc8ff"], thunder: [905, 195, "#9a90c0"], storm: [925, 72, "#d9b8ff"],
   infinity: [480, 70, "#b48aff"],
 };
+// The grass world on the map: layered rolling hills lit by the sun, thick grass, meadows of flowers, rocks, bushes and a fence
+function drawGrassWorld(x, R) {
+  const H = 450, X1 = 252, top = (px, base, amp) => base + Math.sin(px / 47) * amp + Math.sin(px / 19) * amp * 0.4;
+  const hillPath = (base, amp, x0 = 0, x1 = X1) => { const p = new Path2D(); p.moveTo(x0, H); for (let px = x0; px <= x1; px += 4) p.lineTo(px, top(px, base, amp)); p.lineTo(x1, H); p.closePath(); return p; };
+  const ground = hillPath(225, 10);
+  x.save(); x.clip(ground);
+  // rolling hills in layers: each one a little lighter and closer, with a soft shadow along its bottom
+  const layers = [[248, 14, "#4f9e3c", "#3a7f2e", 0.9], [285, 18, "#5cae44", "#43893a", 1.3], [330, 16, "#6abc4c", "#4d963f", 0.7], [380, 12, "#74c654", "#55a044", 1.1]];
+  for (const [base, amp, c1, c2, f] of layers) {
+    const p = new Path2D(); p.moveTo(0, H);
+    for (let px = 0; px <= X1; px += 4) p.lineTo(px, base + Math.sin(px / (60 * f) + base) * amp + Math.sin(px / 23 + base * 0.1) * amp * 0.35); p.lineTo(X1, H); p.closePath();
+    const g = x.createLinearGradient(0, base - amp, 0, base + 60); g.addColorStop(0, c1); g.addColorStop(1, c2);
+    x.fillStyle = "rgba(20,50,20,0.22)"; x.save(); x.translate(0, -4); x.fill(p); x.restore();   // shadow line where this hill overlaps the one behind
+    x.fillStyle = g; x.fill(p);
+    x.strokeStyle = "rgba(220,255,170,0.35)"; x.lineWidth = 2; x.stroke(p);   // sunlit ridge
+  }
+  // sunlight from the top-left, and shade toward the bottom-right
+  let g = x.createRadialGradient(40, 200, 20, 40, 200, 300); g.addColorStop(0, "rgba(255,250,190,0.32)"); g.addColorStop(1, "rgba(255,250,190,0)"); x.fillStyle = g; x.fillRect(0, 180, X1, H);
+  g = x.createLinearGradient(0, 300, 0, H); g.addColorStop(0, "rgba(0,40,0,0)"); g.addColorStop(1, "rgba(0,40,0,0.25)"); x.fillStyle = g; x.fillRect(0, 300, X1, H);
+  // soft meadow patches of lighter, yellow-green grass
+  for (let n = 0; n < 9; n++) { const a = 10 + R() * 230, b = 250 + R() * 180, rr = 14 + R() * 22; g = x.createRadialGradient(a, b, 1, a, b, rr); g.addColorStop(0, "rgba(200,235,120,0.5)"); g.addColorStop(1, "rgba(200,235,120,0)"); x.fillStyle = g; x.beginPath(); x.ellipse(a, b, rr * 1.4, rr * 0.7, 0, 0, Math.PI * 2); x.fill(); }
+  // thick grass: hundreds of little blades, darker and longer near the front
+  for (let n = 0; n < 1100; n++) {
+    const a = R() * X1, b = 228 + R() * (H - 228), near = (b - 228) / (H - 228), len = 2 + near * 5 + R() * 2, lean = (R() - 0.5) * 3;
+    x.strokeStyle = R() < 0.45 ? `rgba(40,110,40,${0.35 + near * 0.4})` : R() < 0.6 ? `rgba(150,215,90,${0.4 + near * 0.3})` : `rgba(90,170,60,${0.4 + near * 0.3})`;
+    x.lineWidth = 1 + near * 0.6; x.beginPath(); x.moveTo(a, b); x.lineTo(a + lean, b - len); x.stroke();
+  }
+  // a wooden fence along a hill
+  x.strokeStyle = "#8a5a2a"; x.lineWidth = 2; x.beginPath(); x.moveTo(132, 372); x.lineTo(196, 360); x.moveTo(132, 378); x.lineTo(196, 366); x.stroke();
+  x.fillStyle = "#6e4520"; for (let k = 0; k <= 4; k++) { const a = 132 + k * 16, b = 372 - k * 3; x.fillRect(a - 1.5, b - 6, 3, 14); }
+  // rocks with a sunlit side
+  for (const [a, b, w] of [[68, 300, 9], [150, 400, 11], [228, 352, 7], [20, 430, 8]]) { x.fillStyle = "rgba(0,0,0,0.2)"; x.beginPath(); x.ellipse(a + 2, b + w * 0.45, w, w * 0.35, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#8a8f96"; x.beginPath(); x.ellipse(a, b, w, w * 0.6, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#b8bcc2"; x.beginPath(); x.ellipse(a - w * 0.3, b - w * 0.15, w * 0.5, w * 0.3, 0, Math.PI, Math.PI * 2); x.fill(); }
+  // round bushes
+  for (const [a, b] of [[48, 330], [98, 405], [140, 300], [215, 430], [10, 360]]) { x.fillStyle = "rgba(0,0,0,0.18)"; x.beginPath(); x.ellipse(a + 2, b + 4, 11, 3, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#2f7d32"; x.beginPath(); x.arc(a - 5, b, 6, 0, Math.PI * 2); x.arc(a + 5, b, 6, 0, Math.PI * 2); x.arc(a, b - 4, 7, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#5fbf4a"; x.beginPath(); x.arc(a - 3, b - 6, 3, 0, Math.PI * 2); x.fill(); if (a % 2) { x.fillStyle = "#e0443a"; x.fillRect(a + 2, b - 2, 2, 2); x.fillRect(a - 4, b + 1, 2, 2); } }   // some have red berries
+  // little flowers with four petals and a yellow middle
+  const cols = ["#ffffff", "#ff8ab0", "#ffd34d", "#b48aff", "#7cc8ff"];
+  for (let n = 0; n < 90; n++) { const a = R() * X1, b = 245 + R() * (H - 250), near = (b - 245) / (H - 250), s = 1 + near * 0.8, col = cols[n % cols.length];
+    x.strokeStyle = "rgba(40,110,40,0.8)"; x.lineWidth = 1; x.beginPath(); x.moveTo(a, b); x.lineTo(a, b + 3 * s); x.stroke();
+    x.fillStyle = col; for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) x.fillRect(a + dx * 1.5 * s - s / 2, b + dy * 1.5 * s - s / 2, s * 1.2, s * 1.2);
+    x.fillStyle = "#ffcf3a"; x.fillRect(a - s / 2, b - s / 2, s, s); }
+  x.restore();
+  // where the grass meets the sand: a soft, wavy edge of sand with tufts of grass poking into it
+  const yTop = 236 + Math.sin(252 / 47) * 10 + Math.sin(252 / 19) * 4;   // where the sand hill starts here
+  const edge = new Path2D(); edge.moveTo(262, yTop);
+  for (let py = yTop; py <= H; py += 6) edge.lineTo(242 + Math.sin(py / 13) * 4 + Math.sin(py / 5) * 1.5, py);
+  edge.lineTo(262, H); edge.closePath();
+  const sg = x.createLinearGradient(0, 230, 0, H); sg.addColorStop(0, "#f4dca6"); sg.addColorStop(1, "#d8b478"); x.fillStyle = sg; x.fill(edge);
+  for (let py = yTop + 8; py < H; py += 9) { x.strokeStyle = "rgba(70,150,50,0.8)"; x.lineWidth = 1.2; const bx = 243 + Math.sin(py / 13) * 4; x.beginPath(); x.moveTo(bx, py); x.lineTo(bx + 3, py - 4); x.moveTo(bx + 1, py); x.lineTo(bx + 5, py - 2); x.stroke(); }
+}
 function drawWorldMap() {
   const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
   const x = c.getContext("2d"), W = 1000, H = 450; let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
@@ -2253,11 +2305,12 @@ function drawWorldMap() {
   hill(232, 432, 245, lin(0, 245, 0, H, [[0, "#f4dca6"], [1, "#d8b478"]]));
   hill(418, 622, 235, lin(0, 235, 0, H, [[0, "#5a4448"], [1, "#2e2026"]]));
   hill(606, 812, 205, lin(0, 205, 0, H, [[0, "#f6f9fe"], [1, "#cfdcec"]]));
+  drawGrassWorld(x, R);   // the grass world's detailed hills, grass and meadows
   // soft blends where the worlds meet
-  for (const [bx, a, b] of [[242, "rgba(108,192,76,0)", "rgba(244,220,166,0)"], [425, "", ""], [614, "", ""]]) {
+  for (const [bx, a, b] of [[425, "", ""], [614, "", ""]]) {
     x.fillStyle = lin(bx - 14, 0, bx + 14, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.18)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 14, 200, 28, H - 200); }
   // grass world: flowers, a winding river with a little bridge, the home treehouse and a far-off robot factory
-  for (let n = 0; n < 70; n++) { const a = R() * 240, b = 260 + R() * 180; x.fillStyle = ["#ffd34d", "#ff8ab0", "#ffffff", "#b48aff"][n % 4]; x.fillRect(a, b, 3, 3); x.fillStyle = "#2f7d32"; x.fillRect(a + 1, b + 3, 1, 3); }
+  // (flowers are drawn in drawGrassWorld)
   x.strokeStyle = "#5aa8e8"; x.lineWidth = 9; x.beginPath(); x.moveTo(0, 300); x.bezierCurveTo(60, 290, 90, 330, 130, 320); x.bezierCurveTo(170, 310, 190, 370, 205, 395); x.stroke();
   x.strokeStyle = "#a8dcff"; x.lineWidth = 2; x.beginPath(); x.moveTo(10, 296); x.bezierCurveTo(60, 288, 90, 326, 130, 316); x.stroke();
   x.fillStyle = "#8a5a2a"; x.fillRect(84, 312, 18, 6); x.fillStyle = "#6e4520"; x.fillRect(84, 312, 18, 2);   // a little bridge
