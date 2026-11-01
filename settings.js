@@ -176,8 +176,8 @@ const SETTINGS = {
     // and packBonus = extra damage on every attack for each Wolf in the 8 squares around it.
     // The Night Owl tower: from the Night Owl's shop. It starts really weak, but every wave it gets stronger
     // (waveGrowth 0.1 = +10% damage for every wave so far), and its last upgrade is really, really strong.
-    nightowl: { name: "Night Owl", cost: 110, range: 2.4, damage: 5, attacksPerSecond: 1.2, waveGrowth: 0.1, serpentUnlock: "nightowl",
-              about: "Unlocked in the Night Owl's shop. It hits flying robots. It starts out weak, but gets stronger every wave, and its last upgrade is really, really strong.",
+    nightowl: { name: "Night Owl", cost: 110, range: 2.4, damage: 5, attacksPerSecond: 1.2, targets: 2, waveGrowth: 0.1, serpentUnlock: "nightowl",
+              about: "Unlocked in the Night Owl's shop. It attacks 2 robots at once and hits flying robots. It starts out weak, but gets stronger every wave, and its last upgrade is really, really strong.",
               upgradeChoices: [
                 [ { name: "Fluffy Feathers", about: "Attacks do 10% more damage.", damageTimes: 1.1 },
                   { name: "Keen Ears",       about: "Reaches 0.3 squares farther.", rangePlus: 0.3 } ],

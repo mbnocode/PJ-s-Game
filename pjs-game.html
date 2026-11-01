@@ -3418,7 +3418,7 @@ const TUT_TOWER = {
   squirrel: "<b>Squirrel:</b> it doesn't attack, but it gathers extra Maple Leaves for you after every wave. Build it early!",
   crab: "<b>Crab:</b> hurls seashells that splash and hurt every robot nearby. Great against big groups.",
   pegasus: "<b>Pegasus:</b> the Super Tower! It shoots golden stars at 3 robots at once.",
-  nightowl: "<b>Night Owl:</b> from the Night Owl's shop! It can hit flying robots. It starts out weak, but gets 10% stronger every wave. Save up for its last upgrade: it's really, really strong!",
+  nightowl: "<b>Night Owl:</b> from the Night Owl's shop! It attacks 2 robots at once and can hit flying robots. It starts out weak, but gets 10% stronger every wave. Save up for its last upgrade: it's really, really strong!",
   hacked: "<b>Hacked Robot:</b> from the Defector's shop! Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward.",
   wolf: "<b>Wolf:</b> from the Night Owl's shop! It hits like a Fire Dragon, and every Wolf right next to it adds 15 damage to each attack. Build a pack!",
   hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads bites a different robot.",
@@ -3697,7 +3697,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
-  nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It hits flying robots too. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
+  nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It attacks 2 robots at once and hits flying robots too. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
   hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
   air: "A wise old owl. Its gusts of wind push robots back down the road. It can see Hiders and hit flying robots.",
@@ -4074,7 +4074,7 @@ function openPanel(t) {
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
   if (s.wolfCount) lines.push(`Strength in Numbers: ${s.allWolves} other ${s.allWolves === 1 ? "Wolf" : "Wolves"} on the board, +${s.allWolves * s.wolfCount} damage`);
   if (s.packBonus) lines.push(s.pack ? `Pack: ${s.pack} ${s.pack > 1 ? "Wolves" : "Wolf"} next to it, +${s.pack * (s.packBonus + (s.packBonusPlus || 0))} damage` : `Pack: no Wolves next to it yet (+${s.packBonus + (s.packBonusPlus || 0)} damage for each one)`);
-  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : t.kind === "pegasus" ? "Shoots" : "Grabs"} ${s.targets} robots at once`);
+  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : t.kind === "pegasus" || t.kind === "nightowl" || t.kind === "hacked" ? "Attacks" : "Grabs"} ${s.targets} robots at once`);
   if (s.pushBack && spec.upgradeChoices) lines.push(`Pushes robots back ${s.pushBack.toFixed(1)} squares`);
   if (s.holdSeconds && t.kind === "plant" && spec.upgradeChoices) lines.push(`Holds robots for ${s.holdSeconds.toFixed(1)}s`);
   if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
