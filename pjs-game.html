@@ -2209,60 +2209,129 @@ const WORLD_MAP = {
 function drawWorldMap() {
   const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
   const x = c.getContext("2d"), W = 1000, H = 450; let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  // the sky: day on the left, getting darker toward the storm and space on the right
-  const sky = x.createLinearGradient(0, 0, W, 0); sky.addColorStop(0, "#8fd0ff"); sky.addColorStop(0.55, "#a8c8f0"); sky.addColorStop(0.8, "#6a78b0"); sky.addColorStop(1, "#3a3a6a");
-  x.fillStyle = sky; x.fillRect(0, 0, W, H);
-  // space and the Infinity portal at the top
-  const sp = x.createRadialGradient(480, 70, 5, 480, 70, 120); sp.addColorStop(0, "#2a1650"); sp.addColorStop(0.7, "rgba(42,22,80,0.9)"); sp.addColorStop(1, "rgba(42,22,80,0)");
-  x.fillStyle = sp; x.beginPath(); x.ellipse(480, 70, 150, 75, 0, 0, Math.PI * 2); x.fill();
-  for (let i = 0; i < 40; i++) { const a = R() * Math.PI * 2, r = R(); x.fillStyle = R() < 0.3 ? "#ffe9a8" : "#ffffff"; x.fillRect(480 + Math.cos(a) * 140 * r, 70 + Math.sin(a) * 65 * r, 2, 2); }
-  x.strokeStyle = "rgba(200,170,255,0.9)"; x.lineWidth = 4; x.beginPath();   // a glowing infinity sign
-  for (let t = 0; t <= Math.PI * 2 + 0.05; t += 0.05) { const s = Math.sin(t), co = Math.cos(t), d = 1 + s * s, px = 480 + 70 * co / d, py = 70 + 50 * s * co / d; t ? x.lineTo(px, py) : x.moveTo(px, py); }
-  x.stroke();
-  // clouds
-  const cloud = (cx, cy, w, col) => { x.fillStyle = col; for (let k = 0; k < 5; k++) { x.beginPath(); x.arc(cx + (k - 2) * w * 0.2, cy + (k % 2) * 4, w * (0.18 + (k === 2 ? 0.08 : 0)), 0, Math.PI * 2); x.fill(); } };
-  [[90, 70, 70], [230, 110, 60], [330, 50, 80], [640, 60, 70]].forEach(([a, b, w]) => cloud(a, b, w, "rgba(255,255,255,0.9)"));
-  [[880, 240, 90], [960, 130, 70], [820, 60, 60]].forEach(([a, b, w]) => cloud(a, b, w, "rgba(90,88,120,0.85)"));
-  // the ground: rolling hills colored by world, from left to right
-  const band = (x0, x1, top, col, dark) => { x.fillStyle = col; x.beginPath(); x.moveTo(x0, H);
-    for (let px = x0; px <= x1; px += 10) x.lineTo(px, top + Math.sin(px / 47) * 10 + Math.sin(px / 19) * 4); x.lineTo(x1, H); x.closePath(); x.fill();
-    x.fillStyle = dark; for (let n = 0; n < (x1 - x0) / 6; n++) x.fillRect(x0 + R() * (x1 - x0), top + 20 + R() * (H - top - 20), 3, 2); };
-  band(0, 240, 225, "#5fae45", "#4a9038");        // grass
-  band(240, 425, 245, "#ecd29a", "#d6b878");      // sand
-  band(425, 615, 235, "#4a3a40", "#3a2a30");      // lava rock
-  band(615, 810, 210, "#eef3fa", "#cfdbe8");      // snow
-  // the swamp's water and the beach's sea
-  x.fillStyle = "#4a7a6a"; x.beginPath(); x.ellipse(205, 395, 45, 16, 0, 0, Math.PI * 2); x.fill();
-  x.fillStyle = "#3d8fe0"; x.beginPath(); x.moveTo(240, H); x.quadraticCurveTo(275, 410, 320, H); x.fill(); x.fillStyle = "#ffffff"; x.fillRect(262, 425, 20, 2);
-  // little scenery for each world
-  const tree = (a, b, s, c1, c2) => { x.fillStyle = "#6e4520"; x.fillRect(a - 2 * s, b, 4 * s, 10 * s); x.fillStyle = c1; x.beginPath(); x.arc(a, b - 2 * s, 9 * s, 0, Math.PI * 2); x.fill(); x.fillStyle = c2; x.beginPath(); x.arc(a + 3 * s, b - 5 * s, 4 * s, 0, Math.PI * 2); x.fill(); };
-  const pine = (a, b, s, col, snow) => { x.fillStyle = "#4e2d14"; x.fillRect(a - 2 * s, b, 4 * s, 6 * s); for (let k = 0; k < 3; k++) { x.fillStyle = col; x.beginPath(); x.moveTo(a, b - 22 * s + k * 7 * s); x.lineTo(a - (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.lineTo(a + (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.fill(); if (snow) { x.fillStyle = "#ffffff"; x.fillRect(a - 3 * s, b - 20 * s + k * 7 * s, 6 * s, 2 * s); } } };
-  [[30, 280], [110, 300], [160, 230], [40, 400], [230, 270]].forEach(([a, b]) => tree(a, b, 1, "#3f9a3a", "#5fbf4a"));
-  [[180, 260], [100, 250]].forEach(([a, b]) => pine(a, b, 1, "#2f6a46"));
-  // palm trees, a cactus and the pyramid
-  const palm = (a, b) => { x.strokeStyle = "#8a5a2a"; x.lineWidth = 4; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + 6, b - 18, a + 2, b - 34); x.stroke(); x.fillStyle = "#3f9a3a"; for (const d of [-1, 1]) { x.beginPath(); x.ellipse(a + 2 + d * 9, b - 34, 11, 3.5, d * 0.4, 0, Math.PI * 2); x.fill(); } };
-  palm(250, 330); palm(305, 360);
-  x.fillStyle = "#3f9a3a"; x.fillRect(360, 345, 6, 26); x.fillRect(352, 352, 6, 4); x.fillRect(352, 344, 4, 10); x.fillRect(366, 356, 6, 4); x.fillRect(370, 348, 4, 10);
-  x.fillStyle = "#d8b06a"; x.beginPath(); x.moveTo(355, 270); x.lineTo(400, 175); x.lineTo(445, 270); x.fill(); x.fillStyle = "#c09050"; x.beginPath(); x.moveTo(400, 175); x.lineTo(445, 270); x.lineTo(410, 270); x.fill();
-  // the volcano, with lava
-  x.fillStyle = "#3a2a30"; x.beginPath(); x.moveTo(530, 300); x.lineTo(580, 190); x.lineTo(600, 190); x.lineTo(650, 300); x.fill();
-  x.fillStyle = "#ff7a1a"; x.beginPath(); x.moveTo(582, 190); x.lineTo(598, 190); x.lineTo(604, 230); x.lineTo(592, 214); x.lineTo(586, 240); x.fill();
-  x.fillStyle = "rgba(255,140,40,0.35)"; x.beginPath(); x.arc(590, 185, 22, 0, Math.PI * 2); x.fill();
-  for (const [a, b] of [[455, 395], [500, 330], [545, 410]]) { x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, b, 16, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - 4, b - 1, 8, 2); }   // lava pools
-  // snowy mountains
-  const mtn = (a, b, w, h) => { x.fillStyle = "#9aa6b8"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a, b - h); x.lineTo(a + w, b); x.fill(); x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(a - w * 0.3, b - h * 0.7); x.lineTo(a, b - h); x.lineTo(a + w * 0.3, b - h * 0.7); x.lineTo(a + w * 0.1, b - h * 0.62); x.lineTo(a - w * 0.1, b - h * 0.7); x.fill(); };
-  mtn(700, 240, 60, 110); mtn(775, 215, 70, 150); mtn(650, 250, 40, 70);
-  [[630, 300], [690, 300], [745, 380]].forEach(([a, b]) => pine(a, b, 0.9, "#2f6a46", true));
-  // floating sky islands
-  const isle = (a, b, w) => { x.fillStyle = "#6e4520"; x.beginPath(); x.moveTo(a - w, b); x.quadraticCurveTo(a, b + w * 0.9, a + w, b); x.fill(); x.fillStyle = "#5fbf4a"; x.beginPath(); x.ellipse(a, b, w, w * 0.22, 0, 0, Math.PI * 2); x.fill(); };
-  isle(840, 140, 34); isle(905, 215, 30); isle(925, 94, 26);
-  x.strokeStyle = "#fff7a0"; x.lineWidth = 3; x.beginPath(); x.moveTo(940, 140); x.lineTo(930, 160); x.lineTo(940, 162); x.lineTo(928, 185); x.stroke();   // a lightning bolt
-  // the road between the levels (a dotted trail)
+  const lin = (x0, y0, x1, y1, stops) => { const g = x.createLinearGradient(x0, y0, x1, y1); stops.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
+  const rad = (cx, cy, r0, r1, stops) => { const g = x.createRadialGradient(cx, cy, r0, cx, cy, r1); stops.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
+  // ---- the sky: a bright morning on the left, sunset over the volcano, a storm and then space on the right ----
+  x.fillStyle = lin(0, 0, W, 0, [[0, "#7cc4ff"], [0.42, "#9cd0ff"], [0.58, "#ffb88a"], [0.72, "#9aa8d8"], [0.86, "#5a5a8a"], [1, "#2e2a52"]]); x.fillRect(0, 0, W, H);
+  x.fillStyle = lin(0, 0, 0, H, [[0, "rgba(255,255,255,0)"], [0.55, "rgba(255,255,255,0.25)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(0, 0, W, H);
+  // the sun, with soft rays
+  x.fillStyle = rad(70, 60, 10, 110, [[0, "rgba(255,250,200,0.95)"], [0.25, "rgba(255,240,160,0.5)"], [1, "rgba(255,240,160,0)"]]); x.beginPath(); x.arc(70, 60, 110, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#fff6b0"; x.beginPath(); x.arc(70, 60, 22, 0, Math.PI * 2); x.fill();
+  x.save(); x.translate(70, 60); x.strokeStyle = "rgba(255,246,176,0.5)"; x.lineWidth = 3; for (let k = 0; k < 12; k++) { x.rotate(Math.PI / 6); x.beginPath(); x.moveTo(30, 0); x.lineTo(44, 0); x.stroke(); } x.restore();
+  // a rainbow over the sky islands
+  for (const [r, col] of [[120, "rgba(255,90,90,.35)"], [113, "rgba(255,170,60,.35)"], [106, "rgba(255,230,90,.35)"], [99, "rgba(110,210,110,.35)"], [92, "rgba(90,160,255,.35)"], [85, "rgba(160,110,230,.35)"]]) { x.strokeStyle = col; x.lineWidth = 7; x.beginPath(); x.arc(880, 250, r, Math.PI * 1.05, Math.PI * 1.75); x.stroke(); }
+  // ---- Infinity: a swirling purple nebula in space, with a ringed planet and a glowing infinity sign ----
+  x.fillStyle = rad(480, 70, 5, 150, [[0, "#3a1a70"], [0.55, "rgba(40,20,80,0.95)"], [1, "rgba(40,20,80,0)"]]); x.beginPath(); x.ellipse(480, 70, 165, 82, 0, 0, Math.PI * 2); x.fill();
+  for (let k = 0; k < 5; k++) { x.strokeStyle = `rgba(${k % 2 ? "120,200,255" : "200,140,255"},0.18)`; x.lineWidth = 10; x.beginPath(); x.ellipse(480, 70, 40 + k * 22, 18 + k * 10, -0.25 + k * 0.08, 0.3 + k, 2.6 + k); x.stroke(); }   // nebula swirls
+  for (let i = 0; i < 70; i++) { const a = R() * Math.PI * 2, r = Math.sqrt(R()); const px = 480 + Math.cos(a) * 150 * r, py = 70 + Math.sin(a) * 70 * r; x.fillStyle = R() < 0.25 ? "#ffe9a8" : R() < 0.5 ? "#c8d8ff" : "#ffffff"; const s = R() < 0.1 ? 3 : 2; x.fillRect(px, py, s, s); }
+  x.fillStyle = "#e8a060"; x.beginPath(); x.arc(585, 50, 11, 0, Math.PI * 2); x.fill(); x.fillStyle = "#c07a40"; x.fillRect(575, 52, 20, 3);   // a little planet
+  x.strokeStyle = "rgba(255,230,190,0.8)"; x.lineWidth = 2; x.beginPath(); x.ellipse(585, 50, 18, 5, -0.3, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = "#bfe0ff"; x.beginPath(); x.arc(380, 95, 6, 0, Math.PI * 2); x.fill(); x.fillStyle = "#8ab0e0"; x.beginPath(); x.arc(382, 97, 3, 0, Math.PI * 2); x.fill();
+  x.lineCap = "round";
+  for (const [w, col] of [[10, "rgba(180,140,255,0.35)"], [4, "#d8c0ff"], [1.5, "#ffffff"]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath();
+    for (let t = 0; t <= Math.PI * 2 + 0.05; t += 0.04) { const s = Math.sin(t), co = Math.cos(t), d = 1 + s * s, px = 480 + 72 * co / d, py = 70 + 52 * s * co / d; t ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); }
+  // fluffy clouds (gray storm clouds on the right)
+  const cloud = (cx, cy, w, top, under) => { for (const [ox, oy, r] of [[-0.32, 0.1, 0.2], [-0.1, -0.12, 0.27], [0.15, -0.05, 0.24], [0.35, 0.1, 0.18], [0, 0.15, 0.22]]) {
+      x.fillStyle = under; x.beginPath(); x.arc(cx + ox * w, cy + oy * w + 4, r * w, 0, Math.PI * 2); x.fill(); }
+    for (const [ox, oy, r] of [[-0.32, 0.1, 0.2], [-0.1, -0.12, 0.27], [0.15, -0.05, 0.24], [0.35, 0.1, 0.18], [0, 0.15, 0.22]]) { x.fillStyle = top; x.beginPath(); x.arc(cx + ox * w, cy + oy * w, r * w, 0, Math.PI * 2); x.fill(); } };
+  [[190, 60, 75], [300, 120, 60], [680, 50, 80], [250, 30, 45]].forEach(([a, b, w]) => cloud(a, b, w, "#ffffff", "#c8dcf0"));
+  [[880, 300, 100], [985, 160, 80], [800, 40, 70], [960, 260, 70]].forEach(([a, b, w]) => cloud(a, b, w, "#6e6c8c", "#4a4866"));
+  // birds
+  x.strokeStyle = "#3a4a6a"; x.lineWidth = 2; for (const [a, b] of [[150, 110], [170, 100], [330, 70], [345, 80]]) { x.beginPath(); x.moveTo(a - 6, b); x.quadraticCurveTo(a - 3, b - 5, a, b); x.quadraticCurveTo(a + 3, b - 5, a + 6, b); x.stroke(); }
+  // ---- the ground: each world's hills, blended into the next ----
+  const hill = (x0, x1, top, fill, amp = 10) => { x.fillStyle = fill; x.beginPath(); x.moveTo(x0, H);
+    for (let px = x0; px <= x1; px += 6) x.lineTo(px, top + Math.sin(px / 47) * amp + Math.sin(px / 19) * amp * 0.4); x.lineTo(x1, H); x.closePath(); x.fill(); };
+  // far-away hills behind everything
+  hill(0, 260, 200, "rgba(70,140,90,0.5)", 16); hill(420, 640, 190, "rgba(60,40,50,0.45)", 14);
+  hill(0, 252, 225, lin(0, 225, 0, H, [[0, "#6cc04c"], [1, "#3f8a34"]]));
+  hill(232, 432, 245, lin(0, 245, 0, H, [[0, "#f4dca6"], [1, "#d8b478"]]));
+  hill(418, 622, 235, lin(0, 235, 0, H, [[0, "#5a4448"], [1, "#2e2026"]]));
+  hill(606, 812, 205, lin(0, 205, 0, H, [[0, "#f6f9fe"], [1, "#cfdcec"]]));
+  // soft blends where the worlds meet
+  for (const [bx, a, b] of [[242, "rgba(108,192,76,0)", "rgba(244,220,166,0)"], [425, "", ""], [614, "", ""]]) {
+    x.fillStyle = lin(bx - 14, 0, bx + 14, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.18)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 14, 200, 28, H - 200); }
+  // grass world: flowers, a winding river with a little bridge, the home treehouse and a far-off robot factory
+  for (let n = 0; n < 70; n++) { const a = R() * 240, b = 260 + R() * 180; x.fillStyle = ["#ffd34d", "#ff8ab0", "#ffffff", "#b48aff"][n % 4]; x.fillRect(a, b, 3, 3); x.fillStyle = "#2f7d32"; x.fillRect(a + 1, b + 3, 1, 3); }
+  x.strokeStyle = "#5aa8e8"; x.lineWidth = 9; x.beginPath(); x.moveTo(0, 300); x.bezierCurveTo(60, 290, 90, 330, 130, 320); x.bezierCurveTo(170, 310, 190, 370, 205, 395); x.stroke();
+  x.strokeStyle = "#a8dcff"; x.lineWidth = 2; x.beginPath(); x.moveTo(10, 296); x.bezierCurveTo(60, 288, 90, 326, 130, 316); x.stroke();
+  x.fillStyle = "#8a5a2a"; x.fillRect(84, 312, 18, 6); x.fillStyle = "#6e4520"; x.fillRect(84, 312, 18, 2);   // a little bridge
+  // the treehouse (home!)
+  x.fillStyle = "#6e4520"; x.fillRect(27, 360, 10, 26); x.fillStyle = "#3f9a3a"; x.beginPath(); x.arc(32, 350, 20, 0, Math.PI * 2); x.fill(); x.fillStyle = "#5fbf4a"; x.beginPath(); x.arc(26, 344, 9, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#a8743e"; x.fillRect(22, 358, 20, 12); x.fillStyle = "#7a4a24"; x.beginPath(); x.moveTo(20, 358); x.lineTo(32, 350); x.lineTo(44, 358); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(29, 362, 5, 5);
+  // the robots' factory far away on the hill, puffing smoke
+  x.fillStyle = "#5a606c"; x.fillRect(205, 214, 30, 16); x.fillRect(209, 202, 5, 12); x.fillRect(218, 198, 5, 16); x.fillStyle = "#ff8c1a"; x.fillRect(209, 220, 4, 3); x.fillRect(217, 220, 4, 3); x.fillRect(225, 220, 4, 3);
+  for (let k = 0; k < 5; k++) { x.fillStyle = `rgba(150,150,160,${0.5 - k * 0.08})`; x.beginPath(); x.arc(220 + k * 5, 190 - k * 9, 4 + k * 2, 0, Math.PI * 2); x.fill(); }
+  // trees with shading
+  const tree = (a, b, s) => { x.fillStyle = "rgba(0,0,0,0.18)"; x.beginPath(); x.ellipse(a + 2, b + 10 * s, 9 * s, 3 * s, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6e4520"; x.fillRect(a - 2 * s, b, 4 * s, 10 * s);
+    x.fillStyle = "#2f7d32"; x.beginPath(); x.arc(a, b - 2 * s, 10 * s, 0, Math.PI * 2); x.fill(); x.fillStyle = "#4aa83e"; x.beginPath(); x.arc(a - 2 * s, b - 4 * s, 8 * s, 0, Math.PI * 2); x.fill(); x.fillStyle = "#7cd45f"; x.beginPath(); x.arc(a - 4 * s, b - 7 * s, 3.5 * s, 0, Math.PI * 2); x.fill(); };
+  const pine = (a, b, s, col, snow) => { x.fillStyle = "rgba(0,0,0,0.15)"; x.beginPath(); x.ellipse(a + 2, b + 6 * s, 8 * s, 2.5 * s, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#4e2d14"; x.fillRect(a - 2 * s, b, 4 * s, 6 * s);
+    for (let k = 0; k < 3; k++) { x.fillStyle = col; x.beginPath(); x.moveTo(a, b - 22 * s + k * 7 * s); x.lineTo(a - (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.lineTo(a + (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.fill();
+      x.fillStyle = "rgba(0,0,0,0.15)"; x.beginPath(); x.moveTo(a, b - 22 * s + k * 7 * s); x.lineTo(a + (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.lineTo(a, b - 6 * s + k * 5 * s); x.fill();
+      if (snow) { x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(a, b - 22 * s + k * 7 * s); x.lineTo(a - 4 * s, b - 15 * s + k * 7 * s); x.lineTo(a + 4 * s, b - 15 * s + k * 7 * s); x.fill(); } } };
+  [[20, 275], [120, 285], [60, 420], [235, 300], [165, 420]].forEach(([a, b]) => tree(a, b, 1.1));
+  [[105, 240], [180, 240], [200, 290]].forEach(([a, b]) => pine(a, b, 1.1, "#2f6a46"));
+  // the swamp: murky water, lily pads, cattails and mist
+  x.fillStyle = "#3e6a5a"; x.beginPath(); x.ellipse(205, 400, 50, 18, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(160,220,190,0.25)"; x.beginPath(); x.ellipse(200, 395, 38, 9, 0, 0, Math.PI * 2); x.fill();
+  for (const [a, b] of [[185, 398], [222, 404], [205, 410]]) { x.fillStyle = "#5fa040"; x.beginPath(); x.arc(a, b, 5, 0.3, Math.PI * 2); x.lineTo(a, b); x.fill(); }
+  for (const a of [160, 168, 245, 252]) { x.strokeStyle = "#5a7a35"; x.lineWidth = 2; x.beginPath(); x.moveTo(a, 410); x.lineTo(a, 385); x.stroke(); x.fillStyle = "#6e4520"; x.fillRect(a - 2, 385, 4, 9); }
+  x.fillStyle = "rgba(220,240,230,0.25)"; x.beginPath(); x.ellipse(205, 382, 70, 10, 0, 0, Math.PI * 2); x.fill();
+  // sand world: dune ripples, the sea with waves, a sandcastle, palms, cacti and the great pyramid
+  x.strokeStyle = "rgba(200,160,100,0.5)"; x.lineWidth = 2; for (let n = 0; n < 10; n++) { const a = 250 + R() * 160, b = 270 + R() * 140; x.beginPath(); x.arc(a, b + 20, 22, Math.PI * 1.15, Math.PI * 1.85); x.stroke(); }
+  x.fillStyle = lin(0, 400, 0, H, [[0, "#4aa8e8"], [1, "#2a78c0"]]); x.beginPath(); x.moveTo(236, H); x.bezierCurveTo(250, 420, 300, 405, 345, H); x.fill();
+  x.strokeStyle = "#ffffff"; x.lineWidth = 2; for (const [a, b] of [[260, 428], [290, 418], [318, 432], [275, 442]]) { x.beginPath(); x.arc(a, b, 6, Math.PI, Math.PI * 2); x.stroke(); }
+  x.fillStyle = "#e8c888"; x.fillRect(372, 400, 22, 14); x.fillRect(370, 394, 6, 8); x.fillRect(388, 394, 6, 8); x.fillRect(379, 390, 6, 10); x.fillStyle = "#e0443a"; x.fillRect(381, 382, 1, 8); x.fillRect(382, 382, 5, 3);   // a sandcastle with a flag
+  const palm = (a, b, s = 1) => { x.strokeStyle = "#8a5a2a"; x.lineWidth = 4 * s; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + 7 * s, b - 18 * s, a + 2 * s, b - 36 * s); x.stroke();
+    for (const [ang, col] of [[-2.6, "#2f8a32"], [-0.5, "#2f8a32"], [-1.9, "#4aa83e"], [-1.1, "#4aa83e"]]) { x.fillStyle = col; x.save(); x.translate(a + 2 * s, b - 36 * s); x.rotate(ang + Math.PI / 2); x.beginPath(); x.ellipse(0, 10 * s, 3.5 * s, 12 * s, 0, 0, Math.PI * 2); x.fill(); x.restore(); }
+    x.fillStyle = "#6e4520"; x.beginPath(); x.arc(a + 2 * s, b - 33 * s, 2.5 * s, 0, Math.PI * 2); x.fill(); };
+  palm(255, 330); palm(310, 362, 0.9); palm(400, 425, 0.8);
+  const cactus = (a, b) => { x.fillStyle = "#3f9a3a"; x.fillRect(a, b - 26, 7, 26); x.fillRect(a - 8, b - 18, 6, 4); x.fillRect(a - 8, b - 26, 4, 10); x.fillRect(a + 9, b - 14, 6, 4); x.fillRect(a + 11, b - 22, 4, 10); x.fillStyle = "#5fbf4a"; x.fillRect(a + 1, b - 26, 2, 26); };
+  cactus(355, 372); cactus(420, 330);
+  // the pyramid: sunlit and shady sides, stone rows and a dark doorway
+  x.fillStyle = "#e8c070"; x.beginPath(); x.moveTo(352, 272); x.lineTo(400, 168); x.lineTo(400, 272); x.fill();
+  x.fillStyle = "#b88848"; x.beginPath(); x.moveTo(400, 168); x.lineTo(448, 272); x.lineTo(400, 272); x.fill();
+  x.strokeStyle = "rgba(120,80,30,0.35)"; x.lineWidth = 1; for (let k = 1; k < 9; k++) { const y = 168 + k * 13, half = (y - 168) * 48 / 104; x.beginPath(); x.moveTo(400 - half, y); x.lineTo(400 + half, y); x.stroke(); }
+  x.fillStyle = "#3a2410"; x.fillRect(394, 254, 12, 18); x.fillStyle = "#ffd36b"; x.beginPath(); x.arc(400, 168, 3, 0, Math.PI * 2); x.fill();   // a golden capstone
+  // lava world: glowing cracks, basalt columns, lava rivers and the erupting volcano
+  x.strokeStyle = "rgba(255,120,40,0.7)"; x.lineWidth = 2; for (let n = 0; n < 14; n++) { let a = 430 + R() * 180, b = 280 + R() * 160; x.beginPath(); x.moveTo(a, b); for (let k = 0; k < 4; k++) { a += (R() - 0.5) * 18; b += 6 + R() * 6; x.lineTo(a, b); } x.stroke(); }
+  for (const [a, b, h] of [[438, 300, 34], [446, 300, 26], [454, 300, 40], [462, 300, 22]]) { x.fillStyle = "#4a4454"; x.fillRect(a, b - h, 8, h); x.fillStyle = "#6a6474"; x.fillRect(a, b - h, 8, 3); x.fillStyle = "#2e2a36"; x.fillRect(a + 6, b - h, 2, h); }   // basalt columns
+  x.strokeStyle = "#ff7a1a"; x.lineWidth = 7; x.beginPath(); x.moveTo(592, 212); x.bezierCurveTo(600, 280, 540, 320, 520, 450); x.stroke();   // a lava river from the volcano
+  x.strokeStyle = "#ffd36b"; x.lineWidth = 2; x.beginPath(); x.moveTo(592, 212); x.bezierCurveTo(600, 280, 540, 320, 520, 450); x.stroke();
+  x.fillStyle = "rgba(255,120,40,0.22)"; x.beginPath(); x.ellipse(560, 330, 50, 120, 0.3, 0, Math.PI * 2); x.fill();
+  x.fillStyle = lin(530, 0, 650, 0, [[0, "#4a3438"], [0.55, "#3a262c"], [1, "#24161a"]]); x.beginPath(); x.moveTo(525, 305); x.lineTo(578, 190); x.lineTo(602, 190); x.lineTo(655, 305); x.fill();
+  x.fillStyle = "#ff7a1a"; x.beginPath(); x.moveTo(580, 190); x.lineTo(600, 190); x.lineTo(608, 236); x.lineTo(594, 220); x.lineTo(588, 250); x.lineTo(583, 222); x.fill();
+  x.fillStyle = rad(590, 186, 2, 40, [[0, "rgba(255,200,90,0.9)"], [0.4, "rgba(255,120,40,0.5)"], [1, "rgba(255,80,20,0)"]]); x.beginPath(); x.arc(590, 186, 40, 0, Math.PI * 2); x.fill();
+  for (let k = 0; k < 7; k++) { x.fillStyle = `rgba(70,60,70,${0.6 - k * 0.07})`; x.beginPath(); x.arc(590 + k * 7 + Math.sin(k) * 6, 170 - k * 15, 8 + k * 3, 0, Math.PI * 2); x.fill(); }   // ash cloud
+  for (let n = 0; n < 16; n++) { x.fillStyle = R() < 0.5 ? "#ffd36b" : "#ff7a1a"; x.fillRect(570 + R() * 50, 120 + R() * 70, 2, 2); }   // embers
+  for (const [a, b] of [[455, 395], [500, 335], [548, 415]]) { x.fillStyle = "rgba(255,120,40,0.3)"; x.beginPath(); x.ellipse(a, b, 22, 8, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, b, 15, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - 5, b - 1, 10, 2); }
+  // snow world: shaded mountains with snow caps, a glacier cave, a frozen lake and sparkles
+  const mtn = (a, b, w, h) => { x.fillStyle = "#a8b4c8"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a, b - h); x.lineTo(a + w, b); x.fill();
+    x.fillStyle = "#7c88a0"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w, b); x.lineTo(a + w * 0.15, b); x.fill();
+    x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(a - w * 0.35, b - h * 0.62); x.lineTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.lineTo(a - w * 0.16, b - h * 0.55); x.fill();
+    x.fillStyle = "#dfe8f6"; x.beginPath(); x.moveTo(a, b - h); x.lineTo(a + w * 0.35, b - h * 0.62); x.lineTo(a + w * 0.14, b - h * 0.55); x.lineTo(a, b - h * 0.64); x.fill(); };
+  mtn(648, 252, 42, 74); mtn(700, 242, 62, 118); mtn(778, 218, 74, 160);
+  x.fillStyle = "#3f86bb"; x.beginPath(); x.ellipse(712, 238, 16, 12, 0, Math.PI, Math.PI * 2); x.fill(); x.fillStyle = "#1a3a5a"; x.beginPath(); x.ellipse(712, 238, 10, 8, 0, Math.PI, Math.PI * 2); x.fill();   // the glacier cave
+  for (let k = 0; k < 5; k++) { x.fillStyle = "#bfe6fa"; x.fillRect(700 + k * 6, 226, 2, 4 + (k % 2) * 3); }
+  x.fillStyle = lin(0, 380, 0, 420, [[0, "#bfe0f6"], [1, "#8ec6e8"]]); x.beginPath(); x.ellipse(690, 405, 48, 16, 0, 0, Math.PI * 2); x.fill();   // the frozen lake
+  x.strokeStyle = "#ffffff"; x.lineWidth = 1; x.beginPath(); x.moveTo(660, 402); x.lineTo(680, 408); x.lineTo(696, 400); x.moveTo(690, 412); x.lineTo(712, 404); x.stroke();
+  [[630, 300], [688, 300], [742, 380], [790, 330], [640, 430]].forEach(([a, b]) => pine(a, b, 1, "#2f6a46", true));
+  for (let n = 0; n < 40; n++) { x.fillStyle = "rgba(255,255,255,0.9)"; x.fillRect(610 + R() * 200, 120 + R() * 320, 2, 2); }   // falling snow
+  // sky world: floating islands with waterfalls and rope bridges, under a stormy sky with lightning
+  const isle = (a, b, w) => { x.fillStyle = lin(0, b, 0, b + w, [[0, "#8a5a2a"], [1, "#4e2f14"]]); x.beginPath(); x.moveTo(a - w, b); x.quadraticCurveTo(a - w * 0.3, b + w * 1.1, a, b + w * 1.2); x.quadraticCurveTo(a + w * 0.3, b + w * 1.1, a + w, b); x.fill();
+    x.fillStyle = "#3f9a3a"; x.beginPath(); x.ellipse(a, b, w, w * 0.25, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6cc04c"; x.beginPath(); x.ellipse(a - w * 0.1, b - w * 0.06, w * 0.8, w * 0.15, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "rgba(220,240,255,0.85)"; x.fillRect(a + w * 0.5, b + 3, 3, w * 1.4); };   // a waterfall off the edge
+  isle(840, 140, 36); isle(905, 215, 30); isle(925, 94, 26);
+  x.strokeStyle = "#d8c08a"; x.lineWidth = 2; x.beginPath(); x.moveTo(870, 144); x.quadraticCurveTo(890, 170, 880, 212); x.stroke(); x.beginPath(); x.moveTo(908, 100); x.quadraticCurveTo(880, 120, 860, 132); x.stroke();   // rope bridges
+  for (const [a, b] of [[836, 128], [928, 84]]) tree(a, b, 0.6);
+  for (const [lx, ly] of [[960, 130], [870, 270]]) { x.strokeStyle = "rgba(255,247,160,0.4)"; x.lineWidth = 7; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx - 10, ly + 22); x.lineTo(lx, ly + 24); x.lineTo(lx - 14, ly + 50); x.stroke(); x.strokeStyle = "#fff7a0"; x.lineWidth = 2.5; x.stroke(); }   // lightning bolts
+  // ---- the trail between the levels: a glowing dotted path ----
   const order = LEVEL_ORDER.filter((L) => L !== "infinity").concat(["storm"]);
-  x.setLineDash([2, 9]); x.lineCap = "round"; x.lineWidth = 6; x.strokeStyle = "rgba(255,248,225,0.95)"; x.beginPath();
-  order.forEach((L, i) => { const [a, b] = WORLD_MAP[L]; i ? x.lineTo(a, b) : x.moveTo(a, b); }); x.stroke();
-  x.strokeStyle = "rgba(200,170,255,0.8)"; x.beginPath(); x.moveTo(WORLD_MAP.meadow[0], WORLD_MAP.meadow[1]); x.quadraticCurveTo(220, 120, WORLD_MAP.infinity[0] - 20, WORLD_MAP.infinity[1] + 10); x.stroke();   // a magic trail to Infinity
+  const trail = () => { x.beginPath(); order.forEach((L, i) => { const [a, b] = WORLD_MAP[L]; i ? x.lineTo(a, b) : x.moveTo(a, b); }); };
+  x.setLineDash([]); x.lineWidth = 12; x.strokeStyle = "rgba(60,40,20,0.25)"; trail(); x.stroke();
+  x.setLineDash([2, 9]); x.lineWidth = 6; x.strokeStyle = "rgba(255,248,225,0.98)"; trail(); x.stroke();
+  x.strokeStyle = "rgba(210,180,255,0.9)"; x.beginPath(); x.moveTo(WORLD_MAP.meadow[0], WORLD_MAP.meadow[1]); x.quadraticCurveTo(220, 110, WORLD_MAP.infinity[0] - 20, WORLD_MAP.infinity[1] + 10); x.stroke();   // a magic trail to Infinity
   x.setLineDash([]);
+  // a soft frame of shadow around the edge
+  x.fillStyle = rad(W / 2, H / 2, H * 0.55, W * 0.62, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,20,0.35)"]]); x.fillRect(0, 0, W, H);
 }
 function renderWorldMap() {
   const box = $("worldmap"); if (!box) return; drawWorldMap();
