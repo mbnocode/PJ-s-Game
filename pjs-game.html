@@ -969,8 +969,46 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   const BIRD = { d: "#3a3e6a", D: "#22264a", E: "#7ff3ff", o: "#fff066", f: "#ffffff", w: "#fff7a0" };
   const CYCLONE = { U: "#d4dae8", c: "#9aa4bc", b: "#6e7894", B: "#454c66", u: "#fff066", w: "#ffffff", x: "#c8d0e0" };
   const TITANT = { R: "#3a3f78", r: "#6a74c8", g: "#4a5a8a", G: "#2c3458", s: "#8a90a8", y: "#fff066", Y: "#c9a020", o: "#7ff3ff", w: "#ffffff", f: "#ffffff" };
-  for (const [k, base, pal] of [["gustrunner", "scout", GUST], ["staticbot", "tesla", STATIC], ["thunderbird", "emberbat", BIRD], ["thunderbird_mid", "emberbat_mid", BIRD], ["thunderbird_down", "emberbat_down", BIRD], ["cyclonegolem", "glaciergolem", CYCLONE], ["thundertitan", "boss", TITANT]]) {
+  for (const [k, base, pal] of [["staticbot", "tesla", STATIC], ["thunderbird", "emberbat", BIRD], ["thunderbird_mid", "emberbat_mid", BIRD], ["thunderbird_down", "emberbat_down", BIRD], ["thundertitan", "boss", TITANT]]) {
     SPR[k] = makeSprite(ART[base], false, pal); SPRF[k] = makeSprite(ART[base], true, pal); }
+  // Sky robots get stormy colors (dark storm-indigo, electric yellow, glowing teal) so they don't look like the icy robots.
+  const SKYPAL = { a: "#22264a", b: "#3a4280", c: "#6a74c8", C: "#9aa4e8", y: "#fff066", Y: "#c9a020", t: "#7ff3ff", T: "#2a8aa8", w: "#ffffff", g: "#8a90a8", G: "#4a4e68" };
+  // The Gust Runner: a low, sleek wind-racer shaped like a wedge, with a swept-back fin, a lightning stripe and a teal visor
+  const GUSTART = [
+    "................",
+    "....kk..........",
+    "...kCck.........",
+    "...kcbbkkkk.....",
+    "..kcbbbbbbbkk...",
+    "..kcbbbbbbbbtk..",
+    ".kcbyybbbbbttwk.",
+    ".kbbbyybbbbtttk.",
+    "kbbbbbyybbbbbbk.",
+    "kaabbbbyybbaaak.",
+    "kaaaaaaaaaaaaak.",
+    ".kGkkkkkkkkGkk..",
+    ".kgGk....kgGk...",
+    "..kk......kk....",
+    "................",
+    "................"];
+  SPR.gustrunner = makeSprite(GUSTART, false, SKYPAL); SPRF.gustrunner = makeSprite(GUSTART, true, SKYPAL);
+  // The Cyclone Golem: a hulking golem made of dark storm cloud, with a swirling teal vortex in its chest and lightning-yellow eyes
+  const N = 32, puffs = [[16, 7, 5.2], [16, 16, 8.2], [8, 12, 4.8], [24, 12, 4.8], [5, 18, 3.6], [27, 18, 3.6], [5, 23.5, 3.8], [27, 23.5, 3.8], [12, 23, 4.4], [20, 23, 4.4], [11, 27.5, 3.6], [21, 27.5, 3.6]];
+  const inside = (i, j) => puffs.some(([cx, cy, r]) => Math.hypot(i + 0.5 - cx, j + 0.5 - cy) <= r);
+  const rows = [];
+  for (let j = 0; j < N; j++) { let row = "";
+    for (let i = 0; i < N; i++) {
+      if (!inside(i, j)) { row += [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([di, dj]) => inside(i + di, j + dj)) ? "k" : "."; continue; }
+      let best = null, bd = 9; for (const p of puffs) { const d = Math.hypot(i + 0.5 - p[0], j + 0.5 - p[1]) / p[2]; if (d < bd) { bd = d; best = p; } }
+      const up = (j + 0.5 - best[1]) / best[2], vx = i + 0.5 - 16, vy = j + 0.5 - 16.5, vr = Math.hypot(vx, vy);
+      let ch = up < -0.45 ? "C" : up < 0 ? "c" : up < 0.5 ? "b" : "a";   // each puff of cloud lit from above
+      if (vr < 5.2 && best === puffs[1]) { const sw = Math.sin(Math.atan2(vy, vx) * 2 + vr * 1.3); ch = vr < 1.2 ? "w" : sw > 0.25 ? "t" : "T"; }   // the swirling vortex
+      row += ch; }
+    rows.push(row); }
+  const put = (i, j, ch) => { rows[j] = rows[j].slice(0, i) + ch + rows[j].slice(i + 1); };
+  put(14, 7, "y"); put(18, 7, "y"); put(14, 8, "Y"); put(18, 8, "Y"); put(13, 6, "a"); put(19, 6, "a");   // glowing eyes under a stormy brow
+  for (const [i, j] of [[6, 14], [5, 15], [6, 16], [5, 17], [26, 14], [27, 15], [26, 16], [27, 17], [10, 21], [11, 22], [21, 21], [20, 22]]) put(i, j, "y");   // lightning crackling through its arms and hips
+  SPR.cyclonegolem = makeSprite(rows, false, SKYPAL); SPRF.cyclonegolem = makeSprite(rows, true, SKYPAL);
 }
 { // the Leaf Vacuum: a green vacuum with a leaf-stuffed bag, a long hose and a nozzle slurping up a maple leaf
   SPR.leafvacuum = makeSprite([
@@ -4245,10 +4283,10 @@ const FOE_ABOUT = {
   universetitan: "The biggest robot in the universe: a gigantic golem of deep violet space rock with golden cracks and a blazing sun for a heart.",
   universegolem: "A towering giant made of space rock from far across the universe, with glowing cracks, starry specks and a swirling galaxy in its chest.",
   blizzardking: "The ruler of the snowy peaks: an icy robot king with a crown and an ice scepter, riding in on a storm cloud.",
-  gustrunner: "A sleek, pale-blue runner bot with a glowing cyan visor. It rides the storm winds.",
+  gustrunner: "A low, wedge-shaped wind racer in storm-indigo, with a lightning stripe and a glowing teal visor. It rides the storm winds.",
   staticbot: "A walking battery wrapped in coils, buzzing and crackling with stored lightning.",
   thunderbird: "A small dark flying bot with glowing blue wings that flies in flocks through the storm clouds.",
-  cyclonegolem: "A huge golem of gray storm-stone with glowing yellow eyes. Sometimes it spins so fast it turns into a tornado.",
+  cyclonegolem: "A hulking golem made of dark storm clouds, with a swirling vortex in its chest and lightning-yellow eyes. Sometimes it spins so fast it turns into a tornado.",
   thundertitan: "The ruler of the storm: a gigantic dark-blue war machine with golden horns, crackling with lightning. The final boss of the Eye of the Storm.",
   volcanoheart: "The molten heart of the volcano, wrapped in armor plates, with fire roaring out of its vents. The final boss.",
 };
