@@ -273,6 +273,19 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .shellrow { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
 .ability.bottle { border-color: #7fd8c8; } .ability[hidden] { display: none; }
 .perk .needs { display: block; font-size: 13px; color: #ffd36b; margin: 4px 0; }
+/* the world map on the levels page */
+.worldmap { position: relative; flex-shrink: 0; width: min(1100px, 100%); aspect-ratio: 1000 / 450; border: 3px solid #16191d; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 0 #16191d; }
+.worldmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: auto; }
+.wm-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; box-shadow: none; padding: 0; cursor: pointer; min-height: 0; }
+.wm-node .dot { width: clamp(22px, 3.6vw, 40px); height: clamp(22px, 3.6vw, 40px); border-radius: 50%; border: 3px solid #16191d; display: grid; place-items: center; font-family: var(--display); font-size: clamp(11px, 1.5vw, 17px); color: #16191d; box-shadow: 0 3px 0 #16191d; }
+.wm-node:hover .dot { transform: scale(1.12); }
+.wm-node .nm { font-family: var(--display); font-size: clamp(8px, 1.05vw, 13px); color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
+.wm-node .st { font-size: clamp(8px, 1vw, 12px); color: #ffd34d; text-shadow: 0 1px 0 #000, 0 0 3px #000; letter-spacing: -1px; }
+.wm-node.locked { cursor: default; } .wm-node.locked .dot { background: #6a6e78 !important; color: #2a2c32; }
+.wm-node.soon { cursor: default; opacity: .8; } .wm-node.soon .dot { background: #8a8ea0 !important; border-style: dashed; }
+.wm-node.here .dot { animation: wm-pulse 1.2s ease-in-out infinite; }
+@keyframes wm-pulse { 50% { box-shadow: 0 3px 0 #16191d, 0 0 0 6px rgba(255,211,77,.55); } }
+@media (max-width: 560px) { .wm-node .nm { display: none; } }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
 .choices button small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
@@ -561,6 +574,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   <section class="screen menu" id="s-levels" hidden>
     <button class="back" id="b-levels-back">←&nbsp; Back to save slots</button>
     <h2>Pick a level</h2>
+    <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="1000" height="450" aria-hidden="true"></canvas></div>
     <div class="cards" id="level-cards"></div>
     <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
   </section>
@@ -2180,7 +2194,93 @@ function unlocked(L) {
   const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
   const prev = slot().best[(SETTINGS.levels[L] || {}).unlockAfter || LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);   // unlockAfter: beat that level to open this one
 }
+/* ---------- the world map ---------- */
+// Where each level sits on the map (out of 1000 across, 450 down), and its color.
+const WORLD_MAP = {
+  meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
+  beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
+  basalt: [455, 310, "#a08a9a"], magma: [520, 375, "#ff8a3c"], volcano: [585, 265, "#e0443a"],
+  tundra: [650, 345, "#dde8f4"], glacier: [715, 260, "#8fd3ff"], blizzard: [770, 165, "#c8d4e2"],
+  skyislands: [840, 120, "#7cc8ff"], thunder: [905, 195, "#9a90c0"], storm: [925, 72, "#d9b8ff"],
+  infinity: [480, 70, "#b48aff"],
+};
+function drawWorldMap() {
+  const c = $("worldmap-art"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
+  const x = c.getContext("2d"), W = 1000, H = 450; let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  // the sky: day on the left, getting darker toward the storm and space on the right
+  const sky = x.createLinearGradient(0, 0, W, 0); sky.addColorStop(0, "#8fd0ff"); sky.addColorStop(0.55, "#a8c8f0"); sky.addColorStop(0.8, "#6a78b0"); sky.addColorStop(1, "#3a3a6a");
+  x.fillStyle = sky; x.fillRect(0, 0, W, H);
+  // space and the Infinity portal at the top
+  const sp = x.createRadialGradient(480, 70, 5, 480, 70, 120); sp.addColorStop(0, "#2a1650"); sp.addColorStop(0.7, "rgba(42,22,80,0.9)"); sp.addColorStop(1, "rgba(42,22,80,0)");
+  x.fillStyle = sp; x.beginPath(); x.ellipse(480, 70, 150, 75, 0, 0, Math.PI * 2); x.fill();
+  for (let i = 0; i < 40; i++) { const a = R() * Math.PI * 2, r = R(); x.fillStyle = R() < 0.3 ? "#ffe9a8" : "#ffffff"; x.fillRect(480 + Math.cos(a) * 140 * r, 70 + Math.sin(a) * 65 * r, 2, 2); }
+  x.strokeStyle = "rgba(200,170,255,0.9)"; x.lineWidth = 4; x.beginPath();   // a glowing infinity sign
+  for (let t = 0; t <= Math.PI * 2 + 0.05; t += 0.05) { const s = Math.sin(t), co = Math.cos(t), d = 1 + s * s, px = 480 + 70 * co / d, py = 70 + 50 * s * co / d; t ? x.lineTo(px, py) : x.moveTo(px, py); }
+  x.stroke();
+  // clouds
+  const cloud = (cx, cy, w, col) => { x.fillStyle = col; for (let k = 0; k < 5; k++) { x.beginPath(); x.arc(cx + (k - 2) * w * 0.2, cy + (k % 2) * 4, w * (0.18 + (k === 2 ? 0.08 : 0)), 0, Math.PI * 2); x.fill(); } };
+  [[90, 70, 70], [230, 110, 60], [330, 50, 80], [640, 60, 70]].forEach(([a, b, w]) => cloud(a, b, w, "rgba(255,255,255,0.9)"));
+  [[880, 240, 90], [960, 130, 70], [820, 60, 60]].forEach(([a, b, w]) => cloud(a, b, w, "rgba(90,88,120,0.85)"));
+  // the ground: rolling hills colored by world, from left to right
+  const band = (x0, x1, top, col, dark) => { x.fillStyle = col; x.beginPath(); x.moveTo(x0, H);
+    for (let px = x0; px <= x1; px += 10) x.lineTo(px, top + Math.sin(px / 47) * 10 + Math.sin(px / 19) * 4); x.lineTo(x1, H); x.closePath(); x.fill();
+    x.fillStyle = dark; for (let n = 0; n < (x1 - x0) / 6; n++) x.fillRect(x0 + R() * (x1 - x0), top + 20 + R() * (H - top - 20), 3, 2); };
+  band(0, 240, 225, "#5fae45", "#4a9038");        // grass
+  band(240, 425, 245, "#ecd29a", "#d6b878");      // sand
+  band(425, 615, 235, "#4a3a40", "#3a2a30");      // lava rock
+  band(615, 810, 210, "#eef3fa", "#cfdbe8");      // snow
+  // the swamp's water and the beach's sea
+  x.fillStyle = "#4a7a6a"; x.beginPath(); x.ellipse(205, 395, 45, 16, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#3d8fe0"; x.beginPath(); x.moveTo(240, H); x.quadraticCurveTo(275, 410, 320, H); x.fill(); x.fillStyle = "#ffffff"; x.fillRect(262, 425, 20, 2);
+  // little scenery for each world
+  const tree = (a, b, s, c1, c2) => { x.fillStyle = "#6e4520"; x.fillRect(a - 2 * s, b, 4 * s, 10 * s); x.fillStyle = c1; x.beginPath(); x.arc(a, b - 2 * s, 9 * s, 0, Math.PI * 2); x.fill(); x.fillStyle = c2; x.beginPath(); x.arc(a + 3 * s, b - 5 * s, 4 * s, 0, Math.PI * 2); x.fill(); };
+  const pine = (a, b, s, col, snow) => { x.fillStyle = "#4e2d14"; x.fillRect(a - 2 * s, b, 4 * s, 6 * s); for (let k = 0; k < 3; k++) { x.fillStyle = col; x.beginPath(); x.moveTo(a, b - 22 * s + k * 7 * s); x.lineTo(a - (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.lineTo(a + (8 + k * 3) * s, b - 6 * s + k * 5 * s); x.fill(); if (snow) { x.fillStyle = "#ffffff"; x.fillRect(a - 3 * s, b - 20 * s + k * 7 * s, 6 * s, 2 * s); } } };
+  [[30, 280], [110, 300], [160, 230], [40, 400], [230, 270]].forEach(([a, b]) => tree(a, b, 1, "#3f9a3a", "#5fbf4a"));
+  [[180, 260], [100, 250]].forEach(([a, b]) => pine(a, b, 1, "#2f6a46"));
+  // palm trees, a cactus and the pyramid
+  const palm = (a, b) => { x.strokeStyle = "#8a5a2a"; x.lineWidth = 4; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + 6, b - 18, a + 2, b - 34); x.stroke(); x.fillStyle = "#3f9a3a"; for (const d of [-1, 1]) { x.beginPath(); x.ellipse(a + 2 + d * 9, b - 34, 11, 3.5, d * 0.4, 0, Math.PI * 2); x.fill(); } };
+  palm(250, 330); palm(305, 360);
+  x.fillStyle = "#3f9a3a"; x.fillRect(360, 345, 6, 26); x.fillRect(352, 352, 6, 4); x.fillRect(352, 344, 4, 10); x.fillRect(366, 356, 6, 4); x.fillRect(370, 348, 4, 10);
+  x.fillStyle = "#d8b06a"; x.beginPath(); x.moveTo(355, 270); x.lineTo(400, 175); x.lineTo(445, 270); x.fill(); x.fillStyle = "#c09050"; x.beginPath(); x.moveTo(400, 175); x.lineTo(445, 270); x.lineTo(410, 270); x.fill();
+  // the volcano, with lava
+  x.fillStyle = "#3a2a30"; x.beginPath(); x.moveTo(530, 300); x.lineTo(580, 190); x.lineTo(600, 190); x.lineTo(650, 300); x.fill();
+  x.fillStyle = "#ff7a1a"; x.beginPath(); x.moveTo(582, 190); x.lineTo(598, 190); x.lineTo(604, 230); x.lineTo(592, 214); x.lineTo(586, 240); x.fill();
+  x.fillStyle = "rgba(255,140,40,0.35)"; x.beginPath(); x.arc(590, 185, 22, 0, Math.PI * 2); x.fill();
+  for (const [a, b] of [[455, 395], [500, 330], [545, 410]]) { x.fillStyle = "#ff7a1a"; x.beginPath(); x.ellipse(a, b, 16, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd36b"; x.fillRect(a - 4, b - 1, 8, 2); }   // lava pools
+  // snowy mountains
+  const mtn = (a, b, w, h) => { x.fillStyle = "#9aa6b8"; x.beginPath(); x.moveTo(a - w, b); x.lineTo(a, b - h); x.lineTo(a + w, b); x.fill(); x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(a - w * 0.3, b - h * 0.7); x.lineTo(a, b - h); x.lineTo(a + w * 0.3, b - h * 0.7); x.lineTo(a + w * 0.1, b - h * 0.62); x.lineTo(a - w * 0.1, b - h * 0.7); x.fill(); };
+  mtn(700, 240, 60, 110); mtn(775, 215, 70, 150); mtn(650, 250, 40, 70);
+  [[630, 300], [690, 300], [745, 380]].forEach(([a, b]) => pine(a, b, 0.9, "#2f6a46", true));
+  // floating sky islands
+  const isle = (a, b, w) => { x.fillStyle = "#6e4520"; x.beginPath(); x.moveTo(a - w, b); x.quadraticCurveTo(a, b + w * 0.9, a + w, b); x.fill(); x.fillStyle = "#5fbf4a"; x.beginPath(); x.ellipse(a, b, w, w * 0.22, 0, 0, Math.PI * 2); x.fill(); };
+  isle(840, 140, 34); isle(905, 215, 30); isle(925, 94, 26);
+  x.strokeStyle = "#fff7a0"; x.lineWidth = 3; x.beginPath(); x.moveTo(940, 140); x.lineTo(930, 160); x.lineTo(940, 162); x.lineTo(928, 185); x.stroke();   // a lightning bolt
+  // the road between the levels (a dotted trail)
+  const order = LEVEL_ORDER.filter((L) => L !== "infinity").concat(["storm"]);
+  x.setLineDash([2, 9]); x.lineCap = "round"; x.lineWidth = 6; x.strokeStyle = "rgba(255,248,225,0.95)"; x.beginPath();
+  order.forEach((L, i) => { const [a, b] = WORLD_MAP[L]; i ? x.lineTo(a, b) : x.moveTo(a, b); }); x.stroke();
+  x.strokeStyle = "rgba(200,170,255,0.8)"; x.beginPath(); x.moveTo(WORLD_MAP.meadow[0], WORLD_MAP.meadow[1]); x.quadraticCurveTo(220, 120, WORLD_MAP.infinity[0] - 20, WORLD_MAP.infinity[1] + 10); x.stroke();   // a magic trail to Infinity
+  x.setLineDash([]);
+}
+function renderWorldMap() {
+  const box = $("worldmap"); if (!box) return; drawWorldMap();
+  box.querySelectorAll(".wm-node").forEach((n) => n.remove());
+  const s = slot(); let here = null;
+  LEVEL_ORDER.forEach((L) => { if (unlocked(L) && L !== "infinity" && !(s.best[L] && Object.keys(s.best[L]).length)) here = here || L; });
+  const nodes = LEVEL_ORDER.map((L, i) => [L, SETTINGS.levels[L].name, false, i + 1]).concat((SETTINGS.comingSoon || []).filter((c) => WORLD_MAP[c.look]).map((c) => [c.look, c.name, true, "?"]));
+  for (const [L, name, soon, num] of nodes) {
+    const pos = WORLD_MAP[L]; if (!pos) continue;
+    const open = !soon && unlocked(L), best = (!soon && s.best[L]) || {}, stars = Math.max(0, ...DIFF_ORDER.map((d) => (best[d] && best[d].stars) || 0));
+    const b = document.createElement("button"); b.className = "wm-node" + (soon ? " soon" : open ? "" : " locked") + (L === here ? " here" : ""); b.id = "map-" + L;
+    b.style.left = pos[0] / 10 + "%"; b.style.top = pos[1] / 4.5 + "%";
+    b.title = soon ? name + " (coming soon)" : open ? name : name + " (locked)";
+    b.innerHTML = `<span class="dot" style="background:${pos[2]}">${soon ? "?" : open ? (L === "infinity" ? "∞" : num) : "🔒"}</span><span class="nm">${name}</span>${Object.keys(best).length ? `<span class="st">${starText(stars)}</span>` : ""}`;
+    if (open) b.onclick = () => openSetup(L); else b.disabled = soon || !open;
+    box.appendChild(b);
+  }
+}
 function renderLevels() {
+  renderWorldMap();
   const box = $("level-cards"); box.innerHTML = "";
   LEVEL_ORDER.forEach((L) => {
     const lv = SETTINGS.levels[L], open = unlocked(L), best = slot().best[L] || {};
