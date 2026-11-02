@@ -4039,6 +4039,8 @@ function drawNightFeather(x, sh) {
   x.fillStyle = "#fff4b0"; x.fillRect(6, -0.6, 2, 1.2);   // a glowing golden tip
   x.restore();
 }
+// Towers you didn't start with (from the secret shops, the Mystery Box, a code, or the Super Tower) can't be struck by lightning
+function lightningProof(kind) { const tw = SETTINGS.towers[kind] || {}; return !!(tw.serpentUnlock || tw.boxUnlock || tw.superTower); }
 // Thunder Peaks: every few seconds during a wave, lightning stuns a random tower
 function tickLightning(dt) {
   const L = SETTINGS.levels[G.level].lightning; if (!L) return;
@@ -4048,7 +4050,7 @@ function tickLightning(dt) {
   if (G.boltClock < L.every) return;
   G.boltClock = 0;
   const eye = { x: (G.map.base.x + 1) * T, y: (G.map.base.y + 1) * T };
-  const ok = G.towers.filter((t) => t.kind !== "phoenix" && !(L.calmRadius && Math.hypot(t.x * T + 16 - eye.x, t.y * T + 16 - eye.y) <= L.calmRadius * T)); if (!ok.length) return;   // (the Phoenix can't be stunned, and nothing in the calm eye gets struck)
+  const ok = G.towers.filter((t) => !lightningProof(t.kind) && !(L.calmRadius && Math.hypot(t.x * T + 16 - eye.x, t.y * T + 16 - eye.y) <= L.calmRadius * T)); if (!ok.length) return;   // (the Phoenix can't be stunned, and nothing in the calm eye gets struck)
   const t = ok[Math.random() * ok.length | 0];
   t.stunT = Math.max(t.stunT || 0, L.stunSeconds); t.zapT = L.stunSeconds; G.struckAny = true; addStat("lightningStrikes", 1, null);
   const cx = t.x * T + 16, cy = t.y * T + 12;
@@ -6650,7 +6652,7 @@ function stormPowers(dt) {
       r.strikeT = (r.strikeT ?? S.strikeEvery * 0.5) - dt;
       if (r.strikeT <= 0) {
         r.strikeT = S.strikeEvery;
-        const near = G.towers.filter((t) => t.kind !== "phoenix" && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.strikeRadius * T).sort(() => Math.random() - 0.5).slice(0, S.strikeTowers);
+        const near = G.towers.filter((t) => !lightningProof(t.kind) && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.strikeRadius * T).sort(() => Math.random() - 0.5).slice(0, S.strikeTowers);
         for (const t of near) { addStat("lightningStrikes", 1, null); const cx = t.x * T + 16, cy = t.y * T + 12; t.stunT = Math.max(t.stunT || 0, S.strikeSeconds); t.zapT = S.strikeSeconds;
           G.fx.push({ kind: "bolt", x: cx, y: cy, t: 0.45, life: 0.45, seed: Math.random() * 1000 }); burst(cx, cy, "#fff7a0", 14); }
         if (near.length) { G.flash = 0.25; G.shake = Math.max(G.shake, 0.3); Sound.play("smash"); floatText(q.x, q.y - 56, "THUNDER!", "#fff7a0"); }
