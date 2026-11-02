@@ -5568,7 +5568,7 @@ function hurt(r, amt, vision, isBurn, kind) {
     r.chunkDmg = (r.chunkDmg || 0) + amt;
     const star = RB.chunkType === "starchunk", col = star ? "#c9a8ff" : "#bfe6fa";
     const every = RB.chunkEvery * ((SETTINGS.auras[r.aura] || {}).health || 1);   // (a glowing golem has more health, so its chunks come off less often)
-    while (r.chunkDmg >= every) { r.chunkDmg -= every; spawn({ type: RB.chunkType || "icechunk", d: Math.max(0, r.d - 10), path: r.path }); const q = rpos(r); burst(q.x, q.y, col, 12); floatText(q.x, q.y - 30, "Crack!", col, 0.8); }
+    while (r.chunkDmg >= every) { r.chunkDmg -= every; spawn({ type: RB.chunkType || "icechunk", d: Math.max(0, r.d - 10), path: r.path }); const q = rpos(r); burst(q.x, q.y, col, 12); }   // (no "Crack!" text: just a little puff of ice or stardust)
   }
   if (RB.crackHit && !r.cracked) {   // Obsidian Shell: half damage until one big hit cracks it
     if (amt >= RB.crackHit) { r.cracked = true; addStat("obsidianCracks", 1, null); const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
