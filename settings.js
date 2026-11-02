@@ -285,9 +285,10 @@ const SETTINGS = {
     thunderbird: { name: "Thunderbird Drone", health: 50, speed: 3.4, leaves: 8, points: 25, flying: true, baseHit: 6, swarm: 4 },
     // Cyclone Golem (a Boss): every spinEvery seconds it spins into a tornado for spinSeconds. Nothing can hurt it while it spins, and it moves spinSpeed times faster.
     cyclonegolem: { name: "Cyclone Golem", health: 3000, speed: 0.85, leaves: 180, points: 700, baseHit: 55, isBoss: true, spinEvery: 7, spinSeconds: 2, spinSpeed: 1.6 },
-    // The Thunder Titan: the final boss of the Eye of the Storm (wave 30). Every strikeEvery seconds it calls lightning
+    // The Thunder Titan: the final boss of the Eye of the Storm (wave 30). Its storm armor: landTowerTimes / flyingTowerTimes (below). Every strikeEvery seconds it calls lightning
     // down on strikeTowers towers within strikeRadius squares, stunning them for strikeSeconds. fixedHealth: exactly this much health on Normal.
-    thundertitan: { name: "Thunder Titan", health: 30000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5 },
+    thundertitan: { name: "Thunder Titan", health: 30000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
+                    landTowerTimes: 0.5, flyingTowerTimes: 2 },   // land towers do half damage to it; flying towers (Owl, Night Owl, Dragon, Pegasus, Phoenix) do double
     starchunk:     { name: "Star Chunk", health: 110, speed: 1.8, leaves: 0, points: 20 },
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).

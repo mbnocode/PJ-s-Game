@@ -4422,7 +4422,7 @@ function renderEnemies() {
       : k === "staticbot" ? `Special: every ${r.zapEvery} seconds it zaps the closest tower within ${r.zapRadius} squares, so that tower can't attack for ${r.zapSeconds} seconds. Shows up on the Eye of the Storm.`
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
       : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
-      : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
+      : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Its storm armor makes land towers do only ${r.landTowerTimes}x damage, but flying towers (Owls, Night Owls, Dragons, the Pegasus and the Phoenix) do ${r.flyingTowerTimes}x damage! Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col, grows]) => { const v = f(k);
@@ -5325,7 +5325,7 @@ function startWave() {
     staticbot: "Static Bots are here! Every few seconds they zap the closest tower, so it can't attack for a moment.",
     thunderbird: "Thunderbird Drones fly in flocks straight at your treehouse. Only towers that hit flying robots can stop them.",
     cyclonegolem: "The Cyclone Golem is coming! Sometimes it spins into a tornado, and nothing can hurt it until it stops.",
-    thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Towers in the calm eye still get hit by the Titan!",
+    thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
     volcanoheart: "The Volcano Heart is coming! It heals while it's on the glowing lava squares. Freeze it there to stop the healing!",
   };
   G.seenLava = G.seenLava || {};
@@ -5454,6 +5454,8 @@ function endWave() {
 }
 
 /* ---------- combat ---------- */
+// Towers that fly: the Owl, the Night Owl, the Fire (and Ice) Dragon, the Pegasus and the Phoenix. (Everything else is a land tower.)
+const FLYING_TOWERS = new Set(["air", "nightowl", "fire", "ice", "pegasus", "phoenix"]);
 function hurt(r, amt, vision, isBurn, kind) {
   if (r.dead) return;
   if (r.hideT > 0 && !vision) return;
@@ -5463,6 +5465,10 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (RB.waterTimes) {   // Fire-Proof Bot: Dragon fire does nothing, Frogs hit extra hard
     if (kind === "fire" || kind === "phoenix" || isBurn) { if (!isBurn && Math.random() < 0.3) { const q = rpos(r); floatText(q.x, q.y - 16, "Fire-proof!", "#c9ced6", 0.6); } return; }
     if (kind === "water") amt *= RB.waterTimes;
+  }
+  if (RB.landTowerTimes && (kind || isBurn)) {   // Thunder Titan: tough against towers on the ground, weak against towers that fly
+    const flyer = isBurn || FLYING_TOWERS.has(kind); amt *= flyer ? RB.flyingTowerTimes : RB.landTowerTimes;   // (burning comes from Dragon or Phoenix fire)
+    if (Math.random() < 0.06) { const q = rpos(r); floatText(q.x, q.y - 40, flyer ? "Weak to flyers!" : "Resisted!", flyer ? "#fff066" : "#9aa4c0", 0.6); }
   }
   if (RB.chunkEvery && !isBurn) {   // Glacier Golem: every so much damage, an ice chunk breaks off and keeps marching
     r.chunkDmg = (r.chunkDmg || 0) + amt;
@@ -5590,7 +5596,7 @@ function fire(t, s, target) {
         for (const o of G.robots) {
           if (o === r || o.dead || (o.hideT > 0 && !s.vision) || o.flying) continue;
           const q = rpos(o);
-          if (Math.hypot(q.x - p.x, q.y - p.y) <= s.splash * T) hurt(o, s.damage * 0.5, s.vision);
+          if (Math.hypot(q.x - p.x, q.y - p.y) <= s.splash * T) hurt(o, s.damage * 0.5, s.vision, false, "plant");
         }
         G.fx.push({ kind: "splash", x: p.x, y: p.y, r: s.splash * T, t: 0.3, col: "150,110,60" });
       }
@@ -6267,7 +6273,7 @@ function update(dt) {
         for (const r of G.robots) {
           if (r.dead || r.flying) continue;
           const q = rpos(r);
-          if (Math.hypot(q.x - cx, q.y - cy) <= R) { hurt(r, gs.damage, true); if (!r.dead) r.rootT = Math.max(r.rootT, isHeavy(r) ? 0.15 : gs.holdSeconds); }
+          if (Math.hypot(q.x - cx, q.y - cy) <= R) { hurt(r, gs.damage, true, false, "plant"); if (!r.dead) r.rootT = Math.max(r.rootT, isHeavy(r) ? 0.15 : gs.holdSeconds); }
         }
         G.fx.push({ kind: "splash", x: cx, y: cy, r: R, t: 0.3, col: "150,110,60" });
         G.fx.push({ kind: "splash", x: cx, y: cy, r: R * 0.6, t: 0.3, col: "200,160,90" });
@@ -6292,7 +6298,7 @@ function update(dt) {
             const q = rpos(r), el = ELEMENTS[(Math.floor(G.time * 2) + i) % ELEMENTS.length];
             G.fx.push({ kind: "zap", x1: o.x, y1: o.y, x2: q.x, y2: q.y - 4, t: 0.3, col: el.col, glow: el.glow, seed: Math.random() * 100 });
             burst(q.x, q.y - 4, el.col, 8);
-            hurt(r, es.damage * (1 + (G.damageBonus || 0)), true);
+            hurt(r, es.damage * (1 + (G.damageBonus || 0)), true, false, "wizard");
           });
           Sound.play("upgrade");
         } else t.sphereTimer = 0.2;   // nothing nearby: check again soon
