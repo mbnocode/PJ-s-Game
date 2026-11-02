@@ -1369,8 +1369,8 @@ function skinOf(img, style, frame = 0) {
         if (base < H && A(i, base) && L[base * W + i] >= 0.12 && hash(i, 12) > 0.7 && dn < len) { put(i, j, dn === len - 1 ? [255, 255, 255] : [140, 220, 255], 255); continue; }
       }
       if (style === "lava" && !near && hash(i, j, 21 + frame) > 0.985) { put(i, j, [255, 200, 80], 230); continue; }   // embers floating off it
-      if (GLOW && near) put(i, j, GLOW, style === "toxic" ? 120 : 105);   // a soft glow all around it
-      else if (GLOW && near2 && sc >= 1) put(i, j, GLOW, 45);
+      if (GLOW && near) put(i, j, GLOW, style === "toxic" ? 120 : style === "gold" ? 170 : 105);   // a soft glow all around it
+      else if (GLOW && near2 && sc >= 1) put(i, j, GLOW, style === "gold" ? 80 : 45);
       continue;
     }
     const l = L[k];
@@ -1380,10 +1380,9 @@ function skinOf(img, style, frame = 0) {
     if (style === "gold") {   // polished gold: bright bevelled edges, a shiny band of reflection, star sparkles and a sweeping glint
       const yy = j / H, refl = Math.exp(-Math.pow((yy - 0.3) / 0.12, 2)) * 0.28 - Math.exp(-Math.pow((yy - 0.62) / 0.1, 2)) * 0.16;   // like light bouncing off curved metal
       col = ramp([[40, 20, 2], [110, 62, 8], [186, 120, 18], [238, 182, 40], [255, 222, 110], [255, 248, 214]], l * 1.08 + refl + (lit ? 0.24 : 0) - (shade ? 0.2 : 0));
-      const band = frame < 10 ? -8 + frame * (W + H + 16) / 9 : -999;   // the glint sweeping across
-      const bd = Math.abs(i + j - band); if (bd < 2.6 * sc + 0.6) col = mix(col, [255, 255, 250], bd < 1.2 * sc ? 0.9 : 0.55);
       const star = (sx, sy) => (i === sx && Math.abs(j - sy) <= 1) || (j === sy && Math.abs(i - sx) <= 1);
-      for (let n = 0; n < 3; n++) { const sx = Math.floor(hash(n, 31) * W), sy = Math.floor(hash(n, 32) * H * 0.8); if (star(sx, sy) && A(sx, sy) && L[sy * W + sx] > 0.3) col = (i === sx && j === sy) ? [255, 255, 255] : mix(col, [255, 255, 230], 0.8); }
+      for (let n = 0; n < 3; n++) { if ((frame + n * 5) % 16 > 10) continue;   // the sparkles twinkle on and off
+        const sx = Math.floor(hash(n, 31) * W), sy = Math.floor(hash(n, 32) * H * 0.8); if (star(sx, sy) && A(sx, sy) && L[sy * W + sx] > 0.3) col = (i === sx && j === sy) ? [255, 255, 255] : mix(col, [255, 255, 230], 0.8); }
     } else if (style === "crystal") {   // cut blue crystals fitted together: each facet lit like a gem, with glowing seams between them
       const g = 6 * sc + 1.5, v = vor(i, j, g), seam = v.d2 - v.d1;
       const dir = ((i + 0.5 - v.ox) * -0.7 + (j + 0.5 - v.oy) * -0.7) / g;   // which way this part of the facet faces the light
@@ -7042,6 +7041,11 @@ function draw() {
     let img = t.ice ? SPR.fire_ice : towerSprite(t.kind);
     if (t.kind === "fire" && t.level >= 3) img = (t.ice ? [SPR.fire_ice, SPR.fire_mid_ice, SPR.fire_down_ice, SPR.fire_mid_ice] : [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid])[Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
     img = towerLook(t.kind, img);   // (a Golden look or a Tower Skin)
+    if (towerSkin(t.kind) === "gold" && !PREFS.simple) {   // the Golden look has a warm glowing aura that gently pulses
+      const pulse = 0.5 + 0.5 * Math.sin(G.time * 2.4 + t.x), ay = by - s2 / 2 - rc, ga = x.createRadialGradient(cx, ay, s2 * 0.15, cx, ay, s2 * 0.85);
+      ga.addColorStop(0, `rgba(255,220,100,${0.35 + 0.2 * pulse})`); ga.addColorStop(0.55, `rgba(255,190,60,${0.14 + 0.1 * pulse})`); ga.addColorStop(1, "rgba(255,180,40,0)");
+      x.fillStyle = ga; x.beginPath(); x.arc(cx, ay, s2 * 0.85, 0, Math.PI * 2); x.fill();
+    }
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
     else if (t.iceT > 0) x.filter = "saturate(0.4) brightness(1.15) hue-rotate(160deg)";   // frozen: icy blue   // trapped by a Pillar Titan: grayed out, but still visible
