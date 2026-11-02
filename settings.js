@@ -462,7 +462,7 @@ const SETTINGS = {
 
   // Maps are 20 squares wide and 12 tall. The path goes through these corners.
   levels: {
-    meadow: { name: "The Meadow", about: "Far beneath the earth, something ancient stirs. The Iron Heart, a machine forged before anyone can remember, has awakened, and it hungers for power. The greatest power in all the world lies in the Golden Acorns, and the Iron Heart will stop at nothing to claim every last one. Its first army is already marching down the long, twisting meadow path toward your treehouse. The war for the Golden Acorns begins now. Stand your ground!",
+    meadow: { name: "The Meadow", about: "Long ago, in a single moment, every human in the world disappeared. No one knows how or why. The animals only call it the Swipe. In the silence that followed, something ancient stirred far beneath the earth: the Iron Heart, a machine forged before anyone can remember, awoke hungry for power. The greatest power in all the world lies in the Golden Acorns, and the Iron Heart will stop at nothing to claim every last one. Its first army is already marching down the long, twisting meadow path toward your treehouse. The war for the Golden Acorns begins now. Stand your ground!",
               acornDropChance: 0.01,   // each robot you destroy here has this chance (0.01 = 1%) to drop a Golden Acorn
               waveCount: 10,           // the Meadow only plays the first 10 waves (it ends with the big Boss on wave 10)
               maxBossHealth: 1600,     // Bosses on the Meadow have at most this much health
