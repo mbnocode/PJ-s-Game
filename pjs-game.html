@@ -2520,7 +2520,7 @@ function renderOwlShop() {
   const wolfWaits = s && wolf && !(s.materials && s.materials.wolf) && !shopNeedsMet(wolf, s);
   $("owl-say").textContent = !has ? "“Hoo… who's there? Come back when you have a save slot and some Golden Acorns.”"
     : wolfWaits ? "“Hoo… the Wolf only runs with the bravest. Beat Blizzard Peak on Hard or Nightmare, and then he'll follow you.”"
-    : "“Hoo… hoo goes there? Only the patient find me, and only at night. I trade my moonlit treasures for Golden Acorns.”";
+    : "“Hoo… hoo goes there? Only the patient find me, and only at night. I was watching the night the humans vanished. Their lights went out all at once… every single one. Now, I trade my moonlit treasures for Golden Acorns.”";
   $("owl-acorns-row").hidden = !s; if (s) $("owl-acorns").textContent = s.acorns || 0;
   renderShopShelves($("owl-shop"), SETTINGS.nightOwlShop, (SETTINGS.nightOwl || {}).shelves || 3, s, "owl", "Coming soon. The owl is still collecting treasures under the moon…", renderOwlShop);
 }
@@ -2540,9 +2540,9 @@ $("b-owl-back").onclick = () => show("s-title");
 function renderSerpentShop() {
   const has = slots.some((s) => s);
   renderShopSlotPicker($("serp-slots"), serpSlot, "serp", (i) => { serpSlot = i; renderSerpentShop(); });
-  $("serp-say").textContent = has ? "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns. Pick a save slot to shop with.”"
+  $("serp-say").textContent = has ? "“Sssso… you found my hiding spot. I am older than the Swipe, little one. I remember the humans… and I know where some of their things went. I trade rare treasures for Golden Acorns. Pick a save slot to shop with.”"
     : "“Sssso… you found me. Come back when you have a save slot and some Golden Acorns.”";
-  if (has && slots.filter((s) => s).length < 2) $("serp-say").textContent = "“Sssso… you found my hiding spot. I trade rare treasures for Golden Acorns.”";
+  if (has && slots.filter((s) => s).length < 2) $("serp-say").textContent = "“Sssso… you found my hiding spot. I am older than the Swipe, little one. I remember the humans… and I know where some of their things went. I trade rare treasures for Golden Acorns.”";
   const s = slots[serpSlot];
   $("serp-acorns-row").hidden = !s; if (s) $("serp-acorns").textContent = s.acorns || 0;
   renderShopShelves($("serp-shop"), SETTINGS.serpentShop, SETTINGS.serpentShopSlots, s, "serp", "Coming soon. The serpent is still gathering its treasures…", renderSerpentShop);
@@ -4868,7 +4868,7 @@ let defAnim = null;
 function openDefectorShop() { foundShop("defector"); renderDefectorShop(); show("s-defector"); if (!defAnim) defAnim = requestAnimationFrame(defPortrait); }
 function renderDefectorShop() {
   const s = slot(); $("def-acorns").textContent = (s && s.acorns) || 0;
-  $("def-say").textContent = "“Welcome, welcome! Everything here was smuggled right out of the robots' factory. Shh, they still think I'm on their side.”";
+  $("def-say").textContent = "“Welcome, welcome! Everything here was smuggled right out of the robots' factory. Shh, they still think I'm on their side. And don't ask me about the Swipe. My memory files from that day are… blank. All of ours are.”";
   renderShopShelves($("def-shop"), SETTINGS.defectorShop, (SETTINGS.defector || {}).shelves || 3, s, "def", "Coming soon. The Defector is still sneaking things out of the factory…", renderDefectorShop);
   renderLeafVacuum(s);
 }
@@ -6618,7 +6618,7 @@ function openCrabShop() {
 }
 function renderCrabShop() {
   const s = slot(); $("crab-acorns").textContent = (s && s.acorns) || 0;
-  $("crab-say").textContent = "“Oh! You found me under the sand. Shh… I only come out between waves. I've got treasures from the bottom of the sea, for Golden Acorns.”";
+  $("crab-say").textContent = "“Oh! You found me under the sand. Shh… I only come out between waves. I've got treasures from the bottom of the sea, for Golden Acorns. Some of them washed up the morning after the Swipe… nobody ever came back for them.”";
   renderShopShelves($("crab-shop"), SETTINGS.hermitCrabShop, SETTINGS.hermitCrab.shelves || 3, s, "crab", "Coming soon. The crab is still digging up treasures from the sea…", renderCrabShop);
   // the Seashell Collection card: which shells you've found, and a trade-in button for a full set
   const card = $("crab-buy-shells") ? null : [...$("crab-shop").children].find((d) => d.textContent.includes("Seashell Collection"));

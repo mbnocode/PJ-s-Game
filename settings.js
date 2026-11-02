@@ -471,7 +471,7 @@ const SETTINGS = {
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
-    forest: { name: "The Forest", acornDropChance: 0.02, about: "The meadow held, but the Iron Heart never gives up. Its robots now tear through the ancient pine forest, racing down a hidden shortcut faster than ever before. But the forest remembers. The Tree Giants, its oldest guardians, have risen from their thousand-year sleep in a fury, and here they strike 50% faster. Let these woods be where the robots fall!", theme: "forest",
+    forest: { name: "The Forest", acornDropChance: 0.02, about: "The meadow held, but the Iron Heart never gives up. Its robots now tear through the ancient pine forest, past old cabins that have stood empty since the Swipe, with dinner plates still sitting on the tables. They race down a hidden shortcut faster than ever before. But the forest remembers. The Tree Giants, its oldest guardians, have risen from their thousand-year sleep in a fury, and here they strike 50% faster. Let these woods be where the robots fall!", theme: "forest",
               // 2% Golden Acorn chance per robot (from wave 3 on)
               // In the Forest, trees are tall pines, mushrooms are brown, and tall grass is ferns.
               towerBoosts: { plant: { speedTimes: 1.5 } },
@@ -479,7 +479,7 @@ const SETTINGS = {
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
-    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "Deep in the swamp, the Iron Heart's factory spilled black, oily sludge into the water, and something monstrous grew in the muck. Now its robots crawl out of the poisoned water 50% tougher than before, and the Sludge Leviathan lurks beneath the surface, waiting. But the frogs are ready to defend their home: here they hit 25% harder. Hold the swamp!", theme: "swamp",
+    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "Deep in the swamp, the Iron Heart's factory spilled black, oily sludge into the water, and something monstrous grew in the muck. Rusty road signs still poke out of the water, pointing to towns where no one has lived since the Swipe. Now the robots crawl out of the poisoned water 50% tougher than before, and the Sludge Leviathan lurks beneath the surface, waiting. But the frogs are ready to defend their home: here they hit 25% harder. Hold the swamp!", theme: "swamp",
               // 3% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
@@ -570,7 +570,7 @@ const SETTINGS = {
                 [["sandboss", 2, 5], [["drone", "drone", "tesla"], 15, 0.6]],           // 19
                 [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
               ] },
-    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Quicksand slows them down, Mummy Bots unravel, and the Pharaoh Machine waits at the end! Scores are worth 2x.", theme: "pyramid",
+    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Its walls are carved with pictures of people looking up at a strange light in the sky. Did the ancients see the Swipe coming? Quicksand slows the robots down, Mummy Bots unravel, and the Pharaoh Machine waits at the end! Scores are worth 2x.", theme: "pyramid",
               // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.4,      // robots have this many times their normal health (the quicksand helps you a lot)
               scoreTimes: 2,         // your score on this level is multiplied by this
