@@ -591,7 +591,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Settings</h2>
     <div class="settings">
       <label class="setrow" for="set-volume"><span>Sound volume<small>Tower attacks, robots and buttons</small></span><input type="range" id="set-volume" min="0" max="100" step="5"><b id="set-volume-n"></b></label>
-      <label class="setrow" for="set-music"><span>Music volume<small>The little tune that plays in the background</small></span><input type="range" id="set-music" min="0" max="100" step="5"><b id="set-music-n"></b></label>
+      <label class="setrow" for="set-music"><span>Music volume<small>The background music. The Meadow, the Forest and the Swamp each have their own song that changes with the action</small></span><input type="range" id="set-music" min="0" max="100" step="5"><b id="set-music-n"></b></label>
       <div class="setrow"><span>Tips<small>"Heads up" tips about new robots and levels (the tutorial is turned on or off when you pick a level)</small></span><div class="choices" id="set-tips"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
       <div class="setrow"><span>Screen shake<small>The board shakes when big things happen</small></span><div class="choices" id="set-shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
       <div class="setrow"><span>Starting speed<small>How fast each game starts (you can still change it while you play)</small></span><div class="choices" id="set-speed"><button data-v="1">1×</button><button data-v="2">2×</button><button data-v="3">3×</button></div></div>
@@ -1687,11 +1687,11 @@ const Sound = {
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     o.connect(g); g.connect(out || this.master); o.start(t); o.stop(t + dur + 0.02);
   },
-  noise(dur, vol, ftype, f1, f2) {
-    const c = this.ctx, t = c.currentTime, s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+  noise(dur, vol, ftype, f1, f2, delay = 0, out) {
+    const c = this.ctx, t = c.currentTime + delay, s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
     s.buffer = this.noiseBuf; fl.type = ftype; fl.frequency.setValueAtTime(f1, t); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + dur);
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    s.connect(fl); fl.connect(g); g.connect(this.master); s.start(t); s.stop(t + dur + 0.02);
+    s.connect(fl); fl.connect(g); g.connect(out || this.master); s.start(t); s.stop(t + dur + 0.02);
   },
   play(name) {
     if (!this.ctx) return;
@@ -1723,28 +1723,85 @@ const Sound = {
       case "nope": this.tone(160, 0.1, "square", 0.06); break;
     }
   },
+  // The music. On the Meadow, the Forest and the Swamp each level has its own song, and it changes with what's happening:
+  // calm while you plan, drums and a fuller band once a wave starts, a dark minor-key boss theme while a Boss is out,
+  // and an urgent alarm note when your treehouse is low on health. (It changes at the start of the next bar, so it stays in time.)
+  // Everywhere else the little wandering tune plays, like before.
   music() {
-    const notes = [262, 294, 330, 392, 440, 523, 587, 659];
-    const bass = [131, 98, 110, 87];
-    let step = 0, i = 3;
-    const beat = 0.42;
-    let next = this.ctx.currentTime + 0.2;
+    const M = this.mus = { next: this.ctx.currentTime + 0.2, theme: null, mood: "calm", danger: false, step: 0, gstep: 0, gi: 3 };
+    const notes = [262, 294, 330, 392, 440, 523, 587, 659], bass = [131, 98, 110, 87];
     const sched = () => {
       if (!this.ctx) return;
-      while (next < this.ctx.currentTime + 0.6) {
-        const t = next - this.ctx.currentTime;
-        if (step % 8 === 0) this.tone(bass[(step / 8 | 0) % 4], beat * 7.5, "triangle", 0.035, null, t, this.musicGain);
-        if (Math.random() < 0.7) {
-          i = Math.max(0, Math.min(notes.length - 1, i + [-2, -1, 1, 2, 0][Math.random() * 5 | 0]));
-          this.tone(notes[i], beat * 0.9, "triangle", 0.022, null, t, this.musicGain);
+      while (M.next < this.ctx.currentTime + 0.35) {
+        const t = Math.max(0, M.next - this.ctx.currentTime), want = musicWanted();
+        if (want.theme !== M.theme) { M.theme = want.theme; M.step = 0; M.mood = want.mood; M.danger = want.danger; }
+        if (!M.theme) {   // the little wandering tune
+          if (M.gstep % 8 === 0) this.tone(bass[(M.gstep / 8 | 0) % 4], 0.42 * 7.5, "triangle", 0.035, null, t, this.musicGain);
+          if (Math.random() < 0.7) { M.gi = Math.max(0, Math.min(notes.length - 1, M.gi + [-2, -1, 1, 2, 0][Math.random() * 5 | 0])); this.tone(notes[M.gi], 0.42 * 0.9, "triangle", 0.022, null, t, this.musicGain); }
+          M.gstep++; M.next += 0.42; continue;
         }
-        step++; next += beat;
+        if (M.step % 16 === 0) { M.mood = want.mood; M.danger = want.danger; }   // moods change on the first beat of a bar
+        M.next += this.songStep(M, t); M.step++;
       }
     };
-    setInterval(sched, 150);
+    setInterval(sched, 60);
+  },
+  songStep(M, t) {
+    const TH = MUSIC_THEMES[M.theme], mood = M.mood, out = this.musicGain, q = G && G.paused ? 0.45 : 1;
+    const s16 = 60 / ((mood === "calm" || mood === "end" ? TH.calm : TH.battle) * (M.danger ? 1.08 : 1)) / 4;   // how long a 16th note is
+    if (mood === "end") return s16;   // the game is over: the win or lose tune plays instead
+    const boss = mood === "boss", calm = mood === "calm", bar = (M.step / 16 | 0) % 4, pos = M.step % 16;
+    const ch = (boss ? BOSS_SONG.chords : TH.chords)[bar], mel = (boss ? BOSS_SONG.melody : TH.melody)[bar];
+    const f = (semi) => 440 * Math.pow(2, (TH.root + semi - 69) / 12);
+    const sw = TH.swing && pos % 4 === 2 ? s16 * TH.swing : 0;   // the Swamp swings: the off-beats come a little late
+    // a soft chord held through the bar
+    if (pos === 0) ch.forEach((n) => this.tone(f(n), s16 * 15, boss ? "sawtooth" : "triangle", (boss ? 0.005 : calm ? 0.012 : 0.009) * q, null, t, out));
+    // the bass
+    if (calm) { if (pos === 0 || pos === 8) this.tone(f(ch[0] - 12), s16 * 7.5, TH.bass, 0.03 * q, null, t, out); }
+    else if (pos % 2 === 0) { const bn = boss ? ch[0] - 24 + (pos % 8 === 6 ? 12 : 0) : ch[0] - 12 + ((pos / 2) % 4 === 2 ? 7 : 0); this.tone(f(bn), s16 * 1.7, boss ? "sawtooth" : TH.bass, (boss ? 0.03 : 0.032) * q, null, t + sw, out); }
+    // the melody (8th notes)
+    if (pos % 2 === 0) { const n = mel[pos / 2]; if (n !== null && n !== undefined) this.tone(f(n), s16 * (calm ? 2.6 : 1.8), boss ? "square" : TH.lead, (boss ? 0.016 : calm ? 0.02 : 0.024) * q, null, t + sw, out); }
+    // in battle: a bubbly arpeggio and the drums
+    if (!calm) {
+      if (pos % 2 === 1 && !boss) this.tone(f(ch[(pos >> 1) % 3] + 12), s16 * 0.9, "square", 0.007 * q, null, t, out);
+      const kick = () => this.tone(150, 0.16, "sine", 0.07 * q, 45, t, out), snare = () => this.noise(0.12, 0.045 * q, "bandpass", 1800, null, t, out), hat = () => this.noise(0.035, 0.018 * q, "highpass", 7000, null, t + sw, out);
+      if (boss) { if (pos % 4 === 0) kick(); if (pos === 12) snare(); if (pos >= 13) this.tone(140 - (pos - 13) * 25, 0.16, "sine", 0.05 * q, 70, t, out); if (pos % 2 === 0) hat(); }   // a heavy marching beat with toms
+      else { if (pos === 0 || pos === 8 || pos === 10) kick(); if (pos === 4 || pos === 12) snare(); if (pos % 2 === 0) hat(); }
+    }
+    // low health: an urgent alarm note on every beat
+    if (M.danger && pos % 4 === 0) this.tone(f(ch[0] + 24), s16 * 0.8, "square", 0.011 * q, null, t, out);
+    return s16;
   },
 };
 
+// The songs for the first 3 levels. root: the key (a MIDI note). calm / battle: beats per minute.
+// chords: 4 bars, notes counted in half steps from the root. melody: 4 bars of 8 eighth notes each (null = a rest).
+const MUSIC_THEMES = {
+  // The Meadow: sunny and bouncy, in C major (C - G - Am - F)
+  meadow: { root: 60, calm: 96, battle: 124, lead: "square", bass: "triangle",
+    chords: [[0, 4, 7], [-5, -1, 2], [-3, 0, 4], [-7, -3, 0]],
+    melody: [[12, null, 7, 9, 12, null, 14, 12], [11, null, 7, null, 14, 12, 11, 7], [9, null, 12, null, 16, 14, 12, 9], [5, 9, 12, 9, 7, null, 4, null]] },
+  // The Forest: a wandering wooden-flute tune in D minor (Dm - C - Bb - C)
+  forest: { root: 62, calm: 88, battle: 116, lead: "triangle", bass: "triangle",
+    chords: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-2, 2, 5]],
+    melody: [[7, null, 5, 3, 2, null, 0, null], [2, null, 5, null, 7, null, 5, null], [3, null, 2, 0, -2, null, 0, 2], [5, null, null, 3, 2, null, null, null]] },
+  // The Swamp: a slow, swinging bluesy tune in E minor (Em - Em - Am - B7), with a twangy bass
+  swamp: { root: 64, calm: 82, battle: 104, lead: "triangle", bass: "sawtooth", swing: 0.35,
+    chords: [[-12, -9, -5], [-12, -9, -5], [-7, -4, 0], [-5, -1, 2]],
+    melody: [[0, 3, 5, 6, 7, null, 5, 3], [0, null, 10, null, 7, null, 3, null], [5, 8, 12, null, 10, 8, 5, null], [11, null, 7, null, 6, null, 3, null]] },
+};
+// The boss theme (any of the 3 levels, in that level's key): dark and minor (vi - IV - V - vi), with a harmonic-minor twist
+const BOSS_SONG = {
+  chords: [[-3, 0, 4], [-7, -3, 0], [-5, -1, 2], [-3, 0, 4]],
+  melody: [[9, null, 12, null, 11, 9, 8, null], [5, null, 9, null, 8, 5, 4, null], [7, null, 11, null, 14, 12, 11, null], [9, 12, 16, 15, 16, null, null, null]],
+};
+// What the music should be doing right now
+function musicWanted() {
+  if (!G || $("game").hidden || !MUSIC_THEMES[G.level]) return { theme: null };
+  if (G.over) return { theme: G.level, mood: "end" };
+  const boss = G.robots.some((r) => !r.dead && isHeavy(r));
+  return { theme: G.level, mood: boss ? "boss" : G.waveActive ? "battle" : "calm", danger: G.waveActive && G.health / G.maxHealth < 0.3 };
+}
 /* ---------- settings (for everyone on this computer) ---------- */
 const PREF_DEFAULTS = { volume: 100, music: 100, tips: true, shake: true, speed: 1, floats: true, simple: false };
 const PREFS = (() => { try { return { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem("pjs-game-prefs") || "{}") }; } catch (e) { return { ...PREF_DEFAULTS }; } })();
