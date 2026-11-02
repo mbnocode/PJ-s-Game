@@ -285,9 +285,19 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .perk .needs { display: block; font-size: 13px; color: #ffd36b; margin: 4px 0; }
 /* the world map on the levels page */
 .worldmap { position: relative; flex-shrink: 0; width: min(100%, calc((100vh - 130px) * 1000 / 450), 2000px); width: min(100%, calc((100dvh - 130px) * 1000 / 450), 2000px);   /* as big as the screen allows, while still fitting top to bottom */ aspect-ratio: 1000 / 450; border: 3px solid #16191d; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 0 #16191d; }
+.mappv { position: fixed; inset: 0; z-index: 50; background: rgba(8,12,10,0.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.mappv-box { position: relative; width: min(680px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 3px solid #16191d; border-radius: 14px; box-shadow: 0 6px 0 #16191d, 0 10px 40px rgba(0,0,0,0.5); padding: 16px; display: flex; flex-direction: column; gap: 10px; text-align: left; animation: mappv-pop 0.18s ease-out; }
+@keyframes mappv-pop { from { transform: scale(0.92); opacity: 0; } }
+.mappv-box canvas { width: 100%; height: auto; aspect-ratio: 640 / 384; image-rendering: pixelated; border-radius: 8px; border: 2px solid #16191d; }
+.mappv.locked .mappv-box canvas { filter: grayscale(0.6) brightness(0.8); }
+.mappv-box .k { font-family: var(--display); font-size: 24px; }
+.mappv-box .s { color: var(--muted); font-size: 15px; }
+.mappv-box .stars { color: #ffd34d; font-size: 14px; }
+.mappv-box .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.mappv-box .x { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 22px; line-height: 1; z-index: 1; }
 .worldmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: auto; }
 .wm-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; box-shadow: none; padding: 0; cursor: pointer; min-height: 0; }
-.wm-node .dot { --c: #8fd45f; --ring: rgba(255,255,255,0.55); width: clamp(24px, 3.2vw, 56px); height: clamp(24px, 3.2vw, 56px); border-radius: 50%; border: 3px solid #16191d; display: grid; place-items: center; font-family: var(--display); font-size: clamp(11px, 1.3vw, 21px); color: #16191d; text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+.wm-node .dot { --c: #8fd45f; --ring: rgba(255,255,255,0.55); width: clamp(24px, 3.2vw, 56px); height: clamp(24px, 3.2vw, 56px); border-radius: 50%; border: 3px solid #16191d; display: grid; place-items: center; font-family: var(--body); font-weight: 800; font-size: clamp(12px, 1.35vw, 22px); color: #16191d; text-shadow: 0 1px 0 rgba(255,255,255,0.6);
   background: radial-gradient(circle at 34% 28%, rgba(255,255,255,0.75) 0 10%, rgba(255,255,255,0) 38%), radial-gradient(circle at 50% 125%, rgba(0,0,0,0.4), rgba(0,0,0,0) 62%), var(--c);
   box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.22), 0 0 0 2px var(--ring), 0 0 0 4px #16191d, 0 5px 0 #16191d, 0 8px 8px rgba(0,0,0,0.45); }
 .wm-node .dot .ic { position: absolute; right: -9px; top: -9px; width: 1.25em; height: 1.25em; border-radius: 50%; background: #fff8e6; border: 2px solid #16191d; display: grid; place-items: center; font-size: clamp(8px, 0.95vw, 12px); line-height: 1; text-shadow: none; box-shadow: 0 2px 0 #16191d; pointer-events: none; }
@@ -304,7 +314,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .wm-node .dot { position: relative; } .wm-node .dot::after { content: ""; position: absolute; inset: -10px; border-radius: 50%; }   /* a bigger area to tap */
 .wm-node .nm { font-family: var(--display); font-size: clamp(8px, 0.95vw, 17px); color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
 .wm-node .st { font-size: clamp(8px, 0.9vw, 15px); color: #ffd34d; text-shadow: 0 1px 0 #000, 0 0 3px #000; letter-spacing: -1px; }
-.wm-node.locked { cursor: default; } .wm-node.locked .dot { --c: #6a6e78 !important; --ring: rgba(255,255,255,0.2); color: #2a2c32; }
+.wm-node.locked { cursor: pointer; } .wm-node.locked .dot { --c: #6a6e78 !important; --ring: rgba(255,255,255,0.2); color: #2a2c32; }
 .wm-node.soon { cursor: default; opacity: .8; } .wm-node.soon .dot { --c: #8a8ea0 !important; border-style: dashed; }
 .wm-node.here .dot { animation: wm-pulse 1.2s ease-in-out infinite; }
 @keyframes wm-pulse { 50% { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.22), 0 0 0 2px #fff, 0 0 0 4px #16191d, 0 5px 0 #16191d, 0 0 0 10px rgba(255,211,77,.55); } }
@@ -608,6 +618,16 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="resetslot" id="b-resetslot" title="Erase everything in this save slot and start over">↺ Restart save slot</button>
     <h2>Pick a level</h2>
     <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas></div>
+    <div class="mappv" id="mappv" role="dialog" aria-modal="true" aria-labelledby="mappv-name" hidden>
+      <div class="mappv-box">
+        <button class="x" id="mappv-x" aria-label="Close">×</button>
+        <canvas id="mappv-art" width="640" height="384" aria-label="What this level's terrain looks like"></canvas>
+        <div class="k" id="mappv-name"></div>
+        <div class="s" id="mappv-about"></div>
+        <div class="stars" id="mappv-stars" hidden></div>
+        <div class="btns"><button class="go" id="mappv-play">Play</button><button id="mappv-close">Close</button></div>
+      </div>
+    </div>
     <div class="cards" id="level-cards"></div>
     <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
   </section>
@@ -2810,10 +2830,29 @@ function renderWorldMap() {
     b.style.left = pos[0] / 10 + "%"; b.style.top = pos[1] / 4.5 + "%";
     b.title = soon ? name + " (coming soon)" : open ? name : name + " (locked)";
     b.innerHTML = `<span class="dot" style="--c:${pos[2]}"><span class="shine"></span>${soon ? "?" : open ? (L === "infinity" ? "∞" : num) : "🔒"}${open || soon ? `<span class="ic">${WORLD_MAP_ICON[L] || ""}</span>` : ""}</span><span class="nm">${name}</span>${Object.keys(best).length ? `<span class="st">${starText(stars)}</span>` : ""}`;
-    if (open) { b.type = "button"; b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); Sound.init(); openSetup(L); }); } else b.disabled = soon || !open;
+    if (!soon) { b.type = "button"; b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); Sound.init(); openMapPreview(L); }); } else b.disabled = true;   // tap a circle: see the level's terrain first
     box.appendChild(b);
   }
 }
+// Tapping a circle on the world map shows a peek at that level's terrain, with a Play button (if it's unlocked).
+const mapPreviewArt = {};
+function openMapPreview(L) {
+  const lv = SETTINGS.levels[L], open = unlocked(L), best = slot().best[L] || {}, box = $("mappv");
+  const c = $("mappv-art"), x = c.getContext("2d"); x.clearRect(0, 0, 640, 384);
+  if (!mapPreviewArt[L]) { const cv = document.createElement("canvas"); cv.width = 640; cv.height = 384; paintGround(cv.getContext("2d"), buildMap(L), 0); mapPreviewArt[L] = cv; }
+  x.drawImage(mapPreviewArt[L], 0, 0);
+  $("mappv-name").textContent = lv.name;
+  $("mappv-about").textContent = open ? lv.about : "🔒 Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock this level.";
+  const stars = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
+  $("mappv-stars").textContent = stars; $("mappv-stars").hidden = !stars;
+  const play = $("mappv-play"); play.hidden = !open; play.textContent = savedGame(L) ? "Play (saved game)" : "Play";
+  play.onclick = () => { closeMapPreview(); openSetup(L); };
+  box.dataset.level = L; box.classList.toggle("locked", !open); box.hidden = false; (open ? play : $("mappv-close")).focus();
+}
+function closeMapPreview() { $("mappv").hidden = true; }
+$("mappv-close").onclick = closeMapPreview; $("mappv-x").onclick = closeMapPreview;
+$("mappv").addEventListener("click", (e) => { if (e.target.id === "mappv") closeMapPreview(); });   // tap outside the box to close it
+addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("mappv").hidden) closeMapPreview(); });
 // Restart save slot: tap once to ask, tap again to erase everything in this slot (stars, acorns, upgrades, shop items,
 // achievements and saved games). Leaderboard scores are kept.
 $("b-resetslot").onclick = () => {
