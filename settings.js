@@ -298,9 +298,9 @@ const SETTINGS = {
     thunderbird: { name: "Thunderbird Drone", health: 50, speed: 3.4, leaves: 8, points: 25, flying: true, baseHit: 6, swarm: 4 },
     // Cyclone Golem (a Boss): every spinEvery seconds it spins into a tornado for spinSeconds. Nothing can hurt it while it spins, and it moves spinSpeed times faster.
     cyclonegolem: { name: "Cyclone Golem", health: 3000, speed: 0.85, leaves: 180, points: 700, baseHit: 55, isBoss: true, spinEvery: 7, spinSeconds: 2, spinSpeed: 1.6 },
-    // The Iron Heart: the final boss of the Eye of the Storm (wave 30). Its storm armor: landTowerTimes / flyingTowerTimes (below). Every strikeEvery seconds it calls lightning
+    // The Thunder Titan: the final boss of the Eye of the Storm (wave 30). Its storm armor: landTowerTimes / flyingTowerTimes (below). Every strikeEvery seconds it calls lightning
     // down on strikeTowers towers within strikeRadius squares, stunning them for strikeSeconds. fixedHealth: exactly this much health on Normal.
-    thundertitan: { name: "Iron Heart", health: 75000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
+    thundertitan: { name: "Thunder Titan", health: 75000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
                     landTowerTimes: 0.5, flyingTowerTimes: 2 },   // land towers do half damage to it; flying towers (Owl, Night Owl, Dragon, Pegasus, Phoenix) do double
     // ---- more sky robots ----
     // Balloon Bot: floats over everything under a hot-air balloon (only towers that hit flying robots can reach it).
@@ -452,7 +452,7 @@ const SETTINGS = {
 
   // Maps are 20 squares wide and 12 tall. The path goes through these corners.
   levels: {
-    meadow: { name: "The Meadow", about: "Deep underground, a forgotten computer called The Mainframe has woken up. It wants the Golden Acorns hidden in your treehouse, so it sent its first robots marching down the long, twisty meadow path. Build your towers and stop them!",
+    meadow: { name: "The Meadow", about: "Deep underground, a forgotten machine called the Iron Heart has woken up. It wants the Golden Acorns hidden in your treehouse, so it sent its first robots marching down the long, twisty meadow path. Build your towers and stop them!",
               acornDropChance: 0.01,   // each robot you destroy here has this chance (0.01 = 1%) to drop a Golden Acorn
               waveCount: 10,           // the Meadow only plays the first 10 waves (it ends with the big Boss on wave 10)
               maxBossHealth: 1600,     // Bosses on the Meadow have at most this much health
@@ -461,7 +461,7 @@ const SETTINGS = {
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
-    forest: { name: "The Forest", acornDropChance: 0.02, about: "The Mainframe's robots found a shortcut through the tall pines, so they get through faster. But the Tree Giants, the oldest guardians of the forest, have woken up angry: they attack 50% faster here!", theme: "forest",
+    forest: { name: "The Forest", acornDropChance: 0.02, about: "The Iron Heart's robots found a shortcut through the tall pines, so they get through faster. But the Tree Giants, the oldest guardians of the forest, have woken up angry: they attack 50% faster here!", theme: "forest",
               // 2% Golden Acorn chance per robot (from wave 3 on)
               // In the Forest, trees are tall pines, mushrooms are brown, and tall grass is ferns.
               towerBoosts: { plant: { speedTimes: 1.5 } },
@@ -469,7 +469,7 @@ const SETTINGS = {
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
-    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "The Mainframe's factory leaked oily sludge into the swamp, and its robots wade through the murky water 50% tougher than before. But the frogs are fighting for their home: they hit 25% harder here!", theme: "swamp",
+    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "The Iron Heart's factory leaked oily sludge into the swamp, and its robots wade through the murky water 50% tougher than before. But the frogs are fighting for their home: they hit 25% harder here!", theme: "swamp",
               // 3% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
@@ -981,7 +981,7 @@ const SETTINGS = {
               ] },
     // The Eye of the Storm: the road spirals in through a giant storm to the calm eye in the middle, where your treehouse is.
     // Lightning strikes towers out in the storm, but never towers inside the calm eye (within calmRadius squares of the treehouse).
-    storm: { name: "Eye of the Storm", acornDropChance: 0.08, about: "The road spirals through a giant swirling storm to the calm eye in the middle. Lightning strikes towers out in the storm, but towers in the calm eye are safe. The Iron Heart is waiting! Scores are worth 4.5x.", theme: "storm",
+    storm: { name: "Eye of the Storm", acornDropChance: 0.08, about: "The road spirals through a giant swirling storm to the calm eye in the middle. Lightning strikes towers out in the storm, but towers in the calm eye are safe. The Thunder Titan is waiting! Scores are worth 4.5x.", theme: "storm",
               robotHealth: 1.4,
               lateToughness: { fromWave: 8, perWave: 0.065 },   // after wave 8, robots get 6.5% tougher every wave
               scoreTimes: 4.5,
@@ -1021,7 +1021,7 @@ const SETTINGS = {
                 [["cyclonegolem", 3, 8], ["skyblimp", 1, 0], [["thunderbird", "snowdrone"], 14, 0.32]],   // 27
                 [["boss", 1, 0, 9000], ["universegolem", 2, 9], [["tank", "snowplow", "planklayer", "staticbot", "balloonbot"], 36, 0.32]],   // 28
                 [[["thunderbird", "emberbat", "drone", "snowdrone", "gustrunner", "hider", "scout"], 56, 0.2]],   // 29: the whole storm at once
-                [["thundertitan", 1, 0]],                                               // 30: the Iron Heart
+                [["thundertitan", 1, 0]],                                               // 30: the Thunder Titan
               ] },
   },
 };
