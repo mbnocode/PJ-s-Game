@@ -1017,8 +1017,44 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   const STATIC = { z: "#fff7a0", p: "#ffe066", P: "#c9a020", e: "#4a5a7a", m: "#6a7a9a", j: "#3a4660", n: "#8a9aba", N: "#2a3450", s: "#9aa4c0", g: "#5a6480", G: "#343c58", U: "#fff7c2", c: "#ffe066", y: "#7ff3ff", Y: "#2aa8d8" };
   const BIRD = { d: "#3a3e6a", D: "#22264a", E: "#7ff3ff", o: "#fff066", f: "#ffffff", w: "#fff7a0" };
   const CYCLONE = { U: "#d4dae8", c: "#9aa4bc", b: "#6e7894", B: "#454c66", u: "#fff066", w: "#ffffff", x: "#c8d0e0" };
-  const TITANT = { R: "#3a3f78", r: "#6a74c8", g: "#4a5a8a", G: "#2c3458", s: "#8a90a8", y: "#fff066", Y: "#c9a020", o: "#7ff3ff", w: "#ffffff", f: "#ffffff" };
-  for (const [k, base, pal] of [["staticbot", "tesla", STATIC], ["thunderbird", "emberbat", BIRD], ["thunderbird_mid", "emberbat_mid", BIRD], ["thunderbird_down", "emberbat_down", BIRD], ["thundertitan", "boss", TITANT]]) {
+  // The Thunder Titan: a storm colossus in indigo armor, with golden lightning-bolt horns and crest, storm clouds for shoulders,
+  // a glowing storm orb with a lightning bolt in its chest, and a golden lightning spear in its hand. (32 x 32)
+  const TITANT = { k: "#12142a", A: "#20255a", a: "#343d8c", m: "#5260b8", h: "#8a96ee", c: "#f0f3ff", C: "#a9b2cc", D: "#5c6484", y: "#ffd84a", Y: "#b8861a", t: "#7ff3ff", T: "#1f9ccc", w: "#ffffff", z: "#fff27a" };
+  const TITANART = [
+    ".......kzk....kzzk....kzk..kzk..",
+    ".......kyyk..kyyyyk..kyyk..kzwk.",
+    "........kyYkkmmyymmkkYyk..kzkk..",
+    "........kyykhmayYaAAkyyk..kzzk..",
+    "...z....kyYkhmayyaAAkYyk...kzzk.",
+    ".........kyyYYYYYYYYyyk.....kzk.",
+    ".......kkkkyhTwaawTAykkkk...kzwk",
+    "......kccckkhmaaaaAAkkccck.kzkk.",
+    ".z.kkkccccckhmTATAAAkccccckkzzk.",
+    "..kccCCCCCCChmaaaaAACCCCCCCzzk..",
+    ".kcccCCtCCCCkkAAAAkkCCCCCCCczck.",
+    ".kCCCCCChhmmmmmmmmmmmmAACCCCyYk.",
+    ".kCccCDDhmaYyyttttyyYaAADDCcyYk.",
+    ".kccctDDhmaaatTTTztaaaAADDccyYkz",
+    "kCCCCCCkhmaaaTTTzTTaaaAAkCtCyYCk",
+    "kCCCCCCkkhmatTTzwzTtaAAkkCCCyYCk",
+    ".kDDhaaAkhmaaTTTzTTaaAAkAaahyYk.",
+    "..kDhttAkhmaatTzTTtaaAAkAtthyYk.",
+    "...khaaAkhAAAAttttAAAAAkAaahyYk.",
+    "...kyyyykkhmaaaAAaaaAAkkyyyyyYk.",
+    "...kYYYYkkhAAAAAAAAAAAkkYYYYyYk.",
+    "...khaaAkkhmaaaAAaaaAAkkhmmmmmk.",
+    "...khaaAkkYyyyyttyyyyYkkhmmmyyk.",
+    "..khmmmAkkhaaaAkkAaaahkkhAAAAAk.",
+    "..khmmmAkkhaaaAkkAaaahk.kkkkyYk.",
+    "..khAAAAkkyyyyykkyyyyyk....kyYk.",
+    "...kkkkk.kYYYYYkkYYYYYk....kyYk.",
+    "..z......khaaaAkkAaaahk....kyYk.",
+    "........kkhaaaAkkAaaahkk...kyYk.",
+    ".......khhhhhhhkkhhhhhhhk..kYYk.",
+    ".......kmAAAAAAkkAAAAAAmk...kk..",
+    "........kkkkkkk..kkkkkkk........"];
+  SPR.thundertitan = makeSprite(TITANART, false, TITANT); SPRF.thundertitan = makeSprite(TITANART, true, TITANT);
+  for (const [k, base, pal] of [["staticbot", "tesla", STATIC], ["thunderbird", "emberbat", BIRD], ["thunderbird_mid", "emberbat_mid", BIRD], ["thunderbird_down", "emberbat_down", BIRD]]) {
     SPR[k] = makeSprite(ART[base], false, pal); SPRF[k] = makeSprite(ART[base], true, pal); }
   // Sky robots get stormy colors (dark storm-indigo, electric yellow, glowing teal) so they don't look like the icy robots.
   const SKYPAL = { a: "#22264a", b: "#3a4280", c: "#6a74c8", C: "#9aa4e8", y: "#fff066", Y: "#c9a020", t: "#7ff3ff", T: "#2a8aa8", w: "#ffffff", g: "#8a90a8", G: "#4a4e68" };
