@@ -3099,8 +3099,6 @@ function drawWorldMap() {
   const trail = () => { x.beginPath(); order.forEach((L, i) => { const [a, b] = WORLD_MAP[L]; i ? x.lineTo(a, b) : x.moveTo(a, b); }); };
   x.setLineDash([]); x.lineWidth = 12; x.strokeStyle = "rgba(60,40,20,0.25)"; trail(); x.stroke();
   x.setLineDash([2, 9]); x.lineWidth = 6; x.strokeStyle = "rgba(255,248,225,0.98)"; trail(); x.stroke();
-  x.strokeStyle = "rgba(210,180,255,0.9)"; x.beginPath(); x.moveTo(250, 170); x.quadraticCurveTo(300, 100, WORLD_MAP.infinity[0] - 20, WORLD_MAP.infinity[1] + 10); x.stroke();   // a magic trail floating up to Infinity (it doesn't start at the Meadow: Infinity is its own world)
-  x.setLineDash([]); for (const [a, b, r] of [[242, 178, 3], [233, 187, 2.2], [226, 195, 1.5]]) { x.fillStyle = "rgba(225,205,255,0.85)"; x.beginPath(); x.arc(a, b, r, 0, Math.PI * 2); x.fill(); }   // the trail fading out into sparkles at its start
   x.setLineDash([]);
   // a soft frame of shadow around the edge
   x.fillStyle = rad(W / 2, H / 2, H * 0.55, W * 0.62, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,20,0.35)"]]); x.fillRect(0, 0, W, H);
