@@ -6554,8 +6554,8 @@ function tickPet(dt) {
 }
 function drawPet(x) {
   const p = G.pet; if (!p) return; const img = SPR["pet_" + p.kind]; if (!img) return;
-  const ph = (p.hop || 0) % 1, hopping = p.kind !== "firefly" && p.hop > 0, hop = hopping ? Math.sin(ph * Math.PI) * 7 : 0;   // a bouncy arc up and down
-  const sq = hopping ? (ph < 0.12 || ph > 0.88 ? 0.82 : 1 + Math.sin(ph * Math.PI) * 0.1) : 1 + Math.sin(G.time * 3) * 0.03;   // squashes as it lands and takes off, stretches in the air
+  const ph = (p.hop || 0) % 1, hopping = p.kind !== "firefly" && p.hop > 0, hop = hopping ? Math.sin(ph * Math.PI) * 4 : 0;   // a gentle arc up and down
+  const sq = hopping ? (ph < 0.12 || ph > 0.88 ? 0.9 : 1 + Math.sin(ph * Math.PI) * 0.05) : 1 + Math.sin(G.time * 3) * 0.03;   // squashes as it lands and takes off, stretches in the air
   if (p.kind === "firefly" && !PREFS.simple) { const g = x.createRadialGradient(p.x, p.y - 10, 1, p.x, p.y - 10, 18); g.addColorStop(0, `rgba(255,240,120,${0.45 + 0.2 * Math.sin(G.time * 6)})`); g.addColorStop(1, "rgba(255,240,120,0)"); x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y - 10, 18, 0, Math.PI * 2); x.fill(); }
   x.fillStyle = "rgba(0,0,0,0.2)"; x.beginPath(); x.ellipse(p.x, p.y + 1, 8 - hop * 0.4, 2.5 - hop * 0.12, 0, 0, Math.PI * 2); x.fill();   // its shadow shrinks as it hops up
   x.save(); x.translate(p.x, p.y - hop - (p.kind === "firefly" ? 10 + Math.sin(G.time * 4) * 3 : 0)); if (p.face < 0) x.scale(-1, 1); x.scale(1 / Math.sqrt(sq), sq);
