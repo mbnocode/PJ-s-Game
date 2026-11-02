@@ -452,7 +452,7 @@ const SETTINGS = {
 
   // Maps are 20 squares wide and 12 tall. The path goes through these corners.
   levels: {
-    meadow: { name: "The Meadow", about: "Deep underground, a forgotten machine called the Iron Heart has woken up. It needs power, and the strongest power source in the world is the Golden Acorns, so it set out to collect them all, starting with the ones hidden in your treehouse! Its first robots are marching down the long, twisty meadow path. Build your towers and stop them!",
+    meadow: { name: "The Meadow", about: "Far beneath the earth, something ancient stirs. The Iron Heart, a machine forged before anyone can remember, has awakened, and it hungers for power. The greatest power in all the world lies in the Golden Acorns, and the Iron Heart will stop at nothing to claim every last one. Its first army is already marching down the long, twisting meadow path toward your treehouse. The war for the Golden Acorns begins now. Stand your ground!",
               acornDropChance: 0.01,   // each robot you destroy here has this chance (0.01 = 1%) to drop a Golden Acorn
               waveCount: 10,           // the Meadow only plays the first 10 waves (it ends with the big Boss on wave 10)
               maxBossHealth: 1600,     // Bosses on the Meadow have at most this much health
@@ -461,7 +461,7 @@ const SETTINGS = {
               trees:     [[1, 6], [2, 10], [6, 0], [10, 6], [14, 1], [18, 10], [19, 0], [6, 11]],
               mushrooms: [[2, 5], [10, 10], [14, 6], [18, 2]],
               tallGrass: [[6, 4], [3, 8], [10, 1], [15, 11], [17, 7]] },
-    forest: { name: "The Forest", acornDropChance: 0.02, about: "The Iron Heart's robots found a shortcut through the tall pines, so they get through faster. But the Tree Giants, the oldest guardians of the forest, have woken up angry: they attack 50% faster here!", theme: "forest",
+    forest: { name: "The Forest", acornDropChance: 0.02, about: "The meadow held, but the Iron Heart never gives up. Its robots now tear through the ancient pine forest, racing down a hidden shortcut faster than ever before. But the forest remembers. The Tree Giants, its oldest guardians, have risen from their thousand-year sleep in a fury, and here they strike 50% faster. Let these woods be where the robots fall!", theme: "forest",
               // 2% Golden Acorn chance per robot (from wave 3 on)
               // In the Forest, trees are tall pines, mushrooms are brown, and tall grass is ferns.
               towerBoosts: { plant: { speedTimes: 1.5 } },
@@ -469,7 +469,7 @@ const SETTINGS = {
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
-    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "The Iron Heart's factory leaked oily sludge into the swamp, and its robots wade through the murky water 50% tougher than before. But the frogs are fighting for their home: they hit 25% harder here!", theme: "swamp",
+    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "Enraged, the Iron Heart poisoned the swamp, pouring black factory sludge into its waters. Its robots rise from the murk coated in oil, 50% tougher than any before. But the frogs will not abandon their home. Fighting for every lily pad, they strike 25% harder here. The swamp will not fall!", theme: "swamp",
               // 3% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
