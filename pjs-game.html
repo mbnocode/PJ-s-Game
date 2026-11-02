@@ -3423,8 +3423,8 @@ function resultText(p) {
   if (p.status === "lost") return `Lost on wave ${p.wave}`;
   return `Playing wave ${p.wave}`;
 }
-// A level's Top 10, keeping only each player's best few games (by nickname), so one player can't fill the whole board.
-const BOARD_PER_PLAYER = 5;
+// A level's Top 25, keeping only each player's best 3 games (by nickname), so one player can't fill the whole board.
+const BOARD_PER_PLAYER = 3, BOARD_SIZE = 25;
 async function levelTop(level, fields) {
   const since = (SETTINGS.leaderboardResets || {})[level];   // a reset board only counts scores from after the reset
   const rows = await sb(`players?level=eq.${level}&status=in.(won,lost)${since ? `&created_at=gte.${encodeURIComponent(since)}` : ""}&select=${fields}&order=score.desc&limit=1000`);
@@ -3432,7 +3432,7 @@ async function levelTop(level, fields) {
   for (const p of rows) {
     const who = String(p.nickname || "").trim().toLowerCase();
     if ((seen[who] = (seen[who] || 0) + 1) > BOARD_PER_PLAYER) continue;
-    out.push(p); if (out.length >= 10) break;
+    out.push(p); if (out.length >= BOARD_SIZE) break;
   }
   return out;
 }
@@ -3459,7 +3459,7 @@ async function renderBoards(code) {
     const rows = code
       ? await sb(`players?challenge_code=eq.${encodeURIComponent(code)}&select=nickname,difficulty,score,stars,wave,status&order=score.desc&limit=50`)
       : await levelTop(boardLevel, "nickname,difficulty,score,stars,wave,status");
-    const title = code ? `Challenge ${esc(code)}` : `Top 10 · ${SETTINGS.levels[boardLevel].name}<small class="bnote">Only each player's best ${BOARD_PER_PLAYER} games count.</small>`;
+    const title = code ? `Challenge ${esc(code)}` : `Top ${BOARD_SIZE} · ${SETTINGS.levels[boardLevel].name}<small class="bnote">Only each player's best ${BOARD_PER_PLAYER} games count.</small>`;
     list.innerHTML = `<div class="bt">${title}</div>` + (rows.length
       ? `<table><thead><tr><th>#</th><th>Player</th><th>Score</th><th>Difficulty</th><th>Result</th></tr></thead><tbody>${rows.map((p, i) =>
           `<tr><td class="r">${i + 1}</td><td class="nm">${esc(p.nickname)}</td><td class="sc">${p.score.toLocaleString()}</td><td>${esc((SETTINGS.difficulties[p.difficulty] || {}).name || p.difficulty)}</td><td>${resultText(p)}</td></tr>`).join("")}</tbody></table>`
@@ -7126,7 +7126,7 @@ function finish(won) {
     setTimeout(() => { $("overlay").classList.remove("gameover"); showResult(); }, 4000);
   }, (G.takeover.dur + 0.9) * 1000);
 }
-// Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 10.
+// Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 25.
 async function askForBoard(g, won, score, stars) {
   const box = $("o-ask"); if (!box) return;
   const lvName = SETTINGS.levels[g.level].name;
@@ -7136,9 +7136,9 @@ async function askForBoard(g, won, score, stars) {
     try { top = await levelTop(g.level, "nickname,score"); } catch (e) {}
     if (!$("o-ask")) return;
     if (!top) { box.innerHTML = `<p class="muted">Couldn't reach the leaderboard.</p>`; return; }
-    if (top.length >= 10 && score <= top[9].score) { box.innerHTML = `<p class="muted">Get into the Top 10 to put your score on the leaderboard.</p>`; return; }
+    if (top.length >= BOARD_SIZE && score <= top[BOARD_SIZE - 1].score) { box.innerHTML = `<p class="muted">Get into the Top ${BOARD_SIZE} to put your score on the leaderboard.</p>`; return; }
   }
-  box.innerHTML = `<label class="field" for="o-nick">${won ? "Put your score on the leaderboard" : "You made the Top 10! Put your score on the leaderboard"}<small>Type your nickname.</small>
+  box.innerHTML = `<label class="field" for="o-nick">${won ? "Put your score on the leaderboard" : `You made the Top ${BOARD_SIZE}! Put your score on the leaderboard`}<small>Type your nickname.</small>
       <input id="o-nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="PJ" value="${esc(savedNick())}"></label>
     <button class="go" id="o-submit">Add to leaderboard</button><p class="err" id="o-msg" hidden></p>`;
   const submit = async () => {
