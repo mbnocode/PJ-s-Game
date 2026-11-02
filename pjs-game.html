@@ -2096,6 +2096,7 @@ setInterval(() => {
   const s = slots[slotIndex]; if (!slotActive || !s || document.visibilityState !== "visible") return;
   s.playTime = (s.playTime || 0) + 1;
   if (--playSaveIn <= 0) { playSaveIn = 15; saveSlots(slots); }
+  if (s.playTime % 60 === 0 && s.playTime >= 36000) earnAch("dedicated");
   const el = $("slot-time"); if (el && !$("s-levels").hidden) el.textContent = "⏱ Time played in this slot: " + fmtPlayTime(s.playTime);
 }, 1000);
 addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && slotActive) saveSlots(slots); });
@@ -2172,7 +2173,7 @@ let serpSlot = -1, serpAnim = null, serpFrom = "s-slots";
 // from: where the Back button goes ("s-slots" from the hidden serpent, "s-perks" from the shortcut next to the Mystery Box)
 function openSerpentShop(from = "s-slots") {
   serpFrom = from; $("b-serpent-back").innerHTML = from === "s-perks" ? "←&nbsp; Back to Upgrades" : "←&nbsp; Back to save slots";
-  if (!PREFS.serpentFound) { PREFS.serpentFound = true; savePrefs(); }   // found it! now there's a shortcut next to the Mystery Box
+  if (!PREFS.serpentFound) { PREFS.serpentFound = true; savePrefs(); } foundShop("serpent");   // found it! now there's a shortcut next to the Mystery Box
   serpSlot = from === "s-perks" ? slotIndex : slots[slotIndex] ? slotIndex : slots.findIndex((s) => s);
   renderSerpentShop(); show("s-serpent");
   if (!serpAnim) serpAnim = requestAnimationFrame(serpPortrait);
@@ -2385,7 +2386,9 @@ function drawOwlEyes(c, t, open) {
 }
 $("b-owl").onclick = () => { if (owlNight.night < 1) return; Sound.init(); Sound.play("place"); openOwlShop(); };
 let owlSlot = -1, owlAnim = null;
+function foundShop(k) { PREFS.shopsFound = PREFS.shopsFound || {}; if (!PREFS.shopsFound[k]) { PREFS.shopsFound[k] = true; savePrefs(); } if (slots[slotIndex]) checkAchievements(); }   // (Secret Seeker)
 function openOwlShop() {
+  foundShop("owl");
   owlSlot = slots[slotIndex] ? slotIndex : slots.findIndex((s) => s);
   renderOwlShop(); show("s-owl");
   if (!owlAnim) owlAnim = requestAnimationFrame(owlPortrait);
@@ -4737,7 +4740,7 @@ function flipToDefector(card) {
   }, 220);
 }
 let defAnim = null;
-function openDefectorShop() { renderDefectorShop(); show("s-defector"); if (!defAnim) defAnim = requestAnimationFrame(defPortrait); }
+function openDefectorShop() { foundShop("defector"); renderDefectorShop(); show("s-defector"); if (!defAnim) defAnim = requestAnimationFrame(defPortrait); }
 function renderDefectorShop() {
   const s = slot(); $("def-acorns").textContent = (s && s.acorns) || 0;
   $("def-say").textContent = "“Welcome, welcome! Everything here was smuggled right out of the robots' factory. Shh, they still think I'm on their side.”";
@@ -5014,6 +5017,27 @@ const ACHIEVEMENTS = [
   { id: "skychampion", name: "Sky Champion", about: "Beat all 3 sky levels: the Floating Islands, Thunder Peaks and the Eye of the Storm.", pic: "pegasus", check: (s) => SKY_LEVELS.every((L) => beat(s, L)) },
   { id: "stormnightmare", name: "Storm Nightmare", about: "Beat all 3 sky levels on Nightmare.", pic: "snowrockgray", check: (s) => SKY_LEVELS.every((L) => beat(s, L, "nightmare")) },
   { id: "skyperfect", name: "Sky Perfect", about: "Beat all 3 sky levels without losing any health.", pic: "air", check: (s) => SKY_LEVELS.every((L) => s.perfect && s.perfect[L]) },
+  // general achievements (any level)
+  { id: "starcollector", name: "Star Collector", about: "Earn 100 stars in one save slot (stars on every difficulty count).", pic: "pegasus", check: (s) => slotSummary(s).stars >= 100 },
+  { id: "perfectionist", name: "Perfectionist", about: "Get 3 stars on every level (on any difficulty).", pic: "tree", check: (s) => LEVEL_ORDER.every((L) => Object.values(s.best[L] || {}).some((b) => b.stars >= 3)) },
+  { id: "nightmarefuel", name: "Nightmare Fuel", about: "Beat any 10 levels on Nightmare.", pic: "boss", check: (s) => LEVEL_ORDER.filter((L) => beat(s, L, "nightmare")).length >= 10 },
+  { id: "dedicated", name: "Dedicated", about: "Play for 10 hours in one save slot.", pic: "squirrel", check: (s) => (s.playTime || 0) >= 36000 },
+  { id: "toinfinity", name: "To Infinity!", about: "Survive 25 waves on Infinity.", pic: "starcrystal" },
+  { id: "fullhouse", name: "Full House", about: "Have 20 towers on the board at the same time.", pic: "wizard" },
+  { id: "bigspender", name: "Big Spender", about: "Spend 10,000 Maple Leaves in one game.", pic: "leaf" },
+  { id: "yardsale", name: "Yard Sale", about: "Sell 50 towers.", pic: "crab", goal: ["towersSold", 50] },
+  { id: "towercollector", name: "Tower Collector", about: "Unlock every tower, even the ones from the secret shops and the Mystery Box.", pic: "kraken", check: () => TOWER_ORDER.every((k) => towerUnlocked(k)) },
+  { id: "robotwrecker", name: "Robot Wrecker", about: "Destroy 10,000 robots, on any level.", pic: "clanker", goal: ["allKills", 10000] },
+  { id: "bosshunter", name: "Boss Hunter", about: "Defeat 50 Bosses.", pic: "sandboss", goal: ["bossKills", 50] },
+  { id: "closecall", name: "Close Call", about: "Win a level with only 1 health left.", pic: "healer" },
+  { id: "glowgetter", name: "Glow Getter", about: "Destroy 100 robots that have a glowing aura.", pic: "glowshroom", goal: ["auraKills", 100] },
+  { id: "secretseeker", name: "Secret Seeker", about: "Find every secret shopkeeper: the Serpent, the Night Owl, the Defector and the Hermit Crab.", pic: "defector", check: () => ["serpent", "owl", "defector", "crab"].every((k) => (PREFS.shopsFound || {})[k]) },
+  { id: "fashionista", name: "Fashionista", about: "Collect 10 Tower Skins.", pic: "water", check: (s) => TOWER_ORDER.reduce((n, k) => n + Object.keys(ownedLooks(s, k)).filter((x) => x !== "gold").length, 0) >= 10 },
+  { id: "petparent", name: "Pet Parent", about: "Collect all 3 pets from the Mystery Box.", pic: "pet_bunny", check: (s) => Object.keys((s.box && s.box.pets) || {}).length >= 3 },
+  { id: "mimicmaster", name: "Mimic Master", about: "Beat 5 Box Mimics.", pic: "mimic", check: (s) => ((s.box && s.box.mimicWins) || 0) >= 5 },
+  { id: "fireballfrenzy", name: "Fireball Frenzy", about: "Destroy 10 robots with a single Mega Fireball.", pic: "fire" },
+  { id: "iceage", name: "Ice Age", about: "Freeze 15 robots with a single Freeze.", pic: "icecrystal" },
+  { id: "luckyleaf", name: "Lucky Leaf", about: "Tap 50 big maple leaves in one game.", pic: "leaf" },
   { id: "boxopener", name: "Box Opener", about: "Open the Mystery Box 10 times.", pic: "mysteryboxopen", check: (s) => (s.boxOpened || 0) >= 10 },
   { id: "jackpot", name: "Jackpot!", about: "Find the secret jackpot in the Mystery Box.", pic: "phoenix", check: (s) => !!(s.box && s.box.found && s.box.found.phoenix) },
 ];
@@ -5341,7 +5365,7 @@ function openPanel(t) {
   const doUpgrade = (ci) => {
     const pr = upgradePrice(t); if (pr === null || G.leaves < pr) return;
     if (ci !== undefined) t.picks = [...(t.picks || []), ci];
-    G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade");
+    G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade"); noteSpent(pr);
     if (t.level >= 3) earnAch("maxed");
     burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); updateShelf(); openPanel(t);
   };
@@ -5357,12 +5381,12 @@ function openPanel(t) {
   };
   if ($("p-ice")) $("p-ice").onclick = () => {
     if (G.leaves < ice.cost) return;
-    G.leaves -= ice.cost; t.spent += ice.cost; t.ice = true; Sound.play("upgrade");
+    G.leaves -= ice.cost; t.spent += ice.cost; t.ice = true; Sound.play("upgrade"); noteSpent(ice.cost);
     burst(t.x * T + 16, t.y * T + 12, "#bfe6fa", 18); burst(t.x * T + 16, t.y * T + 12, "#ffffff", 10); floatText(t.x * T + 16, t.y * T - 6, "Ice Dragon!", "#bfe6fa", 1.2);
     updateHud(); updateShelf(); openPanel(t);
   };
   $("p-sell").onclick = () => {
-    G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t); updateShelf();
+    G.leaves += Math.floor(t.spent * SETTINGS.sellBack); G.towers = G.towers.filter((o) => o !== t); updateShelf(); addStat("towersSold", 1, null);
     Sound.play("sell"); p.hidden = true; G.sel = null; updateHud();
   };
 }
@@ -5443,7 +5467,7 @@ function setAiming(k) { G.aim = k || null; if (k) { G.pick = null; G.sel = null;
 function castAbility(k, pos) {
   const A = SETTINGS.abilities[k];
   if (!abilityReady(k)) { setAiming(null); return; }
-  G.leaves -= A.cost; G.cool = G.cool || {}; G.cool[k] = A.cooldownSeconds || 0; setAiming(null);
+  G.leaves -= A.cost; noteSpent(A.cost); G.cool = G.cool || {}; G.cool[k] = A.cooldownSeconds || 0; setAiming(null);
   if (k === "fireball") { G.meteors = G.meteors || []; G.meteors.push({ x: pos.x, y: pos.y, t: 0, dur: 0.6 }); Sound.play("fire"); }
   if (k === "freeze") castFreeze(pos);
   updateHud();
@@ -5460,14 +5484,15 @@ function castFreeze(pos) {
   for (let i = 0; i < 50; i++) { const a = Math.random() * Math.PI * 2, v = 40 + Math.random() * 150; G.particles.push({ kind: "spark", x: pos.x, y: pos.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.7 - 30, t: 0, life: 0.5 + Math.random() * 0.5, col: ["#ffffff", "#c8f0ff", "#7cd4ff", "#e8faff"][i % 4] }); }
   G.shake = Math.max(G.shake, 0.15); Sound.play("tongue"); Sound.play("upgrade");
   floatText(pos.x, pos.y - 20, hits ? `Freeze! x${hits}` : "Freeze!", "#c8f0ff", 1.4);
+  if (hits >= 15) earnAch("iceage");
 }
 function landFireball(m) {
   const A = SETTINGS.abilities.fireball, R = A.radius * T;
-  let hits = 0;
+  let hits = 0; G.fbKills = 0;
   for (const r of G.robots) {
     if (r.dead) continue;
     const q = rpos(r); if (Math.hypot(q.x - m.x, q.y - m.y) > R) continue;
-    hurt(r, A.damage, true); hits++;
+    hurt(r, A.damage, true); hits++; if (r.dead) G.fbKills = (G.fbKills || 0) + 1;
     if (!r.dead && A.burnSeconds) { r.burnT = A.burnSeconds; r.burnDps = A.burnDamagePerSecond; }   // only if a burn is set
   }
   G.fx.push({ kind: "flash", t: 0.18 }, { kind: "shock", x: m.x, y: m.y, r: R * 1.4, t: 0.5, w: 6 }, { kind: "shock", x: m.x, y: m.y, r: R * 0.9, t: 0.35, w: 3 },
@@ -5476,6 +5501,7 @@ function landFireball(m) {
   for (let i = 0; i < 14; i++) { const a = -Math.PI * Math.random(), v = 80 + Math.random() * 120; G.particles.push({ kind: "spark", x: m.x, y: m.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, t: 0, life: 0.8, col: i % 2 ? "#3a2416" : "#5a3a24" }); }   // flying rocks
   G.shake = Math.max(G.shake, 0.4); Sound.play("smash"); Sound.play("fire");
   floatText(m.x, m.y - 20, hits ? `Mega Fireball! x${hits}` : "Mega Fireball!", "#ffb347", 1.4);
+  if (G.fbKills >= 10) earnAch("fireballfrenzy");
 }
 // A blazing meteor: rocky glowing core, a flickering three-layer flame tail, heat glow and sparks.
 function drawMeteor(x, m) {
@@ -5565,9 +5591,10 @@ board.addEventListener("pointerdown", (e) => {
     if (sc) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, sc === "tree" ? "A tree is here" : sc === "mushroom" ? "Mushrooms here" : "Tall grass here", "#ffd34d"); return; }
     const price = towerCost(G.pick);
     if (G.leaves < price) { Sound.play("nope"); floatText(c.x * T + 16, c.y * T + 8, "Need " + price, "#ff8a7a"); return; }
-    G.leaves -= price;
+    G.leaves -= price; noteSpent(price);
     G.towers.push({ kind: G.pick, x: c.x, y: c.y, face: pathFacing(c.x, c.y), level: 0, cool: 0.2, spent: price, born: G.time, boosted: false });
     if (G.pick === "healer") earnAch("deer");
+    if (G.towers.length >= 20) earnAch("fullhouse");
     { const lm = G.map.landmark; if (lm && c.x >= lm.x - 1 && c.x <= lm.x + lm.w && c.y >= lm.y - 1 && c.y <= lm.y + lm.h) G.nearPyramid = true; }   // (Pharaoh's Treasure)
     G.placedN = (G.placedN || 0) + 1; (G.placedKinds = G.placedKinds || {})[G.pick] = true;
     if (G.towers.filter((o) => o.kind === "healer").length >= 3) earnAch("herd");
@@ -5875,6 +5902,7 @@ function drawMerge(x) {
 }
 function endWave() {
   G.waveActive = false;
+  if (G.level === "infinity" && G.wave >= 25 && !G.over) earnAch("toinfinity");
   G.towers.forEach((t) => { if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#5a5664", 12); } });   // basalt pillars crumble away
   G.burns = [];
   if (G.slotDirty) { saveSlots(slots); G.slotDirty = false; }   // keep the "Defeated" counts
@@ -5934,6 +5962,7 @@ function hurt(r, amt, vision, isBurn, kind) {
 }
 // Serpent's Shop items like the Golden Acorn Doubler make each acorn drop count more
 function acornTimes(s) { let n = 1; for (const [key, it] of Object.entries(SETTINGS.serpentShop || {})) if (it.acornTimes && s && s.materials && s.materials[key]) n = Math.max(n, it.acornTimes); return n; }
+function noteSpent(n) { G.spentLeaves = (G.spentLeaves || 0) + n; if (G.spentLeaves >= 10000) earnAch("bigspender"); }   // (Big Spender)
 function kill(r) {
   r.dead = true;
   // Junk Splitter: bursts into Mini-Clankers that keep marching from where it fell
@@ -5950,7 +5979,9 @@ function kill(r) {
   }
   G.leaves += r.leaves; G.killPoints += r.points;
   { const s = slot(); if (s) { s.defeated = s.defeated || {}; s.defeated[r.type] = (s.defeated[r.type] || 0) + 1; G.slotDirty = true; } }
-  addStat("grassKills", 1);
+  addStat("grassKills", 1); addStat("allKills", 1, null);
+  if (isHeavy(r)) addStat("bossKills", 1, null);
+  if (r.aura) addStat("auraKills", 1, null);
   if (isHeavy(r) && G.level === "forest" && r.d < (r.path || G.map).total / 2) earnAch("bossbuster");
   // sand-level achievements
   if (r.type === "repair" && !r.healedAny) earnAch("fixitfail");
@@ -6160,9 +6191,9 @@ function tickBonusLeaf(dt) {
     if (G.map.cells[y][x] === "grass" && !towerAt(x, y) && !G.map.scenery[x + "," + y] && !isFactory(x, y)) free.push({ x, y });
   if (free.length) { const c = free[Math.random() * free.length | 0]; const pk = squirrelLeafPerks(); G.bonus = { x: c.x, y: c.y, t: 0, stay: SETTINGS.bonusLeaf.staySeconds + pk.stay, amt: SETTINGS.bonusLeaf.leaves + pk.value, gold: pk.value > 0 }; Sound.play("place"); }
 }
-function collectBonusLeaf(vacuum) {   // vacuum: the Leaf Vacuum collected it, for this much of its value
+function collectBonusLeaf(vacuum, byPet) {   // vacuum: the Leaf Vacuum collected it, for this much of its value; byPet: your pet picked it up
   const b = G.bonus, amt = Math.max(1, Math.round((b.amt || SETTINGS.bonusLeaf.leaves) * (vacuum || 1))); G.bonus = null;
-  G.leaves += amt; updateHud(); if (!vacuum) addStat("grassTaps", 1);
+  G.leaves += amt; updateHud(); if (!vacuum && !byPet) { addStat("grassTaps", 1); if ((G.leafTaps = (G.leafTaps || 0) + 1) >= 50) earnAch("luckyleaf"); }
   const px = b.x * T + 16, py = b.y * T + 14;
   floatText(px, py - 6, (vacuum ? "Vroom! +" : "+") + amt, "#ffd34d");
   if (vacuum) { for (let i = 0; i < 10; i++) { const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 10; G.particles.push({ kind: "spark", x: px + Math.cos(a) * d, y: py + Math.sin(a) * d, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, t: 0, life: 0.3, col: "#e6f4ff" }); } Sound.play("place"); return; }
@@ -6426,7 +6457,7 @@ function drawCrabSpot(x) {
 }
 let crabWasPaused = false, crabAnim = null;
 function openCrabShop() {
-  earnAch("secretshopper");
+  earnAch("secretshopper"); foundShop("crab");
   crabWasPaused = G.paused; G.paused = true; Sound.play("place");
   renderCrabShop(); $("crabshop").hidden = false;
   if (!crabAnim) crabAnim = requestAnimationFrame(crabPortrait);
@@ -6550,7 +6581,7 @@ function tickPet(dt) {
   p.x += p.vx * dt; p.y += p.vy * dt;
   const speed = Math.hypot(p.vx, p.vy); p.moving = speed > 12; if (Math.abs(p.vx) > 6) p.face = p.vx < 0 ? -1 : 1;
   if (p.moving || (p.hop || 0) % 1 > 0.02) p.hop = (p.hop || 0) + dt * Math.max(2.2, speed / 24); else p.hop = 0;   // hops: faster when it runs faster, and it always finishes a hop before stopping
-  if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 18 - p.y) < 10) { floatText(p.x, p.y - 22, "Got it!", "#ffd34d", 0.8); collectBonusLeaf(); }
+  if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 18 - p.y) < 10) { floatText(p.x, p.y - 22, "Got it!", "#ffd34d", 0.8); collectBonusLeaf(null, true); }
 }
 function drawPet(x) {
   const p = G.pet; if (!p) return; const img = SPR["pet_" + p.kind]; if (!img) return;
@@ -7489,6 +7520,7 @@ function finish(won) {
       if (L === "swamp" && kinds.length && kinds.every((k) => k === "water")) earnAch("frogpond");
       if (L === "swamp" && G.diffKey === "nightmare" && !G.hurtBase) earnAch("cleansweep"); }
     if (!G.hurtBase) earnAch("untouchable");
+    if (Math.round(G.health) <= 1) earnAch("closecall");
     checkAchievements();
   }
   const g = G;
