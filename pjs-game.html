@@ -84,6 +84,16 @@ button.go:hover { background: #f58b42; }
 #s-levels #b-enemies { --btn: #e8574a; --btn-dark: #8e2a22; --btn-ink: #fff4ee; }   /* Enemies: red */
 #s-levels #b-achievements { --btn: #a77ce0; --btn-dark: #5e3399; --btn-ink: #fff8ff; }   /* Achievements: purple */
 #s-levels #b-join { --btn: #4a9ae0; --btn-dark: #1f5fa8; --btn-ink: #f4faff; }   /* Join a friend's challenge: blue */
+#s-levels #b-skins { color: #3a0e2a; background: #ff9ad0; border-color: #a8407a; box-shadow: 0 3px 0 #a8407a; }   /* Skins: candy pink */
+#s-levels #b-skins:hover { filter: brightness(1.12); }
+.skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 14px; width: min(1100px, 100%); }
+.skin-card { background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 12px; text-align: left; }
+.skin-card .k { font-family: var(--display); font-size: 18px; margin-bottom: 8px; }
+.skin-card .looks { display: flex; flex-wrap: wrap; gap: 8px; }
+.skin-card .look { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 3px; min-width: 0; width: 64px; font-size: 12px; background: #1a2620; border: 2px solid #2e3a34; border-radius: 8px; box-shadow: none; }
+.skin-card .look canvas { width: 52px; height: 52px; image-rendering: pixelated; }
+.skin-card .look.on { border-color: #ffd34d; background: #3a3418; box-shadow: 0 0 10px rgba(255,211,77,0.45); }
+.skin-card .look.locked { opacity: 0.6; cursor: default; } .skin-card .look:disabled { filter: none; }
 #s-levels #b-boards { --btn: #3fc4a8; --btn-dark: #1f7a68; }         /* Leaderboards: teal */
 button.big { font-size: 26px; padding: 14px 34px; }
 button.back { font-size: 19px; padding: 12px 28px; min-height: 52px; align-self: flex-start; margin: 0 0 4px; }   /* the Back buttons: at the top of every page */
@@ -639,7 +649,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       </div>
     </div>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
+    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button class="go" id="b-skins">Skins</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
   </section>
 
   <!-- Setup -->
@@ -722,6 +732,13 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   </div>
 
   <!-- Achievements (coming soon) -->
+  <section class="screen menu" id="s-skins" hidden>
+    <button class="back" id="b-skins-back">←&nbsp; Back to levels</button>
+    <h2>Skins</h2>
+    <div class="ach-count" id="skins-count"></div>
+    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page).</p>
+    <div class="skin-grid" id="skin-grid"></div>
+  </section>
   <section class="screen menu" id="s-achievements" hidden>
     <button class="back" id="b-achievements-back">←&nbsp; Back to levels</button>
     <h2>Achievements</h2>
@@ -1281,7 +1298,7 @@ function pathFacing(tx, ty) {
   return dir;
 }
 function towerFace(t) { if (t.face === undefined) t.face = pathFacing(t.x, t.y); return SIDE_FACING.has(t.kind) ? t.face : 1; }
-function towerSprite(kind) { const img = kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind], sk = towerSkin(kind); return sk ? skinOf(img, sk) : hasGolden(kind) ? goldOf(img) : img; }
+function towerSprite(kind) { const img = kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind]; return towerLook(kind, img); }
 // Tower Skins (a Mystery Box prize): a tower's picture recolored in a new style. (A skin shows instead of the gold look.)
 const TOWER_SKINS = {
   crystal: { name: "Crystal", ramp: [[20, 40, 70], [40, 90, 150], [80, 160, 220], [140, 210, 250], [200, 240, 255], [245, 252, 255]] },
@@ -1290,16 +1307,104 @@ const TOWER_SKINS = {
   lava:    { name: "Lava",    ramp: [[40, 6, 2], [110, 20, 6], [190, 50, 10], [240, 110, 20], [255, 180, 60], [255, 235, 160]] },
   toxic:   { name: "Toxic",   ramp: [[10, 30, 8], [30, 80, 20], [60, 150, 30], [120, 210, 60], [190, 245, 120], [240, 255, 210]] },
 };
-function towerSkin(kind) { const s = typeof slot === "function" ? slot() : null; return (s && s.box && s.box.skins && s.box.skins[kind]) || null; }
+// The looks you own for each tower: "gold" (a Golden look) and any Tower Skins. (An old save kept one skin per tower in box.skins.)
+function ownedLooks(s, kind) {
+  const b = (s && s.box) || {}, own = { ...((b.skinsOwned || {})[kind] || {}) };
+  if (b.skins && b.skins[kind]) own[b.skins[kind]] = true;
+  if (b.golden && b.golden[kind]) own.gold = true;
+  return own;
+}
+// The look a tower wears: the one picked on the Skins page, or else its newest skin, or else gold. ("normal" = no skin)
+function towerSkin(kind) {
+  const s = typeof slot === "function" ? slot() : null; if (!s || !s.box) return null;
+  const pick = (s.box.look || {})[kind], own = ownedLooks(s, kind);
+  if (pick === "normal") return null; if (pick && own[pick]) return pick;
+  return (s.box.skins && s.box.skins[kind]) || (own.gold ? "gold" : null);
+}
+// Each look is painted pixel by pixel over the tower's picture (keeping its dark outline and its shape):
+//  gold: shiny gold with bevelled edges, sparkles and a glint that sweeps across it every couple of seconds
+//  crystal: blue crystal facets fitted together, with dark seams and bright sparkles
+//  lava: dark cracked rock with glowing magma in the cracks (it throbs)
+//  shadow: almost black, with a purple glow around its edges, glowing violet eyes and a dark mist around it
+//  toxic: radioactive neon green with bubbling spots, a green glow and slime dripping off the bottom
+//  candy: bubblegum pink with candy-cane stripes, sprinkles and a glossy shine
+const SKIN_FRAMES = { gold: 16, lava: 6, toxic: 4 };
+function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" ? 9 : 5)) % n; }
+function towerLook(kind, img) { const sk = towerSkin(kind); return sk ? skinOf(img, sk, skinFrame(sk)) : img; }
 const SKIN_CACHE = new Map();
-function skinOf(img, style) {
-  const key = style, m = SKIN_CACHE.get(img) || new Map(); SKIN_CACHE.set(img, m); if (m.has(key)) return m.get(key);
-  const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d"); x.drawImage(img, 0, 0);
-  const d = x.getImageData(0, 0, c.width, c.height), p = d.data, ramp = TOWER_SKINS[style].ramp;
-  for (let i = 0; i < p.length; i += 4) { if (!p[i + 3]) continue; const lum = (0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2]) / 255; if (lum < 0.12) continue;
-    const f = Math.min(0.999, lum * 1.15) * (ramp.length - 1), k = Math.floor(f), t = f - k, a = ramp[k], b = ramp[k + 1];
-    p[i] = a[0] + (b[0] - a[0]) * t; p[i + 1] = a[1] + (b[1] - a[1]) * t; p[i + 2] = a[2] + (b[2] - a[2]) * t; }
-  x.putImageData(d, 0, 0); m.set(key, c); return c;
+function skinOf(img, style, frame = 0) {
+  if (!img || img.isSkin) return img;
+  const key = style + frame, m = SKIN_CACHE.get(img) || new Map(); SKIN_CACHE.set(img, m); if (m.has(key)) return m.get(key);
+  const W = img.width, H = img.height, c = document.createElement("canvas"); c.width = W; c.height = H; c.isSkin = true;
+  const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, W, H), p = d.data, sc = W / 32;
+  const A = (i, j) => i >= 0 && j >= 0 && i < W && j < H && p[(j * W + i) * 4 + 3] > 0;
+  const L = new Float32Array(W * H); for (let k = 0; k < W * H; k++) L[k] = (0.3 * p[k * 4] + 0.59 * p[k * 4 + 1] + 0.11 * p[k * 4 + 2]) / 255;
+  const hash = (a, b, e = 0) => { const v = Math.sin(a * 127.1 + b * 311.7 + e * 74.7) * 43758.5453; return v - Math.floor(v); };
+  const vor = (i, j, g) => { const cx = Math.floor(i / g), cy = Math.floor(j / g); let d1 = 1e9, d2 = 1e9, id = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const gx = cx + dx, gy = cy + dy, sx = (gx + 0.15 + 0.7 * hash(gx, gy)) * g, sy = (gy + 0.15 + 0.7 * hash(gy, gx, 1)) * g, dd = Math.hypot(i + 0.5 - sx, j + 0.5 - sy);
+      if (dd < d1) { d2 = d1; d1 = dd; id = hash(gx, gy, 2); } else if (dd < d2) d2 = dd; }
+    return { d1, d2, id }; };
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const ramp = (stops, t) => { t = Math.max(0, Math.min(0.999, t)) * (stops.length - 1); const k = Math.floor(t); return mix(stops[k], stops[k + 1], t - k); };
+  const out = new Uint8ClampedArray(p);   // what we write (the extra glow and drips go around the picture)
+  const put = (i, j, col, a = 255) => { const o = (j * W + i) * 4; out[o] = col[0]; out[o + 1] = col[1]; out[o + 2] = col[2]; out[o + 3] = a; };
+  const edgeOut = (i, j) => !A(i - 1, j) || !A(i + 1, j) || !A(i, j - 1) || !A(i, j + 1);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const k = j * W + i;
+    if (!A(i, j)) {   // empty pixels next to the picture: glows, mist and drips
+      const near = A(i - 1, j) || A(i + 1, j) || A(i, j - 1) || A(i, j + 1);
+      if (style === "shadow" && near) put(i, j, [120, 60, 200], 110);
+      if (style === "toxic") {
+        let up = 0; while (up < 4 && !A(i, j - up - 1) && j - up - 1 >= 0) up++;
+        const top = j - up - 1, dripLen = 1 + Math.floor(hash(i, 7) * 3.5 * sc + 0.5);
+        if (top >= 0 && A(i, top) && L[top * W + i] >= 0.12 && hash(i, 3) > 0.62 && up < dripLen) put(i, j, up === dripLen - 1 ? [200, 255, 90] : [110, 220, 30], 255);
+        else if (near) put(i, j, [190, 255, 40], 110);
+      }
+      continue;
+    }
+    const l = L[k];
+    if (l < 0.12) { if (style === "shadow") put(i, j, [6, 2, 12]); continue; }   // keep the dark outline
+    const lit = !A(i - 1, j - 1) || !A(i, j - 1) || L[(j - 1) * W + i] < 0.12, shade = !A(i + 1, j + 1) || !A(i, j + 1) || (j + 1 < H && L[(j + 1) * W + i] < 0.12);
+    let col;
+    if (style === "gold") {
+      col = ramp([[50, 28, 6], [120, 74, 14], [196, 136, 26], [244, 196, 52], [255, 228, 126], [255, 250, 220]], l * 1.12 + (lit ? 0.18 : 0) - (shade ? 0.16 : 0));
+      const band = frame < 10 ? -8 + frame * (W + H + 16) / 9 : -999;   // the glint sweeping across
+      if (Math.abs(i + j - band) < 2.2 * sc + 0.6) col = mix(col, [255, 255, 245], 0.75);
+      if (hash(i, j, 9) > 0.975 && l > 0.45) col = [255, 255, 255];   // little sparkles
+    } else if (style === "crystal") {
+      const v = vor(i, j, 5 * sc + 1.5), seam = v.d2 - v.d1;
+      if (seam < 0.85) col = [26, 64, 128];   // dark seams where the crystals meet
+      else { let t = 0.25 + 0.45 * v.id + (l - 0.5) * 0.6 + (1 - Math.min(1, v.d1 / (5 * sc + 1.5))) * 0.22 + (lit ? 0.15 : 0) - (shade ? 0.12 : 0);
+        if (l > 0.85) t = 0.95; col = ramp([[30, 70, 150], [50, 120, 210], [110, 200, 250], [190, 240, 255], [250, 254, 255]], t);
+        if (seam < 1.6) col = mix(col, [200, 245, 255], 0.35);   // a bright edge on each facet
+        if (v.id > 0.9 && v.d1 < 1.1) col = [255, 255, 255]; }   // sparkle
+    } else if (style === "lava") {
+      const v = vor(i, j, 6 * sc + 2), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / (SKIN_FRAMES.lava) * Math.PI * 2);
+      if (l > 0.86) col = mix([255, 200, 60], [255, 245, 170], pulse);   // the eyes glow like hot magma
+      else if (seam < 0.95) col = mix([255, 110, 20], [255, 215, 80], pulse);   // glowing cracks
+      else if (seam < 1.9) col = mix([150, 40, 8], [200, 70, 12], pulse);   // heat around them
+      else col = ramp([[28, 14, 14], [52, 30, 28], [84, 54, 48], [120, 84, 72]], 0.2 + l * 0.6 + v.id * 0.2 + (lit ? 0.15 : 0) - (shade ? 0.1 : 0));
+    } else if (style === "shadow") {
+      if (l > 0.95) col = [235, 200, 255];   // glowing violet eyes
+      else { col = ramp([[8, 4, 16], [22, 12, 38], [40, 24, 66], [62, 38, 98]], l * 0.85);
+        if (edgeOut(i, j)) col = mix(col, [160, 100, 240], 0.55);   // a purple glow around its edges
+        if (hash(i, j, 5) > 0.94) col = mix(col, [90, 50, 140], 0.6); }   // swirling dark mist
+    } else if (style === "toxic") {
+      const v = vor(i, j, 7 * sc + 2), sp = 0.55 * Math.sin(frame * 1.6 + v.id * 9) ;
+      col = ramp([[14, 36, 0], [52, 110, 0], [150, 230, 0], [205, 255, 40], [245, 255, 170]], l * 0.95 + (lit ? 0.12 : 0) - (shade ? 0.1 : 0));   // radioactive neon yellow-green
+      if (v.id > 0.4 && v.d1 < (1.4 + sp * 0.5) * sc + 0.6) col = v.d1 < 0.8 * sc + 0.3 ? [255, 255, 150] : [30, 70, 0];   // bubbling spots
+      if (v.id < 0.12 && v.d1 < 1.2 * sc + 0.5) col = [120, 40, 170];   // a few purple ooze spots
+      if (l > 0.88) col = [250, 255, 180];
+    } else if (style === "candy") {
+      col = ramp([[120, 26, 80], [220, 80, 150], [250, 140, 195], [255, 200, 228], [255, 245, 250]], l * 1.05 + (lit ? 0.12 : 0) - (shade ? 0.1 : 0));
+      if (l > 0.3 && l < 0.85 && ((i + j) % Math.round(6 * sc + 2)) < Math.max(1, Math.round(2 * sc))) col = mix(col, [255, 250, 252], 0.75);   // candy-cane stripes
+      if (hash(i, j, 4) > 0.955 && l > 0.25 && l < 0.85) col = [[255, 225, 70], [100, 210, 255], [140, 245, 140], [255, 255, 255], [190, 130, 255]][Math.floor(hash(j, i, 6) * 5)];   // sprinkles
+      if (lit && l > 0.3) col = mix(col, [255, 255, 255], 0.5);   // glossy
+    } else col = [p[k * 4], p[k * 4 + 1], p[k * 4 + 2]];
+    put(i, j, col);
+  }
+  d.data.set(out); x.putImageData(d, 0, 0); m.set(key, c); return c;
 }
 // Golden Tower looks (a Mystery Box prize): the same picture, recolored in shiny gold.
 function hasGolden(kind) { const s = typeof slot === "function" ? slot() : null; return !!(s && s.box && s.box.golden && s.box.golden[kind]); }
@@ -1963,7 +2068,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "game"];
+const SCREENS = ["s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); if (id === "s-slots" || id === "s-title") slotActive = false; }
 /* ---------- total time played in each save slot ---------- */
 // Counts every second you're inside a save slot (on its levels page, its shops, in its levels, anywhere) while the game is on screen.
@@ -4408,11 +4513,11 @@ function renderPerks() {
   const found = (s.box && s.box.found) || {};
   const d = document.createElement("div"); d.className = "perk mystery" + (opened ? " maxed" : "");
   const goldN = Object.keys((s.box && s.box.golden) || {}).length, goldMax = TOWER_ORDER.filter((k) => !SETTINGS.towers[k].boxUnlock).length;
-  const skinN = Object.keys((s.box && s.box.skins) || {}).length, pets = Object.keys((s.box && s.box.pets) || {});
+  const skinN = TOWER_ORDER.reduce((n, k) => n + Object.keys(ownedLooks(s, k)).filter((x) => x !== "gold").length, 0), pets = Object.keys((s.box && s.box.pets) || {});
   const coll = [
     ["acorns", "Acorn Pouch", found.acorns ? `found ${found.acorns}×` : ""],
     ["golden", "Golden Tower Looks", goldN ? `${goldN} / ${goldMax} towers` : ""],
-    ["skin", "Tower Skins", skinN ? `${skinN} tower${skinN > 1 ? "s" : ""} with a new look` : ""],
+    ["skin", "Tower Skins", skinN ? `${skinN} skin${skinN > 1 ? "s" : ""} (see the Skins page)` : ""],
     ["pet", "Pets", pets.length ? `${pets.length} / ${PET_NAMES_N} pets` : ""],
     ["mimic", "Box Mimic", found.mimic ? `met ${found.mimic}× · beat ${(s.box && s.box.mimicWins) || 0}×` : ""],
     ["phoenix", "??? Jackpot ???", found.phoenix ? "The Phoenix!" : ""],
@@ -4460,7 +4565,8 @@ function rollBoxPrize(s, noMimic) {
   for (const [k, p] of choices) { roll -= p.chance; if (roll <= 0) { kind = k; break; } }
   const gold = TOWER_ORDER.filter((k) => !SETTINGS.towers[k].boxUnlock && towerUnlocked(k) && !s.box.golden[k]);
   const ups = Object.keys(SETTINGS.permanentUpgrades).filter((k) => k !== "superTower" && ((s.perks || {})[k] || 0) < SETTINGS.permanentUpgrades[k].costs.length);
-  const skinnable = TOWER_ORDER.filter((k) => towerUnlocked(k) && !s.box.skins[k]), newPets = Object.keys(PETS).filter((k) => !s.box.pets[k]);
+  const skinPairs = TOWER_ORDER.filter((k) => towerUnlocked(k)).flatMap((k) => Object.keys(TOWER_SKINS).filter((st) => !ownedLooks(s, k)[st]).map((st) => [k, st]));
+  const skinnable = skinPairs, newPets = Object.keys(PETS).filter((k) => !s.box.pets[k]);
   if ((kind === "golden" && !gold.length) || (kind === "upgrade" && !ups.length) || (kind === "skin" && !skinnable.length) || (kind === "pet" && !newPets.length)) kind = "acorns";   // nothing left of that kind: acorns instead
   s.box.found[kind] = (s.box.found[kind] || 0) + 1;
   if (kind === "acorns") {
@@ -4470,7 +4576,9 @@ function rollBoxPrize(s, noMimic) {
   if (kind === "leafboost") { s.box.leafBoosts = (s.box.leafBoosts || 0) + 1; return { kind, pic: "leaf", title: "Leaf Boost!", text: `Your next game starts with ${P.leafboost.leaves} extra Maple Leaves` }; }
   if (kind === "mimic") return { kind, pic: "mimic", mimic: true, title: "It's a trap!", text: "" };
   if (kind === "skin") {
-    const k = skinnable[Math.random() * skinnable.length | 0], styles = Object.keys(TOWER_SKINS), st = styles[Math.random() * styles.length | 0]; s.box.skins[k] = st;
+    const [k, st] = skinPairs[Math.random() * skinPairs.length | 0];
+    s.box.skinsOwned = s.box.skinsOwned || {}; s.box.skinsOwned[k] = s.box.skinsOwned[k] || {}; s.box.skinsOwned[k][st] = true;
+    s.box.look = s.box.look || {}; s.box.look[k] = st;   // it starts wearing its new skin (change it on the Skins page)
     return { kind, pic: k, skin: st, title: "Tower Skin!", text: `Your ${SETTINGS.towers[k].name} got the ${TOWER_SKINS[st].name} look` };
   }
   if (kind === "pet") {
@@ -4479,7 +4587,7 @@ function rollBoxPrize(s, noMimic) {
   }
   if (kind === "kraken") return { kind: "kraken", pic: "kraken", jackpot: true, title: "JACKPOT!", text: "You found the Kraken! A giant sea-monster tower is in your tower shop." };
   if (kind === "golden") {
-    const k = gold[Math.random() * gold.length | 0]; s.box.golden[k] = true;
+    const k = gold[Math.random() * gold.length | 0]; s.box.golden[k] = true; s.box.look = s.box.look || {}; s.box.look[k] = "gold";
     return { kind, pic: k, gold: true, title: "Golden Tower!", text: `Your ${SETTINGS.towers[k].name} is now shiny gold` };
   }
   if (kind === "upgrade") {
@@ -4499,7 +4607,7 @@ function mimicFight(prize, c) {
     s.box.found.mimic = s.box.found.mimic || 0;
     if (won) {
       s.box.mimicWins = (s.box.mimicWins || 0) + 1; const a = rollBoxPrize(s, true), b = rollBoxPrize(s, true);
-      const ctx2 = c.getContext("2d"); ctx2.clearRect(0, 0, 96, 96); ctx2.imageSmoothingEnabled = false; ctx2.drawImage(a.gold ? goldOf(SPR[a.pic]) : a.skin ? skinOf(SPR[a.pic], a.skin) : SPR[a.pic], 0, 0, 96, 96);
+      const ctx2 = c.getContext("2d"); ctx2.clearRect(0, 0, 96, 96); ctx2.imageSmoothingEnabled = false; ctx2.drawImage(a.gold ? skinOf(SPR[a.pic], "gold") : a.skin ? skinOf(SPR[a.pic], a.skin) : SPR[a.pic], 0, 0, 96, 96);
       tx.innerHTML = `<div class="t">You beat the Mimic! 2 prizes!</div><div class="d"><b>${a.title}</b> ${a.text}<br><b>${b.title}</b> ${b.text}</div>`; Sound.play(a.jackpot || b.jackpot ? "win" : "upgrade");
     } else {
       s.acorns = (s.acorns || 0) + M.consolation; c.getContext("2d").clearRect(0, 0, 96, 96);
@@ -4521,7 +4629,7 @@ function playBoxOpening(prize, done) {
   setTimeout(() => {
     draw("mysteryboxopen"); bx.className = "opened"; ov.classList.add("burst"); Sound.play("upgrade"); if (prize.jackpot) setTimeout(() => Sound.play("win"), 250);
     const c = document.createElement("canvas"); c.width = c.height = 96; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false;
-    cx.drawImage(prize.gold ? goldOf(SPR[prize.pic]) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
+    cx.drawImage(prize.gold ? skinOf(SPR[prize.pic], "gold") : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
     if (prize.mimic) { setTimeout(() => mimicFight(prize, c), 650); return; }
     setTimeout(() => { tx.innerHTML = `<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus(); }, 650);
   }, 1500);
@@ -4936,6 +5044,33 @@ function renderAchievements() {
   }
 }
 $("b-achievements").onclick = () => { renderAchievements(); show("s-achievements"); };
+/* ---------- the Skins page: pick the look each tower wears ---------- */
+const LOOKS = [["normal", "Normal"], ["gold", "Golden"], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name])];
+let skinAnim = null;
+function renderSkins() {
+  const s = slot(), grid = $("skin-grid"); grid.innerHTML = ""; s.box = s.box || {};
+  const towers = TOWER_ORDER.filter((k) => towerUnlocked(k));
+  let got = 0, all = 0;
+  for (const k of towers) {
+    const own = ownedLooks(s, k), cur = towerSkin(k) || "normal", card = document.createElement("div"); card.className = "skin-card";
+    card.innerHTML = `<div class="k">${SETTINGS.towers[k].name}</div><div class="looks"></div>`;
+    for (const [st, name] of LOOKS) {
+      const has = st === "normal" || own[st]; if (st !== "normal") { all++; if (has) got++; }
+      const b = document.createElement("button"); b.className = "look" + (has ? "" : " locked") + (cur === st ? " on" : ""); b.id = `skin-${k}-${st}`;
+      b.title = has ? name : `${name} (not found yet)`; b.setAttribute("aria-pressed", String(cur === st)); b.disabled = !has;
+      const c = document.createElement("canvas"); c.width = c.height = 56; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+      x.drawImage(st === "normal" ? SPR[k] : skinOf(SPR[k], st, st === "gold" ? 4 : 0), 4, 4, 48, 48);
+      if (!has) { x.globalCompositeOperation = "source-atop"; x.fillStyle = "#2a2e36"; x.fillRect(0, 0, 56, 56); x.globalCompositeOperation = "source-over"; }   // a dark silhouette until you find it
+      b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>`);
+      b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
+      card.querySelector(".looks").appendChild(b);
+    }
+    grid.appendChild(card);
+  }
+  $("skins-count").textContent = `✨ ${got} / ${all} looks found`;
+}
+$("b-skins").onclick = () => { Sound.init(); renderSkins(); show("s-skins"); };
+$("b-skins-back").onclick = () => { renderLevels(); show("s-levels"); };
 $("b-achievements-back").onclick = () => { renderLevels(); show("s-levels"); };
 $("b-towers-back").onclick = () => { renderLevels(); show("s-levels"); };
 
@@ -6889,7 +7024,7 @@ function draw() {
     }
     let img = t.ice ? SPR.fire_ice : towerSprite(t.kind);
     if (t.kind === "fire" && t.level >= 3) img = (t.ice ? [SPR.fire_ice, SPR.fire_mid_ice, SPR.fire_down_ice, SPR.fire_mid_ice] : [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid])[Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
-    if (hasGolden(t.kind)) img = goldOf(img);
+    img = towerLook(t.kind, img);   // (a Golden look or a Tower Skin)
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
     else if (t.iceT > 0) x.filter = "saturate(0.4) brightness(1.15) hue-rotate(160deg)";   // frozen: icy blue   // trapped by a Pillar Titan: grayed out, but still visible
