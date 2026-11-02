@@ -1131,7 +1131,7 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   kr = kr.map((row, j) => row.split("").map((ch, i) => ch !== "." ? ch : [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => ((kr[j + b] || "")[i + a] || ".") !== "." && ((kr[j + b] || "")[i + a] || ".") !== "k") ? "k" : ".").join(""));
   SPR.kraken = makeSprite(kr, false, KR); SPRF.kraken = makeSprite(kr, true, KR);
   // the pets
-  SPR.pet_bunny = makeSprite(["....kk..kk......", "...kwwk.kwwk....", "...kwpk.kwpk....", "...kwwk.kwwk....", "....kwwkwwk.....", "...kwwwwwwwk....", "..kwwkwwwkwwk...", "..kwwwwpwwwwk...", "..kwwwwwwwwwk...", "...kwwwwwwwk....", "..kwwwwwwwwwwk..", ".kwwwwwwwwwwwwk.", ".kwwwwwwwwwwwwkk", ".kwwswwwwwswwwkw", "..kkkkkkkkkkkkk.", "................"], false, { w: "#ffffff", p: "#ffb0c8", s: "#c9ced6" });
+  SPR.pet_bunny = makeSprite(["................", "...ww...ww......", "...wpw.wpw......", "...wpw.wpw......", "...wpw.wpw......", "....wwwww.......", "...wwwwwww......", "..wwewwwewww....", "..wwwwpwwwww....", "..swwwwwwwws....", "...wwwwwwwwww...", "..wwwwwwwwwwwww.", "..wwwwwwwwwwwwsw", "..swwwwwwwwwwss.", "...ss.....ss....", "................"], false, { w: "#ffffff", p: "#ffb0c8", s: "#d6dbe4", e: "#2a2a33" });   // (soft, with no black outline)
   SPR.pet_chick = makeSprite(["................", "................", "......kkkk......", ".....kyyyyk.....", "....kyykyyyk....", "....kyyyyyyok...", "....kyyyyyyook..", "...kyyyyyyyk....", "..kyyyyyyyyyk...", "..kyYyyyyyyyk...", "..kyYYyyyyyyk...", "..kyyyyyyyyyk...", "...kyyyyyyyk....", "....kkkkkkk.....", ".....o...o......", "....oo..oo......"], false, { y: "#ffe066", Y: "#e8b830", o: "#ff8c1a" });
   SPR.pet_firefly = makeSprite(["................", "....cc...cc.....", "...cwwc.cwwc....", "...cwwcccwwc....", "....ccNNNcc.....", ".....kNNNk......", ".....kNkNk......", ".....kNNNk......", ".....kyyyk......", "....kyyyyyk.....", "....kyyyyyk.....", ".....kyyyk......", "......kkk.......", "................", "................", "................"], false, { c: "#cfe8ff", w: "#ffffff", N: "#5a3a1a", y: "#fff066" });
   SPR.pet_paw = SPR.pet_bunny;
@@ -6544,17 +6544,22 @@ function tickPet(dt) {
   let tx, ty;
   if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 16 - p.y) < 3 * T) { tx = G.bonus.x * T + 16; ty = G.bonus.y * T + 18; }   // a leaf nearby: go get it!
   else if (G.mouse) { tx = G.mouse.x - 18; ty = G.mouse.y + 14; } else { tx = (G.map.base.x + 1) * T - 24 + Math.sin(G.time * 0.7) * 18; ty = (G.map.base.y + 1) * T + 12; }
-  const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy), sp = 140 * dt;
-  if (d > 2) { p.x += dx / d * Math.min(d, sp); p.y += dy / d * Math.min(d, sp); if (Math.abs(dx) > 1) p.face = dx < 0 ? -1 : 1; p.moving = true; } else p.moving = false;
+  // smooth movement: it speeds up and slows down gently instead of moving at one flat speed
+  const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy), want = Math.min(150, d * 3.2), k = Math.min(1, dt * 7);
+  p.vx = (p.vx || 0) + ((d > 1 ? dx / d * want : 0) - (p.vx || 0)) * k; p.vy = (p.vy || 0) + ((d > 1 ? dy / d * want : 0) - (p.vy || 0)) * k;
+  p.x += p.vx * dt; p.y += p.vy * dt;
+  const speed = Math.hypot(p.vx, p.vy); p.moving = speed > 12; if (Math.abs(p.vx) > 6) p.face = p.vx < 0 ? -1 : 1;
+  if (p.moving || (p.hop || 0) % 1 > 0.02) p.hop = (p.hop || 0) + dt * Math.max(2.2, speed / 24); else p.hop = 0;   // hops: faster when it runs faster, and it always finishes a hop before stopping
   if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 18 - p.y) < 10) { floatText(p.x, p.y - 22, "Got it!", "#ffd34d", 0.8); collectBonusLeaf(); }
 }
 function drawPet(x) {
   const p = G.pet; if (!p) return; const img = SPR["pet_" + p.kind]; if (!img) return;
-  const hop = p.moving ? Math.abs(Math.sin(G.time * 12)) * 4 : Math.abs(Math.sin(G.time * 3)) * 1;
+  const ph = (p.hop || 0) % 1, hopping = p.kind !== "firefly" && p.hop > 0, hop = hopping ? Math.sin(ph * Math.PI) * 7 : 0;   // a bouncy arc up and down
+  const sq = hopping ? (ph < 0.12 || ph > 0.88 ? 0.82 : 1 + Math.sin(ph * Math.PI) * 0.1) : 1 + Math.sin(G.time * 3) * 0.03;   // squashes as it lands and takes off, stretches in the air
   if (p.kind === "firefly" && !PREFS.simple) { const g = x.createRadialGradient(p.x, p.y - 10, 1, p.x, p.y - 10, 18); g.addColorStop(0, `rgba(255,240,120,${0.45 + 0.2 * Math.sin(G.time * 6)})`); g.addColorStop(1, "rgba(255,240,120,0)"); x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y - 10, 18, 0, Math.PI * 2); x.fill(); }
-  x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.ellipse(p.x, p.y + 1, 8, 2.5, 0, 0, Math.PI * 2); x.fill();
-  x.save(); x.translate(p.x, p.y - 9 - hop - (p.kind === "firefly" ? 10 + Math.sin(G.time * 4) * 3 : 0)); if (p.face < 0) x.scale(-1, 1);
-  x.imageSmoothingEnabled = false; x.drawImage(img, -10, -10, 20, 20); x.restore();
+  x.fillStyle = "rgba(0,0,0,0.2)"; x.beginPath(); x.ellipse(p.x, p.y + 1, 8 - hop * 0.4, 2.5 - hop * 0.12, 0, 0, Math.PI * 2); x.fill();   // its shadow shrinks as it hops up
+  x.save(); x.translate(p.x, p.y - hop - (p.kind === "firefly" ? 10 + Math.sin(G.time * 4) * 3 : 0)); if (p.face < 0) x.scale(-1, 1); x.scale(1 / Math.sqrt(sq), sq);
+  x.imageSmoothingEnabled = false; x.drawImage(img, -10, -19, 20, 20); x.restore();
 }
 function stormPowers(dt) {
   const RS = SETTINGS.robots;
