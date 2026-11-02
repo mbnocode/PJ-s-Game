@@ -617,6 +617,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="back" id="b-levels-back">←&nbsp; Back to save slots</button>
     <button class="resetslot" id="b-resetslot" title="Erase everything in this save slot and start over">↺ Restart save slot</button>
     <h2>Pick a level</h2>
+    <p class="muted" id="slot-time" style="margin-top:-14px"></p>
     <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas></div>
     <div class="mappv" id="mappv" role="dialog" aria-modal="true" aria-labelledby="mappv-name" hidden>
       <div class="mappv-box">
@@ -1911,7 +1912,20 @@ function renderFriends() {
 
 /* ---------- screens ---------- */
 const SCREENS = ["s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "game"];
-function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); }
+function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); if (id === "s-slots" || id === "s-title") slotActive = false; }
+/* ---------- total time played in each save slot ---------- */
+// Counts every second you're inside a save slot (on its levels page, its shops, in its levels, anywhere) while the game is on screen.
+// It stops on the title and save-slot screens, and when the game's tab is hidden or the computer is asleep.
+let slotActive = false, playSaveIn = 15;
+const fmtPlayTime = (sec) => { sec = Math.floor(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60; return sec < 60 ? "under a minute" : h ? `${h}h ${m}m` : `${m}m`; };
+setInterval(() => {
+  const s = slots[slotIndex]; if (!slotActive || !s || document.visibilityState !== "visible") return;
+  s.playTime = (s.playTime || 0) + 1;
+  if (--playSaveIn <= 0) { playSaveIn = 15; saveSlots(slots); }
+  const el = $("slot-time"); if (el && !$("s-levels").hidden) el.textContent = "⏱ Time played in this slot: " + fmtPlayTime(s.playTime);
+}, 1000);
+addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && slotActive) saveSlots(slots); });
+addEventListener("pagehide", () => { if (slotActive) saveSlots(slots); });
 
 function spriteCanvas(name, size = 16) {
   const c = document.createElement("canvas"); c.width = size; c.height = size;
@@ -2402,10 +2416,10 @@ function renderSlots() {
       b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="s">Empty. Tap to start a new game.</span>`;
     } else {
       const sum = slotSummary(s);
-      b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="stars">★ ${sum.stars} stars</span><span class="s">${sum.beaten} of ${LEVEL_ORDER.length} levels beaten · ${sum.acorns} Golden Acorns</span>`;
+      b.innerHTML = `<span class="k">Slot ${i + 1}</span><span class="stars">★ ${sum.stars} stars</span><span class="s">${sum.beaten} of ${LEVEL_ORDER.length} levels beaten · ${sum.acorns} Golden Acorns</span><span class="s">⏱ ${fmtPlayTime(s.playTime)} played</span>`;
     }
     b.onclick = () => {
-      slotIndex = i;
+      slotIndex = i; slotActive = true;
       if (!slots[i]) { slots[i] = { created: Date.now(), best: {} }; saveSlots(slots); }
       renderLevels(); show("s-levels");
     };
@@ -2924,6 +2938,7 @@ $("b-resetslot").onclick = () => {
 };
 function renderLevels() {
   renderWorldMap();
+  $("slot-time").textContent = "⏱ Time played in this slot: " + fmtPlayTime(slot().playTime);
   const box = $("level-cards"); box.innerHTML = "";
   LEVEL_ORDER.forEach((L) => {
     const lv = SETTINGS.levels[L], open = unlocked(L), best = slot().best[L] || {};
