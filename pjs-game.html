@@ -3108,7 +3108,6 @@ function renderLevels() {
     const starsLine = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
     b.appendChild(mini);
     b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
-    if (open && savedGame(L)) b.insertAdjacentHTML("beforeend", `<span class="ribbon saved">Saved game</span>`);
     b.disabled = !open;
     b.onclick = () => openSetup(L);
     box.appendChild(b);
