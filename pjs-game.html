@@ -5120,7 +5120,7 @@ $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 // Gift codes add Golden Acorns (or unlock a tower) in the save slot you're in (once per slot).
-const GIFT_CODES = { "PJ1050": 1050, "PHOENIXRISE": { tower: "phoenix" } };
+const GIFT_CODES = { "PJ1050": 1050, "PHOENIXRISE": { tower: "phoenix" }, "ALLTROPHIES": { achievements: true } };   // ALLTROPHIES: unlocks every achievement in this save slot
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
@@ -5128,13 +5128,16 @@ $("b-gift").onclick = () => {
   s.gifts = s.gifts || [];
   if (s.gifts.includes(code)) { msg.textContent = "This save slot already used that code."; return; }
   const gift = GIFT_CODES[code];
-  if (gift.tower) {
+  if (gift.achievements) {
+    s.achievements = s.achievements || {}; let n = 0; for (const a of ACHIEVEMENTS) if (!s.achievements[a.id]) { s.achievements[a.id] = Date.now(); n++; }
+    if (!n) { msg.textContent = "This save slot already has every achievement!"; return; }
+  } else if (gift.tower) {
     if (towerUnlocked(gift.tower)) { msg.textContent = `You already have the ${SETTINGS.towers[gift.tower].name}!`; return; }
     s.codeTowers = s.codeTowers || {}; s.codeTowers[gift.tower] = true;
   } else s.acorns = (s.acorns || 0) + gift;
   s.gifts.push(code); saveSlots(slots);
   Sound.play("upgrade"); $("gift-code").value = "";
-  msg.textContent = gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
+  msg.textContent = gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
 };
 $("gift-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-gift").click(); });
 $("b-perks").onclick = () => { Sound.init(); $("gift-msg").hidden = true; renderPerks(); show("s-perks"); };
