@@ -123,6 +123,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .card:hover { border-color: var(--moss); background: var(--panel); }
 .card .k { font-family: var(--display); font-size: 22px; }
 .card .s { color: var(--muted); font-size: 15px; }
+.card .s.lore { color: #dfe6dc; font-size: 17px; line-height: 1.4; }   /* the story text on each level */
+#mappv-about { font-size: 19px; line-height: 1.45; color: #dfe6dc; }
 /* the meadow battle fills the whole save slot screen, behind the title and the slots */
 #slot-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; image-rendering: pixelated; z-index: 0; pointer-events: none; }
 #s-slots { position: relative; }
@@ -3163,7 +3165,7 @@ function renderLevels() {
     drawMini(mini, L);
     const starsLine = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
     b.appendChild(mini);
-    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
+    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s${open ? " lore" : ""}">${open ? lv.about : "Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
     b.disabled = !open;
     b.onclick = () => openSetup(L);
     box.appendChild(b);

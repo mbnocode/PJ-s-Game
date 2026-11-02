@@ -452,7 +452,7 @@ const SETTINGS = {
 
   // Maps are 20 squares wide and 12 tall. The path goes through these corners.
   levels: {
-    meadow: { name: "The Meadow", about: "Deep underground, a forgotten machine called the Iron Heart has woken up. It wants the Golden Acorns hidden in your treehouse, so it sent its first robots marching down the long, twisty meadow path. Build your towers and stop them!",
+    meadow: { name: "The Meadow", about: "Deep underground, a forgotten machine called the Iron Heart has woken up. It needs power, and the strongest power source in the world is the Golden Acorns, so it set out to collect them all, starting with the ones hidden in your treehouse! Its first robots are marching down the long, twisty meadow path. Build your towers and stop them!",
               acornDropChance: 0.01,   // each robot you destroy here has this chance (0.01 = 1%) to drop a Golden Acorn
               waveCount: 10,           // the Meadow only plays the first 10 waves (it ends with the big Boss on wave 10)
               maxBossHealth: 1600,     // Bosses on the Meadow have at most this much health
