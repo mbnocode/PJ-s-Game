@@ -595,7 +595,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="setrow"><span>Tips<small>"Heads up" tips about new robots and levels (the tutorial is turned on or off when you pick a level)</small></span><div class="choices" id="set-tips"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
       <div class="setrow"><span>Screen shake<small>The board shakes when big things happen</small></span><div class="choices" id="set-shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
       <div class="setrow"><span>Starting speed<small>How fast each game starts (you can still change it while you play)</small></span><div class="choices" id="set-speed"><button data-v="1">1×</button><button data-v="2">2×</button><button data-v="3">3×</button></div></div>
-      <div class="setrow"><span>Simple effects<small>Fewer sparks, no glowing auras around big Bosses, and no blowing snow, rain or lava embers. Good for slower computers, or if the screen gets too busy</small></span><div class="choices" id="set-simple"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+      <div class="setrow"><span>Simple effects<small>Fewer sparks and bursts, simpler Owl gusts and Tree Giant vines, a faster-drawing factory, a still sky on the Eye of the Storm, no glowing auras around big Bosses, and no blowing snow, rain or lava embers. Good for slower computers, or if the game lags</small></span><div class="choices" id="set-simple"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
       <div class="setrow"><span>Floating numbers<small>Damage, leaves and other numbers that pop up over the board</small></span><div class="choices" id="set-floats"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     </div>
     <button id="b-settings-reset">Reset to normal</button>
@@ -3747,6 +3747,7 @@ function drawBridges(x, map) {
 }
 // The Owl's gust: a spinning swirl of wind with a fading tail, and a little feather caught in it
 function drawGust(x, sh) {
+  if (PREFS.simple) { x.fillStyle = "rgba(235,248,255,0.9)"; x.beginPath(); x.arc(sh.x, sh.y, 3.5, 0, Math.PI * 2); x.fill(); x.strokeStyle = "rgba(160,215,255,0.9)"; x.lineWidth = 1.5; x.beginPath(); x.arc(sh.x, sh.y, 6, G.time * 10, G.time * 10 + 3); x.stroke(); return; }   // Simple effects: a plain little puff of wind
   const tr = sh.trail || (sh.trail = []); if (!tr.length || tr[tr.length - 1][0] !== sh.x || tr[tr.length - 1][1] !== sh.y) tr.push([sh.x, sh.y]); if (tr.length > 7) tr.shift();
   const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1), big = (sh.s.targets || 1) > 1 ? 0.85 : 1;
   x.save(); x.lineCap = "round";
@@ -4176,7 +4177,10 @@ function redrawGround() {
   const fc = Math.round((1 - G.health / G.maxHealth) * SETTINGS.factorySquares);
   const before = G.factoryCount; G.factoryCount = Math.max(0, Math.min(SETTINGS.factorySquares, fc));
   G.map.liveSky = G.map.theme === "storm";   // the Eye of the Storm's sky slowly spins underneath the islands
-  const x = G.ground.getContext("2d"); x.clearRect(0, 0, 640, 384); paintGround(x, G.map, G.factoryCount);
+  const x = G.ground.getContext("2d");
+  if (PREFS.simple && G.groundPainted === G.map && G.factoryCount > before) {   // Simple effects: just stamp the new factory squares on (no repainting the whole board)
+    x.imageSmoothingEnabled = false; G.map.factoryOrder.slice(before, G.factoryCount).forEach((c) => x.drawImage(FACTORY_TILES[factoryTileAt(c.x, c.y)], c.x * T, c.y * T, T, T));
+  } else if (G.factoryCount !== before || G.groundPainted !== G.map) { x.clearRect(0, 0, 640, 384); paintGround(x, G.map, G.factoryCount); G.groundPainted = G.map; }
   if (G.factoryCount > before) G.map.factoryOrder.slice(before, G.factoryCount).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.6, col: "255,140,40" }));
   if (G.factoryCount < before) G.map.factoryOrder.slice(G.factoryCount, before).forEach((c) => G.flashTiles.push({ x: c.x, y: c.y, t: 0.8, col: "150,255,140" }));
 }
@@ -5300,7 +5304,7 @@ $("b-vacuum").onclick = () => {
 /* ---------- Save & exit / Resume game ---------- */
 // A saved game is kept in the save slot, one per level. It's always saved between waves
 // (in the middle of a wave, it saves the game from just before that wave started).
-const SNAP_SKIP = new Set(["planks", "map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
+const SNAP_SKIP = new Set(["groundPainted", "planks", "map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
   "merge", "bonus", "bonusTimer", "flashTiles", "waveSnap", "paused", "over", "takeover", "aim", "aimPos", "meteors", "burns", "walls", "crabSpot", "shake", "kingStorm", "slotDirty", "waveActive", "waveClock"]);
 const plain = (v) => v === null || ["number", "string", "boolean"].includes(typeof v);
 function snapshotGame() {
@@ -5893,6 +5897,10 @@ function drawBite(x, f) {
 function drawVine(x, f, now) {
   const { pts, reach } = vinePoints(f, now);
   if (reach <= 0.02) return;
+  if (PREFS.simple) {   // Simple effects: one plain green vine (no thorns or leaves)
+    x.strokeStyle = "#3f8a28"; x.lineWidth = 5; x.lineCap = "round"; x.lineJoin = "round"; x.beginPath(); pts.forEach((q, i) => (i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y))); x.stroke();
+    x.lineCap = "butt"; x.lineJoin = "miter"; return;
+  }
   x.lineCap = "round"; x.lineJoin = "round";
   // dirt bursting where the vine comes out of the ground
   x.fillStyle = "#6b4a2a"; x.beginPath(); x.ellipse(f.x1, f.y1 + 1, 7, 3, 0, 0, Math.PI * 2); x.fill();
@@ -6133,7 +6141,7 @@ function drawFireball(x, sh) {
   blob(bx * 1.5, by * 1.5, 2.2, "#fff4c2");
 }
 function burst(x, y, col, n) {
-  if (PREFS.simple) n = Math.ceil(n / 4);   // Simple effects: a few sparks instead of a shower
+  if (PREFS.simple) n = Math.min(4, Math.ceil(n / 4));   // Simple effects: a few sparks instead of a shower
   for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = 30 + Math.random() * 90; G.particles.push({ kind: "spark", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0, life: 0.35 + Math.random() * 0.3, col }); }
 }
 function floatText(x, y, text, col, life = 1.1) { if (!PREFS.floats) return; G.fx.push({ kind: "text", x, y, text, col, t: life, life }); }
@@ -6478,6 +6486,7 @@ function tickFx(dt) {
     if (p.kind === "spark") { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; }
   }
   G.particles = G.particles.filter((p) => p.t < p.life);
+  if (PREFS.simple && G.particles.length > 40) G.particles.splice(0, G.particles.length - 40);   // Simple effects: never more than 40 sparkles at once
   for (const f of G.fx) f.t -= dt;
   G.fx = G.fx.filter((f) => f.t > 0);
   for (const f of G.flashTiles) f.t -= dt;
@@ -6503,7 +6512,8 @@ function draw() {
   const x = ctx;
   x.save();
   if (G.shake > 0 && PREFS.shake) x.translate((Math.random() - 0.5) * 6 * G.shake / 0.3, (Math.random() - 0.5) * 6 * G.shake / 0.3);
-  if (G.map.liveSky) {   // the Eye of the Storm: the whole storm slowly turns around the calm eye, underneath the islands
+  if (G.map.liveSky && PREFS.simple) x.drawImage(skyBackdrop(G.map), 0, 0);   // Simple effects: the storm stays still
+  else if (G.map.liveSky) {   // the Eye of the Storm: the whole storm slowly turns around the calm eye, underneath the islands
     const sw = G.map.spinSky || (G.map.spinSky = stormBackdrop(G.map, true));
     if (!PREFS.simple) G.skyTurn = G.time * 0.05;   // about one full turn every 2 minutes (it stops when the game is paused; Simple effects keeps it still)
     x.save(); x.translate((G.map.base.x + 1) * T, (G.map.base.y + 1) * T); x.scale(1.25, 1); x.rotate(-(G.skyTurn || 0)); x.drawImage(sw, -sw.width / 2, -sw.height / 2); x.restore();
