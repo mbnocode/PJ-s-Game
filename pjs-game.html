@@ -1341,10 +1341,10 @@ function skinOf(img, style, frame = 0) {
   const A = (i, j) => i >= 0 && j >= 0 && i < W && j < H && p[(j * W + i) * 4 + 3] > 0;
   const L = new Float32Array(W * H); for (let k = 0; k < W * H; k++) L[k] = (0.3 * p[k * 4] + 0.59 * p[k * 4 + 1] + 0.11 * p[k * 4 + 2]) / 255;
   const hash = (a, b, e = 0) => { const v = Math.sin(a * 127.1 + b * 311.7 + e * 74.7) * 43758.5453; return v - Math.floor(v); };
-  const vor = (i, j, g) => { const cx = Math.floor(i / g), cy = Math.floor(j / g); let d1 = 1e9, d2 = 1e9, id = 0;
+  const vor = (i, j, g) => { const cx = Math.floor(i / g), cy = Math.floor(j / g); let d1 = 1e9, d2 = 1e9, id = 0, ox = 0, oy = 0;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const gx = cx + dx, gy = cy + dy, sx = (gx + 0.15 + 0.7 * hash(gx, gy)) * g, sy = (gy + 0.15 + 0.7 * hash(gy, gx, 1)) * g, dd = Math.hypot(i + 0.5 - sx, j + 0.5 - sy);
-      if (dd < d1) { d2 = d1; d1 = dd; id = hash(gx, gy, 2); } else if (dd < d2) d2 = dd; }
-    return { d1, d2, id }; };
+      if (dd < d1) { d2 = d1; d1 = dd; id = hash(gx, gy, 2); ox = sx; oy = sy; } else if (dd < d2) d2 = dd; }
+    return { d1, d2, id, ox, oy }; };
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
   const ramp = (stops, t) => { t = Math.max(0, Math.min(0.999, t)) * (stops.length - 1); const k = Math.floor(t); return mix(stops[k], stops[k + 1], t - k); };
   const out = new Uint8ClampedArray(p);   // what we write (the extra glow and drips go around the picture)
@@ -1352,49 +1352,66 @@ function skinOf(img, style, frame = 0) {
   const edgeOut = (i, j) => !A(i - 1, j) || !A(i + 1, j) || !A(i, j - 1) || !A(i, j + 1);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     const k = j * W + i;
-    if (!A(i, j)) {   // empty pixels next to the picture: glows, mist and drips
+    if (!A(i, j)) {   // empty pixels next to the picture: glows, mist, drips, crystal shards and embers
       const near = A(i - 1, j) || A(i + 1, j) || A(i, j - 1) || A(i, j + 1);
+      const near2 = !near && (A(i - 2, j) || A(i + 2, j) || A(i, j - 2) || A(i, j + 2) || A(i - 1, j - 1) || A(i + 1, j - 1) || A(i - 1, j + 1) || A(i + 1, j + 1));
+      const GLOW = { gold: [255, 214, 90], crystal: [120, 230, 255], lava: [255, 120, 30], toxic: [170, 255, 40] }[style];
       if (style === "shadow" && near) put(i, j, [120, 60, 200], 110);
-      if (style === "toxic") {
-        let up = 0; while (up < 4 && !A(i, j - up - 1) && j - up - 1 >= 0) up++;
-        const top = j - up - 1, dripLen = 1 + Math.floor(hash(i, 7) * 3.5 * sc + 0.5);
-        if (top >= 0 && A(i, top) && L[top * W + i] >= 0.12 && hash(i, 3) > 0.62 && up < dripLen) put(i, j, up === dripLen - 1 ? [200, 255, 90] : [110, 220, 30], 255);
-        else if (near) put(i, j, [190, 255, 40], 110);
+      if (style === "toxic") {   // slime dripping off the bottom
+        let up = 0; while (up < 5 && !A(i, j - up - 1) && j - up - 1 >= 0) up++;
+        const top = j - up - 1, dripLen = 1 + Math.floor(hash(i, 7) * 4 * sc + 0.5);
+        if (top >= 0 && A(i, top) && L[top * W + i] >= 0.12 && hash(i, 3) > 0.55 && up < dripLen) { put(i, j, up === dripLen - 1 ? [230, 255, 120] : [120, 230, 20], 255); continue; }
       }
+      if (style === "crystal") {   // little crystal shards poking up out of the top of the tower
+        let dn = 0; while (dn < 3 && !A(i, j + dn + 1) && j + dn + 1 < H) dn++;
+        const base = j + dn + 1, len = 1 + Math.floor(hash(i, 11) * 3 * sc + 0.5);
+        if (base < H && A(i, base) && L[base * W + i] >= 0.12 && hash(i, 12) > 0.7 && dn < len) { put(i, j, dn === len - 1 ? [255, 255, 255] : [140, 220, 255], 255); continue; }
+      }
+      if (style === "lava" && !near && hash(i, j, 21 + frame) > 0.985) { put(i, j, [255, 200, 80], 230); continue; }   // embers floating off it
+      if (GLOW && near) put(i, j, GLOW, style === "toxic" ? 120 : 105);   // a soft glow all around it
+      else if (GLOW && near2 && sc >= 1) put(i, j, GLOW, 45);
       continue;
     }
     const l = L[k];
     if (l < 0.12) { if (style === "shadow") put(i, j, [6, 2, 12]); continue; }   // keep the dark outline
     const lit = !A(i - 1, j - 1) || !A(i, j - 1) || L[(j - 1) * W + i] < 0.12, shade = !A(i + 1, j + 1) || !A(i, j + 1) || (j + 1 < H && L[(j + 1) * W + i] < 0.12);
     let col;
-    if (style === "gold") {
-      col = ramp([[50, 28, 6], [120, 74, 14], [196, 136, 26], [244, 196, 52], [255, 228, 126], [255, 250, 220]], l * 1.12 + (lit ? 0.18 : 0) - (shade ? 0.16 : 0));
+    if (style === "gold") {   // polished gold: bright bevelled edges, a shiny band of reflection, star sparkles and a sweeping glint
+      const yy = j / H, refl = Math.exp(-Math.pow((yy - 0.3) / 0.12, 2)) * 0.28 - Math.exp(-Math.pow((yy - 0.62) / 0.1, 2)) * 0.16;   // like light bouncing off curved metal
+      col = ramp([[40, 20, 2], [110, 62, 8], [186, 120, 18], [238, 182, 40], [255, 222, 110], [255, 248, 214]], l * 1.08 + refl + (lit ? 0.24 : 0) - (shade ? 0.2 : 0));
       const band = frame < 10 ? -8 + frame * (W + H + 16) / 9 : -999;   // the glint sweeping across
-      if (Math.abs(i + j - band) < 2.2 * sc + 0.6) col = mix(col, [255, 255, 245], 0.75);
-      if (hash(i, j, 9) > 0.975 && l > 0.45) col = [255, 255, 255];   // little sparkles
-    } else if (style === "crystal") {
-      const v = vor(i, j, 5 * sc + 1.5), seam = v.d2 - v.d1;
-      if (seam < 0.85) col = [26, 64, 128];   // dark seams where the crystals meet
-      else { let t = 0.25 + 0.45 * v.id + (l - 0.5) * 0.6 + (1 - Math.min(1, v.d1 / (5 * sc + 1.5))) * 0.22 + (lit ? 0.15 : 0) - (shade ? 0.12 : 0);
-        if (l > 0.85) t = 0.95; col = ramp([[30, 70, 150], [50, 120, 210], [110, 200, 250], [190, 240, 255], [250, 254, 255]], t);
-        if (seam < 1.6) col = mix(col, [200, 245, 255], 0.35);   // a bright edge on each facet
-        if (v.id > 0.9 && v.d1 < 1.1) col = [255, 255, 255]; }   // sparkle
-    } else if (style === "lava") {
-      const v = vor(i, j, 6 * sc + 2), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / (SKIN_FRAMES.lava) * Math.PI * 2);
-      if (l > 0.86) col = mix([255, 200, 60], [255, 245, 170], pulse);   // the eyes glow like hot magma
-      else if (seam < 0.95) col = mix([255, 110, 20], [255, 215, 80], pulse);   // glowing cracks
-      else if (seam < 1.9) col = mix([150, 40, 8], [200, 70, 12], pulse);   // heat around them
-      else col = ramp([[28, 14, 14], [52, 30, 28], [84, 54, 48], [120, 84, 72]], 0.2 + l * 0.6 + v.id * 0.2 + (lit ? 0.15 : 0) - (shade ? 0.1 : 0));
+      const bd = Math.abs(i + j - band); if (bd < 2.6 * sc + 0.6) col = mix(col, [255, 255, 250], bd < 1.2 * sc ? 0.9 : 0.55);
+      const star = (sx, sy) => (i === sx && Math.abs(j - sy) <= 1) || (j === sy && Math.abs(i - sx) <= 1);
+      for (let n = 0; n < 3; n++) { const sx = Math.floor(hash(n, 31) * W), sy = Math.floor(hash(n, 32) * H * 0.8); if (star(sx, sy) && A(sx, sy) && L[sy * W + sx] > 0.3) col = (i === sx && j === sy) ? [255, 255, 255] : mix(col, [255, 255, 230], 0.8); }
+    } else if (style === "crystal") {   // cut blue crystals fitted together: each facet lit like a gem, with glowing seams between them
+      const g = 6 * sc + 1.5, v = vor(i, j, g), seam = v.d2 - v.d1;
+      const dir = ((i + 0.5 - v.ox) * -0.7 + (j + 0.5 - v.oy) * -0.7) / g;   // which way this part of the facet faces the light
+      if (seam < 0.8) col = [150, 230, 255];   // bright glowing seams where the crystals meet
+      else if (seam < 1.5) col = [40, 96, 180];   // the dark inner edge of each crystal
+      else { let t = 0.3 + 0.35 * v.id + dir * 0.55 + (l - 0.5) * 0.35 + (lit ? 0.15 : 0) - (shade ? 0.15 : 0);
+        if (l > 0.88) t = 0.97; col = ramp([[20, 46, 120], [40, 100, 200], [80, 170, 245], [170, 230, 255], [250, 254, 255]], t); }
+      if (v.id > 0.82 && v.d1 < 0.9 * sc + 0.3) col = [255, 255, 255];   // a sparkle in some crystals
+    } else if (style === "lava") {   // cracked magma: dark cooled crust broken into plates, with glowing molten rock in the cracks
+      const g = 6 * sc + 2, v = vor(i, j, g), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / SKIN_FRAMES.lava * Math.PI * 2);
+      if (l > 0.86) col = mix([255, 210, 80], [255, 250, 200], pulse);   // the eyes glow like hot magma
+      else if (seam < 0.7) col = mix([255, 220, 110], [255, 250, 210], pulse);   // white-hot middle of each crack
+      else if (seam < 1.4) col = mix([255, 120, 20], [255, 170, 40], pulse);   // orange
+      else if (seam < 2.1) col = mix([150, 30, 6], [190, 50, 10], pulse);   // red heat at the edge of the crust
+      else { const plate = 0.25 + l * 0.45 + v.id * 0.2 + (lit ? 0.15 : 0) - (shade ? 0.1 : 0) - (v.d1 / g) * 0.15;
+        col = ramp([[20, 10, 10], [44, 24, 22], [72, 44, 38], [104, 70, 60]], plate);
+        if (v.id > 0.86) col = mix(col, [255, 110, 20], 0.55 + 0.25 * pulse); }   // a few plates still half-molten
     } else if (style === "shadow") {
       if (l > 0.95) col = [235, 200, 255];   // glowing violet eyes
       else { col = ramp([[8, 4, 16], [22, 12, 38], [40, 24, 66], [62, 38, 98]], l * 0.85);
         if (edgeOut(i, j)) col = mix(col, [160, 100, 240], 0.55);   // a purple glow around its edges
         if (hash(i, j, 5) > 0.94) col = mix(col, [90, 50, 140], 0.6); }   // swirling dark mist
-    } else if (style === "toxic") {
-      const v = vor(i, j, 7 * sc + 2), sp = 0.55 * Math.sin(frame * 1.6 + v.id * 9) ;
-      col = ramp([[14, 36, 0], [52, 110, 0], [150, 230, 0], [205, 255, 40], [245, 255, 170]], l * 0.95 + (lit ? 0.12 : 0) - (shade ? 0.1 : 0));   // radioactive neon yellow-green
-      if (v.id > 0.4 && v.d1 < (1.4 + sp * 0.5) * sc + 0.6) col = v.d1 < 0.8 * sc + 0.3 ? [255, 255, 150] : [30, 70, 0];   // bubbling spots
-      if (v.id < 0.12 && v.d1 < 1.2 * sc + 0.5) col = [120, 40, 170];   // a few purple ooze spots
+    } else if (style === "toxic") {   // radioactive slime: glowing neon goo with bubbles rising in it and dark sludge in the creases
+      const v = vor(i, j, 7 * sc + 2), sp = Math.sin(frame * 1.6 + v.id * 9);
+      col = ramp([[10, 30, 0], [40, 96, 0], [120, 210, 0], [190, 255, 30], [240, 255, 160]], l * 0.95 + (lit ? 0.18 : 0) - (shade ? 0.16 : 0));
+      if (shade && l < 0.6) col = mix(col, [20, 50, 10], 0.5);   // sludge in the creases
+      const r = (1.5 + 0.4 * sp) * sc + 0.7;
+      if (v.id > 0.45 && v.d1 < r) col = v.d1 < r - 0.9 ? [200, 255, 80] : [250, 255, 190];   // bubbles: a bright ring around a glowing middle
+      if (v.id > 0.45 && v.d1 < r * 0.45) col = [255, 255, 230];   // the shine on each bubble
       if (l > 0.88) col = [250, 255, 180];
     } else if (style === "candy") {
       col = ramp([[120, 26, 80], [220, 80, 150], [250, 140, 195], [255, 200, 228], [255, 245, 250]], l * 1.05 + (lit ? 0.12 : 0) - (shade ? 0.1 : 0));
