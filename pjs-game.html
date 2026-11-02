@@ -1017,7 +1017,7 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   const STATIC = { z: "#fff7a0", p: "#ffe066", P: "#c9a020", e: "#4a5a7a", m: "#6a7a9a", j: "#3a4660", n: "#8a9aba", N: "#2a3450", s: "#9aa4c0", g: "#5a6480", G: "#343c58", U: "#fff7c2", c: "#ffe066", y: "#7ff3ff", Y: "#2aa8d8" };
   const BIRD = { d: "#3a3e6a", D: "#22264a", E: "#7ff3ff", o: "#fff066", f: "#ffffff", w: "#fff7a0" };
   const CYCLONE = { U: "#d4dae8", c: "#9aa4bc", b: "#6e7894", B: "#454c66", u: "#fff066", w: "#ffffff", x: "#c8d0e0" };
-  // The Thunder Titan: a storm colossus in indigo armor, with golden lightning-bolt horns and crest, storm clouds for shoulders,
+  // The Iron Heart: a storm colossus in indigo armor, with golden lightning-bolt horns and crest, storm clouds for shoulders,
   // a glowing storm orb with a lightning bolt in its chest, and a golden lightning spear in its hand. (32 x 32)
   const TITANT = { k: "#12142a", A: "#20255a", a: "#343d8c", m: "#5260b8", h: "#8a96ee", c: "#f0f3ff", C: "#a9b2cc", D: "#5c6484", y: "#ffd84a", Y: "#b8861a", t: "#7ff3ff", T: "#1f9ccc", w: "#ffffff", z: "#fff27a" };
   const TITANART = [
@@ -5049,7 +5049,7 @@ const ACHIEVEMENTS = [
   { id: "eyeofthetornado", name: "Eye of the Tornado", about: "Defeat a Cyclone Golem before it ever spins into a tornado.", pic: "cyclonegolem" },
   { id: "stormchaser", name: "Storm Chaser", about: "Get your towers struck by lightning 100 times.", pic: "chargecrystal", goal: ["lightningStrikes", 100] },
   { id: "calmeye", name: "Calm in the Storm", about: "Beat the Eye of the Storm without the storm's lightning striking any of your towers.", pic: "tree" },
-  { id: "titantoppler", name: "Titan Toppler", about: "Defeat the Thunder Titan.", pic: "thundertitan" },
+  { id: "titantoppler", name: "Iron Breaker", about: "Defeat the Iron Heart.", pic: "thundertitan" },
   { id: "silverlining", name: "Silver Lining", about: "Collect 15 Golden Acorns on the sky levels.", pic: "stormpine", goal: ["skyAcorns", 15] },
   { id: "headintheclouds", name: "Head in the Clouds", about: "Play 10 games on the sky levels.", pic: "pine", goal: ["skyGames", 10] },
   { id: "skychampion", name: "Sky Champion", about: "Beat all 3 sky levels: the Floating Islands, Thunder Peaks and the Eye of the Storm.", pic: "pegasus", check: (s) => SKY_LEVELS.every((L) => beat(s, L)) },
@@ -5847,7 +5847,7 @@ function startWave() {
     staticbot: "Static Bots are here! Every few seconds they zap the closest tower, so it can't attack for a moment.",
     thunderbird: "Thunderbird Drones fly in flocks straight at your treehouse. Only towers that hit flying robots can stop them.",
     cyclonegolem: "The Cyclone Golem is coming! Sometimes it spins into a tornado, and nothing can hurt it until it stops.",
-    thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
+    thundertitan: "The Iron Heart is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
     volcanoheart: "The Volcano Heart is coming! It heals while it's on the glowing lava squares. Freeze it there to stop the healing!",
   };
   G.seenLava = G.seenLava || {};
@@ -5989,7 +5989,7 @@ function hurt(r, amt, vision, isBurn, kind) {
     if (kind === "fire" || kind === "phoenix" || isBurn) { if (!isBurn && Math.random() < 0.3) { const q = rpos(r); floatText(q.x, q.y - 16, "Fire-proof!", "#c9ced6", 0.6); } return; }
     if (kind === "water") amt *= RB.waterTimes;
   }
-  if (RB.landTowerTimes && (kind || isBurn)) {   // Thunder Titan: tough against towers on the ground, weak against towers that fly
+  if (RB.landTowerTimes && (kind || isBurn)) {   // Iron Heart: tough against towers on the ground, weak against towers that fly
     const flyer = isBurn || FLYING_TOWERS.has(kind); amt *= flyer ? RB.flyingTowerTimes : RB.landTowerTimes;   // (burning comes from Dragon or Phoenix fire)
     if (Math.random() < 0.06) { const q = rpos(r); floatText(q.x, q.y - 40, flyer ? "Weak to flyers!" : "Resisted!", flyer ? "#fff066" : "#9aa4c0", 0.6); }
   }
@@ -6690,7 +6690,7 @@ function stormPowers(dt) {
         }
       }
     }
-    if (S.strikeEvery) {   // Thunder Titan: calls lightning down on towers around it
+    if (S.strikeEvery) {   // Iron Heart: calls lightning down on towers around it
       r.strikeT = (r.strikeT ?? S.strikeEvery * 0.5) - dt;
       if (r.strikeT <= 0) {
         r.strikeT = S.strikeEvery;
