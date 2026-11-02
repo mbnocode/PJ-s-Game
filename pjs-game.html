@@ -2196,7 +2196,7 @@ function renderShopShelves(shop, items, shelfCount, s, prefix, soonText, rerende
       shop.appendChild(d); return;
     }
     const [key, it] = entry;
-    const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0, holding = it.oneAtATime && own > 0;
+    const own = (s && s.materials && s.materials[key]) || 0, done = it.unlock && own > 0, holding = (it.oneAtATime && own > 0) || (it.maxHeld && own >= it.maxHeld);   // (maxHeld: you can carry up to that many at a time)
     const locked = !done && !shopNeedsMet(it, s);   // some items have to be earned before you can buy them
     const d = document.createElement("div"); d.className = "perk" + (done ? " maxed" : "");
     d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
@@ -4543,7 +4543,7 @@ function renderPerks() {
   if (found.leafboost || found.upgrade) coll.push(["old", "Old prizes", [found.leafboost ? `Leaf Boost ${found.leafboost}×` : "", found.upgrade ? `Mystery Upgrade ${found.upgrade}×` : ""].filter(Boolean).join(" · ")]);
   d.innerHTML = `<span class="pic"></span><span class="k">${mb.name}</span>
     <span class="s">${opened ? mb.openedAbout : hasKey ? "Your Mystery Key fits the lock… Open it!" : mb.about}</span>
-    ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? "Open with Mystery Key" : "🔒 Needs a Mystery Key"}</button>`}
+    ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? `Open with Mystery Key${s.materials.mysterykey > 1 ? ` (${s.materials.mysterykey} keys)` : ""}` : "🔒 Needs a Mystery Key"}</button>`}
     <div class="coll"><div class="ct">Collection${s.boxOpened ? ` · opened ${s.boxOpened}×` : ""}</div>${coll.map(([k, n, v]) => `<div class="ci${v ? " got" : ""}"><span>${v ? (k === "phoenix" || k === "kraken" ? "Jackpot" : n) : "???"}</span><b>${v || "not found yet"}</b></div>`).join("")}</div>
     <details class="droprates"><summary>Drop rates</summary>${boxDropRates(s)}</details>
     ${pets.length ? `<label class="petpick">Your pet: <select id="pet-pick"><option value="">No pet</option>${pets.map((k) => `<option value="${k}" ${s.box.pet === k ? "selected" : ""}>${PETS[k]}</option>`).join("")}</select></label>` : ""}`;
