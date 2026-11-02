@@ -2760,7 +2760,8 @@ function renderWorldMap() {
   box.querySelectorAll(".wm-node").forEach((n) => n.remove());
   const s = slot(); let here = null;
   LEVEL_ORDER.forEach((L) => { if (unlocked(L) && L !== "infinity" && !(s.best[L] && Object.keys(s.best[L]).length)) here = here || L; });
-  const nodes = LEVEL_ORDER.map((L, i) => [L, SETTINGS.levels[L].name, false, i + 1]).concat((SETTINGS.comingSoon || []).filter((c) => WORLD_MAP[c.look]).map((c) => [c.look, c.name, true, "?"]));
+  const numbered = LEVEL_ORDER.filter((L) => L !== "infinity");   // (Infinity shows ∞, so it doesn't use up a number)
+  const nodes = LEVEL_ORDER.map((L) => [L, SETTINGS.levels[L].name, false, numbered.indexOf(L) + 1]).concat((SETTINGS.comingSoon || []).filter((c) => WORLD_MAP[c.look]).map((c) => [c.look, c.name, true, "?"]));
   for (const [L, name, soon, num] of nodes) {
     const pos = WORLD_MAP[L]; if (!pos) continue;
     const open = !soon && unlocked(L), best = (!soon && s.best[L]) || {}, stars = Math.max(0, ...DIFF_ORDER.map((d) => (best[d] && best[d].stars) || 0));
