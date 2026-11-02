@@ -4623,7 +4623,7 @@ function mimicFight(prize, c) {
     s.box.found.mimic = s.box.found.mimic || 0;
     if (won) {
       s.box.mimicWins = (s.box.mimicWins || 0) + 1; const a = rollBoxPrize(s, true), b = rollBoxPrize(s, true);
-      const ctx2 = c.getContext("2d"); ctx2.clearRect(0, 0, 96, 96); ctx2.imageSmoothingEnabled = false; ctx2.drawImage(a.gold ? skinOf(SPR[a.pic], "gold") : a.skin ? skinOf(SPR[a.pic], a.skin) : SPR[a.pic], 0, 0, 96, 96);
+      const ctx2 = c.getContext("2d"); ctx2.clearRect(0, 0, 96, 96); ctx2.imageSmoothingEnabled = false; ctx2.drawImage(a.gold ? skinOf(SPR[a.pic], "gold", 12) : a.skin ? skinOf(SPR[a.pic], a.skin) : SPR[a.pic], 0, 0, 96, 96);
       tx.innerHTML = `<div class="t">You beat the Mimic! 2 prizes!</div><div class="d"><b>${a.title}</b> ${a.text}<br><b>${b.title}</b> ${b.text}</div>`; Sound.play(a.jackpot || b.jackpot ? "win" : "upgrade");
     } else {
       s.acorns = (s.acorns || 0) + M.consolation; c.getContext("2d").clearRect(0, 0, 96, 96);
@@ -4645,7 +4645,7 @@ function playBoxOpening(prize, done) {
   setTimeout(() => {
     draw("mysteryboxopen"); bx.className = "opened"; ov.classList.add("burst"); Sound.play("upgrade"); if (prize.jackpot) setTimeout(() => Sound.play("win"), 250);
     const c = document.createElement("canvas"); c.width = c.height = 96; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false;
-    cx.drawImage(prize.gold ? skinOf(SPR[prize.pic], "gold") : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
+    cx.drawImage(prize.gold ? skinOf(SPR[prize.pic], "gold", 12) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
     if (prize.mimic) { setTimeout(() => mimicFight(prize, c), 650); return; }
     setTimeout(() => { tx.innerHTML = `<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus(); }, 650);
   }, 1500);
@@ -5075,7 +5075,8 @@ function renderSkins() {
       const b = document.createElement("button"); b.className = "look" + (has ? "" : " locked") + (cur === st ? " on" : ""); b.id = `skin-${k}-${st}`;
       b.title = has ? name : `${name} (not found yet)`; b.setAttribute("aria-pressed", String(cur === st)); b.disabled = !has;
       const c = document.createElement("canvas"); c.width = c.height = 56; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
-      x.drawImage(st === "normal" ? SPR[k] : skinOf(SPR[k], st, st === "gold" ? 4 : 0), 4, 4, 48, 48);
+      if (st === "gold" && has) { const ga = x.createRadialGradient(28, 30, 4, 28, 30, 28); ga.addColorStop(0, "rgba(255,220,100,0.7)"); ga.addColorStop(0.6, "rgba(255,190,60,0.25)"); ga.addColorStop(1, "rgba(255,180,40,0)"); x.fillStyle = ga; x.fillRect(0, 0, 56, 56); }   // its glowing aura
+      x.drawImage(st === "normal" ? SPR[k] : skinOf(SPR[k], st, st === "gold" ? 12 : 0), 4, 4, 48, 48);   // (frame 12: the shine isn't sweeping across)
       if (!has) { x.globalCompositeOperation = "source-atop"; x.fillStyle = "#2a2e36"; x.fillRect(0, 0, 56, 56); x.globalCompositeOperation = "source-over"; }   // a dark silhouette until you find it
       b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>`);
       b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
@@ -7043,8 +7044,9 @@ function draw() {
     img = towerLook(t.kind, img);   // (a Golden look or a Tower Skin)
     if (towerSkin(t.kind) === "gold" && !PREFS.simple) {   // the Golden look has a warm glowing aura that gently pulses
       const pulse = 0.5 + 0.5 * Math.sin(G.time * 2.4 + t.x), ay = by - s2 / 2 - rc, ga = x.createRadialGradient(cx, ay, s2 * 0.15, cx, ay, s2 * 0.85);
-      ga.addColorStop(0, `rgba(255,220,100,${0.35 + 0.2 * pulse})`); ga.addColorStop(0.55, `rgba(255,190,60,${0.14 + 0.1 * pulse})`); ga.addColorStop(1, "rgba(255,180,40,0)");
+      ga.addColorStop(0, `rgba(255,224,110,${0.5 + 0.25 * pulse})`); ga.addColorStop(0.5, `rgba(255,196,60,${0.22 + 0.12 * pulse})`); ga.addColorStop(1, "rgba(255,180,40,0)");
       x.fillStyle = ga; x.beginPath(); x.arc(cx, ay, s2 * 0.85, 0, Math.PI * 2); x.fill();
+      if (!G.paused && Math.random() < 0.05) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 0.8, y: ay + (Math.random() - 0.3) * s2 * 0.6, vx: 0, vy: -16, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#fff3b0" : "#ffd34d" });   // golden sparkles drifting up
     }
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
