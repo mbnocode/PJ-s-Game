@@ -6618,7 +6618,7 @@ function openCrabShop() {
 }
 function renderCrabShop() {
   const s = slot(); $("crab-acorns").textContent = (s && s.acorns) || 0;
-  $("crab-say").textContent = "“Oh! You found me under the sand. Shh… I only come out between waves. I've got treasures from the bottom of the sea, for Golden Acorns. Some of them washed up the morning after the Swipe… nobody ever came back for them.”";
+  $("crab-say").textContent = "“Oh! You found me under the sand. Shh… I only come out between waves. I've got treasures from the bottom of the sea, for Golden Acorns.”";
   renderShopShelves($("crab-shop"), SETTINGS.hermitCrabShop, SETTINGS.hermitCrab.shelves || 3, s, "crab", "Coming soon. The crab is still digging up treasures from the sea…", renderCrabShop);
   // the Seashell Collection card: which shells you've found, and a trade-in button for a full set
   const card = $("crab-buy-shells") ? null : [...$("crab-shop").children].find((d) => d.textContent.includes("Seashell Collection"));
