@@ -1014,6 +1014,81 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   const TITAN = { "1": "#140a2a", "2": "#2e1856", "3": "#4c2a8a", A: "#6a2a7a", u: "#ffd36b", U: "#fff7c2", z: "#fff3b0", p: "#ff9a3c", P: "#c0502a", w: "#ffffff", "5": "#ffe9a8", "7": "#fff7c2" };
   SPR.universetitan = makeSprite(ART.universegolem, false, TITAN); SPRF.universetitan = makeSprite(ART.universegolem, true, TITAN);
 }
+{ // The Sludge Leviathan (final boss of the Swamp): a giant pipe-armored robot eel rising out of a pool of oily sludge,
+  // with open jaws full of teeth, a glowing toxic eye, a rusty spiked fin and a glowing core in its coils. (32 x 32)
+  const LEVP = { k: "#101a16", A: "#1d3a30", a: "#2c5c48", m: "#47866a", h: "#7cbf8c", r: "#a0642a", R: "#5e3a18", o: "#14121a", O: "#3c3a52", s: "#6e7228", S: "#3a3e16", g: "#b4ff3c", G: "#5ea820", e: "#f2ffb0", w: "#f4f4e8" };
+  const LEVART = [
+    "................................",
+    "................................",
+    ".................k....k.........",
+    "................kRk..kgk........",
+    ".................krkkrkkkkk.....",
+    "..................krhrhhhhhkk...",
+    "..................khhhhhRRRRhk..",
+    "................kkmmmmmmmgemmmk.",
+    ".............k.kRmmgmmmmmGmmmmk.",
+    "............kRk.kmmmmmmmmmmmmmk.",
+    "..........k..krkhmagaaaaaaaaaak.",
+    ".........kRk.krmAmaaaaaaaaaaakwk",
+    ".........krkkmmmoaagaaaowowowowo",
+    "..g...k...krmAmaoaAAAaaoowowowow",
+    ".....kRkkkmmmoaaAoAAAaaaaaaaaaas",
+    "......krrmmaaaAAAAAAkkkAAAAAAAAs",
+    "....k.khmmaaaAAoAAkk...kkkkskkkg",
+    "...kRkhmagggAAAAAk........kgk..k",
+    "...krrAmagegAAAkk..........k....",
+    ".k..kmoaaggAoAk...............g.",
+    "kRkkmaoaAAAAAk..................",
+    ".krraaaoAAAAk...................",
+    "..kmsaAAAAAkk...................",
+    "..kagAAAAAmhhk..................",
+    "..kaaoAAAAmmmk..............g...",
+    ".krrAAAAAaammmkkkkkkkkkk........",
+    ".kRkoAAAAAaaaaOOOOOOOOOOkk......",
+    "..kkOAAAAAoaasssssssOOOOOOk.....",
+    "..kSSsrAAAAAAssssssssssssSSk....",
+    "...kSSrssAAsssssssssssssSSk.....",
+    "....kRSSSSssssssssssSSSSkk......",
+    ".....kkkkkkkkkkkkkkkkkkk........"];
+  SPR.sludgeleviathan = makeSprite(LEVART, false, LEVP); SPRF.sludgeleviathan = makeSprite(LEVART, true, LEVP);
+  // The Pharaoh Machine (final boss of the Lost Pyramid): an ancient golden robot pharaoh with a striped headdress, a golden mask
+  // with glowing eyes, a jeweled collar, a glowing ankh in its chest, bandaged legs, and the crook and flail. (32 x 32)
+  const PHAP = { k: "#1a1208", y: "#f2c230", Y: "#a87414", z: "#ffe27a", l: "#2850b8", t: "#3fd8d0", c: "#c8fff4", w: "#ffffff", b: "#e8dcc0", B: "#b8a682", o: "#1a1430", R: "#8a4a1a", r: "#d8402a" };
+  const PHAART = [
+    "...............k................",
+    "............kkkykkkk............",
+    "....kk....kklllyYlllkk..........",
+    "...kyyk..kyyyyyryyyyyyk.........",
+    "...kyyk.klllYyyyyyyYlllk......c.",
+    "..klkyk.kyyyYzzzzzzYyyyk..k.....",
+    "..kyklkkllllYoozzooYllllkklk....",
+    "...kklkkyyyyotczzctoyyyykkltk...",
+    "....kykkllllYzzYYzzYllllkkyytk..",
+    "..c.kykkyyyyYzzYYzzYyyyykkytytk.",
+    "....klkkllllYzRRRRzYllllkklytyk.",
+    "....klkkyyyyYzzllzzYyyyykkltytk.",
+    "....kyktlllllllylllllllltkyytyk.",
+    "....kyYyyyylyyyllyyylyyyyYykytk.",
+    "....klYyyyyylllttlllyyyyyYlkkyk.",
+    "....klllllttyytcctyyttlllllk.k..",
+    "....kyYyyyYzttttttttyYyyyYyk....",
+    "....kyllllYzyytwwtyyyYllllyk....",
+    "....klYyyyYzyyyttyyyyYyyyYlk....",
+    "....klYbbbYzyyyttyyyyYbbbYlk....",
+    ".c..kykbbbkkYllttllykkbbbkyk....",
+    "....kykbbbkYyYyYyYyYykbbbkyk....",
+    "....klkkkkYyYyYyYyYyYykkkklk....",
+    "....klk.kYyYyYyYyYyYyYyk.klk....",
+    "....kykkYyYyYyYyYyYyYyYyk.k.....",
+    "....kyk.kkkBBBBkkBBBBkkk.....c..",
+    "....klk...kbbbbkkbbbbk..........",
+    ".....k....kBBBBkkBBBBk..........",
+    "..........kbbbbkkbbbbk..........",
+    "..........kBBBBkkBBBBk..........",
+    ".........kYyyyykYyyyyk..........",
+    "..........kkkkk.kkkkk..........."];
+  SPR.pharaohmachine = makeSprite(PHAART, false, PHAP); SPRF.pharaohmachine = makeSprite(PHAART, true, PHAP);
+}
 { // the Eye of the Storm robots, made from storm-colored versions of other robots
   const GUST = { s: "#eef6ff", g: "#a8c8e8", G: "#5a7aa8", x: "#ffffff", b: "#4fd1ff", c: "#c8f4ff", B: "#2a8ac8", r: "#7ff3ff", R: "#2aa8d8", y: "#e8f4ff", Y: "#9ab8d8", T: "#3a4a6a", w: "#ffffff" };
   const STATIC = { z: "#fff7a0", p: "#ffe066", P: "#c9a020", e: "#4a5a7a", m: "#6a7a9a", j: "#3a4660", n: "#8a9aba", N: "#2a3450", s: "#9aa4c0", g: "#5a6480", G: "#343c58", U: "#fff7c2", c: "#ffe066", y: "#7ff3ff", Y: "#2aa8d8" };
@@ -4704,9 +4779,9 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
-const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES];
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "cyclonegolem", "skyblimp", "thundertitan"]);
+const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "cyclonegolem", "skyblimp", "thundertitan"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -4715,6 +4790,8 @@ const FOE_ABOUT = {
   hider: "Turns invisible when it gets hit.",
   boss: "A giant horned war-mech with a glowing reactor core. It stomps in every few waves.",
   sandboss: "A hulking golem of scorched sandstone, with bone-white spikes, burning eyes and a crack of glowing magma down its chest. It rises out of the dunes.",
+  sludgeleviathan: "A giant robot eel armored in rusty pipes, rising out of a pool of oily sludge. Its jaws are full of teeth and its eye glows toxic green. The final boss of The Swamp.",
+  pharaohmachine: "An ancient golden robot pharaoh, sealed inside the Lost Pyramid for thousands of years until the Iron Heart woke it up. It carries the crook and flail. The final boss of The Lost Pyramid.",
   mummy: "An ancient robot wrapped in old bandages, with glowing green eyes. It shambles out of the Lost Pyramid.",
   splitter: "A clunky pile of scrap on legs. Destroy it and it bursts apart!",
   repair: "A little medic bot with a wrench. It keeps the robots around it patched up.",
@@ -4855,6 +4932,8 @@ function renderEnemies() {
       : k === "tesla" ? `Special: robots within ${r.boostRadius} squares of it move ${r.boostSpeed} times faster. Take it out first! Shows up on The Swamp and The Beach.`
       : k === "boss" ? `Special: too heavy for Owls to push back. Gets tougher in later waves: ${Math.min(...bossHps)} to ${Math.max(...bossHps)} health. Always drops a Golden Acorn!`
       : k === "sandboss" ? `Special: every ${r.sandstormEvery} seconds it whips up a sandstorm. Towers within ${r.sandstormRadius} squares are blinded and can't attack for ${r.sandstormSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on The Desert from wave 8.`
+      : k === "sludgeleviathan" ? `Special: every ${r.diveEvery} seconds it dives under the sludge for ${r.diveSeconds} seconds, where nothing can hit it, and swims ${r.diveSpeed} times faster. When it comes back up, it splashes sludge on towers within ${r.sludgeRadius} squares, so they attack ${Math.round(r.sludgeSlow * 100)}% slower for ${r.sludgeSeconds} seconds. Water Frogs do ${r.frogTimes} times damage to it! ${r.health.toLocaleString()} health. Final boss of The Swamp (wave 20).`
+      : k === "pharaohmachine" ? `Special: every ${r.summonEvery} seconds it raises ${r.summonCount} Mummy Bots out of the sand. Every ${r.shieldEvery} seconds a golden shield (${r.shieldHp.toLocaleString()} health) blocks all damage until your towers break it. At half health it throws mummy wrappings over towers within ${r.wrapRadius} squares, so they can't attack for ${r.wrapSeconds} seconds. ${r.health.toLocaleString()} health. Final boss of The Lost Pyramid (wave 20).`
       : k === "mummy" ? `Special: unravels into ${r.splitInto} speedy Scouts when destroyed. Shows up on The Lost Pyramid.`
       : k === "splitter" ? `Special: breaks into ${r.splitInto} Mini-Clankers when destroyed. Splash towers like the Crab are great against it. Shows up on The Beach.`
       : k === "repair" ? `Special: heals robots within ${r.healRadius} squares by ${r.healAmount} every ${r.healEvery} seconds. Take it out first! Shows up on The Beach.`
@@ -5083,6 +5162,8 @@ const ACHIEVEMENTS = [
   { id: "fireballfrenzy", name: "Fireball Frenzy", about: "Destroy 10 robots with a single Mega Fireball.", pic: "fire" },
   { id: "iceage", name: "Ice Age", about: "Freeze 15 robots with a single Freeze.", pic: "icecrystal" },
   { id: "luckyleaf", name: "Lucky Leaf", about: "Tap 50 big maple leaves in one game.", pic: "leaf" },
+  { id: "leviathanslayer", name: "Leviathan Slayer", about: "Defeat the Sludge Leviathan, the final boss of the Swamp.", pic: "sludgeleviathan" },
+  { id: "pharaohsfall", name: "Pharaoh's Fall", about: "Defeat the Pharaoh Machine, the final boss of the Lost Pyramid.", pic: "pharaohmachine" },
   { id: "perfectstorm", name: "Perfect Storm", about: "Beat the Eye of the Storm on Nightmare without losing any health.", pic: "thundertitan" },
   { id: "backtobasics", name: "Back to Basics", about: "Beat the Eye of the Storm using only the 8 towers you start with (no Pegasus, Hydra, Wolf, Night Owl, Hacked Robot, Phoenix or Kraken).", pic: "air" },
   { id: "boxopener", name: "Box Opener", about: "Open the Mystery Box 10 times.", pic: "mysteryboxopen", check: (s) => (s.boxOpened || 0) >= 10 },
@@ -5096,7 +5177,7 @@ function addStat(key, n, levels = GRASS_LEVELS) {   // levels = which levels cou
 }
 const ACH_BOXES = ACHIEVEMENTS.length;   // one box per achievement (no empty spare boxes)
 // Golden Acorns each achievement is worth: harder ones pay more (5 for the easiest, up to 50 for the hardest)
-const ACH_ACORNS = { firststeps: 5, grassland: 10, grassnightmare: 35, maxed: 5, untouchable: 15, deer: 5, bareminimum: 15, leafsaver: 10, oneofeach: 10, dragontamer: 15, bossbuster: 15, frogpond: 15, swampsurvivor: 15, cleansweep: 30, herd: 10, recycler: 10, acornhunter: 5, leaftapper: 15, grassperfect: 25, shellshocked: 20, fixitfail: 10, secretshopper: 15, twofront: 20, golemcrusher: 20, droneswatter: 10, oasiskeeper: 20, mummyunwrapper: 10, sinkingfeeling: 15, tombraider: 10, pharaoh: 25, sandchampion: 15, desertnightmare: 40, sandyperfect: 30, sunbaked: 5, heartbreaker: 20, coldheart: 35, shellcracker: 15, batsmasher: 15, hotwater: 20, firewalker: 20, unbreakable: 25, cubecrusher: 15, diverdown: 15, magmamaster: 25, moltengold: 10, hotstuff: 5, lavachampion: 20, volcanicnightmare: 45, lavaperfect: 35, snowballstopper: 20, penguinparade: 15, slipnslide: 15, icebreaker: 15, snowday: 15, yetihunter: 25, defrosted: 25, meltdown: 25, kingofthemountain: 30, snowgold: 10, frostbite: 5, icechampion: 25, frozennightmare: 45, iceperfect: 40, birdwatcher: 20, grounded: 15, gustbuster: 20, staticshock: 25, eyeofthetornado: 25, stormchaser: 15, calmeye: 35, titantoppler: 30, silverlining: 10, headintheclouds: 5, skychampion: 30, stormnightmare: 50, skyperfect: 45, starcollector: 30, perfectionist: 40, nightmarefuel: 45, dedicated: 30, toinfinity: 25, fullhouse: 15, bigspender: 20, yardsale: 10, towercollector: 50, robotwrecker: 35, bosshunter: 25, closecall: 20, glowgetter: 15, secretseeker: 30, fashionista: 30, petparent: 35, mimicmaster: 25, fireballfrenzy: 20, iceage: 25, luckyleaf: 15, perfectstorm: 50, backtobasics: 40, boxopener: 20, jackpot: 40 };
+const ACH_ACORNS = { firststeps: 5, grassland: 10, grassnightmare: 35, maxed: 5, untouchable: 15, deer: 5, bareminimum: 15, leafsaver: 10, oneofeach: 10, dragontamer: 15, bossbuster: 15, frogpond: 15, swampsurvivor: 15, cleansweep: 30, herd: 10, recycler: 10, acornhunter: 5, leaftapper: 15, grassperfect: 25, shellshocked: 20, fixitfail: 10, secretshopper: 15, twofront: 20, golemcrusher: 20, droneswatter: 10, oasiskeeper: 20, mummyunwrapper: 10, sinkingfeeling: 15, tombraider: 10, pharaoh: 25, sandchampion: 15, desertnightmare: 40, sandyperfect: 30, sunbaked: 5, heartbreaker: 20, coldheart: 35, shellcracker: 15, batsmasher: 15, hotwater: 20, firewalker: 20, unbreakable: 25, cubecrusher: 15, diverdown: 15, magmamaster: 25, moltengold: 10, hotstuff: 5, lavachampion: 20, volcanicnightmare: 45, lavaperfect: 35, snowballstopper: 20, penguinparade: 15, slipnslide: 15, icebreaker: 15, snowday: 15, yetihunter: 25, defrosted: 25, meltdown: 25, kingofthemountain: 30, snowgold: 10, frostbite: 5, icechampion: 25, frozennightmare: 45, iceperfect: 40, birdwatcher: 20, grounded: 15, gustbuster: 20, staticshock: 25, eyeofthetornado: 25, stormchaser: 15, calmeye: 35, titantoppler: 30, silverlining: 10, headintheclouds: 5, skychampion: 30, stormnightmare: 50, skyperfect: 45, starcollector: 30, perfectionist: 40, nightmarefuel: 45, dedicated: 30, toinfinity: 25, fullhouse: 15, bigspender: 20, yardsale: 10, towercollector: 50, robotwrecker: 35, bosshunter: 25, closecall: 20, glowgetter: 15, secretseeker: 30, fashionista: 30, petparent: 35, mimicmaster: 25, fireballfrenzy: 20, iceage: 25, luckyleaf: 15, leviathanslayer: 25, pharaohsfall: 30, perfectstorm: 50, backtobasics: 40, boxopener: 20, jackpot: 40 };
 function achReward(id) { return ACH_ACORNS[id] || 10; }
 function hasAch(id) { const s = slot(); return !!(s && s.achievements && s.achievements[id]); }
 function earnAch(id) {
@@ -5854,6 +5935,8 @@ function startWave() {
     staticbot: "Static Bots are here! Every few seconds they zap the closest tower, so it can't attack for a moment.",
     thunderbird: "Thunderbird Drones fly in flocks straight at your treehouse. Only towers that hit flying robots can stop them.",
     cyclonegolem: "The Cyclone Golem is coming! Sometimes it spins into a tornado, and nothing can hurt it until it stops.",
+    sludgeleviathan: "The Sludge Leviathan rises from the swamp! It dives under the sludge where nothing can hit it, and splashes sludge that slows your towers. Water Frogs do double damage to it!",
+    pharaohmachine: "The Pharaoh Machine awakens! It raises Mummy Bots, hides behind a golden shield, and at half health it wraps up nearby towers. Break the shield fast!",
     thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
     volcanoheart: "The Volcano Heart is coming! It heals while it's on the glowing lava squares. Freeze it there to stop the healing!",
   };
@@ -6010,6 +6093,12 @@ function hurt(r, amt, vision, isBurn, kind) {
     if (amt >= RB.crackHit) { r.cracked = true; addStat("obsidianCracks", 1, null); const q = rpos(r); floatText(q.x, q.y - 18, "Cracked!", "#b89aff"); burst(q.x, q.y, "#3a2458", 12); burst(q.x, q.y, "#8a6ac0", 8); Sound.play("smash"); }
     else amt *= 0.5;
   }
+  if (RB.frogTimes && kind === "water") amt *= RB.frogTimes;   // Sludge Leviathan: the frogs are fighting for their home
+  if (r.shield > 0) {   // Pharaoh Machine: the golden shield takes the hits until it breaks
+    r.shield -= amt; r.hitT = 0.12;
+    if (r.shield > 0) return;
+    amt = -r.shield; r.shield = 0; r.shieldT = RB.shieldEvery; const q = rpos(r); floatText(q.x, q.y - 44, "Shield broken!", "#ffd34d"); burst(q.x, q.y - 10, "#ffd34d", 16); Sound.play("smash");
+  }
   r.hp -= amt; r.hitT = 0.12;
   if (r.hp <= 0) { kill(r); return; }
   if (r.type === "hider" && r.hideT <= 0 && !isBurn) r.hideT = SETTINGS.robots.hider.hideSeconds;
@@ -6066,6 +6155,8 @@ function kill(r) {
   if (r.type === "staticbot" && !r.zappedAny) earnAch("staticshock");
   if (r.type === "cyclonegolem" && !r.spunOnce) earnAch("eyeofthetornado");
   if (r.type === "thundertitan") earnAch("titantoppler");
+  if (r.type === "sludgeleviathan") earnAch("leviathanslayer");
+  if (r.type === "pharaohmachine") earnAch("pharaohsfall");
   const p = rpos(r);
   // Some levels give a small chance of a Golden Acorn for each robot destroyed.
   const chance = G.wave >= (SETTINGS.acornsFromWave || 1) ? SETTINGS.levels[G.level].acornDropChance || 0 : 0;   // only after the first few waves
@@ -6709,6 +6800,41 @@ function stormPowers(dt) {
     }
   }
 }
+/* ---------- the Swamp's and the Lost Pyramid's final bosses ---------- */
+function finalBossPowers(dt) {
+  const RS = SETTINGS.robots;
+  for (const r of G.robots) {
+    if (r.dead) continue;
+    const S = RS[r.type] || {}, q = rpos(r);
+    if (r.type === "sludgeleviathan") {   // dives under the sludge, then splashes sludge on towers when it comes back up
+      r.diveT = (r.diveT ?? S.diveEvery * 0.6) - dt;
+      if (!r.under && r.diveT <= 0) { r.under = true; r.diveT = S.diveSeconds; floatText(q.x, q.y - 40, "Dive!", "#b4ff3c"); burst(q.x, q.y, "#6e7228", 16); Sound.play("water"); }
+      else if (r.under && r.diveT <= 0) {
+        r.under = false; r.diveT = S.diveEvery; burst(q.x, q.y, "#6e7228", 18); burst(q.x, q.y, "#b4ff3c", 10);
+        let n = 0;
+        for (const t of G.towers) if (Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.sludgeRadius * T) { if (t.kind === "phoenix") phoenixRebirth(t); else { t.slimeT = S.sludgeSeconds; t.slimeBy = S.sludgeSlow; n++; burst(t.x * T + 16, t.y * T + 12, "#6e7228", 6); } }
+        floatText(q.x, q.y - 44, n ? "SLUDGE!" : "Splash!", "#b4ff3c"); G.shake = Math.max(G.shake, 0.2); Sound.play("smash");
+      }
+    }
+    if (r.type === "pharaohmachine") {
+      r.sumT = (r.sumT ?? S.summonEvery * 0.5) - dt;   // raises Mummy Bots out of the sand behind it
+      if (r.sumT <= 0) {
+        r.sumT = S.summonEvery;
+        for (let k = 0; k < S.summonCount; k++) { spawn({ type: S.summonType, d: Math.max(0, r.d - 24 - k * 14), path: r.path }); const p2 = rpos(G.robots[G.robots.length - 1]); burst(p2.x, p2.y, "#e8dcc0", 10); }
+        floatText(q.x, q.y - 48, "Rise, mummies!", "#e8dcc0"); Sound.play("horn");
+      }
+      if (!(r.shield > 0)) {   // a golden shield that blocks all damage until it's broken
+        r.shieldT = (r.shieldT ?? S.shieldEvery * 0.4) - dt;
+        if (r.shieldT <= 0) { r.shield = S.shieldHp * G.diff.robotHealth; r.shieldMax = r.shield; floatText(q.x, q.y - 48, "Golden Shield!", "#ffd34d"); burst(q.x, q.y - 10, "#ffe27a", 14); Sound.play("upgrade"); }
+      }
+      if (!r.wrapped && r.hp <= r.maxHp / 2) {   // at half health: mummy wrappings fly out and wrap up the towers around it
+        r.wrapped = true; let n = 0;
+        for (const t of G.towers) if (Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.wrapRadius * T) { if (t.kind === "phoenix") phoenixRebirth(t); else { t.stunT = Math.max(t.stunT || 0, S.wrapSeconds); t.wrapT = S.wrapSeconds; n++; burst(t.x * T + 16, t.y * T + 12, "#e8dcc0", 8); } }
+        floatText(q.x, q.y - 52, "MUMMY WRAP!", "#e8dcc0"); G.shake = Math.max(G.shake, 0.25); Sound.play("smash");
+      }
+    }
+  }
+}
 /* ---------- lava-level robot powers ---------- */
 function lavaPowers(dt) {
   const RS = SETTINGS.robots;
@@ -6820,6 +6946,7 @@ function update(dt) {
   }
   lavaPowers(dt);
   stormPowers(dt);
+  finalBossPowers(dt);
   tickPet(dt);
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
   const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => rpos(r));
@@ -6837,7 +6964,7 @@ function update(dt) {
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
-    if (r.under) sp *= 1.5;   // Lava Divers swim fast under the lava
+    if (r.under) sp *= (SETTINGS.robots[r.type] || {}).diveSpeed || 1.5;   // Lava Divers swim fast under the lava (and the Sludge Leviathan under the sludge)
     if (r.chute > 0) { r.chute -= dt; sp = 0; }   // still floating (or tumbling) down onto the road
     if (r.dashLeft > 0) { r.dashLeft -= dt; sp *= (SETTINGS.robots[r.type] || {}).dashSpeed || 2.5; }   // a Gust Runner dashing on the wind
     if (r.spinning) sp *= (SETTINGS.robots[r.type] || {}).spinSpeed || 1.5;   // a Cyclone Golem spinning as a tornado
@@ -6895,7 +7022,8 @@ function update(dt) {
       }
     }
     if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech
-    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
+    if (t.slimeT > 0) t.slimeT -= dt;   // covered in sludge by the Sludge Leviathan: attacks slower
+    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
     if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
@@ -6930,7 +7058,7 @@ function update(dt) {
     let boost = 0;
     for (const w of wizards) if (Math.hypot(w.t.x - t.x, w.t.y - t.y) <= w.s.range) boost = Math.max(boost, w.s.speedBoost);
     t.boosted = boost > 0;
-    t.cool -= dt * (1 + boost);
+    t.cool -= dt * (1 + boost) * (t.slimeT > 0 ? 1 - (t.slimeBy || 0.5) : 1);
     if (t.cool <= 0) {
       const target = findTarget(t, s);
       if (target) { fire(t, s, target); t.cool = 1 / s.attacksPerSecond; } else t.cool = 0;
@@ -7171,7 +7299,11 @@ function draw() {
     }
     x.imageSmoothingEnabled = false;
 
-    if (t.stunT > 0 && t.zapT > 0) {   // zapped by lightning: crackling sparks
+    if (t.slimeT > 0) { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? "#6e7228" : "#b4ff3c"; x.fillRect(cx - 9 + i * 5, by - 18 + ((G.time * 14 + i * 5) % 14), 2, 3); } }   // dripping sludge
+    if (t.stunT > 0 && t.wrapT > 0) {   // wrapped up in mummy bandages
+      x.fillStyle = "#e8dcc0"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12, by - 22 + i * 6 + Math.sin(G.time * 3 + i) * 1.5, 24, 3);
+      x.fillStyle = "#b8a682"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12 + (i * 7) % 20, by - 21 + i * 6, 5, 1);
+    } else if (t.stunT > 0 && t.zapT > 0) {   // zapped by lightning: crackling sparks
       for (let i = 0; i < 5; i++) { const a = G.time * 9 + i * 1.3, rr = 9 + (i % 3) * 3; x.fillStyle = i % 2 ? "#fff7a0" : "#9ab0ff"; x.fillRect(cx + Math.cos(a) * rr - 1, by - 14 + Math.sin(a * 1.7) * rr * 0.6 - 1, 2, 3); }
     } else if (t.stunT > 0) {   // swirling sand: this tower can't attack right now
       for (let i = 0; i < 6; i++) { const a = G.time * 6 + i * 1.05, rr = 10 + (i % 3) * 3; x.fillStyle = i % 2 ? "#e0b06a" : "#c28a52"; x.fillRect(cx + Math.cos(a) * rr - 1.5, by - 14 + Math.sin(a) * rr * 0.5 - 1.5, 3, 3); }
@@ -7236,11 +7368,16 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "universetitan" || r.type === "thundertitan" ? 100 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "universetitan" || r.type === "thundertitan" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
-    if (r.under) {   // a Lava Diver swimming under the lava: only bubbles and a ripple show
+    if (r.under && r.type === "sludgeleviathan") {   // the Sludge Leviathan under the sludge: a dark shape, ripples and toxic bubbles
+      x.fillStyle = "rgba(30,40,20,0.45)"; x.beginPath(); x.ellipse(p.x, p.y + 6, 26, 8, 0, 0, Math.PI * 2); x.fill();
+      x.strokeStyle = "rgba(180,255,60,0.7)"; x.lineWidth = 2; const wv = Math.sin(G.time * 6 + r.wob) * 3;
+      x.beginPath(); x.ellipse(p.x, p.y + 6, 22 + wv, 6, 0, 0, Math.PI * 2); x.stroke();
+      for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? "#b4ff3c" : "#6e7228"; x.fillRect(p.x - 12 + i * 8 + Math.sin(G.time * 7 + i) * 3, p.y + 2 - ((G.time * 18 + i * 4) % 12), 3, 3); }
+    } else if (r.under) {   // a Lava Diver swimming under the lava: only bubbles and a ripple show
       x.strokeStyle = "rgba(255,150,50,0.8)"; x.lineWidth = 1.5; const wv = Math.sin(G.time * 8 + r.wob) * 2;
       x.beginPath(); x.ellipse(p.x, p.y + 6, 9 + wv, 3, 0, 0, Math.PI * 2); x.stroke();
       x.fillStyle = "#ffd36b"; x.fillRect(p.x - 3 + Math.sin(G.time * 9) * 4, p.y + 2 - ((G.time * 20) % 8), 2, 2);
@@ -7263,6 +7400,11 @@ function draw() {
       if (r.flapAt === undefined) r.flapAt = Math.random() * 6;   // each bat starts at its own point, so a swarm doesn't flap in sync
       const f = Math.sin(G.time * (r.type === "thunderbird" ? 6 : 3.2) + r.flapAt);
       frame = r.type + (f > 0.45 ? "" : f < -0.45 ? "_down" : "_mid");
+    }
+    if (r.shield > 0 && !hidden) {   // the Pharaoh Machine's golden shield: a shimmering golden bubble (it fades as it cracks)
+      const f = r.shield / (r.shieldMax || 1), pulse = 0.6 + 0.4 * Math.sin(G.time * 6);
+      x.save(); x.globalAlpha = 0.25 + 0.35 * f * pulse; x.fillStyle = "#ffd34d"; x.beginPath(); x.arc(p.x, p.y - 4, sz * 0.62, 0, Math.PI * 2); x.fill();
+      x.globalAlpha = 0.9; x.strokeStyle = "#fff3b0"; x.lineWidth = 2; x.stroke(); x.restore();
     }
     if (r.spinning && !PREFS.simple) {   // the Cyclone Golem spinning as a tornado: a funnel of wind whirls around it
       x.save(); x.translate(p.x, p.y - 12);

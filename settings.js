@@ -298,6 +298,16 @@ const SETTINGS = {
     thunderbird: { name: "Thunderbird Drone", health: 50, speed: 3.4, leaves: 8, points: 25, flying: true, baseHit: 6, swarm: 4 },
     // Cyclone Golem (a Boss): every spinEvery seconds it spins into a tornado for spinSeconds. Nothing can hurt it while it spins, and it moves spinSpeed times faster.
     cyclonegolem: { name: "Cyclone Golem", health: 3000, speed: 0.85, leaves: 180, points: 700, baseHit: 55, isBoss: true, spinEvery: 7, spinSeconds: 2, spinSpeed: 1.6 },
+    // The Sludge Leviathan: the final boss of The Swamp (wave 20). Every diveEvery seconds it dives under the sludge for diveSeconds
+    // (nothing can hit it, and it swims diveSpeed times faster). When it comes back up, towers within sludgeRadius squares attack sludgeSlow
+    // (50%) slower for sludgeSeconds. Water Frogs do frogTimes damage to it. fixedHealth: exactly this much health on Normal.
+    sludgeleviathan: { name: "Sludge Leviathan", health: 5000, speed: 0.95, leaves: 250, points: 2500, baseHit: 80, isBoss: true, fixedHealth: true,
+                       diveEvery: 7, diveSeconds: 2.5, diveSpeed: 1.8, sludgeRadius: 2.5, sludgeSlow: 0.5, sludgeSeconds: 3, frogTimes: 2 },
+    // The Pharaoh Machine: the final boss of The Lost Pyramid (wave 20). Every summonEvery seconds it raises summonCount Mummy Bots behind it.
+    // Every shieldEvery seconds (after its last shield breaks) it gets a golden shield with shieldHp health that blocks all damage.
+    // At half health it wraps up every tower within wrapRadius squares, so they can't attack for wrapSeconds.
+    pharaohmachine: { name: "Pharaoh Machine", health: 7000, speed: 0.85, leaves: 300, points: 3000, baseHit: 90, isBoss: true, fixedHealth: true,
+                      summonEvery: 8, summonCount: 2, summonType: "mummy", shieldEvery: 10, shieldHp: 800, wrapRadius: 3, wrapSeconds: 3 },
     // The Thunder Titan: the final boss of the Eye of the Storm (wave 30). Its storm armor: landTowerTimes / flyingTowerTimes (below). Every strikeEvery seconds it calls lightning
     // down on strikeTowers towers within strikeRadius squares, stunning them for strikeSeconds. fixedHealth: exactly this much health on Normal.
     thundertitan: { name: "Thunder Titan", health: 75000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
@@ -469,7 +479,7 @@ const SETTINGS = {
               trees:     [[2, 2], [3, 3], [1, 9], [4, 10], [5, 1], [10, 5], [10, 6], [9, 0], [15, 2], [16, 3], [17, 6], [18, 11], [11, 11], [3, 8]],
               mushrooms: [[5, 8], [10, 9], [16, 7], [2, 0]],
               tallGrass: [[4, 4], [9, 4], [15, 10], [11, 1], [18, 4]] },
-    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "Enraged, the Iron Heart poisoned the swamp, pouring black factory sludge into its waters. Its robots rise from the murk coated in oil, 50% tougher than any before. But the frogs will not abandon their home. Fighting for every lily pad, they strike 25% harder here. The swamp will not fall!", theme: "swamp",
+    swamp:  { name: "The Swamp", acornDropChance: 0.03, about: "Deep in the swamp, the Iron Heart's factory spilled black, oily sludge into the water, and something monstrous grew in the muck. Now its robots crawl out of the poisoned water 50% tougher than before, and the Sludge Leviathan lurks beneath the surface, waiting. But the frogs are ready to defend their home: here they hit 25% harder. Hold the swamp!", theme: "swamp",
               // 3% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               // Extra waves after the usual 15 (so The Swamp has 20). A group can mix robots: [["tank", "tank", "tesla"], 9, 1.3]
@@ -479,7 +489,7 @@ const SETTINGS = {
                 [[["hider", "hider", "tesla"], 12, 0.8], ["boss", 1, 0, 900]],              // 17
                 [[["tesla", "hider"], 12, 0.9], ["boss", 2, 3, 900]],                       // 18
                 [["hider", 10, 0.6], [["boss", "tesla", "tesla"], 9, 1.4, 900]],             // 19
-                [[["tesla", "hider", "tesla"], 15, 0.6], [["boss", "tesla"], 6, 1.8, 900]],  // 20: the big finish
+                [[["tesla", "hider", "tesla"], 15, 0.6], [["boss", "tesla"], 4, 1.8, 900], ["sludgeleviathan", 1, 0]],  // 20: the big finish: the Sludge Leviathan rises!
               ],
               // Towers that are stronger on this level. Same kinds of boosts as upgrade choices.
               towerBoosts: { water: { damageTimes: 1.25 } },
@@ -560,7 +570,7 @@ const SETTINGS = {
                 [["sandboss", 2, 5], [["drone", "drone", "tesla"], 15, 0.6]],           // 19
                 [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
               ] },
-    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Quicksand slows them down, and Mummy Bots unravel! Scores are worth 2x.", theme: "pyramid",
+    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Quicksand slows them down, Mummy Bots unravel, and the Pharaoh Machine waits at the end! Scores are worth 2x.", theme: "pyramid",
               // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.4,      // robots have this many times their normal health (the quicksand helps you a lot)
               scoreTimes: 2,         // your score on this level is multiplied by this
@@ -592,7 +602,7 @@ const SETTINGS = {
                 [[["hider", "drone", "mummy"], 15, 0.7], ["boss", 1, 0, 3000]],         // 17
                 [[["splitter", "mummy", "repair"], 18, 0.6]],                           // 18
                 [["sandboss", 2, 5], [["mummy", "drone"], 14, 0.6]],                    // 19
-                [[["tank", "mummy", "repair", "tesla"], 20, 0.6], ["boss", 2, 4, 4000], ["sandboss", 1, 0]],  // 20: the big finish
+                [[["tank", "mummy", "repair", "tesla"], 20, 0.6], ["sandboss", 1, 0], ["pharaohmachine", 1, 0]],  // 20: the big finish: the Pharaoh Machine awakens!
               ] },
 
     // ---------------- THE LAVA LEVELS ----------------
