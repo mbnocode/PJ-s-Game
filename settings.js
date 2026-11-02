@@ -300,7 +300,7 @@ const SETTINGS = {
     cyclonegolem: { name: "Cyclone Golem", health: 3000, speed: 0.85, leaves: 180, points: 700, baseHit: 55, isBoss: true, spinEvery: 7, spinSeconds: 2, spinSpeed: 1.6 },
     // The Thunder Titan: the final boss of the Eye of the Storm (wave 30). Its storm armor: landTowerTimes / flyingTowerTimes (below). Every strikeEvery seconds it calls lightning
     // down on strikeTowers towers within strikeRadius squares, stunning them for strikeSeconds. fixedHealth: exactly this much health on Normal.
-    thundertitan: { name: "Thunder Titan", health: 30000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
+    thundertitan: { name: "Thunder Titan", health: 75000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
                     landTowerTimes: 0.5, flyingTowerTimes: 2 },   // land towers do half damage to it; flying towers (Owl, Night Owl, Dragon, Pegasus, Phoenix) do double
     // ---- more sky robots ----
     // Balloon Bot: floats over everything under a hot-air balloon (only towers that hit flying robots can reach it).
