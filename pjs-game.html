@@ -170,6 +170,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .boxopen #bo-prize.mimic { cursor: pointer; animation: mimicbounce 0.35s ease-in-out infinite alternate; opacity: 1; transform: translateY(-60px) scale(1.2); }
 .boxopen #bo-prize.mimic.hitme canvas { filter: brightness(2) drop-shadow(0 0 14px rgba(255,80,80,0.9)); }
 @keyframes mimicbounce { from { transform: translateY(-60px) scale(1.2) rotate(-6deg); } to { transform: translateY(-74px) scale(1.25) rotate(6deg); } }
+.serp-link { display: flex; align-items: center; gap: 10px; align-self: flex-start; padding: 6px 12px 6px 6px; background: #1e3a22; border: 2px solid #5fbf4a; border-radius: 10px; color: #c8f0a0; font-size: 15px; box-shadow: 0 3px 0 #16191d; }
+.serp-link:hover { background: #26482a; } .serp-link canvas { width: 72px; height: 36px; image-rendering: pixelated; }
 .droprates summary { cursor: pointer; font-weight: 700; color: #d9b8ff; }
 .droprates table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 14px; } .droprates td { padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,0.08); } .droprates td:last-child { text-align: right; color: #ffd34d; font-weight: 700; white-space: nowrap; }
 .droprates p { font-size: 12px; margin: 6px 0 0; }
@@ -2041,12 +2043,15 @@ function drawSerpentTree(c, sp, dt) {
 const TS_SLOT = 32;
 $("b-serpent").onmouseenter = () => { if (slotSerp()) slotSerp().hover = true; };
 $("b-serpent").onmouseleave = () => { if (slotSerp()) slotSerp().hover = false; };
-$("b-serpent").onclick = () => { Sound.play("place"); openSerpentShop(); };
+$("b-serpent").onclick = () => { Sound.play("place"); openSerpentShop("s-slots"); };
 let serpSceneRef = null; const slotSerp = () => serpSceneRef && serpSceneRef.serp;
 
-let serpSlot = -1, serpAnim = null;
-function openSerpentShop() {
-  serpSlot = slots[slotIndex] ? slotIndex : slots.findIndex((s) => s);
+let serpSlot = -1, serpAnim = null, serpFrom = "s-slots";
+// from: where the Back button goes ("s-slots" from the hidden serpent, "s-perks" from the shortcut next to the Mystery Box)
+function openSerpentShop(from = "s-slots") {
+  serpFrom = from; $("b-serpent-back").innerHTML = from === "s-perks" ? "←&nbsp; Back to Upgrades" : "←&nbsp; Back to save slots";
+  if (!PREFS.serpentFound) { PREFS.serpentFound = true; savePrefs(); }   // found it! now there's a shortcut next to the Mystery Box
+  serpSlot = from === "s-perks" ? slotIndex : slots[slotIndex] ? slotIndex : slots.findIndex((s) => s);
   renderSerpentShop(); show("s-serpent");
   if (!serpAnim) serpAnim = requestAnimationFrame(serpPortrait);
 }
@@ -2319,7 +2324,7 @@ function serpPortrait(now) {
   drawSerpentHead(c, Math.round(hd[0]) - 6, Math.round(hd[1]) - 12, 2, (t % 1.6) < 0.4);
   serpAnim = requestAnimationFrame(serpPortrait);
 }
-$("b-serpent-back").onclick = () => { renderSlots(); show("s-slots"); startSlotScene(); };
+$("b-serpent-back").onclick = () => { if (serpFrom === "s-perks") { renderPerks(); show("s-perks"); return; } renderSlots(); show("s-slots"); startSlotScene(); };
 
 function startSlotScene() {
   if (slotScene) return;
@@ -4422,6 +4427,13 @@ function renderPerks() {
     ${pets.length ? `<label class="petpick">Your pet: <select id="pet-pick"><option value="">No pet</option>${pets.map((k) => `<option value="${k}" ${s.box.pet === k ? "selected" : ""}>${PETS[k]}</option>`).join("")}</select></label>` : ""}`;
   const pc = spriteCanvas(opened ? "mysteryboxopen" : "mysterybox", 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc);
   box.appendChild(d);
+  if (PREFS.serpentFound) {   // you've found the Serpent's Shop before: the serpent waits next to the box, so you can pop over and buy a key
+    const sb = document.createElement("button"); sb.className = "serp-link"; sb.id = "perk-serpent"; sb.title = "Visit the Serpent's Shop";
+    const sc = document.createElement("canvas"); sc.width = 48; sc.height = 24; const g = sc.getContext("2d"); g.imageSmoothingEnabled = false; drawSerpentHead(g, 6, 2, 2, false);
+    sb.appendChild(sc); sb.insertAdjacentHTML("beforeend", `<span>Psst… the Serpent's Shop</span>`);
+    sb.onclick = () => { Sound.play("place"); openSerpentShop("s-perks"); };
+    d.appendChild(sb);
+  }
   const pp = d.querySelector("#pet-pick"); if (pp) pp.onchange = () => { s.box.pet = pp.value || null; saveSlots(slots); };
   const ob = d.querySelector("button");
   if (ob && hasKey) ob.onclick = () => {   // the key gets used up, so the Serpent's Shop sells another
