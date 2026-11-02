@@ -498,7 +498,7 @@ const SETTINGS = {
               trees:     [[1, 1], [7, 0], [11, 5], [15, 10], [19, 1], [0, 6], [11, 11], [15, 5]],
               mushrooms: [[4, 8], [7, 4], [16, 0], [12, 10]],
               tallGrass: [[1, 4], [8, 9], [10, 0], [14, 6], [18, 10], [5, 0], [16, 5]] },
-    beach:  { name: "The Beach", acornDropChance: 0.05, about: "Robots splash through the ocean to the sandy treehouse. They're 50% tougher here, but Crabs hit 50% harder and scores are worth 1.5x.", theme: "beach",
+    beach:  { name: "The Beach", acornDropChance: 0.05, about: "Driven back from the swamp, the Iron Heart turned its gaze to the sea. Its robots now storm the shore, crashing through the waves toward the sandy treehouse, their armor hardened by salt water until they're 50% tougher than before. But the beach has defenders of its own: the Crabs have clawed their way up out of the sand, and here they hit 50% harder. Hold the shoreline! Scores are worth 1.5x.", theme: "beach",
               // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.5,   // every Robot on this level has this many times its normal health
               scoreTimes: 1.5,    // your score on this level is multiplied by this (on top of the difficulty's score bonus)
@@ -536,7 +536,7 @@ const SETTINGS = {
                 [[["tank", "splitter", "repair", "tesla"], 20, 0.7], ["boss", 2, 3, 4500]],  // 20: the big finish
               ] },
     // A two-factory level: the left half is written here, and mirror: true copies the path, scenery and factory onto the right half.
-    desert: { name: "The Desert", acornDropChance: 0.04, about: "Two factories! Robots march from both sides along twisty canyon roads to the oasis treehouse in the middle. Scores are worth 1.75x.", theme: "desert",
+    desert: { name: "The Desert", acornDropChance: 0.04, about: "Beyond the beach lies an endless desert, and at its heart, a hidden oasis with the last fresh water for a hundred miles. The Iron Heart has built not one but two factories in the canyons, and its robots march from both sides at once to surround your treehouse. Out of the dunes rise the Sand Golems, ancient guardians bent to the Iron Heart's will. Defend the oasis from every direction! Scores are worth 1.75x.", theme: "desert",
               // 4% Golden Acorn chance per robot (from wave 3 on)
               mirror: true,          // build a matching path and factory on the right side
               base: [9, 5],          // the treehouse sits in the middle (top-left square of its 2 x 2 spot)
@@ -570,7 +570,7 @@ const SETTINGS = {
                 [["sandboss", 2, 5], [["drone", "drone", "tesla"], 15, 0.6]],           // 19
                 [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
               ] },
-    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Robots march around an ancient pyramid on an old stone road. Its walls are carved with pictures of people looking up at a strange light in the sky. Did the ancients see the Swipe coming? Quicksand slows the robots down, Mummy Bots unravel, and the Pharaoh Machine waits at the end! Scores are worth 2x.", theme: "pyramid",
+    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Deep in the desert stands the Lost Pyramid, buried and forgotten for thousands of years. Its walls are carved with pictures of people looking up at a strange light in the sky. Did the ancients see the Swipe coming? Now the Iron Heart has broken the seal. Mummy Bots shamble out of the tombs, quicksand swallows the old stone road, and deep inside, the Pharaoh Machine has awakened, furious after thousands of years of sleep. Scores are worth 2x.", theme: "pyramid",
               // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.4,      // robots have this many times their normal health (the quicksand helps you a lot)
               scoreTimes: 2,         // your score on this level is multiplied by this
