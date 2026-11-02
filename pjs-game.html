@@ -395,6 +395,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
+.tbtn.lockedtw { opacity: 0.55; filter: grayscale(0.8); } .tbtn.lockedtw:hover { filter: grayscale(0.8); }
 .tbtn canvas { width: 36px; height: 36px; image-rendering: pixelated; flex: none; }
 .tbtn .c { display: block; font-family: var(--body); font-weight: 700; font-size: 13px; color: var(--leaf); }
 .tbtn[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
@@ -4542,6 +4543,8 @@ function startGame(L, d, tutorial, online, resuming) {
     shake: 0, time: 0, seenHider: false, seenBoss: false, factoryCount: 0, flashTiles: [],
     online: online ? { ...online, id: online.id || null, secret: online.secret || null, others: [], last: 0, dirty: false, err: false, collapsed: false } : null,
   };
+  // The very first time you play the Meadow in a save slot, the Tree Giant is locked (it unlocks when that game ends)
+  { const s = slot(); if (L === "meadow" && s && !s.meadowPlayed && !(s.best && s.best.meadow)) G.lockedTowers = { plant: true }; }
   G.ground = document.createElement("canvas"); G.ground.width = 640; G.ground.height = 384;
   redrawGround();
   $("tpanel").hidden = true; $("overlay").hidden = true; $("banner").hidden = true;
@@ -5285,6 +5288,12 @@ function renderShelf() {
     const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32;
     const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = SMOOTH_SPRITES.has(k); icx.imageSmoothingQuality = "high"; icx.drawImage(towerSprite(k), 0, 0, 32, 32);
     b.appendChild(ic);
+    if (G.lockedTowers && G.lockedTowers[k]) {   // locked for now (the Tree Giant on your first Meadow game)
+      b.classList.add("lockedtw"); b.title = `The ${t.name} unlocks after your first game on the Meadow.`;
+      b.insertAdjacentHTML("beforeend", `<span>🔒 ${t.name}<span class="c">Unlocks after this game</span></span>`);
+      b.onclick = () => { Sound.play("nope"); tip(`The ${t.name} is locked for your first game on the Meadow. Finish this game to unlock it!`, undefined, "Locked"); };
+      box.appendChild(b); return;
+    }
     b.insertAdjacentHTML("beforeend", `<span>${t.name}<span class="c">${towerCost(k)} leaves</span></span>`);
     b.onclick = () => { G.pick = G.pick === k ? null : k; G.sel = null; $("tpanel").hidden = true; updateShelf(); };
     box.appendChild(b);
@@ -7689,6 +7698,7 @@ function finish(won) {
   // The factory eats the rest of the map at a steady 40 squares a second.
   if (!won) { G.takeover = { t: 0, from: G.factoryCount, n: G.factoryCount, done: false, dur: Math.max(1, (G.map.grassOrder.length - G.factoryCount) / 40) }; Sound.play("horn"); }
   sendProgress(true, won ? "won" : "lost", stars, score);
+  if (G.level === "meadow") { const s = slot(); if (s && !s.meadowPlayed) { s.meadowPlayed = true; saveSlots(slots); } }   // the Tree Giant unlocks after your first Meadow game
   addStat("sandGames", 1, SAND_LEVELS);   // (Sun-Baked)
   addStat("lavaGames", 1, LAVA_LEVELS);   // (Hot Stuff)
   addStat("iceGames", 1, ICE_LEVELS); addStat("skyGames", 1, SKY_LEVELS);   // (Frostbite, Head in the Clouds)
