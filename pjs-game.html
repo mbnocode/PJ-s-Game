@@ -3110,7 +3110,7 @@ addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("mappv").hidde
 $("b-resetslot").onclick = () => {
   const b = $("b-resetslot");
   if (!b.dataset.sure) {
-    b.dataset.sure = "1"; b.textContent = "Tap again to erase everything in Slot " + (slotIndex + 1);
+    b.dataset.sure = "1"; b.textContent = "Tap again to erase everything in Slot " + (slotIndex + 1) + " (even towers, skins and shop items)";
     setTimeout(() => { if (b.dataset.sure) { b.dataset.sure = ""; b.textContent = "↺ Restart save slot"; } }, 5000); return;
   }
   b.dataset.sure = ""; b.textContent = "↺ Restart save slot";

@@ -211,7 +211,7 @@ const SETTINGS = {
                 [ { name: "Mega Laser",     about: "Zaps do double damage.", damageTimes: 2 },
                   { name: "Robot Army",     about: "Zaps 2 robots at once.", targetsPlus: 1 } ],
               ] },
-    wolf:     { name: "Wolf", cost: 120, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, maxDamage: 250,   // maxDamage: a Wolf's hit is never more than this serpentUnlock: "wolf",
+    wolf:     { name: "Wolf", cost: 120, range: 2.3, damage: 9, attacksPerSecond: 2.4, packBonus: 15, maxDamage: 250, serpentUnlock: "wolf",   // maxDamage: a Wolf's hit is never more than this
               about: "Unlocked in the Night Owl's shop. Hits like a Fire Dragon, and gets stronger next to other Wolves.",
               upgradeChoices: [
                 [ { name: "Sharp Fangs",  about: "Hits 50% harder.", damageTimes: 1.5 },
