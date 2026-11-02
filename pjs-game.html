@@ -744,7 +744,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="back" id="b-achievements-back">←&nbsp; Back to levels</button>
     <h2>Achievements</h2>
     <div class="ach-count" id="ach-count"></div>
-    <p class="muted">Earn achievements to fill the boxes. Tap a ? box to see what to do. More are coming soon!</p>
+    <p class="muted">Earn achievements to fill the boxes, and get 10 Golden Acorns for each one! Tap a ? box to see what to do.</p>
     <div class="ach-grid" id="ach-grid"></div>
     <p class="ach-hint" id="ach-hint" hidden></p>
   </section>
@@ -4039,8 +4039,9 @@ function drawNightFeather(x, sh) {
   x.fillStyle = "#fff4b0"; x.fillRect(6, -0.6, 2, 1.2);   // a glowing golden tip
   x.restore();
 }
-// Towers you didn't start with (from the secret shops, the Mystery Box, a code, or the Super Tower) can't be struck by lightning
-function lightningProof(kind) { const tw = SETTINGS.towers[kind] || {}; return !!(tw.serpentUnlock || tw.boxUnlock || tw.superTower); }
+// Towers you didn't start with (from the secret shops, the Mystery Box, a code, or the Super Tower) can't be struck by lightning (except the Wolf)
+function starterTower(kind) { const tw = SETTINGS.towers[kind] || {}; return !(tw.serpentUnlock || tw.boxUnlock || tw.superTower); }
+function lightningProof(kind) { return !starterTower(kind) && kind !== "wolf"; }
 // Thunder Peaks: every few seconds during a wave, lightning stuns a random tower
 function tickLightning(dt) {
   const L = SETTINGS.levels[G.level].lightning; if (!L) return;
@@ -5040,6 +5041,8 @@ const ACHIEVEMENTS = [
   { id: "fireballfrenzy", name: "Fireball Frenzy", about: "Destroy 10 robots with a single Mega Fireball.", pic: "fire" },
   { id: "iceage", name: "Ice Age", about: "Freeze 15 robots with a single Freeze.", pic: "icecrystal" },
   { id: "luckyleaf", name: "Lucky Leaf", about: "Tap 50 big maple leaves in one game.", pic: "leaf" },
+  { id: "perfectstorm", name: "Perfect Storm", about: "Beat the Eye of the Storm on Nightmare without losing any health.", pic: "thundertitan" },
+  { id: "backtobasics", name: "Back to Basics", about: "Beat the Eye of the Storm using only the 8 towers you start with (no Pegasus, Hydra, Wolf, Night Owl, Hacked Robot, Phoenix or Kraken).", pic: "air" },
   { id: "boxopener", name: "Box Opener", about: "Open the Mystery Box 10 times.", pic: "mysteryboxopen", check: (s) => (s.boxOpened || 0) >= 10 },
   { id: "jackpot", name: "Jackpot!", about: "Find the secret jackpot in the Mystery Box.", pic: "phoenix", check: (s) => !!(s.box && s.box.found && s.box.found.phoenix) },
 ];
@@ -5050,11 +5053,13 @@ function addStat(key, n, levels = GRASS_LEVELS) {   // levels = which levels cou
   for (const a of ACHIEVEMENTS) if (a.goal && a.goal[0] === key && s.stats[key] >= a.goal[1]) earnAch(a.id);
 }
 const ACH_BOXES = Math.max(30, Math.ceil((ACHIEVEMENTS.length + 6) / 6) * 6);   // the page shows this many boxes (a row or so of empty ones waiting for future achievements)
+const ACH_REWARD = 10;   // Golden Acorns you get for each achievement
 function hasAch(id) { const s = slot(); return !!(s && s.achievements && s.achievements[id]); }
 function earnAch(id) {
   const s = slot(); if (!s) return; s.achievements = s.achievements || {};
   if (s.achievements[id]) return;
-  s.achievements[id] = Date.now(); saveSlots(slots);
+  s.achievements[id] = Date.now(); s.acorns = (s.acorns || 0) + ACH_REWARD; saveSlots(slots);   // every achievement is worth some Golden Acorns
+  if (G && !G.over) { const el = $("hud-acorns"); if (el) el.textContent = s.acorns; }
   earnAch.queue = earnAch.queue || []; earnAch.queue.push(id);
   if (earnAch.queue.length === 1) showAchToast();
 }
@@ -5062,7 +5067,7 @@ function popToast(pic, title, name) { earnAch.queue = earnAch.queue || []; earnA
 function showAchToast() {   // one pop-up at a time, so earning two at once shows both
   const id = earnAch.queue[0]; if (!id) return;
   const a = typeof id === "object" ? id : ACHIEVEMENTS.find((x) => x.id === id), box = $("achtoast");
-  box.innerHTML = `<span class="pic"></span><div><div class="t">${a.title || "Achievement unlocked!"}</div><div class="n">${a.name}</div></div>`;
+  box.innerHTML = `<span class="pic"></span><div><div class="t">${a.title || "Achievement unlocked!"}</div><div class="n">${a.name}</div>${a.title ? "" : `<div class="t" style="margin-top:2px">+${ACH_REWARD} Golden Acorns</div>`}</div>`;
   box.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32)); box.hidden = false; Sound.play("upgrade");
   clearTimeout(earnAch.timer); earnAch.timer = setTimeout(() => { box.hidden = true; earnAch.queue.shift(); if (earnAch.queue.length) setTimeout(showAchToast, 250); }, 3500);
 }
@@ -7515,6 +7520,7 @@ function finish(won) {
       if (LAVA_LEVELS.includes(L) && G.sawPillar && !G.trapped) earnAch("unbreakable");
       if (ICE_LEVELS.includes(L) && !G.frozeAny) earnAch("defrosted");
       if (L === "storm" && !G.struckAny) earnAch("calmeye");
+      if (L === "storm" && G.diffKey === "nightmare" && !G.hurtBase) earnAch("perfectstorm");
       if (L === "beach" && kinds.length && kinds.every((k) => k === "crab")) earnAch("shellshocked");
       if (L === "desert" && (!G.hurtFrom || G.hurtFrom.size < 2)) earnAch("twofront");
       if (L === "pyramid" && !G.nearPyramid) earnAch("pharaoh");
@@ -7525,6 +7531,7 @@ function finish(won) {
       if (L === "swamp" && kinds.length && kinds.every((k) => k === "water")) earnAch("frogpond");
       if (L === "swamp" && G.diffKey === "nightmare" && !G.hurtBase) earnAch("cleansweep"); }
     if (!G.hurtBase) earnAch("untouchable");
+    if (G.level === "storm" && Object.keys(G.placedKinds || {}).length && Object.keys(G.placedKinds).every((k) => starterTower(k))) earnAch("backtobasics");
     if (Math.round(G.health) <= 1) earnAch("closecall");
     checkAchievements();
   }
