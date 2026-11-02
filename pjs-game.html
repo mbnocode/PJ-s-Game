@@ -167,6 +167,13 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .boxopen #bo-prize { position: absolute; left: 32px; top: 20px; width: 96px; height: 96px; opacity: 0; pointer-events: none; }
 .boxopen #bo-prize canvas { width: 96px; height: 96px; image-rendering: pixelated; filter: drop-shadow(0 0 14px rgba(255,230,140,0.9)); }
 .boxopen #bo-prize.fly { animation: prizefly 0.7s cubic-bezier(.2,1.6,.4,1) forwards; }
+.boxopen #bo-prize.mimic { cursor: pointer; animation: mimicbounce 0.35s ease-in-out infinite alternate; opacity: 1; transform: translateY(-60px) scale(1.2); }
+.boxopen #bo-prize.mimic.hitme canvas { filter: brightness(2) drop-shadow(0 0 14px rgba(255,80,80,0.9)); }
+@keyframes mimicbounce { from { transform: translateY(-60px) scale(1.2) rotate(-6deg); } to { transform: translateY(-74px) scale(1.25) rotate(6deg); } }
+.droprates summary { cursor: pointer; font-weight: 700; color: #d9b8ff; }
+.droprates table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 14px; } .droprates td { padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,0.08); } .droprates td:last-child { text-align: right; color: #ffd34d; font-weight: 700; white-space: nowrap; }
+.droprates p { font-size: 12px; margin: 6px 0 0; }
+.petpick { display: flex; gap: 8px; align-items: center; font-size: 15px; } .petpick select { font: inherit; padding: 4px 8px; border-radius: 6px; }
 @keyframes prizefly { 0% { opacity: 0; transform: translateY(30px) scale(0.2); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(-120px) scale(1.5); } }
 .boxopen .bo-rays { position: absolute; width: 900px; height: 900px; left: 50%; top: 50%; margin: -450px 0 0 -450px; opacity: 0; border-radius: 50%;
   background: repeating-conic-gradient(rgba(255,230,150,0.22) 0 10deg, rgba(255,230,150,0) 10deg 22deg); -webkit-mask: radial-gradient(circle, #000 0, transparent 65%); mask: radial-gradient(circle, #000 0, transparent 65%); }
@@ -866,7 +873,7 @@ const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity", "skyislands", "thunder", "storm"];
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
-const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix"];
+const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix", "kraken"];
 const $ = (id) => document.getElementById(id);
 
 /* ---------- pixel art ---------- */
@@ -1091,6 +1098,29 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
     "............kko.",
     "................"], false, { h: "#ffd36b" });
 }
+{ // Mystery Box prizes: the Kraken tower, the pets and the Box Mimic
+  // The Kraken: a purple sea monster with a big round head, glowing yellow eyes and curling tentacles with pale suckers
+  const KR = { P: "#3e1a5e", p: "#6a2e98", z: "#a066d0", Z: "#d2a8f0", y: "#ffd34d", t: "#4fd1b8", w: "#ffffff" };
+  const kin = (i, j) => { const dx = (i + 0.5 - 16) / 10, dy = (j + 0.5 - 11) / 9.5; return dx * dx + dy * dy <= 1 && j <= 18; };
+  const tent = (i, j) => { if (j < 16 || j > 30) return false; for (let k = 0; k < 6; k++) { const bx = 6 + k * 4, cx = bx + Math.sin((j - 16) / 3 + k * 1.3) * (1 + (j - 16) * 0.15) + (k - 2.5) * (j - 16) * 0.12; if (Math.abs(i + 0.5 - cx) < (j > 27 ? 0.8 : 1.4)) return true; } return false; };
+  let kr = Array.from({ length: 32 }, (_, j) => Array.from({ length: 32 }, (_, i) => {
+    if (kin(i, j)) { const dy = (j + 0.5 - 11) / 9.5, dx = (i + 0.5 - 16) / 10; if ((i === 12 || i === 19) && j === 12) return "k"; if ((i === 11 || i === 12 || i === 19 || i === 20) && (j === 11 || j === 12)) return "y";
+      if ((i * 7 + j * 3) % 11 === 0 && dy < 0.4) return "Z"; return dy < -0.5 ? "Z" : dx < -0.3 ? "z" : dy < 0.4 ? "p" : "P"; }
+    if (tent(i, j)) return (j + i) % 4 === 0 ? "Z" : j > 24 ? "P" : "p";
+    return "."; }).join(""));
+  kr = kr.map((row, j) => row.split("").map((ch, i) => ch !== "." ? ch : [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => ((kr[j + b] || "")[i + a] || ".") !== "." && ((kr[j + b] || "")[i + a] || ".") !== "k") ? "k" : ".").join(""));
+  SPR.kraken = makeSprite(kr, false, KR); SPRF.kraken = makeSprite(kr, true, KR);
+  // the pets
+  SPR.pet_bunny = makeSprite(["....kk..kk......", "...kwwk.kwwk....", "...kwpk.kwpk....", "...kwwk.kwwk....", "....kwwkwwk.....", "...kwwwwwwwk....", "..kwwkwwwkwwk...", "..kwwwwpwwwwk...", "..kwwwwwwwwwk...", "...kwwwwwwwk....", "..kwwwwwwwwwwk..", ".kwwwwwwwwwwwwk.", ".kwwwwwwwwwwwwkk", ".kwwswwwwwswwwkw", "..kkkkkkkkkkkkk.", "................"], false, { w: "#ffffff", p: "#ffb0c8", s: "#c9ced6" });
+  SPR.pet_chick = makeSprite(["................", "................", "......kkkk......", ".....kyyyyk.....", "....kyykyyyk....", "....kyyyyyyok...", "....kyyyyyyook..", "...kyyyyyyyk....", "..kyyyyyyyyyk...", "..kyYyyyyyyyk...", "..kyYYyyyyyyk...", "..kyyyyyyyyyk...", "...kyyyyyyyk....", "....kkkkkkk.....", ".....o...o......", "....oo..oo......"], false, { y: "#ffe066", Y: "#e8b830", o: "#ff8c1a" });
+  SPR.pet_firefly = makeSprite(["................", "....cc...cc.....", "...cwwc.cwwc....", "...cwwcccwwc....", "....ccNNNcc.....", ".....kNNNk......", ".....kNkNk......", ".....kNNNk......", ".....kyyyk......", "....kyyyyyk.....", "....kyyyyyk.....", ".....kyyyk......", "......kkk.......", "................", "................", "................"], false, { c: "#cfe8ff", w: "#ffffff", N: "#5a3a1a", y: "#fff066" });
+  SPR.pet_paw = SPR.pet_bunny;
+  // the Box Mimic: the Mystery Box, with sharp teeth, a tongue and angry red eyes
+  const mc = document.createElement("canvas"); mc.width = mc.height = 16; const mx = mc.getContext("2d"); mx.imageSmoothingEnabled = false; mx.drawImage(SPR.mysteryboxopen, 0, 0);
+  mx.fillStyle = "#ffffff"; for (const i of [2, 4, 6, 8, 10, 12]) { mx.fillRect(i, 7, 1, 2); mx.fillRect(i + 1, 10, 1, 1); }
+  mx.fillStyle = "#e0443a"; mx.fillRect(5, 9, 6, 2); mx.fillStyle = "#ff3a3a"; mx.fillRect(4, 1, 2, 1); mx.fillRect(10, 1, 2, 1);
+  SPR.mimic = mc;
+}
 { // the Defector's shop: the Hacked Robot (a Clanker painted green, with a leaf-green core), the Factory Blueprint and the Overcharge Battery
   const HACK = { f: "#c8f0a0", y: "#5fbf4a", Y: "#2f7d32", r: "#4fd1b8", c: "#9effe8", b: "#2a8a78", n: "#8fd45f", o: "#c8fff4", G: "#3a5524", g: "#6a8a50", s: "#a8d890" };
   SPR.hacked = makeSprite(ART.clanker, false, HACK); SPRF.hacked = makeSprite(ART.clanker, true, HACK);
@@ -1249,7 +1279,26 @@ function pathFacing(tx, ty) {
   return dir;
 }
 function towerFace(t) { if (t.face === undefined) t.face = pathFacing(t.x, t.y); return SIDE_FACING.has(t.kind) ? t.face : 1; }
-function towerSprite(kind) { const img = kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind]; return hasGolden(kind) ? goldOf(img) : img; }
+function towerSprite(kind) { const img = kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind], sk = towerSkin(kind); return sk ? skinOf(img, sk) : hasGolden(kind) ? goldOf(img) : img; }
+// Tower Skins (a Mystery Box prize): a tower's picture recolored in a new style. (A skin shows instead of the gold look.)
+const TOWER_SKINS = {
+  crystal: { name: "Crystal", ramp: [[20, 40, 70], [40, 90, 150], [80, 160, 220], [140, 210, 250], [200, 240, 255], [245, 252, 255]] },
+  shadow:  { name: "Shadow",  ramp: [[20, 10, 30], [45, 25, 70], [80, 45, 120], [120, 80, 170], [170, 130, 220], [220, 200, 250]] },
+  candy:   { name: "Candy",   ramp: [[80, 20, 50], [160, 50, 110], [230, 100, 170], [250, 150, 200], [255, 200, 225], [255, 240, 248]] },
+  lava:    { name: "Lava",    ramp: [[40, 6, 2], [110, 20, 6], [190, 50, 10], [240, 110, 20], [255, 180, 60], [255, 235, 160]] },
+  toxic:   { name: "Toxic",   ramp: [[10, 30, 8], [30, 80, 20], [60, 150, 30], [120, 210, 60], [190, 245, 120], [240, 255, 210]] },
+};
+function towerSkin(kind) { const s = typeof slot === "function" ? slot() : null; return (s && s.box && s.box.skins && s.box.skins[kind]) || null; }
+const SKIN_CACHE = new Map();
+function skinOf(img, style) {
+  const key = style, m = SKIN_CACHE.get(img) || new Map(); SKIN_CACHE.set(img, m); if (m.has(key)) return m.get(key);
+  const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data, ramp = TOWER_SKINS[style].ramp;
+  for (let i = 0; i < p.length; i += 4) { if (!p[i + 3]) continue; const lum = (0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2]) / 255; if (lum < 0.12) continue;
+    const f = Math.min(0.999, lum * 1.15) * (ramp.length - 1), k = Math.floor(f), t = f - k, a = ramp[k], b = ramp[k + 1];
+    p[i] = a[0] + (b[0] - a[0]) * t; p[i + 1] = a[1] + (b[1] - a[1]) * t; p[i + 2] = a[2] + (b[2] - a[2]) * t; }
+  x.putImageData(d, 0, 0); m.set(key, c); return c;
+}
 // Golden Tower looks (a Mystery Box prize): the same picture, recolored in shiny gold.
 function hasGolden(kind) { const s = typeof slot === "function" ? slot() : null; return !!(s && s.box && s.box.golden && s.box.golden[kind]); }
 const GOLD_CACHE = new Map();
@@ -1700,6 +1749,7 @@ const Sound = {
       case "pop": if (this.ok(name, 60)) { this.noise(0.09, 0.35, "bandpass", 1900); this.tone(620, 0.12, "square", 0.08, 180); } break;
       case "swish": if (this.ok(name, 90)) this.noise(0.18, 0.08, "highpass", 1800, 6000); break;
       case "fire": if (this.ok(name, 140)) this.noise(0.22, 0.12, "lowpass", 900, 250); break;
+      case "kraken": if (this.ok(name, 160)) { this.noise(0.22, 0.12, "lowpass", 600, 150); this.tone(90, 0.2, "sine", 0.08, 55); } break;
       case "phoenix": if (this.ok(name, 160)) { this.noise(0.2, 0.1, "lowpass", 1200, 300); this.tone(1100, 0.12, "triangle", 0.04, 1600); } break;
       case "water": if (this.ok(name, 140)) this.noise(0.14, 0.09, "bandpass", 3200, 1400); break;
       case "plant": if (this.ok(name, 160)) this.tone(120, 0.2, "sawtooth", 0.05, 85); break;
@@ -3876,6 +3926,16 @@ function tickLightning(dt) {
   G.flash = 0.25; G.shake = Math.max(G.shake, 0.25); burst(cx, cy, "#fff7a0", 16); Sound.play("smash");
   floatText(cx, cy - 22, "Zap!", "#fff7a0", 1);
 }
+// a Kraken tentacle reaching out from the tower and slamming down on a robot
+function drawTentacle(x, f) {
+  const k = f.t / f.life, reach = Math.min(1, (1 - k) * 2.2), ex = f.x1 + (f.x2 - f.x1) * reach, ey = f.y1 + (f.y2 - f.y1) * reach;
+  const mx = (f.x1 + ex) / 2 + Math.sin(f.seed) * 14, my = (f.y1 + ey) / 2 - 12;
+  x.save(); x.globalAlpha = Math.min(1, k * 2.5); x.lineCap = "round";
+  if (PREFS.simple) { x.strokeStyle = "#6a2e98"; x.lineWidth = 5; x.beginPath(); x.moveTo(f.x1, f.y1); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); x.restore(); return; }
+  for (const [col, w] of [["#16191d", 9], ["#6a2e98", 7], ["#a066d0", 3]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(f.x1, f.y1); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
+  x.fillStyle = "#e8d0f8"; for (let i = 1; i < 6; i++) { const u = i / 6, px = (1 - u) * (1 - u) * f.x1 + 2 * (1 - u) * u * mx + u * u * ex, py = (1 - u) * (1 - u) * f.y1 + 2 * (1 - u) * u * my + u * u * ey; x.beginPath(); x.arc(px, py + 2, 1.4, 0, Math.PI * 2); x.fill(); }   // suckers
+  x.restore();
+}
 // a crackling arc of electricity between two points (the Static Bot zapping a tower)
 function drawArc(x, f) {
   const a = f.t / f.life; x.save(); x.globalAlpha = Math.min(1, a * 1.8); x.lineJoin = "round";
@@ -4343,19 +4403,26 @@ function renderPerks() {
   const found = (s.box && s.box.found) || {};
   const d = document.createElement("div"); d.className = "perk mystery" + (opened ? " maxed" : "");
   const goldN = Object.keys((s.box && s.box.golden) || {}).length, goldMax = TOWER_ORDER.filter((k) => !SETTINGS.towers[k].boxUnlock).length;
+  const skinN = Object.keys((s.box && s.box.skins) || {}).length, pets = Object.keys((s.box && s.box.pets) || {});
   const coll = [
     ["acorns", "Acorn Pouch", found.acorns ? `found ${found.acorns}×` : ""],
-    ["leafboost", "Leaf Boost", found.leafboost ? `found ${found.leafboost}×` + (s.box.leafBoosts ? ` (${s.box.leafBoosts} waiting for your next game)` : "") : ""],
-    ["upgrade", "Mystery Upgrade", found.upgrade ? `found ${found.upgrade}×` : ""],
     ["golden", "Golden Tower Looks", goldN ? `${goldN} / ${goldMax} towers` : ""],
+    ["skin", "Tower Skins", skinN ? `${skinN} tower${skinN > 1 ? "s" : ""} with a new look` : ""],
+    ["pet", "Pets", pets.length ? `${pets.length} / ${PET_NAMES_N} pets` : ""],
+    ["mimic", "Box Mimic", found.mimic ? `met ${found.mimic}× · beat ${(s.box && s.box.mimicWins) || 0}×` : ""],
     ["phoenix", "??? Jackpot ???", found.phoenix ? "The Phoenix!" : ""],
+    ["kraken", "??? Jackpot ???", found.kraken ? "The Kraken!" : ""],
   ];
+  if (found.leafboost || found.upgrade) coll.push(["old", "Old prizes", [found.leafboost ? `Leaf Boost ${found.leafboost}×` : "", found.upgrade ? `Mystery Upgrade ${found.upgrade}×` : ""].filter(Boolean).join(" · ")]);
   d.innerHTML = `<span class="pic"></span><span class="k">${mb.name}</span>
     <span class="s">${opened ? mb.openedAbout : hasKey ? "Your Mystery Key fits the lock… Open it!" : mb.about}</span>
     ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? "Open with Mystery Key" : "🔒 Needs a Mystery Key"}</button>`}
-    <div class="coll"><div class="ct">Collection${s.boxOpened ? ` · opened ${s.boxOpened}×` : ""}</div>${coll.map(([k, n, v]) => `<div class="ci${v ? " got" : ""}"><span>${v ? (k === "phoenix" ? "Jackpot" : n) : "???"}</span><b>${v || "not found yet"}</b></div>`).join("")}</div>`;
+    <div class="coll"><div class="ct">Collection${s.boxOpened ? ` · opened ${s.boxOpened}×` : ""}</div>${coll.map(([k, n, v]) => `<div class="ci${v ? " got" : ""}"><span>${v ? (k === "phoenix" || k === "kraken" ? "Jackpot" : n) : "???"}</span><b>${v || "not found yet"}</b></div>`).join("")}</div>
+    <details class="droprates"><summary>Drop rates</summary>${boxDropRates(s)}</details>
+    ${pets.length ? `<label class="petpick">Your pet: <select id="pet-pick"><option value="">No pet</option>${pets.map((k) => `<option value="${k}" ${s.box.pet === k ? "selected" : ""}>${PETS[k]}</option>`).join("")}</select></label>` : ""}`;
   const pc = spriteCanvas(opened ? "mysteryboxopen" : "mysterybox", 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc);
   box.appendChild(d);
+  const pp = d.querySelector("#pet-pick"); if (pp) pp.onchange = () => { s.box.pet = pp.value || null; saveSlots(slots); };
   const ob = d.querySelector("button");
   if (ob && hasKey) ob.onclick = () => {   // the key gets used up, so the Serpent's Shop sells another
     const prize = rollBoxPrize(s);
@@ -4363,21 +4430,42 @@ function renderPerks() {
     playBoxOpening(prize, () => { renderPerks(); checkAchievements(); });
   };
 }
-// Picks a random prize, gives it to the save slot, and says what it was.
-function rollBoxPrize(s) {
-  const P = SETTINGS.mysteryBox.prizes; s.box = s.box || {}; s.box.found = s.box.found || {}; s.box.golden = s.box.golden || {};
-  const choices = Object.entries(P).filter(([k]) => !(k === "phoenix" && s.box.found.phoenix));   // the jackpot only once
+const PETS = { bunny: "Bunny", chick: "Chick", firefly: "Firefly" }, PET_NAMES_N = Object.keys(PETS).length;
+// The chance of each Mystery Box prize right now (a jackpot you already found can't come again, so the others go up a little)
+function boxDropRates(s) {
+  const P = SETTINGS.mysteryBox.prizes, f = (s.box && s.box.found) || {};
+  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
+  const live = Object.entries(P).filter(([k]) => NAMES[k] && !((k === "phoenix" || k === "kraken") && f[k])), tot = live.reduce((a, [, p]) => a + p.chance, 0);
+  return `<table>${Object.entries(P).filter(([k]) => NAMES[k]).map(([k, p]) => { const got = (k === "phoenix" || k === "kraken") && f[k];
+    return `<tr><td>${NAMES[k]}</td><td>${got ? "found ✓" : (100 * p.chance / tot).toFixed(1).replace(/\.0$/, "") + "%"}</td></tr>`; }).join("")}</table>
+    <p class="muted">If you already have every Golden look, Tower Skin or Pet, you get an Acorn Pouch instead.</p>`;
+}
+// Picks a random prize, gives it to the save slot, and says what it was. (noMimic: for the 2 prizes you win by beating a Mimic)
+function rollBoxPrize(s, noMimic) {
+  const P = SETTINGS.mysteryBox.prizes; s.box = s.box || {}; s.box.found = s.box.found || {}; s.box.golden = s.box.golden || {}; s.box.skins = s.box.skins || {}; s.box.pets = s.box.pets || {};
+  const choices = Object.entries(P).filter(([k]) => !((k === "phoenix" || k === "kraken") && s.box.found[k]) && !(noMimic && k === "mimic"));   // each jackpot only once
   let roll = Math.random() * choices.reduce((a, [, p]) => a + p.chance, 0), kind = choices[0][0];
   for (const [k, p] of choices) { roll -= p.chance; if (roll <= 0) { kind = k; break; } }
   const gold = TOWER_ORDER.filter((k) => !SETTINGS.towers[k].boxUnlock && towerUnlocked(k) && !s.box.golden[k]);
   const ups = Object.keys(SETTINGS.permanentUpgrades).filter((k) => k !== "superTower" && ((s.perks || {})[k] || 0) < SETTINGS.permanentUpgrades[k].costs.length);
-  if ((kind === "golden" && !gold.length) || (kind === "upgrade" && !ups.length)) kind = "acorns";   // nothing left of that kind: acorns instead
+  const skinnable = TOWER_ORDER.filter((k) => towerUnlocked(k) && !s.box.skins[k]), newPets = Object.keys(PETS).filter((k) => !s.box.pets[k]);
+  if ((kind === "golden" && !gold.length) || (kind === "upgrade" && !ups.length) || (kind === "skin" && !skinnable.length) || (kind === "pet" && !newPets.length)) kind = "acorns";   // nothing left of that kind: acorns instead
   s.box.found[kind] = (s.box.found[kind] || 0) + 1;
   if (kind === "acorns") {
     const a = P.acorns, n = Math.round((a.min + Math.random() * (a.max - a.min)) / 50) * 50;
     s.acorns = (s.acorns || 0) + n; return { kind, pic: "acorndoubler", title: "Acorn Pouch!", text: `+${n} Golden Acorns` };
   }
   if (kind === "leafboost") { s.box.leafBoosts = (s.box.leafBoosts || 0) + 1; return { kind, pic: "leaf", title: "Leaf Boost!", text: `Your next game starts with ${P.leafboost.leaves} extra Maple Leaves` }; }
+  if (kind === "mimic") return { kind, pic: "mimic", mimic: true, title: "It's a trap!", text: "" };
+  if (kind === "skin") {
+    const k = skinnable[Math.random() * skinnable.length | 0], styles = Object.keys(TOWER_SKINS), st = styles[Math.random() * styles.length | 0]; s.box.skins[k] = st;
+    return { kind, pic: k, skin: st, title: "Tower Skin!", text: `Your ${SETTINGS.towers[k].name} got the ${TOWER_SKINS[st].name} look` };
+  }
+  if (kind === "pet") {
+    const k = newPets[Math.random() * newPets.length | 0]; s.box.pets[k] = true; s.box.pet = k;
+    return { kind, pic: "pet_" + k, title: "A new pet!", text: `A ${PETS[k]} follows you around the board now, and runs over to pick up maple leaves. (Pick your pet on the Upgrades page.)` };
+  }
+  if (kind === "kraken") return { kind: "kraken", pic: "kraken", jackpot: true, title: "JACKPOT!", text: "You found the Kraken! A giant sea-monster tower is in your tower shop." };
   if (kind === "golden") {
     const k = gold[Math.random() * gold.length | 0]; s.box.golden[k] = true;
     return { kind, pic: k, gold: true, title: "Golden Tower!", text: `Your ${SETTINGS.towers[k].name} is now shiny gold` };
@@ -4387,6 +4475,29 @@ function rollBoxPrize(s) {
     return { kind, pic: { startLeaves: "leaf", damage: "fire", baseHealth: "tree", cheaper: "squirrel" }[k] || "tree", title: "Mystery Upgrade!", text: `A free level of ${SETTINGS.permanentUpgrades[k].name}` };
   }
   return { kind: "phoenix", pic: "phoenix", jackpot: true, title: "JACKPOT!", text: "You found the Phoenix! A secret fire-bird tower is in your tower shop." };
+}
+// The Box Mimic: a quick mini-fight. Tap it enough times before time runs out to win 2 prizes!
+function mimicFight(prize, c) {
+  const M = SETTINGS.mysteryBox.prizes.mimic, s = slot(), pz = $("bo-prize"), tx = $("bo-text"), ok = $("bo-ok");
+  let left = M.taps, end = performance.now() + M.seconds * 1000, done = false;
+  pz.classList.add("mimic"); pz.style.pointerEvents = "auto"; Sound.play("smash");
+  const show = () => { tx.innerHTML = `<div class="t">It's a Box Mimic!</div><div class="d">Tap it ${left} more time${left === 1 ? "" : "s"}! <b>${Math.max(0, (end - performance.now()) / 1000).toFixed(1)}s</b></div>`; };
+  const finish = (won) => {
+    done = true; pz.style.pointerEvents = "none"; pz.classList.remove("mimic"); clearInterval(timer);
+    s.box.found.mimic = s.box.found.mimic || 0;
+    if (won) {
+      s.box.mimicWins = (s.box.mimicWins || 0) + 1; const a = rollBoxPrize(s, true), b = rollBoxPrize(s, true);
+      const ctx2 = c.getContext("2d"); ctx2.clearRect(0, 0, 96, 96); ctx2.imageSmoothingEnabled = false; ctx2.drawImage(a.gold ? goldOf(SPR[a.pic]) : a.skin ? skinOf(SPR[a.pic], a.skin) : SPR[a.pic], 0, 0, 96, 96);
+      tx.innerHTML = `<div class="t">You beat the Mimic! 2 prizes!</div><div class="d"><b>${a.title}</b> ${a.text}<br><b>${b.title}</b> ${b.text}</div>`; Sound.play(a.jackpot || b.jackpot ? "win" : "upgrade");
+    } else {
+      s.acorns = (s.acorns || 0) + M.consolation; c.getContext("2d").clearRect(0, 0, 96, 96);
+      tx.innerHTML = `<div class="t">The Mimic got away!</div><div class="d">It ran off with your prize, but dropped ${M.consolation} Golden Acorns as it fled.</div>`; Sound.play("lose");
+    }
+    saveSlots(slots); ok.hidden = false; ok.focus();
+  };
+  pz.onclick = () => { if (done) return; left--; Sound.play("hit"); pz.classList.remove("hitme"); void pz.offsetWidth; pz.classList.add("hitme"); if (left <= 0) finish(true); else show(); };
+  const timer = setInterval(() => { if (done) return; if (performance.now() >= end) finish(false); else show(); }, 100);
+  show();
 }
 // The box shakes and glows, the lid bursts open, and the prize flies out.
 function playBoxOpening(prize, done) {
@@ -4398,7 +4509,8 @@ function playBoxOpening(prize, done) {
   setTimeout(() => {
     draw("mysteryboxopen"); bx.className = "opened"; ov.classList.add("burst"); Sound.play("upgrade"); if (prize.jackpot) setTimeout(() => Sound.play("win"), 250);
     const c = document.createElement("canvas"); c.width = c.height = 96; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false;
-    cx.drawImage(prize.gold ? goldOf(SPR[prize.pic]) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
+    cx.drawImage(prize.gold ? goldOf(SPR[prize.pic]) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
+    if (prize.mimic) { setTimeout(() => mimicFight(prize, c), 650); return; }
     setTimeout(() => { tx.innerHTML = `<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus(); }, 650);
   }, 1500);
   ok.onclick = () => { ov.hidden = true; ov.className = "boxopen"; done && done(); };
@@ -4602,6 +4714,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
+  kraken: "A giant purple sea monster from the Mystery Box, with glowing yellow eyes. Its tentacles slam 2 robots at once, and every few seconds it grabs one: on the sky levels it pulls robots right off the rope bridges!",
   nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It attacks 2 robots at once and hits flying robots too. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
   hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
@@ -5106,7 +5219,7 @@ function tileFromEvent(e) {
   return x >= 0 && y >= 0 && x < COLS && y < ROWS ? { x, y } : null;
 }
 const towerAt = (x, y) => G.towers.find((t) => t.x === x && t.y === y);
-board.addEventListener("pointermove", (e) => { if (G) G.hover = tileFromEvent(e); });
+board.addEventListener("pointermove", (e) => { if (G) { G.hover = tileFromEvent(e); G.mouse = boardPos(e); } });
 board.addEventListener("pointerleave", () => { if (G) G.hover = null; });
 /* ---------- Mega Fireball ability ---------- */
 /* ---------- tap a robot to see its info at the top of the screen ---------- */
@@ -5376,7 +5489,7 @@ $("b-vacuum").onclick = () => {
 /* ---------- Save & exit / Resume game ---------- */
 // A saved game is kept in the save slot, one per level. It's always saved between waves
 // (in the middle of a wave, it saves the game from just before that wave started).
-const SNAP_SKIP = new Set(["groundPainted", "planks", "map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
+const SNAP_SKIP = new Set(["pet", "mouse", "groundPainted", "planks", "map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
   "merge", "bonus", "bonusTimer", "flashTiles", "waveSnap", "paused", "over", "takeover", "aim", "aimPos", "meteors", "burns", "walls", "crabSpot", "shake", "kingStorm", "slotDirty", "waveActive", "waveClock"]);
 const plain = (v) => v === null || ["number", "string", "boolean"].includes(typeof v);
 function snapshotGame() {
@@ -5788,6 +5901,25 @@ function fire(t, s, target) {
       .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, (s.targets || 3) - 1)];
     bites.forEach((r, i) => { G.fx.push({ kind: "bite", tower: t, robot: r, head: bites.length === 1 ? 1 : (s.targets >= 4 ? [1, 0, 2, 3] : [1, 0, 2])[i % (s.targets >= 4 ? 4 : 3)], t: 0.3, dur: 0.3, hit: false, dmg: s.damage, vision: s.vision, fullAir: !!s.fullFlying }); });
     Sound.play("tongue");
+  } else if (t.kind === "kraken") {
+    // The Kraken's tentacles slam down on a few robots; every few seconds it grabs one
+    const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
+    const hits = [target, ...G.robots.filter((r) => r !== target && !r.dead && !(r.hideT > 0 && !s.vision) && canHit(t.kind, r) && Math.hypot(rpos(r).x - cx, rpos(r).y - cy) <= R)
+      .sort((a, b) => targetRank(t)(b) - targetRank(t)(a)).slice(0, (s.targets || 2) - 1)];
+    const KS = SETTINGS.towers.kraken, up3 = t.picks && t.picks[2] != null && t.level >= 3 ? (KS.upgradeChoices[2][t.picks[2]] || {}) : {};
+    const canGrab = G.time - (t.lastGrab ?? -99) >= KS.grabEvery / (up3.grabTimes || 1);
+    let grabbed = false;
+    for (const r of hits) {
+      const q = rpos(r); G.fx.push({ kind: "tentacle", x1: cx + (q.x < cx ? -8 : 8), y1: cy + 10, x2: q.x, y2: q.y, t: 0.35, life: 0.35, seed: Math.random() * 6 });
+      if (canGrab && !grabbed && !isHeavy(r) && !r.flying) {
+        const onBridge = G.map.islands && !onAnIsland(G.map, Math.floor(q.x / T), Math.floor(q.y / T));
+        if (onBridge) { grabbed = true; floatText(q.x, q.y - 20, "Grabbed!", "#d2a8f0"); burst(q.x, q.y, "#a066d0", 14); hurt(r, r.hp + 1, true, false, "kraken"); continue; }   // pulled right off the rope bridge
+        grabbed = true; r.rootT = Math.max(r.rootT || 0, KS.squeezeSeconds); floatText(q.x, q.y - 20, "Squeeze!", "#d2a8f0");
+      }
+      hurt(r, s.damage * plowMul(r, cx, cy), s.vision, false, "kraken");
+    }
+    if (grabbed) t.lastGrab = G.time;
+    Sound.play("kraken");
   } else if (t.kind === "water") {
     // The frog's tongue shoots out, smacks the robot, and snaps back.
     G.tongues.push({ tower: t, target, s, t: 0, dur: 0.3, hit: false, end: null });
@@ -6060,7 +6192,7 @@ function towerScale(t) {
   if (t.kind === "healer") return [1.0, 1.06, 1.12, 1.2][t.level];
   if (t.kind === "squirrel") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "pegasus") return [1.0, 1.07, 1.14, 1.22][t.level];
-  if (t.kind === "hydra") return [0.95, 1.03, 1.11, 1.2][t.level];
+  if (t.kind === "hydra" || t.kind === "kraken") return [0.95, 1.03, 1.11, 1.2][t.level];
   if (t.kind === "fire" || t.kind === "wizard") return [0.95, 1.03, 1.11, 1.2][t.level];
   if (t.kind === "water") return [0.85, 0.95, 1.05, 1.15][t.level];
   if (t.kind === "crab") return [0.85, 0.95, 1.05, 1.15][t.level];
@@ -6239,6 +6371,26 @@ function phoenixRebirth(t) {
 }
 function freezeTower(t, sec) { if (t.kind === "phoenix") { phoenixRebirth(t); return; } G.frozeAny = true; t.stunT = Math.max(t.stunT || 0, sec); t.iceT = Math.max(t.iceT || 0, sec); burst(t.x * T + 16, t.y * T + 12, "#e6f6ff", 10); }
 /* ---------- Eye of the Storm robot powers ---------- */
+// Your pet (a Mystery Box prize) follows your pointer around the board, and runs over to pick up maple leaves near it
+function tickPet(dt) {
+  const s = slot(), kind = s && s.box && s.box.pet; if (!kind || !G || G.over) { if (G) G.pet = null; return; }
+  const p = G.pet || (G.pet = { kind, x: (G.map.base.x + 1) * T - 20, y: (G.map.base.y + 1) * T + 10, face: 1 });
+  p.kind = kind;
+  let tx, ty;
+  if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 16 - p.y) < 3 * T) { tx = G.bonus.x * T + 16; ty = G.bonus.y * T + 18; }   // a leaf nearby: go get it!
+  else if (G.mouse) { tx = G.mouse.x - 18; ty = G.mouse.y + 14; } else { tx = (G.map.base.x + 1) * T - 24 + Math.sin(G.time * 0.7) * 18; ty = (G.map.base.y + 1) * T + 12; }
+  const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy), sp = 140 * dt;
+  if (d > 2) { p.x += dx / d * Math.min(d, sp); p.y += dy / d * Math.min(d, sp); if (Math.abs(dx) > 1) p.face = dx < 0 ? -1 : 1; p.moving = true; } else p.moving = false;
+  if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 18 - p.y) < 10) { floatText(p.x, p.y - 22, "Got it!", "#ffd34d", 0.8); collectBonusLeaf(); }
+}
+function drawPet(x) {
+  const p = G.pet; if (!p) return; const img = SPR["pet_" + p.kind]; if (!img) return;
+  const hop = p.moving ? Math.abs(Math.sin(G.time * 12)) * 4 : Math.abs(Math.sin(G.time * 3)) * 1;
+  if (p.kind === "firefly" && !PREFS.simple) { const g = x.createRadialGradient(p.x, p.y - 10, 1, p.x, p.y - 10, 18); g.addColorStop(0, `rgba(255,240,120,${0.45 + 0.2 * Math.sin(G.time * 6)})`); g.addColorStop(1, "rgba(255,240,120,0)"); x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y - 10, 18, 0, Math.PI * 2); x.fill(); }
+  x.fillStyle = "rgba(0,0,0,0.22)"; x.beginPath(); x.ellipse(p.x, p.y + 1, 8, 2.5, 0, 0, Math.PI * 2); x.fill();
+  x.save(); x.translate(p.x, p.y - 9 - hop - (p.kind === "firefly" ? 10 + Math.sin(G.time * 4) * 3 : 0)); if (p.face < 0) x.scale(-1, 1);
+  x.imageSmoothingEnabled = false; x.drawImage(img, -10, -10, 20, 20); x.restore();
+}
 function stormPowers(dt) {
   const RS = SETTINGS.robots;
   if (G.planks) G.planks = G.planks.filter((b) => (b.t -= dt) > 0);   // shortcut bridges only last a while
@@ -6413,6 +6565,7 @@ function update(dt) {
   }
   lavaPowers(dt);
   stormPowers(dt);
+  tickPet(dt);
   const teslaR = (SETTINGS.robots.tesla.boostRadius || 0) * T;
   const teslas = G.robots.filter((r) => r.type === "tesla" && !r.dead).map((r) => rpos(r));
   for (const r of G.robots) {
@@ -7039,6 +7192,7 @@ function draw() {
     else if (f.kind === "bite") drawBite(x, f);
     else if (f.kind === "bolt") drawBolt(x, f);
     else if (f.kind === "arc") drawArc(x, f);
+    else if (f.kind === "tentacle") drawTentacle(x, f);
     if (f.kind === "zap") drawZap(x, f);
     if (f.kind === "scorch") {   // a crater with glowing embers that cool down
       const a = Math.min(1, f.t / 1);
@@ -7072,6 +7226,7 @@ function draw() {
   if (G.map.theme === "blizzard" && !PREFS.simple) drawBlizzardWind(x, true);
   if ((G.map.theme === "thunder" || G.map.theme === "storm") && !PREFS.simple) drawStormRain(x);
   drawBonusLeaf(x);
+  drawPet(x);
   drawCrabSpot(x);
   drawShell(x);
   drawInspect(x);

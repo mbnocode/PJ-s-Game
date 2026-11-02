@@ -172,6 +172,19 @@ const SETTINGS = {
                 [ { name: "Sun Fire",         about: "Hits twice as hard.", damageTimes: 2 },
                   { name: "Phoenix Eyes",     about: "Can see Hiders and reaches a bit farther.", vision: true, rangePlus: 0.5 } ],
               ] },
+    // The Kraken: the second jackpot prize from the Mystery Box. Its tentacles slam targets robots at once. Every grabEvery seconds
+    // it grabs a robot: on the sky levels, a robot (not a Boss) on a rope bridge gets pulled right off it; anywhere else it gets
+    // squeezed and held still for squeezeSeconds.
+    kraken:   { name: "Kraken", cost: 240, range: 3, damage: 30, attacksPerSecond: 1.0, targets: 2, boxUnlock: "kraken", grabEvery: 5, squeezeSeconds: 1.5,
+              about: "Found in the Mystery Box. Its tentacles slam 2 robots at once. On the sky levels it grabs robots right off the rope bridges! Anywhere else it squeezes a robot and holds it still.",
+              upgradeChoices: [
+                [ { name: "Long Tentacles", about: "Reaches 1 more square.", rangePlus: 1 },
+                  { name: "Suckers",        about: "Slams 50% harder.", damageTimes: 1.5 } ],
+                [ { name: "Many Arms",      about: "Slams 1 more robot (3 at once).", targetsPlus: 1 },
+                  { name: "Ink Cloud",      about: "Can see Hiders and slams 30% faster.", vision: true, speedTimes: 1.3 } ],
+                [ { name: "Deep Sea Fury",  about: "Slams twice as hard.", damageTimes: 2 },
+                  { name: "Hungry Kraken",  about: "Grabs robots twice as often.", grabTimes: 2 } ],
+              ] },
     // The Wolf: unlock it in the Night Owl's shop. It hits like a Fire Dragon (without the burn, and it can't hit flying robots),
     // and packBonus = extra damage on every attack for each Wolf in the 8 squares around it.
     // The Night Owl tower: from the Night Owl's shop. It starts really weak, but every wave it gets stronger
@@ -346,11 +359,13 @@ const SETTINGS = {
                 openedAbout: "The box creaked open and light poured out! Buy another Mystery Key to open it again.",
                 // What can come out of the box. chance = how likely each one is (they don't have to add up to 100).
                 prizes: {
-                  acorns:    { chance: 45, min: 200, max: 600 },   // Acorn Pouch: a random pile of Golden Acorns
-                  leafboost: { chance: 25, leaves: 200 },           // Leaf Boost: extra Maple Leaves at the start of your next game
-                  golden:    { chance: 15 },                        // Golden Tower: one of your towers turns shiny gold (just for looks)
-                  upgrade:   { chance: 10 },                        // Mystery Upgrade: a free level of a permanent upgrade
+                  acorns:    { chance: 38, min: 200, max: 600 },   // Acorn Pouch: a random pile of Golden Acorns
+                  golden:    { chance: 13 },                        // Golden Tower: one of your towers turns shiny gold (just for looks)
+                  skin:      { chance: 15 },                        // Tower Skin: a new look for one of your towers (Crystal, Shadow, Candy, Lava or Toxic)
+                  pet:       { chance: 12 },                        // Pet: a little critter that follows you around the board and picks up maple leaves
+                  mimic:     { chance: 8, taps: 12, seconds: 6, consolation: 50 },   // Box Mimic! Tap it taps times in seconds seconds to win 2 prizes (or it runs off and drops consolation Golden Acorns)
                   phoenix:   { chance: 5 },                         // JACKPOT: the Phoenix tower (only once)
+                  kraken:    { chance: 5 },                         // JACKPOT #2: the Kraken tower (only once)
                 } },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
