@@ -570,7 +570,7 @@ const SETTINGS = {
                 [["sandboss", 2, 5], [["drone", "drone", "tesla"], 15, 0.6]],           // 19
                 [[["tank", "drone", "repair", "tesla"], 20, 0.6], ["sandboss", 2, 5], ["boss", 1, 0, 4500]],  // 20: the big finish
               ] },
-    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Deep in the desert stands the Lost Pyramid, buried and forgotten for thousands of years. Its walls are carved with pictures of people looking up at a strange light in the sky. Did the ancients see the Swipe coming? Now the Iron Heart has broken the seal. Mummy Bots shamble out of the tombs, quicksand swallows the old stone road, and deep inside, the Pharaoh Machine has awakened, furious after thousands of years of sleep. Scores are worth 2x.", theme: "pyramid",
+    pyramid: { name: "The Lost Pyramid", acornDropChance: 0.05, about: "Deep in the desert stands the Lost Pyramid, buried and forgotten for thousands of years. Its walls are carved with pictures of people looking up at a strange light in the sky. Did the ancients see the Swipe coming? Now the Iron Heart has broken the seal and awoken the Pharaoh Machine, furious after thousands of years of sleep, to fight at its side. Mummy Bots shamble out of the tombs, and quicksand swallows the old stone road. Scores are worth 2x.", theme: "pyramid",
               // 5% Golden Acorn chance per robot (from wave 3 on)
               robotHealth: 1.4,      // robots have this many times their normal health (the quicksand helps you a lot)
               scoreTimes: 2,         // your score on this level is multiplied by this
