@@ -151,6 +151,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ach.got canvas { width: 48px; height: 48px; image-rendering: pixelated; }
 .ach.got .n { font-family: var(--display); font-size: 13px; color: var(--gold); line-height: 1.15; }
 .ach.got .d { font-family: var(--body); font-size: 11px; color: #c9ced6; line-height: 1.2; }
+.ach.got .rw { font-size: 11px; color: #ffd34d; font-weight: bold; margin-top: 2px; }
 .ach-hint { font-family: var(--body); color: var(--gold); text-align: center; }
 @media (min-width: 761px) {   /* bigger boxes on a computer; the page scrolls to show them all */
   .ach-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; width: min(1180px, calc(100% - 40px)); }
@@ -744,7 +745,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="back" id="b-achievements-back">←&nbsp; Back to levels</button>
     <h2>Achievements</h2>
     <div class="ach-count" id="ach-count"></div>
-    <p class="muted">Earn achievements to fill the boxes, and get 10 Golden Acorns for each one! Tap a ? box to see what to do.</p>
+    <p class="muted">Earn achievements to fill the boxes, and get Golden Acorns for each one (harder ones are worth more, up to 50)! Tap a ? box to see what to do.</p>
     <div class="ach-grid" id="ach-grid"></div>
     <p class="ach-hint" id="ach-hint" hidden></p>
   </section>
@@ -5053,12 +5054,14 @@ function addStat(key, n, levels = GRASS_LEVELS) {   // levels = which levels cou
   for (const a of ACHIEVEMENTS) if (a.goal && a.goal[0] === key && s.stats[key] >= a.goal[1]) earnAch(a.id);
 }
 const ACH_BOXES = Math.max(30, Math.ceil((ACHIEVEMENTS.length + 6) / 6) * 6);   // the page shows this many boxes (a row or so of empty ones waiting for future achievements)
-const ACH_REWARD = 10;   // Golden Acorns you get for each achievement
+// Golden Acorns each achievement is worth: harder ones pay more (5 for the easiest, up to 50 for the hardest)
+const ACH_ACORNS = { firststeps: 5, grassland: 10, grassnightmare: 35, maxed: 5, untouchable: 15, deer: 5, bareminimum: 15, leafsaver: 10, oneofeach: 10, dragontamer: 15, bossbuster: 15, frogpond: 15, swampsurvivor: 15, cleansweep: 30, herd: 10, recycler: 10, acornhunter: 5, leaftapper: 15, grassperfect: 25, shellshocked: 20, fixitfail: 10, secretshopper: 15, twofront: 20, golemcrusher: 20, droneswatter: 10, oasiskeeper: 20, mummyunwrapper: 10, sinkingfeeling: 15, tombraider: 10, pharaoh: 25, sandchampion: 15, desertnightmare: 40, sandyperfect: 30, sunbaked: 5, heartbreaker: 20, coldheart: 35, shellcracker: 15, batsmasher: 15, hotwater: 20, firewalker: 20, unbreakable: 25, cubecrusher: 15, diverdown: 15, magmamaster: 25, moltengold: 10, hotstuff: 5, lavachampion: 20, volcanicnightmare: 45, lavaperfect: 35, snowballstopper: 20, penguinparade: 15, slipnslide: 15, icebreaker: 15, snowday: 15, yetihunter: 25, defrosted: 25, meltdown: 25, kingofthemountain: 30, snowgold: 10, frostbite: 5, icechampion: 25, frozennightmare: 45, iceperfect: 40, birdwatcher: 20, grounded: 15, gustbuster: 20, staticshock: 25, eyeofthetornado: 25, stormchaser: 15, calmeye: 35, titantoppler: 30, silverlining: 10, headintheclouds: 5, skychampion: 30, stormnightmare: 50, skyperfect: 45, starcollector: 30, perfectionist: 40, nightmarefuel: 45, dedicated: 30, toinfinity: 25, fullhouse: 15, bigspender: 20, yardsale: 10, towercollector: 50, robotwrecker: 35, bosshunter: 25, closecall: 20, glowgetter: 15, secretseeker: 30, fashionista: 30, petparent: 35, mimicmaster: 25, fireballfrenzy: 20, iceage: 25, luckyleaf: 15, perfectstorm: 50, backtobasics: 40, boxopener: 20, jackpot: 40 };
+function achReward(id) { return ACH_ACORNS[id] || 10; }
 function hasAch(id) { const s = slot(); return !!(s && s.achievements && s.achievements[id]); }
 function earnAch(id) {
   const s = slot(); if (!s) return; s.achievements = s.achievements || {};
   if (s.achievements[id]) return;
-  s.achievements[id] = Date.now(); s.acorns = (s.acorns || 0) + ACH_REWARD; saveSlots(slots);   // every achievement is worth some Golden Acorns
+  s.achievements[id] = Date.now(); s.acorns = (s.acorns || 0) + achReward(id); saveSlots(slots);   // every achievement is worth some Golden Acorns
   if (G && !G.over) { const el = $("hud-acorns"); if (el) el.textContent = s.acorns; }
   earnAch.queue = earnAch.queue || []; earnAch.queue.push(id);
   if (earnAch.queue.length === 1) showAchToast();
@@ -5067,7 +5070,7 @@ function popToast(pic, title, name) { earnAch.queue = earnAch.queue || []; earnA
 function showAchToast() {   // one pop-up at a time, so earning two at once shows both
   const id = earnAch.queue[0]; if (!id) return;
   const a = typeof id === "object" ? id : ACHIEVEMENTS.find((x) => x.id === id), box = $("achtoast");
-  box.innerHTML = `<span class="pic"></span><div><div class="t">${a.title || "Achievement unlocked!"}</div><div class="n">${a.name}</div>${a.title ? "" : `<div class="t" style="margin-top:2px">+${ACH_REWARD} Golden Acorns</div>`}</div>`;
+  box.innerHTML = `<span class="pic"></span><div><div class="t">${a.title || "Achievement unlocked!"}</div><div class="n">${a.name}</div>${a.title ? "" : `<div class="t" style="margin-top:2px">+${achReward(a.id)} Golden Acorns</div>`}</div>`;
   box.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32)); box.hidden = false; Sound.play("upgrade");
   clearTimeout(earnAch.timer); earnAch.timer = setTimeout(() => { box.hidden = true; earnAch.queue.shift(); if (earnAch.queue.length) setTimeout(showAchToast, 250); }, 3500);
 }
@@ -5080,12 +5083,12 @@ function renderAchievements() {
   for (let i = 0; i < ACH_BOXES; i++) {
     const a = ACHIEVEMENTS[i], d = document.createElement("div");
     if (a && hasAch(a.id)) {
-      d.className = "ach got"; d.innerHTML = `<span class="pic"></span><span class="n">${a.name}</span><span class="d">${a.about}</span>`;
+      d.className = "ach got"; d.innerHTML = `<span class="pic"></span><span class="n">${a.name}</span><span class="d">${a.about}</span><span class="rw">🌰 ${achReward(a.id)}</span>`;
       d.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32));
     } else if (a) {
       const st = (slot().stats || {});
       d.className = "ach locked"; d.title = a.about;
-      d.innerHTML = `<span class="q">?</span><span class="d">${a.about}${a.goal ? `<span class="so">So far: ${(st[a.goal[0]] || 0).toLocaleString()} / ${a.goal[1].toLocaleString()}</span>` : ""}</span>`;
+      d.innerHTML = `<span class="q">?</span><span class="d">${a.about}<span class="so">Worth ${achReward(a.id)} Golden Acorns</span>${a.goal ? `<span class="so">So far: ${(st[a.goal[0]] || 0).toLocaleString()} / ${a.goal[1].toLocaleString()}</span>` : ""}</span>`;
       d.onclick = () => { const open = d.classList.contains("sel"); grid.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel")); if (!open) d.classList.add("sel"); };   // tap again to close
     } else d.className = "ach";
     grid.appendChild(d);
