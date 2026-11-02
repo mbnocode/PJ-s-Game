@@ -1009,6 +1009,47 @@ SPR.mini = SPR.clanker; SPRF.mini = SPRF.clanker;   // Mini-Clankers look like l
   put(14, 7, "y"); put(18, 7, "y"); put(14, 8, "Y"); put(18, 8, "Y"); put(13, 6, "a"); put(19, 6, "a");   // glowing eyes under a stormy brow
   for (const [i, j] of [[6, 14], [5, 15], [6, 16], [5, 17], [26, 14], [27, 15], [26, 16], [27, 17], [10, 21], [11, 22], [21, 21], [20, 22]]) put(i, j, "y");   // lightning crackling through its arms and hips
   SPR.cyclonegolem = makeSprite(rows, false, SKYPAL); SPRF.cyclonegolem = makeSprite(rows, true, SKYPAL);
+  const grid = (n, fn) => Array.from({ length: n }, (_, j) => Array.from({ length: n }, (_, i) => fn(i, j)).join(""));
+  const outline = (rows) => rows.map((row, j) => row.split("").map((ch, i) => ch !== "." ? ch : [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([di, dj]) => ((rows[j + dj] || "")[i + di] || ".") !== "." && ((rows[j + dj] || "")[i + di] || ".") !== "k") ? "k" : ".").join(""));
+  // The Balloon Bot: a striped red-and-yellow hot-air balloon with a little robot pilot waving from the basket
+  const BAL = { r: "#e0443a", R: "#9e2a22", y: "#ffd34d", Y: "#c98e12", w: "#ffffff", n: "#8a5a2a", N: "#5e3a1a", m: "#c9a060", g: "#9aa4c0", G: "#5a6480", t: "#7ff3ff" };
+  let bal = grid(16, (i, j) => {
+    const dx = (i + 0.5 - 8) / 6.6, dy = (j + 0.5 - 5) / 5.2;
+    if (j <= 9 && dx * dx + dy * dy <= 1) { if (i === 5 && (j === 2 || j === 3)) return "w"; const st = Math.floor((i + 0.5 - 8) / (2.2 - Math.abs(dy))) ; return (st & 1 ? "y" : "r").replace(/./, (c) => dx > 0.45 ? (c === "r" ? "R" : "Y") : c); }
+    if ((j === 10 || j === 11) && (i === 5 || i === 10)) return "N";
+    if (j === 11 && i >= 6 && i <= 9) return i === 7 || i === 8 ? "g" : ".";
+    if (j === 10 && (i === 7 || i === 8)) return "G";
+    if (j === 11 && (i === 7)) return "t";
+    if (j >= 12 && j <= 14 && i >= 5 && i <= 10) return j === 12 ? "m" : (i + j) % 2 ? "n" : "m";
+    return ".";
+  });
+  bal = outline(bal); SPR.balloonbot = makeSprite(bal, false, BAL); SPRF.balloonbot = makeSprite(bal, true, BAL);
+  // its pilot (in goggles and a red scarf) and the Paratroopers (in army green with helmets): little robots based on the Clanker
+  const PILOT = { f: "#c9ced6", y: "#e0443a", Y: "#9e2a22", G: "#5a6480", g: "#9aa4c0", r: "#ffd34d", c: "#7ff3ff", b: "#2a8aa8", n: "#e0443a", o: "#fff7c2", s: "#c9ced6" };
+  const TROOP = { f: "#8a9a5a", y: "#5a6a34", Y: "#3a4a20", G: "#2e3a1a", g: "#6a7a44", r: "#ffd34d", c: "#c8f0a0", b: "#4a6a2a", n: "#3a4a20", o: "#e8f0c0", s: "#8a9a5a" };
+  SPR.balloonpilot = makeSprite(ART.clanker, false, PILOT); SPRF.balloonpilot = makeSprite(ART.clanker, true, PILOT);
+  SPR.paratrooper = makeSprite(ART.clanker, false, TROOP); SPRF.paratrooper = makeSprite(ART.clanker, true, TROOP);
+  // The Plank Layer: a construction robot in hard-hat orange (it carries its planks on its back; they're drawn in the game)
+  const PLANK = { s: "#ffb347", x: "#ff8c1a", g: "#c9681a", G: "#7a3a0e", k: "#16191d", r: "#ffd34d", y: "#ffd34d", Y: "#c98e12", f: "#ffe0a0", o: "#fff7c2", w: "#ffffff" };
+  SPR.planklayer = makeSprite(ART.walker, false, PLANK); SPRF.planklayer = makeSprite(ART.walker, true, PLANK);
+  // The Sky Blimp: a huge gray armored airship with a red stripe, tail fins, a gondola with glowing windows and a spinning propeller
+  const BLIMP = { s: "#c9ced6", g: "#8a90a8", G: "#4a4e68", a: "#2c2f40", r: "#e0443a", R: "#9e2a22", y: "#fff066", c: "#7ff3ff", w: "#ffffff", n: "#5a6074" };
+  let bl = grid(32, (i, j) => {
+    const dx = (i + 0.5 - 17) / 13.5, dy = (j + 0.5 - 12) / 8;
+    if (dx * dx + dy * dy <= 1) {
+      if (i >= 9 && i <= 10) return "r"; if (i === 11) return "R";
+      if (i >= 26 && Math.abs(j + 0.5 - 12) < 1.6) return "y";   // a searchlight on the nose
+      if ((i % 6 === 0) && dy > -0.85) return "n";   // armor plate seams
+      return dy < -0.45 ? "s" : dy < 0.3 ? "g" : "G";
+    }
+    if (i <= 5 && i >= 1 && ((j >= 4 && j <= 8 && i >= 9 - j) || (j >= 16 && j <= 20 && i >= j - 15))) return j < 12 ? "R" : "r";   // tail fins
+    if (i <= 4 && i >= 2 && j >= 10 && j <= 14) return "G";
+    if (j >= 20 && j <= 24 && i >= 11 && i <= 22) { if (j === 20) return "a"; if (j === 22 && i % 3 === 0 && i < 22) return "c"; return j === 24 ? "a" : "G"; }   // the gondola with its windows
+    if (i === 23 && j >= 20 && j <= 24) return "a";
+    if (i === 24 && (j === 19 || j === 25)) return "w"; if (i === 24 && j >= 20 && j <= 24) return "g";   // the propeller
+    return ".";
+  });
+  bl = outline(bl); SPR.skyblimp = makeSprite(bl, false, BLIMP); SPRF.skyblimp = makeSprite(bl, true, BLIMP);
 }
 { // the Leaf Vacuum: a green vacuum with a leaf-stuffed bag, a long hose and a nozzle slurping up a maple leaf
   SPR.leafvacuum = makeSprite([
@@ -4250,10 +4291,10 @@ function playBoxOpening(prize, done) {
 /* ---------- enemies page (per save slot) ---------- */
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
-const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "cyclonegolem", "thundertitan"];
+const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sandboss", "splitter", "repair", "drone", "mummy", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "cyclonegolem", "thundertitan"]);
+const BOSS_FOES = new Set(["boss", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "cyclonegolem", "skyblimp", "thundertitan"]);
 const FOE_ABOUT = {
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
@@ -4284,6 +4325,11 @@ const FOE_ABOUT = {
   universetitan: "The biggest robot in the universe: a gigantic golem of deep violet space rock with golden cracks and a blazing sun for a heart.",
   universegolem: "A towering giant made of space rock from far across the universe, with glowing cracks, starry specks and a swirling galaxy in its chest.",
   blizzardking: "The ruler of the snowy peaks: an icy robot king with a crown and an ice scepter, riding in on a storm cloud.",
+  balloonbot: "A little robot pilot floating under a striped red-and-yellow hot-air balloon.",
+  balloonpilot: "The Balloon Bot's pilot, in goggles and a red scarf. Pop its balloon and it crashes onto the road, still marching.",
+  planklayer: "A construction robot in a hard hat, carrying a big stack of wooden planks on its back.",
+  paratrooper: "A little army-green robot that drops out of the Sky Blimp and floats down onto the road on a parachute.",
+  skyblimp: "A huge gray armored airship with a red stripe, a searchlight and a gondola full of Paratroopers.",
   gustrunner: "A low, wedge-shaped wind racer in storm-indigo, with a lightning stripe and a glowing teal visor. It rides the storm winds.",
   staticbot: "A walking battery wrapped in coils, buzzing and crackling with stored lightning.",
   thunderbird: "A small dark flying bot with glowing blue wings that flies in flocks through the storm clouds.",
@@ -4419,6 +4465,11 @@ function renderEnemies() {
       : k === "universegolem" ? `Special: stronger than the Glacier Golem! Every time it takes ${r.chunkEvery} damage, a Star Chunk breaks off and keeps marching. It drops NO Maple Leaves, and neither do its Star Chunks. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of Infinity.`
       : k === "glaciergolem" ? `Special: every time it takes ${r.chunkEvery} damage, a chunk of ice breaks off and keeps marching toward your treehouse. Too heavy for Owls to push back. Always drops a Golden Acorn! Boss of The Glacier Caves (and it visits The Frozen Tundra).`
       : k === "blizzardking" ? `Special: it brings a howling blizzard with it. Until it's destroyed, every tower's range shrinks by ${Math.round(r.rangeShrink * 100)}%. Too heavy for Owls to push back. Always drops a Golden Acorn! The final boss of Blizzard Peak.`
+      : k === "balloonbot" ? "Special: floats over everything, so only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl, the Hacked Robot and the Wizard's Elemental Sphere can hit it. Pop its balloon and its pilot crashes onto the closest bit of road and keeps marching. Shows up on the sky levels."
+      : k === "balloonpilot" ? "Special: comes out of a popped Balloon Bot, right onto the road wherever the balloon was."
+      : k === "planklayer" ? `Special: where the road loops back close to itself, it lays down a plank bridge and takes a shortcut, skipping up to ${r.bridgeMaxSkip} squares of road. Every robot behind it uses the shortcut too, for ${r.bridgeSeconds} seconds! Shows up on the sky levels.`
+      : k === "paratrooper" ? "Special: dropped by the Sky Blimp onto random spots on the road, so it can land past your towers."
+      : k === "skyblimp" ? `Special: flies slowly over everything, so only towers that hit flying robots can hurt it. Every ${r.troopEvery} seconds it drops ${r.troopCount} Paratroopers onto random spots on the road. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the sky levels.`
       : k === "gustrunner" ? `Special: every ${r.dashEvery} seconds a gust of wind pushes it ${r.dashSpeed} times faster for a moment. Shows up on the Eye of the Storm.`
       : k === "staticbot" ? `Special: every ${r.zapEvery} seconds it zaps the closest tower within ${r.zapRadius} squares, so that tower can't attack for ${r.zapSeconds} seconds. Shows up on the Eye of the Storm.`
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
@@ -5210,7 +5261,7 @@ $("b-vacuum").onclick = () => {
 /* ---------- Save & exit / Resume game ---------- */
 // A saved game is kept in the save slot, one per level. It's always saved between waves
 // (in the middle of a wave, it saves the game from just before that wave started).
-const SNAP_SKIP = new Set(["map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
+const SNAP_SKIP = new Set(["planks", "map", "ground", "diff", "robots", "shots", "fx", "particles", "tongues", "queue", "online", "sel", "pick", "hover", "inspect", "inspectGone",
   "merge", "bonus", "bonusTimer", "flashTiles", "waveSnap", "paused", "over", "takeover", "aim", "aimPos", "meteors", "burns", "walls", "crabSpot", "shake", "kingStorm", "slotDirty", "waveActive", "waveClock"]);
 const plain = (v) => v === null || ["number", "string", "boolean"].includes(typeof v);
 function snapshotGame() {
@@ -5322,6 +5373,9 @@ function startWave() {
     diver: "Lava Divers dive under the lava, where nothing can hit them, and pop back up farther along the road.",
     pillartitan: "The Pillar Titan is coming! Every few seconds it slams the ground and traps the closest tower under a basalt pillar until the wave ends.",
     magmaking: "The Magma Cube King is coming! When you destroy it, it splits into Magma Cubes, and those split into small cubes!",
+    balloonbot: "Balloon Bots float over everything, so only towers that hit flying robots can reach them. Pop the balloon and the pilot crashes onto the road!",
+    planklayer: "Plank Layers are here! Where the road loops back, they build a plank bridge shortcut, and the robots behind them use it too. Stop them early!",
+    skyblimp: "The Sky Blimp is coming! Only towers that hit flying robots can hurt it, and it drops Paratroopers onto the road. Spread your towers along the whole road!",
     gustrunner: "Gust Runners are here! Every few seconds the storm wind pushes them forward super fast.",
     staticbot: "Static Bots are here! Every few seconds they zap the closest tower, so it can't attack for a moment.",
     thunderbird: "Thunderbird Drones fly in flocks straight at your treehouse. Only towers that hit flying robots can stop them.",
@@ -5491,6 +5545,12 @@ function kill(r) {
   r.dead = true;
   // Junk Splitter: bursts into Mini-Clankers that keep marching from where it fell
   const sb = SETTINGS.robots[r.type];
+  if (sb && sb.dropType) {   // Balloon Bot: the balloon pops and the pilot crashes onto the closest bit of road
+    const q = rpos(r); let best = null;
+    for (const pm of G.map.paths) for (let d = 0; d < pm.total; d += 8) { const p2 = posAt(pm, d), dd = Math.hypot(p2.x - q.x, p2.y - (q.y + 14)); if (!best || dd < best.dd) best = { dd, d, pm }; }
+    if (best) { spawn({ type: sb.dropType, d: best.d, path: best.pm }); const pl = G.robots[G.robots.length - 1]; pl.chute = 0.6; pl.crash = true; }
+    burst(q.x, q.y - 6, "#e0443a", 12); burst(q.x, q.y - 6, "#ffd34d", 8); floatText(q.x, q.y - 22, "Pop!", "#ffd34d");
+  }
   if (sb && sb.splitInto) {
     for (let i = 0; i < sb.splitInto; i++) spawn({ type: sb.splitType || "mini", d: Math.max(0, r.d - i * 9), path: r.path, fromMummy: r.type === "mummy" });
     const q = rpos(r); burst(q.x, q.y, r.type === "mummy" ? "#f4e2c0" : "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, r.type === "mummy" ? "Unraveled!" : "Split!", "#c9ced6");
@@ -6062,9 +6122,10 @@ function freezeTower(t, sec) { if (t.kind === "phoenix") { phoenixRebirth(t); re
 /* ---------- Eye of the Storm robot powers ---------- */
 function stormPowers(dt) {
   const RS = SETTINGS.robots;
+  if (G.planks) G.planks = G.planks.filter((b) => (b.t -= dt) > 0);   // shortcut bridges only last a while
   for (const r of G.robots) {
     if (r.dead) continue;
-    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.spinEvery && !S.strikeEvery) continue;
+    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
     const q = rpos(r);
     if (S.dashEvery) {   // Gust Runner: a gust of wind pushes it forward
       r.dashT = (r.dashT ?? S.dashEvery * (0.4 + Math.random() * 0.6)) - dt;
@@ -6087,6 +6148,28 @@ function stormPowers(dt) {
       r.spinT = (r.spinT ?? S.spinEvery * 0.6) - dt;
       if (!r.spinning && r.spinT <= 0) { r.spinning = true; r.spunOnce = true; r.spinT = S.spinSeconds; floatText(q.x, q.y - 36, "Tornado!", "#dfe6ff"); burst(q.x, q.y, "#dfe6ff", 14); }
       else if (r.spinning && r.spinT <= 0) { r.spinning = false; r.spinT = S.spinEvery; burst(q.x, q.y, "#dfe6ff", 10); }
+    }
+    if (S.troopEvery) {   // Sky Blimp: drops Paratroopers onto random spots on the road
+      r.troopT = (r.troopT ?? S.troopEvery * 0.6) - dt;
+      if (r.troopT <= 0) {
+        r.troopT = S.troopEvery;
+        for (let k = 0; k < S.troopCount; k++) { const pm = G.map.paths[Math.random() * G.map.paths.length | 0], d = pm.total * (0.15 + Math.random() * 0.65);
+          spawn({ type: S.troopType, d, path: pm }); const tr = G.robots[G.robots.length - 1]; tr.chute = 1.1; }
+        floatText(q.x, q.y - 50, "Paratroopers!", "#e8f0c0"); Sound.play("place");
+      }
+    }
+    if (S.bridgeReach && !r.built && !(r.chute > 0)) {   // Plank Layer: looks for a spot where the road loops back close by, and builds a shortcut
+      r.planT = (r.planT ?? 0.3) - dt;
+      if (r.planT <= 0) {
+        r.planT = 0.3; const pm = r.path, here = posAt(pm, r.d); let best = null;
+        for (let d2 = r.d + S.bridgeMinSkip * T; d2 <= Math.min(pm.total - T, r.d + S.bridgeMaxSkip * T); d2 += 8) { const there = posAt(pm, d2); if (Math.hypot(there.x - here.x, there.y - here.y) <= S.bridgeReach * T) best = { d2, there }; }
+        if (best) {
+          r.built = true; G.planks = G.planks || [];
+          G.planks.push({ x1: here.x, y1: here.y, x2: best.there.x, y2: best.there.y, from: r.d, to: best.d2, path: pm, t: S.bridgeSeconds });
+          floatText(here.x, here.y - 24, "Shortcut!", "#ffb347"); burst(here.x, here.y, "#a8743e", 12); Sound.play("place");
+          r.d = best.d2;
+        }
+      }
     }
     if (S.strikeEvery) {   // Thunder Titan: calls lightning down on towers around it
       r.strikeT = (r.strikeT ?? S.strikeEvery * 0.5) - dt;
@@ -6228,6 +6311,7 @@ function update(dt) {
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
     if (r.under) sp *= 1.5;   // Lava Divers swim fast under the lava
+    if (r.chute > 0) { r.chute -= dt; sp = 0; }   // still floating (or tumbling) down onto the road
     if (r.dashLeft > 0) { r.dashLeft -= dt; sp *= (SETTINGS.robots[r.type] || {}).dashSpeed || 2.5; }   // a Gust Runner dashing on the wind
     if (r.spinning) sp *= (SETTINGS.robots[r.type] || {}).spinSpeed || 1.5;   // a Cyclone Golem spinning as a tornado
     if (G.map.ice && G.map.ice.size && !r.flying) { const q = rpos(r); r.sliding = G.map.ice.has(Math.floor(q.x / T) + "," + Math.floor(q.y / T)); if (r.sliding) sp *= (SETTINGS.robots[r.type] || {}).iceSpeed || SETTINGS.levels[G.level].iceSpeed || 1.4; }   // sliding on the ice (Penguin Bots belly-slide extra fast)
@@ -6246,7 +6330,8 @@ function update(dt) {
       if (spot < 3) wall.hp -= SETTINGS.towers.squirrel.wallChewPerSecond * (isHeavy(r) ? 5 : r.type === "tank" ? 2 : 1) * dt; wall.hitT = 0.1;   // only the 3 robots at the front can reach the wall to chew it
       if (wall.hp <= 0) breakNutWall(wall);
     }
-    r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
+    const d0 = r.d; r.d += sp * T * dt; r.wob += dt * (r.type === "clanker" ? 14 : 8);
+    if (!r.flying && G.planks && G.planks.length) for (const b of G.planks) if (b.path === r.path && d0 < b.from && r.d >= b.from) { r.d = b.to + (r.d - b.from); break; }   // takes a Plank Layer's shortcut
     if (r.type === "snowball") {   // Snowball Roller: gets bigger and tougher with every square it rolls
       r.rolled = (r.rolled || 0) + sp * dt;
       while (r.rolled >= 1) { r.rolled -= 1; const g = SETTINGS.robots.snowball.growPerSquare * G.diff.robotHealth * (SETTINGS.levels[G.level].robotHealth || 1); r.maxHp += g; r.hp += g; r.grown = (r.grown || 0) + 1; }
@@ -6604,11 +6689,19 @@ function draw() {
   }
 
   drawMerge(x);
+  for (const b of G.planks || []) {   // Plank Layer shortcut bridges
+    const a = Math.min(1, b.t), len = Math.hypot(b.x2 - b.x1, b.y2 - b.y1), ang = Math.atan2(b.y2 - b.y1, b.x2 - b.x1);
+    x.save(); x.globalAlpha = a; x.translate(b.x1, b.y1); x.rotate(ang);
+    x.fillStyle = "rgba(0,0,0,0.25)"; x.fillRect(0, -9, len, 22);
+    for (let k = 0; k < len; k += 6) { x.fillStyle = (k / 6) % 3 ? "#a8743e" : "#8a5a2a"; x.fillRect(k, -10, 5, 20); x.fillStyle = "#5e3a1a"; x.fillRect(k + 4, -10, 1, 20); }
+    x.fillStyle = "#d8c08a"; x.fillRect(0, -12, len, 2); x.fillRect(0, 10, len, 2);   // rope rails
+    x.restore();
+  }
   // robots
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "universetitan" || r.type === "thundertitan" ? 100 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "universetitan" || r.type === "thundertitan" ? 100 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -6643,9 +6736,21 @@ function draw() {
       x.restore();
     }
     const img = (p.dx < 0 ? SPRF : SPR)[frame];
-    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0));   // robots sink a little in quicksand
+    const drop = r.chute > 0 ? -r.chute * (r.crash ? 40 : 60) : 0;   // a Paratrooper floating down (or a Balloon Pilot crashing down) onto the road
+    x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0) + drop - (r.type === "skyblimp" ? 22 : 0));   // robots sink a little in quicksand (and the Blimp flies high)
+    if (r.chute > 0 && !r.crash) {   // the parachute
+      x.fillStyle = "#e8f0c0"; x.beginPath(); x.arc(0, -sz * 0.95, sz * 0.75, Math.PI, 0); x.fill();
+      x.fillStyle = "#6a7a44"; for (let k = -1; k <= 1; k += 2) { x.beginPath(); x.arc(k * sz * 0.38, -sz * 0.95, sz * 0.37, Math.PI, 0); x.fill(); }
+      x.strokeStyle = "rgba(40,40,40,0.7)"; x.lineWidth = 1; x.beginPath(); x.moveTo(-sz * 0.75, -sz * 0.95); x.lineTo(-sz * 0.2, -sz * 0.2); x.moveTo(sz * 0.75, -sz * 0.95); x.lineTo(sz * 0.2, -sz * 0.2); x.moveTo(0, -sz * 0.95); x.lineTo(0, -sz * 0.3); x.stroke();
+    }
+    if (r.crash && r.chute > 0) x.rotate(Math.sin(G.time * 18) * 0.5);   // tumbling as it falls
     if (r.type === "clanker") x.rotate(Math.sin(r.wob * 0.5) * 0.08);
+    if (r.type === "planklayer") {   // the stack of planks on its back
+      const fl = p.dx < 0 ? 1 : -1;
+      for (let k = 0; k < 4; k++) { x.fillStyle = k % 2 ? "#a8743e" : "#c9944e"; x.fillRect(fl * 4 - 10, -sz / 2 - 5 + k * 3, 20, 3); x.fillStyle = "#5e3a1a"; x.fillRect(fl * 4 - 10, -sz / 2 - 2 + k * 3, 20, 0.8); }
+    }
     x.drawImage(img, -sz / 2, -sz / 2, sz, sz);
+    if (r.type === "skyblimp" && !hidden && !PREFS.simple) { x.fillStyle = "rgba(255,240,140,0.35)"; x.beginPath(); x.moveTo(sz * 0.4 * (p.dx < 0 ? -1 : 1), -6); x.lineTo(sz * 0.95 * (p.dx < 0 ? -1 : 1), 30); x.lineTo(sz * 0.55 * (p.dx < 0 ? -1 : 1), 34); x.fill(); }   // its searchlight beam
     if (r.type === "sandboss" && !hidden) {
       // the Sand Golem's magma crack and eyes glow and throb
       const k = sz / 32, pulse = 0.5 + 0.5 * Math.sin(G.time * 3.5 + r.wob), fl = p.dx < 0 ? -1 : 1;

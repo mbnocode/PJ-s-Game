@@ -289,6 +289,17 @@ const SETTINGS = {
     // down on strikeTowers towers within strikeRadius squares, stunning them for strikeSeconds. fixedHealth: exactly this much health on Normal.
     thundertitan: { name: "Thunder Titan", health: 30000, speed: 0.9, leaves: 300, points: 4000, baseHit: 100, isBoss: true, fixedHealth: true, strikeEvery: 6, strikeTowers: 2, strikeRadius: 5, strikeSeconds: 2.5,
                     landTowerTimes: 0.5, flyingTowerTimes: 2 },   // land towers do half damage to it; flying towers (Owl, Night Owl, Dragon, Pegasus, Phoenix) do double
+    // ---- more sky robots ----
+    // Balloon Bot: floats over everything under a hot-air balloon (only towers that hit flying robots can reach it).
+    // Pop the balloon and its pilot (dropType) crashes onto the closest bit of road and keeps walking.
+    balloonbot:  { name: "Balloon Bot", health: 90, speed: 1.6, leaves: 8, points: 25, flying: true, baseHit: 8, dropType: "balloonpilot" },
+    balloonpilot: { name: "Balloon Pilot", health: 70, speed: 2.2, leaves: 6, points: 20 },
+    // Sky Blimp (a Boss): a huge armored airship. Every troopEvery seconds it drops troopCount Paratroopers onto random spots on the road.
+    skyblimp:    { name: "Sky Blimp", health: 4200, speed: 0.55, leaves: 200, points: 800, baseHit: 60, isBoss: true, flying: true, troopEvery: 5, troopCount: 2, troopType: "paratrooper" },
+    paratrooper: { name: "Paratrooper", health: 60, speed: 2.0, leaves: 2, points: 10 },
+    // Plank Layer: carries a stack of planks. Where the road loops back close to itself (within bridgeReach squares), it builds a
+    // shortcut bridge that skips bridgeMinSkip to bridgeMaxSkip squares of road. Every robot behind it uses the shortcut for bridgeSeconds.
+    planklayer:  { name: "Plank Layer", health: 180, speed: 1.5, leaves: 14, points: 40, bridgeReach: 3.3, bridgeMinSkip: 4, bridgeMaxSkip: 9, bridgeSeconds: 10 },
     starchunk:     { name: "Star Chunk", health: 110, speed: 1.8, leaves: 0, points: 20 },
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
     // The Blizzard King: the final boss of Blizzard Peak (the last wave is just him).
@@ -868,7 +879,7 @@ const SETTINGS = {
     // ---- The Sky Islands ----
     // islands: [square across, square down, width, height] of each floating island. Everything else is open sky:
     // nothing can be built there, and the road crosses it on rope bridges.
-    skyislands: { name: "Floating Islands", unlockAfter: "blizzard", acornDropChance: 0.08, about: "Green islands floating high in the sky, joined by rickety rope bridges. Waterfalls pour off the edges into the clouds! Scores are worth 4x.", theme: "skyislands",
+    skyislands: { name: "Floating Islands", unlockAfter: "blizzard", acornDropChance: 0.08, about: "Green islands floating high in the sky, joined by rickety rope bridges. Waterfalls pour off the edges into the clouds! 30 waves. Scores are worth 4x.", theme: "skyislands",
               robotHealth: 1.6,
               lateToughness: { fromWave: 8, perWave: 0.055 },   // after wave 8, robots get 5.5% tougher every wave
               scoreTimes: 4,
@@ -882,32 +893,37 @@ const SETTINGS = {
                 [["clanker", 7, 1.1]],                                                  // 1
                 [["clanker", 6, 1.0], ["walker", 3, 1.3]],                              // 2
                 [[["scout", "clanker"], 10, 0.9]],                                      // 3
-                [["walker", 6, 1.0], ["drone", 2, 1.6]],                                // 4: the first Sky Drones
-                [[["walker", "hider"], 10, 0.9], ["drone", 2, 1.2]],                    // 5
-                [["boss", 1, 0, 1500], ["drone", 3, 0.7]],                              // 6: a Boss
-                [[["tesla", "tank", "drone"], 12, 0.8]],                                // 7
-                [["emberbat", 6, 0.35], [["walker", "repair"], 8, 0.9]],               // 8
-                [[["splitter", "snowdrone", "scout"], 15, 0.7]],                        // 9
-                [["sandboss", 1, 0], [["drone", "emberbat"], 6, 0.5]],                 // 10: the Sand Golem
-                [[["tank", "obsidian", "snowdrone", "hider"], 18, 0.6]],                // 11
-                [["snowdrone", 5, 0.6], ["drone", 5, 0.6]],                           // 12: the sky fills up!
-                [["yetimech", 1, 0, 2200], [["tesla", "tank", "repair"], 14, 0.7]],     // 13
-                [[["emberbat", "drone", "snowdrone"], 13, 0.3]],                        // 14
-                [["boss", 1, 0, 3500], [["obsidian", "splitter", "hider"], 16, 0.6]],   // 15
-                [[["tank", "snowplow", "tesla", "drone", "emberbat"], 24, 0.5]],        // 16
+                [["walker", 6, 1.0], ["balloonbot", 2, 1.6]],                           // 4: the first Balloon Bots
+                [[["walker", "gustrunner"], 10, 0.9], ["drone", 2, 1.2]],              // 5
+                [["boss", 1, 0, 1500], ["balloonbot", 3, 0.8]],                         // 6: a Boss
+                [[["tesla", "tank", "planklayer"], 12, 0.8]],                           // 7: the first Plank Layers
+                [["thunderbird", 6, 0.35], [["walker", "repair"], 8, 0.9]],            // 8
+                [[["splitter", "balloonbot", "scout"], 15, 0.7]],                       // 9
+                [["skyblimp", 1, 0], [["drone", "thunderbird"], 6, 0.5]],              // 10: the Sky Blimp
+                [[["tank", "obsidian", "snowdrone", "hider", "planklayer"], 18, 0.6]],  // 11
+                [["balloonbot", 6, 0.6], ["drone", 5, 0.6]],                          // 12: the sky fills up!
+                [["yetimech", 1, 0, 2200], [["staticbot", "tank", "repair"], 14, 0.7]], // 13
+                [[["emberbat", "drone", "thunderbird"], 14, 0.3]],                      // 14
+                [["boss", 1, 0, 3500], [["obsidian", "planklayer", "gustrunner"], 16, 0.6]],   // 15
+                [[["tank", "snowplow", "tesla", "balloonbot", "thunderbird"], 24, 0.5]],   // 16
                 [["glaciergolem", 1, 0], [["snowdrone", "drone"], 8, 0.45]],           // 17
-                [[["mummy", "fireproof", "diver", "emberbat"], 24, 0.5]],               // 18
-                [["pillartitan", 1, 0], [["drone", "snowdrone", "emberbat"], 10, 0.4]], // 19
+                [["skyblimp", 1, 0], [["gustrunner", "staticbot", "planklayer"], 18, 0.5]],   // 18
+                [["pillartitan", 1, 0], [["drone", "balloonbot", "thunderbird"], 10, 0.4]],   // 19
                 [[["tank", "obsidian", "tesla", "repair", "snowdrone"], 28, 0.45]],     // 20
-                [["magmaking", 1, 0], [["emberbat", "drone"], 11, 0.35]],               // 21
-                [[["snowplow", "tank", "hider", "drone", "snowdrone", "emberbat"], 32, 0.4]],   // 22
-                [["yetimech", 2, 8], ["boss", 1, 0, 5000], [["drone", "emberbat"], 10, 0.4]],   // 23
-                [[["emberbat", "drone", "snowdrone"], 20, 0.25]],                       // 24: a giant flock
-                [["universegolem", 1, 0], ["glaciergolem", 1, 0], [["tank", "obsidian", "tesla", "drone", "snowdrone", "emberbat"], 36, 0.35]],   // 25: the big finish
+                [["cyclonegolem", 1, 0], [["emberbat", "drone"], 11, 0.35]],            // 21
+                [[["snowplow", "tank", "hider", "balloonbot", "planklayer", "thunderbird"], 32, 0.4]],   // 22
+                [["yetimech", 2, 8], ["boss", 1, 0, 5000], [["drone", "thunderbird"], 10, 0.4]],   // 23
+                [[["thunderbird", "drone", "balloonbot"], 22, 0.25]],                   // 24: a giant flock
+                [["universegolem", 1, 0], ["glaciergolem", 1, 0], [["tank", "obsidian", "tesla", "drone", "snowdrone", "planklayer"], 36, 0.35]],   // 25
+                [["skyblimp", 2, 12], [["gustrunner", "staticbot"], 20, 0.45]],        // 26
+                [[["planklayer", "tank", "obsidian", "balloonbot", "thunderbird"], 38, 0.35]],   // 27
+                [["cyclonegolem", 2, 10], ["magmaking", 1, 0], [["drone", "snowdrone"], 12, 0.35]],   // 28
+                [[["thunderbird", "balloonbot", "drone", "emberbat", "gustrunner", "hider"], 48, 0.24]],   // 29
+                [["skyblimp", 3, 10], ["cyclonegolem", 1, 0], [["balloonbot", "thunderbird"], 16, 0.35]],   // 30: the Blimp armada
               ] },
     // Thunder Peaks: every so often, lightning strikes a tower and stuns it.
-    thunder: { name: "Thunder Peaks", acornDropChance: 0.08, about: "Rocky peaks floating in a dark storm. Lightning strikes towers and stuns them! Scores are worth 4.25x.", theme: "thunder",
-              robotHealth: 1.25,
+    thunder: { name: "Thunder Peaks", acornDropChance: 0.08, about: "Rocky peaks floating in a dark storm. Lightning strikes towers and stuns them! 30 waves. Scores are worth 4.25x.", theme: "thunder",
+              robotHealth: 1.15,
               lateToughness: { fromWave: 8, perWave: 0.06 },   // after wave 8, robots get 6% tougher every wave
               scoreTimes: 4.25,
               lightning: { every: 9, stunSeconds: 2.5, fromWave: 2 },   // during a wave, every 9 seconds lightning stuns a random tower for 2.5 seconds
@@ -918,35 +934,40 @@ const SETTINGS = {
               tallGrass: [[4, 11], [2, 2], [16, 1], [12, 10]],
               waves: [
                 [["clanker", 7, 1.1]],                                                  // 1
-                [["walker", 5, 1.1], ["clanker", 4, 1.0]],                              // 2
+                [["walker", 5, 1.1], ["gustrunner", 3, 1.2]],                           // 2
                 [[["scout", "walker", "hider"], 10, 0.9]],                              // 3
-                [["tank", 1, 0], ["walker", 5, 1.0], ["drone", 2, 1.5]],                // 4
-                [[["tesla", "walker"], 10, 0.8], ["drone", 2, 1.2]],                    // 5
-                [["yetimech", 1, 0, 1600], ["drone", 3, 0.7]],                          // 6
-                [[["tank", "repair", "drone"], 14, 0.75]],                              // 7
-                [["emberbat", 7, 0.3], [["obsidian", "hider"], 8, 0.9]],               // 8
-                [[["splitter", "snowdrone", "fireproof"], 16, 0.7]],                    // 9
-                [["pillartitan", 1, 0], [["drone", "emberbat"], 6, 0.5]],              // 10: the Pillar Titan
-                [[["tank", "obsidian", "tesla", "snowplow"], 20, 0.6]],                 // 11
-                [["snowdrone", 6, 0.5], ["drone", 6, 0.5]],                           // 12
-                [["glaciergolem", 1, 0], [["tesla", "tank", "repair"], 14, 0.7]],       // 13
-                [[["emberbat", "drone", "snowdrone", "hider"], 28, 0.3]],               // 14
-                [["boss", 1, 0, 4000], [["obsidian", "splitter", "diver"], 18, 0.6]],   // 15
-                [[["tank", "snowplow", "tesla", "drone", "emberbat", "mummy"], 26, 0.5]],   // 16
-                [["magmaking", 1, 0], [["snowdrone", "drone"], 9, 0.45]],              // 17
-                [[["fireproof", "obsidian", "diver", "emberbat"], 26, 0.45]],           // 18
-                [["yetimech", 1, 0], [["drone", "snowdrone", "emberbat"], 11, 0.4]],    // 19
-                [["universegolem", 1, 0], [["tank", "obsidian", "tesla", "repair"], 24, 0.45]],   // 20: a Universe Golem!
-                [[["snowplow", "tank", "hider", "drone", "snowdrone", "emberbat"], 34, 0.38]],   // 21
-                [["glaciergolem", 2, 8], ["pillartitan", 1, 0], [["drone", "emberbat"], 10, 0.4]],   // 22
-                [["boss", 1, 0, 6000], ["yetimech", 2, 8], [["tank", "obsidian", "snowdrone", "tesla"], 28, 0.4]],   // 23
-                [[["emberbat", "drone", "snowdrone", "hider", "scout"], 44, 0.25]],     // 24
-                [["universegolem", 2, 10], ["magmaking", 1, 0], [["tank", "obsidian", "fireproof", "drone", "snowdrone", "emberbat", "tesla"], 40, 0.33]],   // 25: the big finish
+                [["tank", 1, 0], ["walker", 5, 1.0], ["balloonbot", 2, 1.5]],           // 4
+                [[["tesla", "walker", "planklayer"], 10, 0.8], ["drone", 2, 1.2]],      // 5
+                [["yetimech", 1, 0, 1600], ["thunderbird", 4, 0.5]],                    // 6
+                [[["tank", "repair", "staticbot"], 14, 0.75]],                          // 7
+                [["emberbat", 7, 0.3], [["obsidian", "hider", "planklayer"], 9, 0.9]], // 8
+                [[["splitter", "snowdrone", "fireproof", "balloonbot"], 16, 0.7]],      // 9
+                [["pillartitan", 1, 0], [["drone", "emberbat", "thunderbird"], 7, 0.5]],   // 10: the Pillar Titan
+                [[["tank", "obsidian", "tesla", "snowplow", "staticbot"], 20, 0.6]],    // 11
+                [["skyblimp", 1, 0], ["snowdrone", 5, 0.5]],                            // 12: the Sky Blimp
+                [["glaciergolem", 1, 0], [["tesla", "tank", "repair", "planklayer"], 14, 0.7]],   // 13
+                [[["emberbat", "drone", "snowdrone", "hider", "thunderbird"], 28, 0.3]],   // 14
+                [["boss", 1, 0, 4000], [["obsidian", "splitter", "diver", "gustrunner"], 18, 0.6]],   // 15
+                [[["tank", "snowplow", "tesla", "drone", "balloonbot", "mummy"], 26, 0.5]],   // 16
+                [["magmaking", 1, 0], [["snowdrone", "drone", "thunderbird"], 9, 0.45]],   // 17
+                [[["fireproof", "obsidian", "diver", "planklayer", "staticbot"], 26, 0.45]],   // 18
+                [["cyclonegolem", 1, 0], [["drone", "snowdrone", "emberbat"], 11, 0.4]],   // 19
+                [["universegolem", 1, 0], [["tank", "obsidian", "tesla", "repair"], 24, 0.45]],   // 20
+                [[["snowplow", "tank", "hider", "balloonbot", "snowdrone", "emberbat"], 34, 0.38]],   // 21
+                [["skyblimp", 1, 0], ["glaciergolem", 2, 8], [["drone", "thunderbird"], 10, 0.4]],   // 22
+                [["boss", 1, 0, 6000], ["yetimech", 2, 8], [["tank", "obsidian", "staticbot", "tesla"], 28, 0.4]],   // 23
+                [[["emberbat", "drone", "snowdrone", "hider", "scout", "thunderbird"], 44, 0.25]],   // 24
+                [["universegolem", 2, 10], ["magmaking", 1, 0], [["tank", "obsidian", "fireproof", "drone", "planklayer", "tesla"], 40, 0.33]],   // 25
+                [["cyclonegolem", 2, 10], [["gustrunner", "staticbot", "balloonbot"], 30, 0.35]],   // 26
+                [["skyblimp", 2, 10], [["thunderbird", "snowdrone"], 14, 0.32]],       // 27
+                [["boss", 1, 0, 8000], ["pillartitan", 1, 0], [["tank", "snowplow", "obsidian", "planklayer", "mummy"], 34, 0.33]],   // 28
+                [[["thunderbird", "emberbat", "drone", "balloonbot", "gustrunner", "hider", "scout"], 52, 0.21]],   // 29
+                [["skyblimp", 2, 10], ["cyclonegolem", 2, 10], ["universegolem", 1, 0], [["staticbot", "planklayer", "thunderbird"], 20, 0.35]],   // 30: the big finish
               ] },
     // The Eye of the Storm: the road spirals in through a giant storm to the calm eye in the middle, where your treehouse is.
     // Lightning strikes towers out in the storm, but never towers inside the calm eye (within calmRadius squares of the treehouse).
     storm: { name: "Eye of the Storm", acornDropChance: 0.08, about: "The road spirals through a giant swirling storm to the calm eye in the middle. Lightning strikes towers out in the storm, but towers in the calm eye are safe. The Thunder Titan is waiting! Scores are worth 4.5x.", theme: "storm",
-              robotHealth: 1.35,
+              robotHealth: 1.4,
               lateToughness: { fromWave: 8, perWave: 0.065 },   // after wave 8, robots get 6.5% tougher every wave
               scoreTimes: 4.5,
               lightning: { every: 8, stunSeconds: 2.5, fromWave: 2, calmRadius: 3 },
@@ -960,30 +981,30 @@ const SETTINGS = {
                 [["walker", 6, 1.0], ["gustrunner", 3, 1.2]],                           // 2: the first Gust Runners
                 [[["scout", "walker", "hider"], 12, 0.85]],                             // 3
                 [["tank", 2, 3], ["thunderbird", 4, 0.4]],                              // 4: the first Thunderbird Drones
-                [[["gustrunner", "walker"], 12, 0.7], ["drone", 3, 1.0]],               // 5
+                [[["gustrunner", "walker"], 12, 0.7], ["balloonbot", 3, 1.0]],               // 5
                 [["staticbot", 3, 2], ["walker", 6, 0.8]],                              // 6: the first Static Bots
                 [["yetimech", 1, 0, 1800], [["thunderbird", "drone"], 6, 0.5]],         // 7
-                [[["tank", "repair", "staticbot"], 14, 0.7]],                           // 8
+                [[["tank", "repair", "staticbot", "planklayer"], 14, 0.7]],                           // 8
                 [["thunderbird", 10, 0.3], [["obsidian", "hider"], 10, 0.8]],           // 9
                 [["cyclonegolem", 1, 0], [["gustrunner", "thunderbird"], 8, 0.5]],      // 10: the Cyclone Golem
                 [[["tank", "obsidian", "tesla", "snowplow", "staticbot"], 22, 0.55]],   // 11
-                [["snowdrone", 6, 0.5], ["thunderbird", 8, 0.35]],                      // 12
+                [["skyblimp", 1, 0], ["thunderbird", 8, 0.35]],                      // 12
                 [["glaciergolem", 1, 0], [["staticbot", "tank", "repair"], 16, 0.65]],  // 13
                 [[["gustrunner", "scout", "emberbat", "thunderbird"], 34, 0.28]],       // 14
                 [["boss", 1, 0, 4500], [["obsidian", "splitter", "diver"], 20, 0.55]],  // 15
-                [[["tank", "snowplow", "staticbot", "drone", "thunderbird", "mummy"], 28, 0.48]],   // 16
+                [[["tank", "snowplow", "staticbot", "balloonbot", "thunderbird", "mummy"], 28, 0.48]],   // 16
                 [["cyclonegolem", 2, 10], [["snowdrone", "thunderbird"], 10, 0.4]],     // 17
-                [[["fireproof", "obsidian", "diver", "gustrunner"], 28, 0.42]],         // 18
+                [[["fireproof", "obsidian", "planklayer", "gustrunner"], 28, 0.42]],         // 18
                 [["yetimech", 2, 8], [["drone", "snowdrone", "thunderbird"], 12, 0.38]],   // 19
                 [["universegolem", 1, 0], [["tank", "obsidian", "staticbot", "repair"], 26, 0.42]],   // 20
                 [[["snowplow", "tank", "hider", "thunderbird", "snowdrone", "gustrunner"], 36, 0.36]],   // 21
-                [["cyclonegolem", 2, 8], ["pillartitan", 1, 0], [["thunderbird", "emberbat"], 12, 0.35]],   // 22
+                [["cyclonegolem", 2, 8], ["skyblimp", 1, 0], [["thunderbird", "emberbat"], 12, 0.35]],   // 22
                 [["boss", 1, 0, 6500], ["yetimech", 2, 8], [["tank", "obsidian", "staticbot", "tesla"], 30, 0.38]],   // 23
-                [[["thunderbird", "drone", "snowdrone", "hider", "gustrunner"], 46, 0.24]],   // 24
+                [[["thunderbird", "drone", "balloonbot", "hider", "gustrunner"], 46, 0.24]],   // 24
                 [["universegolem", 2, 10], ["cyclonegolem", 1, 0], [["tank", "obsidian", "fireproof", "staticbot", "thunderbird", "tesla"], 40, 0.32]],   // 25
                 [["glaciergolem", 2, 8], [["gustrunner", "staticbot", "thunderbird"], 36, 0.3]],   // 26
-                [["cyclonegolem", 3, 8], ["magmaking", 1, 0], [["thunderbird", "snowdrone"], 14, 0.32]],   // 27
-                [["boss", 1, 0, 9000], ["universegolem", 2, 9], [["tank", "snowplow", "obsidian", "staticbot", "mummy"], 36, 0.32]],   // 28
+                [["cyclonegolem", 3, 8], ["skyblimp", 1, 0], [["thunderbird", "snowdrone"], 14, 0.32]],   // 27
+                [["boss", 1, 0, 9000], ["universegolem", 2, 9], [["tank", "snowplow", "planklayer", "staticbot", "balloonbot"], 36, 0.32]],   // 28
                 [[["thunderbird", "emberbat", "drone", "snowdrone", "gustrunner", "hider", "scout"], 56, 0.2]],   // 29: the whole storm at once
                 [["thundertitan", 1, 0]],                                               // 30: the Thunder Titan
               ] },
