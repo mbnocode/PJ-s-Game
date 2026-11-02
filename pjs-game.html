@@ -393,6 +393,13 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
+.rally { position: fixed; inset: 0; z-index: 80; background: rgba(6,8,12,0.88); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.rally-box { width: min(900px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 3px solid #ffd34d; border-radius: 14px; box-shadow: 0 0 40px rgba(255,211,77,0.25); padding: 12px; }
+.rally-box canvas { width: 100%; height: auto; aspect-ratio: 640 / 360; image-rendering: pixelated; border-radius: 8px; border: 2px solid #16191d; display: block; }
+.rally-talk { padding: 12px 6px 4px; }
+.rally-who { font-family: var(--display); color: #ffd34d; font-size: 20px; margin-bottom: 6px; }
+.rally-text { font-size: 19px; line-height: 1.45; min-height: 3em; color: #eef2ea; cursor: pointer; }
+.rally-btns { margin-top: 10px; gap: 10px; }
 .tbtn.lockedtw { opacity: 0.55; filter: grayscale(0.8); } .tbtn.lockedtw:hover { filter: grayscale(0.8); }
 .tbtn canvas { width: 36px; height: 36px; image-rendering: pixelated; flex: none; }
 .tbtn .c { display: block; font-family: var(--body); font-weight: 700; font-size: 13px; color: var(--leaf); }
@@ -7757,7 +7764,7 @@ function finish(won) {
     if ($("o-next")) $("o-next").onclick = () => { G = null; openSetup(nextL); };
     if ($("o-ask")) askForBoard(g, won, score, stars);
   };
-  if (won) setTimeout(showResult, 700);
+  if (won) setTimeout(() => { if (g.level === "storm" && g.diffKey === "nightmare") rallyScene(showResult); else showResult(); }, 700);
   else setTimeout(() => {
     if (G !== g) return;
     // A big GAME OVER for about 4 seconds, then the results.
@@ -7766,6 +7773,95 @@ function finish(won) {
     $("overlay-box").innerHTML = `<div class="go-text">GAME OVER</div>`;
     setTimeout(() => { $("overlay").classList.remove("gameover"); showResult(); }, 4000);
   }, (G.takeover.dur + 0.9) * 1000);
+}
+/* ---------- The rally: after beating the Eye of the Storm on Nightmare, an army of animals arrives ----------
+   General Antler (a great stag) leads the animals' army over the hill at sunrise and asks you to join them
+   and help stop the Iron King, whose fortress glows red on the far mountain. */
+function rallyScene(done) {
+  const old = $("rally"); if (old) old.remove();
+  const wrap = document.createElement("div"); wrap.id = "rally"; wrap.className = "rally";
+  wrap.innerHTML = `<div class="rally-box"><canvas id="rally-cv" width="640" height="360"></canvas>
+    <div class="rally-talk"><div class="rally-who">General Antler</div><div class="rally-text" id="rally-text"></div>
+    <div class="row rally-btns" id="rally-btns"></div></div></div>`;
+  document.body.appendChild(wrap);
+  const cv = $("rally-cv"), x = cv.getContext("2d"); x.imageSmoothingEnabled = false;
+  const W = 640, H = 360, t0 = performance.now();
+  const dark = (img, a) => { const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const y = c.getContext("2d"); y.drawImage(img, 0, 0); y.globalCompositeOperation = "source-atop"; y.fillStyle = `rgba(20,10,30,${a})`; y.fillRect(0, 0, c.width, c.height); return c; };
+  const robotSil = dark(SPR.clanker, 0.85), bossSil = dark(SPR.boss, 0.85);
+  const TROOPS = ["fire", "water", "plant", "air", "crab", "squirrel", "wizard", "fire", "water", "crab", "air", "plant", "squirrel", "water", "fire", "crab", "plant", "air"];
+  let cheerAt = 0, phase = "talk", raf = 0;
+  const leaves = [];
+  const draw = () => {
+    const t = (performance.now() - t0) / 1000;
+    // the sky at sunrise
+    const sky = x.createLinearGradient(0, 0, 0, H * 0.7); sky.addColorStop(0, "#241a44"); sky.addColorStop(0.55, "#a8506a"); sky.addColorStop(1, "#ffb070"); x.fillStyle = sky; x.fillRect(0, 0, W, H);
+    const sunY = 210 - Math.min(t, 6) * 8; x.fillStyle = "rgba(255,220,140,0.35)"; x.beginPath(); x.arc(200, sunY, 48, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffe08a"; x.beginPath(); x.arc(200, sunY, 30, 0, Math.PI * 2); x.fill();
+    // the far mountains, with the Iron King's fortress glowing red on the tallest one
+    x.fillStyle = "#3a2448"; x.beginPath(); x.moveTo(0, 230); x.lineTo(90, 170); x.lineTo(170, 215); x.lineTo(300, 150); x.lineTo(380, 200); x.lineTo(500, 90); x.lineTo(600, 180); x.lineTo(640, 160); x.lineTo(640, 260); x.lineTo(0, 260); x.fill();
+    x.fillStyle = "#1a1024"; x.fillRect(478, 52, 44, 44); x.fillRect(470, 40, 12, 56); x.fillRect(518, 40, 12, 56); x.fillRect(493, 26, 14, 30);   // the fortress
+    for (const [bx, by] of [[470, 36], [518, 36], [493, 22]]) { x.beginPath(); x.moveTo(bx, by + 4); x.lineTo(bx + (bx === 493 ? 7 : 6), by - 10); x.lineTo(bx + (bx === 493 ? 14 : 12), by + 4); x.fill(); }   // spiky towers
+    const pulse = 0.55 + 0.45 * Math.sin(t * 3);
+    x.fillStyle = `rgba(255,40,30,${0.25 * pulse})`; x.beginPath(); x.arc(500, 70, 40, 0, Math.PI * 2); x.fill();
+    x.fillStyle = `rgba(255,${60 + 80 * pulse | 0},40,1)`; x.fillRect(489, 64, 6, 4); x.fillRect(505, 64, 6, 4);   // red eyes in the fortress
+    x.fillStyle = "#ff5a3a"; x.fillRect(496, 76, 8, 8);   // its glowing iron heart
+    for (const [wx, wy] of [[473, 50], [521, 50], [473, 70], [521, 70]]) { x.fillStyle = `rgba(255,90,60,${0.6 + 0.4 * pulse})`; x.fillRect(wx, wy, 6, 4); }
+    // the robot army on the far hills
+    x.fillStyle = "#4a2c50"; x.beginPath(); x.moveTo(330, 260); x.quadraticCurveTo(470, 180, 640, 215); x.lineTo(640, 320); x.lineTo(330, 320); x.fill();
+    for (let i = 0; i < 16; i++) { const rx = 400 + (i % 8) * 28 + (i > 7 ? 14 : 0), ry = 214 + (i > 7 ? 14 : 0) - (rx - 400) * 0.08 + Math.sin(t * 6 + i) * 1; x.drawImage(robotSil, rx, ry, 20, 20); }
+    x.drawImage(bossSil, 560, 188, 40, 40);
+    // the near hill where the animals gather
+    const g2 = x.createLinearGradient(0, 240, 0, H); g2.addColorStop(0, "#3f8a3a"); g2.addColorStop(1, "#1f4a24"); x.fillStyle = g2;
+    x.beginPath(); x.moveTo(0, 262); x.quadraticCurveTo(220, 236, 420, 270); x.quadraticCurveTo(540, 290, 640, 300); x.lineTo(640, H); x.lineTo(0, H); x.fill();
+    for (let i = 0; i < 40; i++) { x.fillStyle = i % 3 ? "#5aa84a" : "#2f6a2e"; x.fillRect((i * 53) % W, 280 + ((i * 37) % 70), 2, 4); }   // grass
+    // the army marching in from the left, then stopping
+    const march = Math.min(1, t / 3.2), cheer = cheerAt ? (performance.now() - cheerAt) / 1000 : 0;
+    TROOPS.forEach((k, i) => {
+      const row = i % 3, col = Math.floor(i / 3), img = SPR[k]; if (!img) return;
+      const tx = -260 + march * 300 + col * 40 + row * 14, ty = 262 + row * 26 - col * 1.5;
+      const hop = march < 1 ? Math.abs(Math.sin(t * 9 + i)) * 4 : cheer ? Math.abs(Math.sin(cheer * 8 + i * 0.7)) * 14 : 0;
+      x.drawImage(img, tx, ty - hop, 32, 32);
+    });
+    // General Antler, a great stag, out in front with the army's banner
+    const lx = -20 + march * 320, ly = 222, lhop = march < 1 ? Math.abs(Math.sin(t * 7)) * 4 : cheer ? Math.abs(Math.sin(cheer * 6)) * 10 : 0;
+    x.fillStyle = "#6a4a2a"; x.fillRect(lx + 50, ly - 40 - lhop, 3, 92);   // banner pole
+    const wave = Math.sin(t * 5);
+    x.fillStyle = "#2f8a3a"; x.beginPath(); x.moveTo(lx + 53, ly - 40 - lhop); x.lineTo(lx + 95, ly - 36 - lhop + wave * 3); x.lineTo(lx + 92, ly - 12 - lhop + wave * 3); x.lineTo(lx + 53, ly - 14 - lhop); x.fill();
+    if (ACORN_IMG.complete) x.drawImage(ACORN_IMG, lx + 64, ly - 37 - lhop + wave * 1.5, 18, 20);   // a Golden Acorn on the banner
+    x.drawImage(SPR.healer, lx, ly - lhop, 64, 64);
+    // falling leaves when everyone cheers
+    if (cheer) { if (leaves.length < 60 && Math.random() < 0.6) leaves.push({ x: Math.random() * W, y: -10, v: 40 + Math.random() * 50, c: ["#ffd34d", "#e2574c", "#ff9a3c", "#9be28a"][Math.random() * 4 | 0], w: Math.random() * 6 });
+      for (const f of leaves) { f.y += f.v / 60; f.x += Math.sin(t * 2 + f.w) * 0.6; x.fillStyle = f.c; x.fillRect(f.x, f.y, 4, 3); } }
+    if (phase === "end") { x.fillStyle = "rgba(0,0,0,0.35)"; x.fillRect(0, 0, W, H); x.fillStyle = "#ffe08a"; x.font = "bold 34px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center"; x.fillText("TO BE CONTINUED…", W / 2, H / 2); x.textAlign = "left"; }
+    raf = requestAnimationFrame(draw);
+  };
+  draw();
+  // the talking: one line at a time, typed out
+  const say = (text, then) => {
+    const el = $("rally-text"); el.textContent = ""; let i = 0; $("rally-btns").innerHTML = "";
+    const tick = setInterval(() => { i += 2; el.textContent = text.slice(0, i); if (i >= text.length) { clearInterval(tick); then(); } }, 30);
+    el.onclick = () => { if (i < text.length) { i = text.length; } };
+  };
+  const btn = (label, go, cls = "") => { const b = document.createElement("button"); b.textContent = label; if (cls) b.className = cls; b.onclick = go; $("rally-btns").appendChild(b); return b; };
+  const close = () => { cancelAnimationFrame(raf); wrap.remove(); done(); };
+  const lines = [
+    "You did it! You held the treehouse through the Eye of the Storm, on Nightmare!",
+    "I am General Antler. While you were fighting, we gathered every animal in the land. Frogs, dragons, owls, crabs… all of us.",
+    "But the robots will never stop coming as long as the Iron King rules them from his fortress on the mountain.",
+    "So now, we fight back. We need a hero like you. Will you join us, and help stop the Iron King?",
+  ];
+  const next = (n) => say(lines[n], () => {
+    if (n < lines.length - 1) { btn("Next ›", () => next(n + 1), "go"); return; }
+    btn("Join the fight!", () => {
+      const s = slot(); if (s) { s.joinedFight = true; saveSlots(slots); }
+      cheerAt = performance.now(); Sound.play("win");
+      say("Then let's go! For the Golden Acorns, and for the treehouse! Together, we march on the Iron King!", () => {
+        setTimeout(() => { phase = "end"; $("rally-btns").innerHTML = ""; btn("Continue", close, "go"); }, 2200);
+      });
+    }, "go");
+    btn("Not yet", () => say("I understand. When you're ready, we'll be waiting, hero.", () => btn("Continue", close)));
+  });
+  setTimeout(() => next(0), 2600);   // the army marches in first
+  Sound.play("horn");
 }
 // Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 25.
 async function askForBoard(g, won, score, stars) {
