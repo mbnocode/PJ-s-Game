@@ -303,7 +303,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ability.vacuum.off .ab-cost { color: #a8acb6; } .ability.vacuum.off .ab-icon { filter: grayscale(1); opacity: 0.6; } .ability[hidden] { display: none; }
 .perk .needs { display: block; font-size: 13px; color: #ffd36b; margin: 4px 0; }
 /* the world map on the levels page */
-.worldmap { position: relative; flex-shrink: 0; width: min(100%, calc((100vh - 130px) * 1000 / 450), 2000px); width: min(100%, calc((100dvh - 130px) * 1000 / 450), 2000px);   /* as big as the screen allows, while still fitting top to bottom */ aspect-ratio: 1000 / 450; border: 3px solid #16191d; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 0 #16191d; }
+#levels-buttons { margin-top: -8px; }
+.worldmap { position: relative; flex-shrink: 0; width: min(100%, calc((100vh - 210px) * 1000 / 450), 2000px); width: min(100%, calc((100dvh - 210px) * 1000 / 450), 2000px);   /* as big as the screen allows, while still fitting top to bottom */ aspect-ratio: 1000 / 450; border: 3px solid #16191d; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 0 #16191d; }
 .mappv { position: fixed; inset: 0; z-index: 50; background: rgba(8,12,10,0.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .mappv-box { position: relative; width: min(680px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 3px solid #16191d; border-radius: 14px; box-shadow: 0 6px 0 #16191d, 0 10px 40px rgba(0,0,0,0.5); padding: 16px; display: flex; flex-direction: column; gap: 10px; text-align: left; animation: mappv-pop 0.18s ease-out; }
 @keyframes mappv-pop { from { transform: scale(0.92); opacity: 0; } }
@@ -638,6 +639,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Pick a level</h2>
     <p class="muted" id="slot-time" style="margin-top:-14px"></p>
     <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas></div>
+    <div class="row" id="levels-buttons"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button class="go" id="b-skins">Skins</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
     <div class="mappv" id="mappv" role="dialog" aria-modal="true" aria-labelledby="mappv-name" hidden>
       <div class="mappv-box">
         <button class="x" id="mappv-x" aria-label="Close">×</button>
@@ -649,7 +651,6 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       </div>
     </div>
     <div class="cards" id="level-cards"></div>
-    <div class="row"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button class="go" id="b-skins">Skins</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
   </section>
 
   <!-- Setup -->
