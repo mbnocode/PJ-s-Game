@@ -3580,7 +3580,7 @@ $("tut-no").onclick = () => { setup.tutorial = false; renderSetup(); };
 /* A special message for Dadbot: before any level starts, make sure the work is done first! */
 // Grown-ups who should be working get asked first. (nickname in lowercase: name to show, the "keep playing" button, where the wrong answer sends you, and whether they get a secret hint)
 const WORK_NICKS = {
-  "dadbot": { name: "Dadbot", yes: "Play anyway", sendTo: "slots", hint: true, canHide: true },
+  "dadbot": { name: "Dadbot", yes: "Play anyway", sendTo: "slots", hint: true, canHide: true, hideFirst: true },   // hideFirst: the get-rid-of-it button shows right away
   "i love tacos": { name: "I LOVE TACOS", yes: "Continue", sendTo: "title", hint: true, canHide: true },   // canHide: from the 2nd time on, a button can get rid of the work question
 };
 function dadCheck(nick, go) {
@@ -3593,7 +3593,7 @@ function dadCheck(nick, go) {
     $("dad-hint-ok").onclick = () => { $("dadcheck").hidden = true; go(); }; };
   if (st.hidden) { go(); return; }   // the message was gotten rid of (the question and the secret hint)
   st.seen++; saveStore();
-  $("dad-never").hidden = !(who.canHide && st.seen >= 2);
+  $("dad-never").hidden = !(who.canHide && (who.hideFirst || st.seen >= 2));
   $("dad-never").onclick = () => { st.hidden = true; saveStore(); $("dadcheck").hidden = true; go(); };
   $("dad-name").textContent = who.name; $("dad-yes").textContent = who.yes;
   $("dad-wrong-text").textContent = `Back to the ${who.sendTo === "title" ? "title screen" : "save slots"} you go, ${who.name}.`;
