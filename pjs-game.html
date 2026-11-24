@@ -397,6 +397,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
+.army-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; width: min(1100px, 100%); }
+.army-card { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 10px; text-align: left; }
+.army-card canvas { width: 48px; height: 48px; image-rendering: pixelated; flex: none; }
+.army-card .army-info { flex: 1; min-width: 0; } .army-card .k { font-family: var(--display); font-size: 17px; }
+.army-card .pips { color: #ffd34d; letter-spacing: 1px; font-size: 13px; } .army-card .pips .muted { letter-spacing: 0; margin-left: 4px; }
+.army-card button { min-width: 92px; } .army-card button small { font-size: 12px; }
 #s-iron { align-items: center; gap: 10px; padding: 12px 16px; }
 .iron-wrap { width: min(1100px, 100%, calc((100vh - 170px) * 1.7778)); }
 .iron-wrap canvas { width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; border: 3px solid #5a1e22; border-radius: 10px; display: block; box-shadow: 0 0 30px rgba(255,60,40,0.2); cursor: pointer; }
@@ -415,7 +421,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .march-end-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 18px 22px; max-width: 460px; text-align: center; }
 .march-help { margin: 0; font-size: 14px; text-align: center; }
 .march-units { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; width: min(1100px, 100%); }
-.march-units .tbtn.broke { opacity: 0.5; } .march-units small { color: var(--muted); font-size: 11px; }
+.march-units .tbtn.broke { opacity: 0.5; } .march-units small { color: var(--muted); font-size: 11px; } .march-units .lvl { color: #ffd34d; font-size: 11px; }
 .march-card { border-color: #ffd34d; position: relative; } .march-card .ribbon { position: absolute; top: 18px; right: 18px; background: #ffd34d; color: #2a2000; font-weight: 700; padding: 2px 10px; border-radius: 6px; font-size: 13px; }
 .rally { position: fixed; inset: 0; z-index: 80; background: rgba(6,8,12,0.88); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .rally-box { width: min(900px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 3px solid #ffd34d; border-radius: 14px; box-shadow: 0 0 40px rgba(255,211,77,0.25); padding: 12px; }
@@ -766,10 +772,17 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   </div>
 
   <!-- Achievements (coming soon) -->
+  <section class="screen menu" id="s-army" hidden>
+    <button class="back" id="army-back">←&nbsp; Back to the Iron Lands</button>
+    <h2>Army Upgrades</h2>
+    <div class="ach-count" id="army-acorns"></div>
+    <p class="muted">Every tower you've unlocked on the world map marches with your army in the Iron Lands. Spend Golden Acorns to make them stronger: each upgrade adds <b>+7 damage</b> and <b>+20% health</b> (the Healer Deer heals more instead). Upgrades only count in the Iron Lands.</p>
+    <div class="army-grid" id="army-grid"></div>
+  </section>
   <section class="screen" id="s-iron" hidden>
     <div class="iron-wrap"><canvas id="iron-cv" width="960" height="540"></canvas></div>
     <p class="iron-info" id="iron-info"></p>
-    <div class="row"><button id="iron-back">← Back to the world map</button><button class="go" id="iron-practice">⚔️ Practice battle (preview)</button></div>
+    <div class="row"><button id="iron-back">← Back to the world map</button><button class="go" id="iron-army">⬆ Army Upgrades</button><button id="iron-practice">⚔️ Practice battle (preview)</button></div>
   </section>
   <section class="screen" id="s-escape" hidden>
     <div class="march-top">
@@ -779,19 +792,19 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     </div>
     <div class="march-wrap esc-wrap"><canvas id="esc-cv" width="960" height="400"></canvas>
       <div class="march-end" id="esc-end" hidden><div class="march-end-box" id="esc-end-box"></div></div></div>
-    <p class="muted march-help">A robot convoy is hauling caged animals to the fortress! Send animals (or press 1–5) to chase it and break the cages. Freed animals join your army. Wreck the <b>Engine</b> at the front to stop the whole convoy. Press C for Antler's Charge!</p>
+    <p class="muted march-help">A robot convoy is hauling caged animals to the fortress! Send animals (or press the number keys) to chase it and break the cages. Freed animals join your army. Wreck the <b>Engine</b> at the front to stop the whole convoy. Press C for Antler's Charge!</p>
     <div class="march-units" id="esc-units"></div>
   </section>
   <section class="screen" id="s-march" hidden>
     <div class="march-top">
-      <span class="march-title">⚔️ The March <small>(preview)</small></span>
+      <span class="march-title" id="march-title">⚔️ The March <small>(preview)</small></span>
       <span class="march-stat">🍁 <b id="march-leaves">0</b> leaves</span><span class="march-stat">⏱ <b id="march-time">0:00</b></span>
       <span class="march-lanes">Road: <button id="march-lane-0">Top</button><button id="march-lane-1">Middle</button><button id="march-lane-2">Bottom</button></span>
       <button id="march-speed">1×</button><button id="march-pause">Pause</button><button id="march-quit">Quit</button>
     </div>
     <div class="march-wrap"><canvas id="march-cv" width="640" height="384"></canvas>
       <div class="march-end" id="march-end" hidden><div class="march-end-box" id="march-end-box"></div></div></div>
-    <p class="muted march-help">Pick a road (tap it, or use ↑ ↓), then send animals down it (or press 1–5). They fight any robots they meet, then attack the fortress. Press C for Antler's Charge!</p>
+    <p class="muted march-help" id="march-help"></p>
     <div class="march-units" id="march-units"></div>
   </section>
   <section class="screen menu" id="s-skins" hidden>
@@ -2262,7 +2275,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-escape", "s-iron", "s-march", "s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
+const SCREENS = ["s-army", "s-escape", "s-iron", "s-march", "s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); if (id === "s-slots" || id === "s-title") slotActive = false; }
 /* ---------- total time played in each save slot ---------- */
 // Counts every second you're inside a save slot (on its levels page, its shops, in its levels, anywhere) while the game is on screen.
@@ -7982,16 +7995,46 @@ function rallyScene(done) {
 }
 /* ---------- THE MARCH (preview): a lanes battle. Your camp is on the left, the robots' fortress on the right, with 3 roads between.
    Send animals down a road; the robots send their army back. When the armies meet, they fight. Knock down the fortress to win. ---------- */
+/* ---------- THE ARMY: every tower you've unlocked on the world map can march in the Iron Lands ----------
+   Base stats for each animal as a soldier (cost in leaves, health, damage per hit, range in pixels, seconds between hits,
+   speed in pixels per second). Army Upgrades (bought with Golden Acorns) add damage and health. */
+const ARMY = {
+  water:    { name: "Frog",         cost: 25,  hp: 70,  dmg: 7,  range: 30,  rate: 0.6, speed: 40, slows: true, sound: "tongue" },
+  fire:     { name: "Dragon",       cost: 45,  hp: 55,  dmg: 15, range: 115, rate: 1.0, speed: 32, shot: "#ff8a3c", fly: true, sound: "fire" },
+  plant:    { name: "Tree Giant",   cost: 70,  hp: 300, dmg: 13, range: 28,  rate: 1.1, speed: 22, sound: "plant" },
+  air:      { name: "Owl",          cost: 40,  hp: 45,  dmg: 9,  range: 85,  rate: 0.7, speed: 58, shot: "#d6ecff", fly: true, sound: "air" },
+  crab:     { name: "Crab",         cost: 55,  hp: 95,  dmg: 11, range: 75,  rate: 1.2, speed: 30, splash: 34, shot: "#f4e2b8", sound: "crab" },
+  squirrel: { name: "Squirrel",     cost: 30,  hp: 50,  dmg: 6,  range: 26,  rate: 0.5, speed: 52, sound: "crab" },
+  wizard:   { name: "Wizard",       cost: 60,  hp: 60,  dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", sound: "hacked" },
+  healer:   { name: "Healer Deer",  cost: 80,  hp: 120, dmg: 0,  heal: 14, range: 90, rate: 1.5, speed: 26, sound: "healer" },
+  pegasus:  { name: "Pegasus",      cost: 120, hp: 120, dmg: 14, range: 120, rate: 0.9, speed: 45, shot: "#fff3a0", fly: true, multi: 3, sound: "pegasus" },
+  nightowl: { name: "Night Owl",    cost: 90,  hp: 70,  dmg: 12, range: 110, rate: 0.6, speed: 50, shot: "#a8b8ff", fly: true, multi: 2, sound: "nightowl" },
+  hacked:   { name: "Hacked Robot", cost: 85,  hp: 110, dmg: 13, range: 100, rate: 0.8, speed: 30, shot: "#7ff3ff", push: 14, sound: "hacked" },
+  wolf:     { name: "Wolf",         cost: 75,  hp: 130, dmg: 15, range: 26,  rate: 0.6, speed: 50, pack: true, sound: "wolf" },
+  hydra:    { name: "Hydra",        cost: 140, hp: 220, dmg: 13, range: 50,  rate: 0.8, speed: 28, multi: 3, sound: "plant" },
+  phoenix:  { name: "Phoenix",      cost: 160, hp: 150, dmg: 15, range: 95,  rate: 0.9, speed: 46, shot: "#ffb347", fly: true, splash: 30, sound: "phoenix" },
+  kraken:   { name: "Kraken",       cost: 180, hp: 420, dmg: 15, range: 40,  rate: 1.2, speed: 20, splash: 40, sound: "kraken" },
+};
+const ARMY_UP = { costs: [100, 200, 350, 550, 800], dmg: 7, hp: 0.2, heal: 5 };   // each upgrade: +7 damage, +20% health (Healer: +5 healing)
+function armyLevel(k) { const s = slot(); return ((s && s.army) || {})[k] || 0; }
+function armyStats(k) {
+  const b = ARMY[k]; if (!b) return null; const L = armyLevel(k);
+  return { ...b, level: L, dmg: b.dmg ? b.dmg + ARMY_UP.dmg * L : 0, heal: b.heal ? b.heal + ARMY_UP.heal * L : 0, hp: Math.round(b.hp * (1 + ARMY_UP.hp * L)) };
+}
+function armyRoster() {   // the soldiers you can send (towers you've unlocked), and stats for every animal (freed animals can be any kind)
+  const all = {}, have = {};
+  for (const k of Object.keys(ARMY)) { all[k] = armyStats(k); if (towerUnlocked(k)) have[k] = all[k]; }
+  MARCH.all = all; MARCH.animals = have;
+}
+// how hard an animal hits: its damage, plus the Wolf pack bonus, minus the robot's armor, then doubled by Antler's Charge
+function armyDamage(u, S, armor, units, charge) {
+  let d = S.dmg;
+  if (S.pack) d += 2 * Math.min(1, units.filter((o) => o !== u && o.side === u.side && o.kind === "wolf" && o.hp > 0 && Math.abs(o.x - u.x) < 44 && Math.abs(o.y - u.y) < 40).length);
+  return Math.max(0, d - (armor || 0)) * (charge ? 2 : 1);
+}
 const MARCH = {
-  campHealth: 250, fortressHealth: 1600, startLeaves: 150, leavesPerSecond: 11,
   lanes: [104, 196, 288],
-  animals: {   // cost in leaves; hp; dmg per hit; range in pixels; rate = seconds between hits; speed in pixels per second
-    water: { name: "Frog",       cost: 25, hp: 70,  dmg: 7,  range: 30,  rate: 0.6, speed: 40, slows: true, sound: "tongue" },
-    fire:  { name: "Dragon",     cost: 45, hp: 55,  dmg: 15, range: 115, rate: 1.0, speed: 32, shot: "#ff8a3c", sound: "fire" },
-    plant: { name: "Tree Giant", cost: 70, hp: 300, dmg: 13, range: 28,  rate: 1.1, speed: 22, sound: "plant" },
-    air:   { name: "Owl",        cost: 40, hp: 45,  dmg: 9,  range: 85,  rate: 0.7, speed: 58, shot: "#d6ecff", sound: "air" },
-    crab:  { name: "Crab",       cost: 55, hp: 95,  dmg: 11, range: 75,  rate: 1.2, speed: 30, splash: 34, shot: "#f4e2b8", sound: "crab" },
-  },
+  animals: {}, all: {},
   robots: {
     clanker: { hp: 55,   dmg: 6,  range: 26, rate: 0.8, speed: 30 },
     scout:   { hp: 38,   dmg: 5,  range: 26, rate: 0.5, speed: 62 },
@@ -8002,14 +8045,31 @@ const MARCH = {
   },
   chargeEvery: 30, chargeSeconds: 6,   // General Antler's Charge: every animal hits twice as hard and moves 50% faster
 };
+// The lanes battles: the preview (The March) and the Iron Lands' Iron Bridge
+const BATTLES = {
+  march: { title: "⚔️ The March <small>(preview)</small>", camp: 250, fort: 1600, startLeaves: 150, lps: 11, armor: 0, bossFirst: 75, bossEvery: 80,
+    pool: (t) => t < 25 ? ["clanker", "clanker", "scout"] : t < 60 ? ["clanker", "scout", "walker", "walker", "tesla"] : ["clanker", "walker", "tesla", "tank", "scout", "walker"],
+    back: "levels", help: "Pick a road (tap it, or use ↑ ↓), then send animals down it (or press the number keys). They fight any robots they meet, then attack the fortress. Press C for Antler's Charge!" },
+  // The Iron Bridge: every robot (and the bridge gate) is IRON-PLATED, so each hit does 17 less damage. No animal's
+  // base damage gets past 17 (even a Wolf pack, and Antler's Charge only doubles what gets through), so you need Army Upgrades to win.
+  bridge: { id: "bridge", title: "🌉 The Iron Bridge", camp: 260, fort: 2400, startLeaves: 160, lps: 12, armor: 17, bossFirst: 60, bossEvery: 70,
+    pool: (t) => t < 20 ? ["clanker", "clanker", "walker"] : t < 60 ? ["clanker", "walker", "tesla", "scout", "walker"] : ["walker", "tesla", "tank", "walker", "scout", "tank"],
+    drawbridge: { x0: 300, x1: 380, every: 22, up: 6, warn: 3 },
+    starsFor: [180, 120, 0],   // finish within this much camp health lost... (see marchEnd)
+    back: "iron", help: "The bridge guards are IRON-PLATED: each hit does 17 less damage, so you'll need Army Upgrades to break through! Watch the drawbridge: when it rises, anything on it falls into the lava (flyers are safe)." },
+};
 let M = null;
 function marchUnlocked() { return true; }   // a preview: open for everyone for now
-function startMarch() {
-  M = { t: 0, leaves: MARCH.startLeaves, camp: MARCH.campHealth, fort: MARCH.fortressHealth, lane: 1, units: [], fx: [], spawnT: 3, bossT: 75,
-        chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
-  if (!M.bg) M.bg = marchBackground();
+function startMarch(which) {
+  const cfg = BATTLES[typeof which === "string" ? which : "march"];
+  armyRoster(); cancelAnimationFrame(ironRaf); if (M) cancelAnimationFrame(M.raf);
+  M = { cfg, t: 0, leaves: cfg.startLeaves, camp: cfg.camp, fort: cfg.fort, lane: 1, units: [], fx: [], spawnT: 3, bossT: cfg.bossFirst,
+        chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0, bridgeUp: false, bridgeT: 0 };
+  M.bg = cfg.drawbridge ? bridgeBackground() : marchBackground();
+  $("march-title").innerHTML = cfg.title; $("march-help").textContent = cfg.help;
   $("march-end").hidden = true; show("s-march"); marchButtons(); Sound.init(); Sound.play("horn");
-  cancelAnimationFrame(M.raf); M.raf = requestAnimationFrame(marchLoop);
+  if (cfg.armor) M.fx.push({ text: `Iron-plated robots: -${cfg.armor} damage per hit!`, x: 320, y: 70, t: 3, c: "#c8d0e0" });
+  M.raf = requestAnimationFrame(marchLoop);
 }
 function marchBackground() {
   const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
@@ -8031,12 +8091,26 @@ function marchBackground() {
   for (const [wx, wy] of [[596, 50], [624, 44], [612, 150], [612, 240], [628, 120], [628, 210]]) { x.fillStyle = "#ff4a2a"; x.fillRect(wx, wy, 5, 6); }
   return c;
 }
+// The Iron Bridge: a lava river across the middle, with an iron bridge (and drawbridge) carrying all three roads
+function bridgeBackground() {
+  const c = marchBackground(), x = c.getContext("2d");
+  x.fillStyle = "#2a1410"; x.fillRect(270, 0, 140, 384);
+  const lv = x.createLinearGradient(280, 0, 400, 0); lv.addColorStop(0, "#8a2a0a"); lv.addColorStop(0.5, "#ff7a1a"); lv.addColorStop(1, "#8a2a0a"); x.fillStyle = lv; x.fillRect(280, 0, 120, 384);
+  let sd = 3; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 160; i++) { x.fillStyle = R() < 0.5 ? "#ffd36a" : "#c83a0a"; x.fillRect(282 + R() * 116, R() * 384, 3, 2); }
+  for (const y of MARCH.lanes) {   // the iron bridge decks over the lava, with railings and rivets
+    x.fillStyle = "#3a3440"; x.fillRect(264, y - 22, 152, 44); x.fillStyle = "#4e4856"; x.fillRect(264, y - 18, 152, 36);
+    x.fillStyle = "#26222c"; for (let bx = 268; bx < 414; bx += 12) x.fillRect(bx, y - 18, 2, 36); x.fillStyle = "#8a8496"; for (let bx = 270; bx < 414; bx += 12) { x.fillRect(bx, y - 20, 2, 2); x.fillRect(bx, y + 18, 2, 2); }
+    x.fillStyle = "#16121a"; x.fillRect(264, y - 24, 152, 3); x.fillRect(264, y + 21, 152, 3);
+  }
+  return c;
+}
 function marchButtons() {
   const box = $("march-units"); box.innerHTML = "";
   Object.entries(MARCH.animals).forEach(([k, a], n) => {
     const b = document.createElement("button"); b.className = "tbtn"; b.id = "march-" + k;
     const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR[k], 0, 0, 32, 32);
-    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${a.name} <small>(${n + 1})</small><span class="c">${a.cost} leaves</span></span>`);
+    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${a.name}${a.level ? ` <b class="lvl">Lv ${a.level}</b>` : ""} ${n < 10 ? `<small>(${(n + 1) % 10})</small>` : ""}<span class="c">${a.cost} leaves</span></span>`);
     b.onclick = () => marchSend(k); box.appendChild(b);
   });
   const ch = document.createElement("button"); ch.className = "tbtn"; ch.id = "march-charge";
@@ -8046,7 +8120,7 @@ function marchButtons() {
   [0, 1, 2].forEach((i) => { $("march-lane-" + i).onclick = () => { M.lane = i; marchHud(); }; });
 }
 function marchSend(k) {
-  if (!M || M.over) return; const a = MARCH.animals[k];
+  if (!M || M.over) return; const a = MARCH.animals[k]; if (!a) return;
   if (M.leaves < a.cost) { Sound.play("nope"); return; }
   M.leaves -= a.cost; Sound.play("place");
   M.units.push({ side: 0, kind: k, x: 70, y: MARCH.lanes[M.lane] + (Math.random() * 10 - 5), lane: M.lane, hp: a.hp, max: a.hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
@@ -8057,8 +8131,7 @@ function marchCharge() {
   M.fx.push({ text: "CHARGE!", x: 220, y: 60, t: 1.6, c: "#ffd34d" });
 }
 function marchSpawn() {
-  const t = M.t, pool = t < 25 ? ["clanker", "clanker", "scout"] : t < 60 ? ["clanker", "scout", "walker", "walker", "tesla"] : ["clanker", "walker", "tesla", "tank", "scout", "walker"];
-  const k = pool[Math.random() * pool.length | 0], r = MARCH.robots[k], lane = Math.random() * 3 | 0, tough = 1 + t / 240;
+  const pool = M.cfg.pool(M.t), k = pool[Math.random() * pool.length | 0], r = MARCH.robots[k], lane = Math.random() * 3 | 0, tough = 1 + M.t / 240;
   M.units.push({ side: 1, kind: k, x: 572, y: MARCH.lanes[lane] + (Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
 }
 function marchLoop(now) {
@@ -8068,60 +8141,98 @@ function marchLoop(now) {
   marchDraw(); marchHud();
   M.raf = requestAnimationFrame(marchLoop);
 }
+const uStats = (u) => u.side ? MARCH.robots[u.kind] : (MARCH.all[u.kind] || MARCH.animals[u.kind]);
 function marchUpdate(dt) {
-  M.t += dt; M.leaves += MARCH.leavesPerSecond * dt;
+  const C = M.cfg, DB = C.drawbridge;
+  M.t += dt; M.leaves += C.lps * dt;
   if (M.chargeT > 0) M.chargeT -= dt; if (M.chargeCool > 0) M.chargeCool -= dt;
   M.spawnT -= dt; if (M.spawnT <= 0) { marchSpawn(); M.spawnT = Math.max(1.3, 4.2 - M.t * 0.025); }
-  M.bossT -= dt; if (M.bossT <= 0) { M.bossT = 80; const lane = Math.random() * 3 | 0, r = MARCH.robots.boss; M.units.push({ side: 1, kind: "boss", x: 572, y: MARCH.lanes[lane], lane, hp: r.hp, max: r.hp, cool: 0, slowT: 0, hitT: 0, wob: 0 }); M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
+  M.bossT -= dt; if (M.bossT <= 0) { M.bossT = C.bossEvery; const lane = Math.random() * 3 | 0, r = MARCH.robots.boss; M.units.push({ side: 1, kind: "boss", x: 572, y: MARCH.lanes[lane], lane, hp: r.hp, max: r.hp, cool: 0, slowT: 0, hitT: 0, wob: 0 }); M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
+  // the drawbridge: rises every so often; anything walking on it falls into the lava
+  if (DB) {
+    const cyc = M.t % DB.every, up = cyc >= DB.every - DB.up;
+    if (up && !M.bridgeUp) {
+      M.bridgeUp = true; let n = 0;
+      for (const u of M.units) { const S = uStats(u); if (u.hp > 0 && !S.fly && u.x >= DB.x0 && u.x <= DB.x1) { u.hp = 0; u.fell = true; n++; for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 10, t: 0.6, c: i % 2 ? "#ff7a1a" : "#ffd36a" }); } }
+      M.fx.push({ text: n ? `The drawbridge rose! ${n} fell into the lava!` : "The drawbridge rose!", x: 340, y: 60, t: 2, c: "#ff9a5a" }); Sound.play("smash");
+    } else if (!up && M.bridgeUp) { M.bridgeUp = false; M.fx.push({ text: "The drawbridge is down. Cross now!", x: 340, y: 60, t: 1.6, c: "#9be28a" }); }
+    M.bridgeWarn = !up && cyc >= DB.every - DB.up - DB.warn;
+  }
   for (const u of M.units) {
     if (u.hp <= 0) continue;
-    const S = u.side ? MARCH.robots[u.kind] : MARCH.animals[u.kind], dir = u.side ? -1 : 1, charge = !u.side && M.chargeT > 0;
+    const S = uStats(u), dir = u.side ? -1 : 1, charge = !u.side && M.chargeT > 0;
     u.cool -= dt; if (u.slowT > 0) u.slowT -= dt; if (u.hitT > 0) u.hitT -= dt;
     // the closest enemy ahead in the same road
     let foe = null, best = 1e9;
     for (const o of M.units) { if (o.side === u.side || o.hp <= 0 || o.lane !== u.lane) continue; const d = (o.x - u.x) * dir; if (d > -12 && d < best) { best = d; foe = o; } }
+    if (S.heal) {   // the Healer Deer: heals hurt animals near it instead of attacking
+      const hurt = M.units.filter((o) => o.side === u.side && o.hp > 0 && o.hp < o.max && o.lane === u.lane && Math.abs(o.x - u.x) <= S.range);
+      if (hurt.length && u.cool <= 0) { u.cool = S.rate; for (const o of hurt) { o.hp = Math.min(o.max, o.hp + S.heal); M.fx.push({ spark: true, x: o.x, y: o.y - 18, t: 0.4, c: "#9be28a" }); } if (Math.random() < 0.3) Sound.play("healer"); }
+      if (foe && best <= S.range * 0.6) continue;   // stays behind the front line
+    }
     const baseD = u.side ? u.x - 70 : 572 - u.x;
-    if (foe && best <= S.range) { if (u.cool <= 0) marchHit(u, S, foe, charge); }
-    else if (baseD <= S.range * 0.4 + 4) {   // at the enemy's base: hit it
-      if (u.cool <= 0) { u.cool = S.rate; const d = S.dmg * (charge ? 2 : 1); if (u.side) { M.camp -= d; Sound.play("hit"); } else { M.fort -= d; if (S.sound) Sound.play(S.sound); } M.fx.push({ spark: true, x: u.side ? 66 : 578, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
-    } else u.x += dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+    if (!S.heal && foe && best <= S.range) { if (u.cool <= 0) marchHit(u, S, foe, charge); }
+    else if (!S.heal && baseD <= S.range * 0.4 + 4) {   // at the enemy's base: hit it
+      if (u.cool <= 0) { u.cool = S.rate;
+        if (u.side) { M.camp -= S.dmg; Sound.play("hit"); }
+        else { const d = armyDamage(u, S, C.armor, M.units, charge); M.fort -= d; if (!d) M.fx.push({ text: "Clank!", x: 560, y: u.y - 20, t: 0.6, c: "#c8d0e0" }); if (S.sound) Sound.play(S.sound); }
+        M.fx.push({ spark: true, x: u.side ? 66 : 578, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
+    } else {
+      let nx = u.x + dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+      if (DB && M.bridgeUp && !S.fly) { if (dir > 0 && u.x < DB.x0 && nx >= DB.x0 - 6) nx = DB.x0 - 6; if (dir < 0 && u.x > DB.x1 && nx <= DB.x1 + 6) nx = DB.x1 + 6; }   // wait at the edge
+      u.x = nx;
+    }
   }
-  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) M.leaves += 8; for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side && !u.fell) M.leaves += 8; if (!u.fell) for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   M.units = M.units.filter((u) => !u.gone);
   for (const f of M.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
   M.fx = M.fx.filter((f) => f.t > 0);
   if (M.fort <= 0 || M.camp <= 0) marchEnd(M.fort <= 0);
 }
 function marchHit(u, S, foe, charge) {
-  u.cool = S.rate; const d = S.dmg * (charge ? 2 : 1);
-  const hitOne = (o) => { o.hp -= d; o.hitT = 0.12; if (S.slows) o.slowT = 1.5; };
-  if (S.splash) { for (const o of M.units) if (o.side !== u.side && o.lane === u.lane && o.hp > 0 && Math.abs(o.x - foe.x) <= S.splash) hitOne(o); } else hitOne(foe);
-  if (S.shot) M.fx.push({ shot: true, x0: u.x, y0: u.y - 6, x1: foe.x, y1: foe.y - 6, t: 0.2, c: S.shot });
+  u.cool = S.rate;
+  const armor = u.side ? 0 : M.cfg.armor;
+  const d = u.side ? S.dmg : armyDamage(u, S, armor, M.units, charge);
+  const hitOne = (o) => { o.hp -= d; o.hitT = 0.12; if (S.slows) o.slowT = 1.5; if (S.push && o.side) o.x = Math.min(572, o.x + S.push); };
+  let targets = [foe];
+  if (S.splash) targets = M.units.filter((o) => o.side !== u.side && o.lane === u.lane && o.hp > 0 && Math.abs(o.x - foe.x) <= S.splash);
+  else if (S.multi) targets = M.units.filter((o) => o.side !== u.side && o.lane === u.lane && o.hp > 0 && (o.x - u.x) * (u.side ? -1 : 1) > -12 && Math.abs(o.x - u.x) <= S.range).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, S.multi);
+  targets.forEach(hitOne);
+  if (!u.side && !d && Math.random() < 0.5) M.fx.push({ text: "Clank!", x: foe.x, y: foe.y - 26, t: 0.6, c: "#c8d0e0" });   // bounced off the iron plating
+  if (S.shot) for (const o of targets) M.fx.push({ shot: true, x0: u.x, y0: u.y - 6, x1: o.x, y1: o.y - 6, t: 0.2, c: S.shot });
   if (!u.side && S.sound) Sound.play(S.sound);
 }
 function marchDraw() {
-  const cv = $("march-cv"), x = cv.getContext("2d"); x.imageSmoothingEnabled = false;
+  const cv = $("march-cv"), x = cv.getContext("2d"), C = M.cfg, DB = C.drawbridge; x.imageSmoothingEnabled = false;
   x.drawImage(M.bg, 0, 0);
+  if (DB) {   // the drawbridge section: when it's up, the decks are gone and the lava shows; just before, it flashes
+    for (const y of MARCH.lanes) {
+      if (M.bridgeUp) { const lv = x.createLinearGradient(DB.x0, 0, DB.x1, 0); lv.addColorStop(0, "#c83a0a"); lv.addColorStop(0.5, "#ffb04a"); lv.addColorStop(1, "#c83a0a"); x.fillStyle = lv; x.fillRect(DB.x0, y - 22, DB.x1 - DB.x0, 44);
+        x.fillStyle = "#26222c"; x.fillRect(DB.x0 - 4, y - 40, 8, 40); x.fillRect(DB.x1 - 4, y - 40, 8, 40); x.fillStyle = "#4e4856"; x.fillRect(DB.x0 - 2, y - 44, 4, 26); x.fillRect(DB.x1 - 2, y - 44, 4, 26); }   // the halves raised up
+      else { x.strokeStyle = M.bridgeWarn && Math.floor(M.t * 6) % 2 ? "#ff5a3a" : "#16121a"; x.lineWidth = 3; x.strokeRect(DB.x0, y - 20, DB.x1 - DB.x0, 40); }
+    }
+  }
   const ly = MARCH.lanes[M.lane]; x.fillStyle = "rgba(255,211,77,0.16)"; x.fillRect(70, ly - 20, 500, 40); x.strokeStyle = "rgba(255,211,77,0.7)"; x.lineWidth = 2; x.strokeRect(70, ly - 20, 500, 40);   // the road you're sending to
   x.drawImage(SPR.healer, 40, ly - 30, 40, 40);   // General Antler stands at the start of the chosen road
   if (M.chargeT > 0) { x.fillStyle = `rgba(255,211,77,${0.08 + 0.06 * Math.sin(M.t * 12)})`; x.fillRect(0, 0, 640, 384); }
   const sorted = [...M.units].sort((a, b) => a.y - b.y);
   for (const u of sorted) {
-    const S = u.side ? MARCH.robots[u.kind] : MARCH.animals[u.kind], sz = S.big ? 52 : 32, moving = true;
-    const hop = Math.abs(Math.sin(M.t * 8 + u.wob)) * (S.big ? 1 : 3), fly = u.kind === "air" ? -10 + Math.sin(M.t * 4 + u.wob) * 3 : 0;
+    const S = uStats(u), sz = S.big ? 52 : 32;
+    const hop = Math.abs(Math.sin(M.t * 8 + u.wob)) * (S.big ? 1 : 3), fly = S.fly ? -10 + Math.sin(M.t * 4 + u.wob) * 3 : 0;
     x.fillStyle = "rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(u.x, u.y + 12, sz * 0.32, 4, 0, 0, Math.PI * 2); x.fill();
     const img = (u.side ? SPRF : SPR)[u.kind]; if (img) { if (u.hitT > 0) x.globalAlpha = 0.6; x.drawImage(img, u.x - sz / 2, u.y - sz + 12 - hop + fly, sz, sz); x.globalAlpha = 1; }
+    if (u.side && C.armor) { x.fillStyle = "#9aa4b8"; x.fillRect(u.x - (S.big ? 14 : 8), u.y - 4, S.big ? 28 : 16, 3); }   // iron plating
     if (u.slowT > 0) { x.fillStyle = "rgba(120,200,255,0.5)"; x.fillRect(u.x - 8, u.y + 8, 16, 3); }
     if (u.hp < u.max) { const w = S.big ? 40 : 24; x.fillStyle = "#200"; x.fillRect(u.x - w / 2, u.y - sz + 6 + fly, w, 3); x.fillStyle = u.side ? "#ff5a4a" : "#6ee06a"; x.fillRect(u.x - w / 2, u.y - sz + 6 + fly, w * Math.max(0, u.hp / u.max), 3); }
   }
   for (const f of M.fx) {
     if (f.shot) { const k = 1 - f.t / 0.2; x.fillStyle = f.c; x.fillRect(f.x0 + (f.x1 - f.x0) * k - 2, f.y0 + (f.y1 - f.y0) * k - 2, 4, 4); }
     else if (f.spark) { x.fillStyle = f.c; x.fillRect(f.x - 2, f.y - 2, 4, 4); }
-    else if (f.text) { x.font = "bold 18px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center"; x.fillStyle = "#000"; x.fillText(f.text, f.x + 2, f.y + 2); x.fillStyle = f.c; x.fillText(f.text, f.x, f.y); x.textAlign = "left"; }
+    else if (f.text) { x.font = "bold 16px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center"; x.fillStyle = "#000"; x.fillText(f.text, f.x + 2, f.y + 2); x.fillStyle = f.c; x.fillText(f.text, f.x, f.y); x.textAlign = "left"; }
   }
   // health bars for the two bases
   const bar = (bx, val, max, col, label) => { x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(bx, 8, 200, 18); x.fillStyle = col; x.fillRect(bx + 2, 10, 196 * Math.max(0, val / max), 14); x.fillStyle = "#fff"; x.font = "12px sans-serif"; x.fillText(`${label} ${Math.max(0, Math.ceil(val))}`, bx + 6, 21); };
-  bar(8, M.camp, MARCH.campHealth, "#5ac85a", "Your camp"); bar(432, M.fort, MARCH.fortressHealth, "#d8402a", "Robot fortress");
+  bar(8, M.camp, C.camp, "#5ac85a", "Your camp"); bar(432, M.fort, C.fort, "#d8402a", C.drawbridge ? "Bridge gate" : "Robot fortress");
 }
 function marchHud() {
   $("march-leaves").textContent = Math.floor(M.leaves);
@@ -8133,18 +8244,29 @@ function marchHud() {
 }
 function marchEnd(won) {
   M.over = true; Sound.play(won ? "win" : "lose");
+  const C = M.cfg; let extra = "";
+  if (C.id && won) {   // an Iron Lands battle: stars for how much of your camp is left, and Golden Acorns for new stars
+    const left = M.camp / C.camp, stars = left >= 0.7 ? 3 : left >= 0.35 ? 2 : 1, s = slot();
+    s.iron = s.iron || {}; const old = s.iron[C.id] || 0; let reward = 0;
+    if (stars > old) { reward = (stars - old) * 75; s.iron[C.id] = stars; s.acorns = (s.acorns || 0) + reward; } saveSlots(slots);
+    extra = `<div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>${reward ? `<div class="acorns" style="font-size:20px">+${reward} Golden Acorns</div>` : ""}`;
+  }
   $("march-end").hidden = false;
-  $("march-end-box").innerHTML = won
-    ? `<h2>The fortress falls!</h2><p class="muted">General Antler's army broke through in ${fmtTime(M.t)}. This is a preview of the battle mode: the real one will have more battles, all the way to the Iron King.</p>`
+  $("march-end-box").innerHTML = C.id === "bridge"
+    ? (won ? `<h2>The Iron Bridge is ours!</h2>${extra}<p class="muted">General Antler: “Those iron plates didn't stand a chance against your upgraded army. On to the Smog Factories!”</p>`
+           : `<h2>Pushed back from the bridge</h2><p class="muted">General Antler: “Their iron plating is too thick! Spend Golden Acorns on <b>Army Upgrades</b> so our animals hit hard enough to break through.”</p>`)
+    : won ? `<h2>The fortress falls!</h2><p class="muted">General Antler's army broke through in ${fmtTime(M.t)}. This is a preview of the battle mode: the real one will have more battles, all the way to the Iron King.</p>`
     : `<h2>Your camp was overrun</h2><p class="muted">The robots pushed all the way to the treehouse. Try sending Tree Giants in front, with Dragons and Crabs behind them!</p>`;
-  $("march-end-box").insertAdjacentHTML("beforeend", `<div class="row"><button id="march-back">← Back to levels</button><button class="go" id="march-again">Play again</button></div>`);
-  $("march-again").onclick = startMarch; $("march-back").onclick = leaveMarch;
+  const backLabel = C.back === "iron" ? "← Back to the Iron Lands" : "← Back to levels";
+  $("march-end-box").insertAdjacentHTML("beforeend", `<div class="row"><button id="march-back">${backLabel}</button>${C.back === "iron" && !won ? `<button id="march-upg">⬆ Army Upgrades</button>` : ""}<button class="go" id="march-again">Play again</button></div>`);
+  $("march-again").onclick = () => startMarch(C.id || "march"); $("march-back").onclick = leaveMarch;
+  if ($("march-upg")) $("march-upg").onclick = () => { if (M) cancelAnimationFrame(M.raf); M = null; openArmy(); };
 }
-function leaveMarch() { if (M) cancelAnimationFrame(M.raf); M = null; renderLevels(); show("s-levels"); }
+function leaveMarch() { const back = M && M.cfg.back; if (M) cancelAnimationFrame(M.raf); M = null; if (back === "iron") openIronLands(); else { renderLevels(); show("s-levels"); } }
 document.addEventListener("keydown", (e) => {
   if (!M || $("s-march").hidden || e.target.tagName === "INPUT") return;
   const keys = Object.keys(MARCH.animals), n = parseInt(e.key, 10);
-  if (n >= 1 && n <= keys.length) marchSend(keys[n - 1]);
+  if (!isNaN(n)) { const k = keys[(n + 9) % 10]; if (k) marchSend(k); }
   else if (e.key === "ArrowUp" || e.key === "w") { M.lane = Math.max(0, M.lane - 1); e.preventDefault(); }
   else if (e.key === "ArrowDown" || e.key === "s") { M.lane = Math.min(2, M.lane + 1); e.preventDefault(); }
   else if (e.key === "c" || e.key === "C") marchCharge();
@@ -8161,7 +8283,7 @@ $("march-quit").onclick = leaveMarch;
    but every stop on it is still "Coming soon". */
 const IRON_STOPS = [   // the battles on the road to the Iron King (x, y on the 960 x 540 map)
   { name: "The Great Escape", x: 340, y: 450, play: "escape" },
-  { name: "The Iron Bridge", x: 450, y: 320 },
+  { name: "The Iron Bridge", x: 450, y: 320, play: "bridge", needs: "escape" },
   { name: "The Smog Factories", x: 570, y: 420 },
   { name: "The Spike Wall", x: 680, y: 280 },
   { name: "The Iron King's Fortress", x: 820, y: 240, king: true },
@@ -8277,18 +8399,17 @@ function drawIronLands(t) {
   const pts = [[200, 460], ...IRON_STOPS.map((p) => [p.x, p.y])];
   x.strokeStyle = "rgba(230,200,150,0.55)"; x.lineWidth = 4; x.setLineDash([10, 9]); x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke(); x.setLineDash([]);
   IRON_STOPS.forEach((p, i) => {
-    const r = p.king ? 26 : 20;
+    const r = p.king ? 26 : 20, iron = (slot() && slot().iron) || {}, locked = p.needs && !iron[p.needs], st = p.play ? iron[p.play] || 0 : 0;
     x.fillStyle = "rgba(0,0,0,0.4)"; x.beginPath(); x.arc(p.x + 2, p.y + 3, r, 0, Math.PI * 2); x.fill();
     x.fillStyle = p.king ? "#4a1010" : "#3a2a2a"; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill();
     x.strokeStyle = p.king ? `rgba(255,80,60,${0.6 + 0.4 * pulse})` : "#8a7060"; x.lineWidth = 3; x.stroke();
-    if (p.play) {   // a battle you can play: a glowing sword, and your stars
+    if (p.play && !locked) {   // a battle you can play: a glowing sword, and your stars
       x.strokeStyle = `rgba(255,211,77,${0.5 + 0.5 * pulse})`; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r + 5, 0, Math.PI * 2); x.stroke();
       x.fillStyle = "#e8e8f0"; x.fillRect(p.x - 2, p.y - 12, 4, 18); x.fillStyle = "#ffd34d"; x.fillRect(p.x - 7, p.y + 4, 14, 3); x.fillRect(p.x - 1, p.y + 7, 2, 5);
     } else { x.fillStyle = "#c8b8a0"; x.fillRect(p.x - 7, p.y - 2, 14, 11); x.strokeStyle = "#c8b8a0"; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y - 3, 5, Math.PI, 0); x.stroke(); }   // a lock
     x.font = "bold 14px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center";
     x.fillStyle = "#000"; x.fillText(p.name, p.x + 1, p.y + r + 18); x.fillStyle = p.king ? "#ff8a6a" : "#f0e0c8"; x.fillText(p.name, p.x, p.y + r + 17);
-    const st = p.play ? ((slot() && slot().iron) || {})[p.play] || 0 : 0;
-    x.font = "12px sans-serif"; x.fillStyle = p.play ? "#ffd34d" : "#c8a888"; x.fillText(p.play ? (st ? "★".repeat(st) + "☆".repeat(3 - st) : "Tap to play!") : "Coming soon", p.x, p.y + r + 32); x.textAlign = "left";
+    x.font = "12px sans-serif"; x.fillStyle = p.play && !locked ? "#ffd34d" : "#c8a888"; x.fillText(locked ? "Win the last battle first" : p.play ? (st ? "★".repeat(st) + "☆".repeat(3 - st) : "Tap to play!") : "Coming soon", p.x, p.y + r + 32); x.textAlign = "left";
   });
   // the war camp: tents, banners, a campfire, and the army gathered around General Antler
   for (const [tx, ty, c] of [[40, 420, "#7a5a3a"], [150, 470, "#6a4a2a"], [30, 490, "#8a6a40"]]) { x.fillStyle = c; x.beginPath(); x.moveTo(tx, ty + 30); x.lineTo(tx + 30, ty - 6); x.lineTo(tx + 60, ty + 30); x.fill(); x.fillStyle = "#2a1a10"; x.beginPath(); x.moveTo(tx + 24, ty + 30); x.lineTo(tx + 30, ty + 12); x.lineTo(tx + 36, ty + 30); x.fill(); }
@@ -8306,10 +8427,34 @@ function drawIronLands(t) {
 $("iron-cv").addEventListener("pointerdown", (e) => {   // tap a battle: it's not ready yet
   const r = e.currentTarget.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * 960, py = (e.clientY - r.top) / r.height * 540;
   const p = IRON_STOPS.find((q) => Math.hypot(q.x - px, q.y - py) < 34);
+  const iron = (slot() && slot().iron) || {};
+  if (p && p.needs && !iron[p.needs]) { Sound.play("nope"); $("iron-info").textContent = `General Antler: “First we need to win ${IRON_STOPS.find((q) => q.play === p.needs).name}, hero.”`; return; }
   if (p && p.play === "escape") { Sound.play("place"); startEscape(); return; }
+  if (p && p.play === "bridge") { Sound.play("place"); startMarch("bridge"); return; }
   if (p) { Sound.play("nope"); $("iron-info").textContent = p.king ? "General Antler: “The Iron King's Fortress… one day, hero. We'll need every animal in the land for that fight.”" : `General Antler: “${p.name}? Our scouts are still out there. That battle is coming soon!”`; }
 });
 $("b-iron").onclick = openIronLands;
+function openArmy() { cancelAnimationFrame(ironRaf); renderArmy(); show("s-army"); }
+function renderArmy() {
+  const s = slot(), grid = $("army-grid"); grid.innerHTML = ""; s.army = s.army || {};
+  $("army-acorns").textContent = `🌰 ${s.acorns || 0} Golden Acorns`;
+  for (const k of Object.keys(ARMY)) {
+    if (!towerUnlocked(k)) continue;
+    const st = armyStats(k), L = st.level, max = ARMY_UP.costs.length, cost = ARMY_UP.costs[L], card = document.createElement("div"); card.className = "army-card";
+    const c = document.createElement("canvas"); c.width = c.height = 48; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(SPR[k], 0, 0, 48, 48);
+    card.appendChild(c);
+    card.insertAdjacentHTML("beforeend", `<div class="army-info"><div class="k">${st.name}</div>
+      <div class="pips">${"<b>■</b>".repeat(L)}${"□".repeat(max - L)} <span class="muted">Level ${L}</span></div>
+      <div class="muted">${st.heal ? `Heals ${st.heal}` : `Damage ${st.dmg}`} · Health ${st.hp}${ARMY[k].fly ? " · Flies" : ""}${ARMY[k].multi ? ` · Hits ${ARMY[k].multi} at once` : ""}${ARMY[k].splash ? " · Splash" : ""}</div></div>`);
+    const b = document.createElement("button"); b.id = "army-up-" + k;
+    if (L >= max) { b.textContent = "MAX"; b.disabled = true; }
+    else { b.className = "go"; b.innerHTML = `Upgrade<br><small>🌰 ${cost}</small>`; b.disabled = (s.acorns || 0) < cost;
+      b.onclick = () => { if ((s.acorns || 0) < cost) { Sound.play("nope"); return; } s.acorns -= cost; s.army[k] = L + 1; saveSlots(slots); Sound.play("upgrade"); renderArmy(); }; }
+    card.appendChild(b); grid.appendChild(card);
+  }
+}
+$("iron-army").onclick = openArmy;
+$("army-back").onclick = openIronLands;
 $("iron-back").onclick = () => { cancelAnimationFrame(ironRaf); renderLevels(); show("s-levels"); };
 $("iron-practice").onclick = () => { cancelAnimationFrame(ironRaf); startMarch(); };
 /* ---------- THE GREAT ESCAPE (Iron Lands, battle 1): a robot convoy is hauling cages of captured animals to the fortress.
@@ -8325,10 +8470,10 @@ const ESCAPE = {
   starsFor: [3, 5, 7],   // animals you need to free for 1, 2, 3 stars
 };
 const ESCAPE_EXTRA = { squirrel: { name: "Squirrel", hp: 50, dmg: 6, range: 26, rate: 0.5, speed: 50, sound: "crab" }, wizard: { name: "Wizard", hp: 60, dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", sound: "hacked" } };
-const escStats = (u) => u.side ? MARCH.robots[u.kind] : (MARCH.animals[u.kind] || ESCAPE_EXTRA[u.kind]);
+const escStats = (u) => u.side ? MARCH.robots[u.kind] : (MARCH.all[u.kind] || ESCAPE_EXTRA[u.kind]);
 let E = null;
 function startEscape() {
-  cancelAnimationFrame(ironRaf);
+  cancelAnimationFrame(ironRaf); armyRoster();
   const carts = []; for (let i = 0; i < ESCAPE.carts; i++) carts.push({ i, kind: ESCAPE.cageAnimals[i % ESCAPE.cageAnimals.length], hp: ESCAPE.cartHp, max: ESCAPE.cartHp, freed: false, lost: false, hitT: 0 });
   E = { t: 0, leaves: ESCAPE.startLeaves, camp: ESCAPE.camp, engX: ESCAPE.engine.startX, engHp: ESCAPE.engine.hp, engHitT: 0, carts, units: [], fx: [],
         guardT: 0.5, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
@@ -8342,7 +8487,7 @@ function escButtons() {
   Object.entries(MARCH.animals).forEach(([k, a], n) => {
     const b = document.createElement("button"); b.className = "tbtn"; b.id = "esc-" + k;
     const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR[k], 0, 0, 32, 32);
-    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${a.name} <small>(${n + 1})</small><span class="c">${a.cost} leaves</span></span>`);
+    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${a.name}${a.level ? ` <b class="lvl">Lv ${a.level}</b>` : ""} ${n < 10 ? `<small>(${(n + 1) % 10})</small>` : ""}<span class="c">${a.cost} leaves</span></span>`);
     b.onclick = () => escSend(k); box.appendChild(b);
   });
   const ch = document.createElement("button"); ch.className = "tbtn"; ch.id = "esc-charge";
@@ -8352,7 +8497,7 @@ function escButtons() {
 }
 function escAddAnimal(k, x, free) { E.units.push({ side: 0, kind: k, x, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: escStats({ side: 0, kind: k }).hp, max: escStats({ side: 0, kind: k }).hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6, free }); }
 function escSend(k) {
-  if (!E || E.over) return; const a = MARCH.animals[k];
+  if (!E || E.over) return; const a = MARCH.animals[k]; if (!a) return;
   if (E.leaves < a.cost) { Sound.play("nope"); return; }
   E.leaves -= a.cost; Sound.play("place"); escAddAnimal(k, 40);
 }
@@ -8394,6 +8539,11 @@ function escUpdate(dt) {
     u.cool -= dt; if (u.slowT > 0) u.slowT -= dt; if (u.hitT > 0) u.hitT -= dt;
     let foe = null, best = 1e9;
     for (const o of escTargets(u.side)) { const d = (o.x - u.x) * dir; if (d > -14 && d < best) { best = d; foe = o; } }
+    if (S.heal) {   // the Healer Deer heals hurt animals near it
+      const hurt = E.units.filter((o) => o.side === u.side && o.hp > 0 && o.hp < o.max && Math.abs(o.x - u.x) <= S.range);
+      if (hurt.length && u.cool <= 0) { u.cool = S.rate; for (const o of hurt) { o.hp = Math.min(o.max, o.hp + S.heal); E.fx.push({ spark: true, x: o.x, y: o.y - 18, t: 0.4, c: "#9be28a" }); } }
+      if (!foe || best > S.range * 0.6) u.x += S.speed * dt; continue;
+    }
     if (foe && best <= S.range) { if (u.cool <= 0) escHit(u, S, foe, charge); }
     else if (u.side && u.x <= 44) { if (u.cool <= 0) { u.cool = S.rate; E.camp -= S.dmg; Sound.play("hit"); E.fx.push({ spark: true, x: 40, y: u.y, t: 0.25, c: "#ff6a4a" }); } }
     else if (!u.side && !foe) { u.x = Math.min(u.x + S.speed * dt, ESCAPE.gateX - 20); }
@@ -8408,20 +8558,23 @@ function escUpdate(dt) {
   else if (!left) escEnd(true);
 }
 function escHit(u, S, foe, charge) {
-  u.cool = S.rate; const d = S.dmg * (charge ? 2 : 1);
+  u.cool = S.rate; const d = u.side ? S.dmg : armyDamage(u, S, 0, E.units, charge);
   const hit = (t) => {
     if (t.obj) { t.obj.hp -= d; t.obj.hitT = 0.12; if (S.slows) t.obj.slowT = 1.5; }
     else if (t.cart) { const c = t.cart; c.hp -= d; c.hitT = 0.12; if (c.hp <= 0 && !c.freed) escFree(c); }
     else if (t.engine) { E.engHp -= d; E.engHitT = 0.12; if (E.engHp <= 0) { E.engHp = 0; E.fx.push({ text: "ENGINE WRECKED! The convoy stopped!", x: E.engX - 120, y: ESCAPE.roadY - 70, t: 2.4, c: "#ffd34d" }); Sound.play("smash"); for (let i = 0; i < 20; i++) E.fx.push({ spark: true, x: E.engX + Math.random() * 40 - 20, y: ESCAPE.roadY + Math.random() * 30 - 15, t: 0.6, c: i % 2 ? "#ff8a3a" : "#5a5a6a" }); } }
   };
-  if (S.splash) { for (const t of escTargets(u.side)) if (Math.abs(t.x - foe.x) <= S.splash) hit(t); } else hit(foe);
+  if (S.splash) { for (const t of escTargets(u.side)) if (Math.abs(t.x - foe.x) <= S.splash) hit(t); }
+  else if (S.multi) escTargets(u.side).filter((t) => (t.x - u.x) * (u.side ? -1 : 1) > -14 && Math.abs(t.x - u.x) <= S.range).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, S.multi).forEach(hit);
+  else hit(foe);
+  if (S.push && foe.obj && foe.obj.side) foe.obj.x += S.push;
   if (S.shot) E.fx.push({ shot: true, x0: u.x, y0: u.y - 6, x1: foe.x, y1: foe.y - 6, t: 0.2, c: S.shot });
   if (!u.side && S.sound) Sound.play(S.sound);
 }
 function escFree(c) {
   c.freed = true; const x0 = cartX(c);
   escAddAnimal(c.kind, x0, true); escAddAnimal(c.kind, x0 + 8, true);   // the freed animals join your army
-  E.fx.push({ text: `Freed! +2 ${(MARCH.animals[c.kind] || ESCAPE_EXTRA[c.kind]).name}s`, x: x0 - 40, y: ESCAPE.roadY - 50, t: 1.8, c: "#9be28a" });
+  E.fx.push({ text: `Freed! +2 ${(MARCH.all[c.kind] || ESCAPE_EXTRA[c.kind]).name}s`, x: x0 - 40, y: ESCAPE.roadY - 50, t: 1.8, c: "#9be28a" });
   for (let i = 0; i < 12; i++) E.fx.push({ spark: true, x: x0 + Math.random() * 30 - 15, y: ESCAPE.roadY + Math.random() * 30 - 20, t: 0.5, c: i % 2 ? "#ffd34d" : "#9be28a" });
   Sound.play("upgrade");
 }
@@ -8472,7 +8625,7 @@ function escDraw() {
     if (E.engHp > 0) { x.fillStyle = "#200"; x.fillRect(ex - 30, ry - 58, 60, 5); x.fillStyle = "#ff5a4a"; x.fillRect(ex - 30, ry - 58, 60 * E.engHp / ESCAPE.engine.hp, 5); x.fillStyle = "#fff"; x.font = "10px sans-serif"; x.fillText("ENGINE", ex - 18, ry - 62); }
   }
   for (const u of [...E.units].sort((a, b) => a.y - b.y)) {
-    const S = escStats(u), sz = 30, hop = Math.abs(Math.sin(E.t * 8 + u.wob)) * 3, fly = u.kind === "air" ? -10 + Math.sin(E.t * 4 + u.wob) * 3 : 0;
+    const S = escStats(u), sz = 30, hop = Math.abs(Math.sin(E.t * 8 + u.wob)) * 3, fly = S.fly ? -10 + Math.sin(E.t * 4 + u.wob) * 3 : 0;
     x.fillStyle = "rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(u.x, u.y + 12, 10, 3, 0, 0, Math.PI * 2); x.fill();
     const img = (u.side ? SPRF : SPR)[u.kind]; if (img) { if (u.hitT > 0) x.globalAlpha = 0.6; x.drawImage(img, u.x - sz / 2, u.y - sz + 12 - hop + fly, sz, sz); x.globalAlpha = 1; }
     if (u.free) { x.fillStyle = "#9be28a"; x.fillRect(u.x - 2, u.y - sz + 2 + fly, 4, 4); }   // a little green mark on freed animals
@@ -8514,7 +8667,7 @@ function leaveEscape() { if (E) cancelAnimationFrame(E.raf); E = null; openIronL
 document.addEventListener("keydown", (e) => {
   if (!E || $("s-escape").hidden || e.target.tagName === "INPUT") return;
   const keys = Object.keys(MARCH.animals), n = parseInt(e.key, 10);
-  if (n >= 1 && n <= keys.length) escSend(keys[n - 1]); else if (e.key === "c" || e.key === "C") escCharge();
+  if (!isNaN(n)) { const k = keys[(n + 9) % 10]; if (k) escSend(k); } else if (e.key === "c" || e.key === "C") escCharge();
 });
 $("esc-pause").onclick = () => { if (E) E.paused = !E.paused; };
 $("esc-speed").onclick = () => { if (E) E.speed = E.speed === 1 ? 2 : E.speed === 2 ? 3 : 1; };
