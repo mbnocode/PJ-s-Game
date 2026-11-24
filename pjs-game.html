@@ -402,6 +402,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .iron-wrap canvas { width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; border: 3px solid #5a1e22; border-radius: 10px; display: block; box-shadow: 0 0 30px rgba(255,60,40,0.2); cursor: pointer; }
 .iron-info { max-width: 900px; text-align: center; font-size: 18px; line-height: 1.4; margin: 0; color: #f0e0c8; }
 #s-levels #b-iron { color: #fff0e0; background: #8a2a20; border-color: #4a1010; box-shadow: 0 3px 0 #4a1010; }
+#s-escape { align-items: center; gap: 8px; padding: 10px 16px; }
+.esc-wrap { width: min(1100px, 100%, calc((100vh - 270px) * 2.4)); } .esc-wrap canvas { aspect-ratio: 960 / 400; }
 #s-march { align-items: center; gap: 8px; padding: 10px 16px; }
 .march-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: min(1100px, 100%); justify-content: center; }
 .march-title { font-family: var(--display); font-size: 20px; color: #ffd34d; } .march-title small { font-size: 12px; color: var(--muted); }
@@ -768,6 +770,17 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="iron-wrap"><canvas id="iron-cv" width="960" height="540"></canvas></div>
     <p class="iron-info" id="iron-info"></p>
     <div class="row"><button id="iron-back">← Back to the world map</button><button class="go" id="iron-practice">⚔️ Practice battle (preview)</button></div>
+  </section>
+  <section class="screen" id="s-escape" hidden>
+    <div class="march-top">
+      <span class="march-title">🔓 The Great Escape</span>
+      <span class="march-stat">🍁 <b id="esc-leaves">0</b> leaves</span><span class="march-stat">⏱ <b id="esc-time">0:00</b></span>
+      <button id="esc-speed">1×</button><button id="esc-pause">Pause</button><button id="esc-quit">Quit</button>
+    </div>
+    <div class="march-wrap esc-wrap"><canvas id="esc-cv" width="960" height="400"></canvas>
+      <div class="march-end" id="esc-end" hidden><div class="march-end-box" id="esc-end-box"></div></div></div>
+    <p class="muted march-help">A robot convoy is hauling caged animals to the fortress! Send animals (or press 1–5) to chase it and break the cages. Freed animals join your army. Wreck the <b>Engine</b> at the front to stop the whole convoy. Press C for Antler's Charge!</p>
+    <div class="march-units" id="esc-units"></div>
   </section>
   <section class="screen" id="s-march" hidden>
     <div class="march-top">
@@ -2249,7 +2262,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-iron", "s-march", "s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
+const SCREENS = ["s-escape", "s-iron", "s-march", "s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); if (id === "s-slots" || id === "s-title") slotActive = false; }
 /* ---------- total time played in each save slot ---------- */
 // Counts every second you're inside a save slot (on its levels page, its shops, in its levels, anywhere) while the game is on screen.
@@ -8147,7 +8160,7 @@ $("march-quit").onclick = leaveMarch;
    Reached by joining General Antler's army in the rally scene. No battles yet: the road to the fortress is mapped,
    but every stop on it is still "Coming soon". */
 const IRON_STOPS = [   // the battles on the road to the Iron King (x, y on the 960 x 540 map)
-  { name: "The Burned Outpost", x: 340, y: 450 },
+  { name: "The Great Escape", x: 340, y: 450, play: "escape" },
   { name: "The Iron Bridge", x: 450, y: 320 },
   { name: "The Smog Factories", x: 570, y: 420 },
   { name: "The Spike Wall", x: 680, y: 280 },
@@ -8156,7 +8169,7 @@ const IRON_STOPS = [   // the battles on the road to the Iron King (x, y on the 
 let ironRaf = 0;
 function openIronLands() {
   const s = slot(); if (s && !s.joinedFight) { s.joinedFight = true; saveSlots(slots); }
-  show("s-iron"); $("iron-info").textContent = "General Antler: “Welcome to the war camp, hero. From here, we march on the Iron King. Our scouts are still mapping the road, so the battles aren't ready yet. Rest up!”";
+  show("s-iron"); $("iron-info").textContent = "General Antler: “Welcome to the war camp, hero. From here, we march on the Iron King. Our scouts found a robot convoy hauling caged animals to the fortress. Tap The Great Escape to go after it!”";
   cancelAnimationFrame(ironRaf); const t0 = performance.now();
   const loop = () => { if ($("s-iron").hidden) return; drawIronLands((performance.now() - t0) / 1000); ironRaf = requestAnimationFrame(loop); };
   loop(); Sound.init(); Sound.play("horn");
@@ -8190,10 +8203,14 @@ function drawIronLands(t) {
     x.fillStyle = "rgba(0,0,0,0.4)"; x.beginPath(); x.arc(p.x + 2, p.y + 3, r, 0, Math.PI * 2); x.fill();
     x.fillStyle = p.king ? "#4a1010" : "#3a2a2a"; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill();
     x.strokeStyle = p.king ? `rgba(255,80,60,${0.6 + 0.4 * pulse})` : "#8a7060"; x.lineWidth = 3; x.stroke();
-    x.fillStyle = "#c8b8a0"; x.fillRect(p.x - 7, p.y - 2, 14, 11); x.strokeStyle = "#c8b8a0"; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y - 3, 5, Math.PI, 0); x.stroke();   // a lock
+    if (p.play) {   // a battle you can play: a glowing sword, and your stars
+      x.strokeStyle = `rgba(255,211,77,${0.5 + 0.5 * pulse})`; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r + 5, 0, Math.PI * 2); x.stroke();
+      x.fillStyle = "#e8e8f0"; x.fillRect(p.x - 2, p.y - 12, 4, 18); x.fillStyle = "#ffd34d"; x.fillRect(p.x - 7, p.y + 4, 14, 3); x.fillRect(p.x - 1, p.y + 7, 2, 5);
+    } else { x.fillStyle = "#c8b8a0"; x.fillRect(p.x - 7, p.y - 2, 14, 11); x.strokeStyle = "#c8b8a0"; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y - 3, 5, Math.PI, 0); x.stroke(); }   // a lock
     x.font = "bold 14px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center";
     x.fillStyle = "#000"; x.fillText(p.name, p.x + 1, p.y + r + 18); x.fillStyle = p.king ? "#ff8a6a" : "#f0e0c8"; x.fillText(p.name, p.x, p.y + r + 17);
-    x.font = "12px sans-serif"; x.fillStyle = "#c8a888"; x.fillText("Coming soon", p.x, p.y + r + 32); x.textAlign = "left";
+    const st = p.play ? ((slot() && slot().iron) || {})[p.play] || 0 : 0;
+    x.font = "12px sans-serif"; x.fillStyle = p.play ? "#ffd34d" : "#c8a888"; x.fillText(p.play ? (st ? "★".repeat(st) + "☆".repeat(3 - st) : "Tap to play!") : "Coming soon", p.x, p.y + r + 32); x.textAlign = "left";
   });
   // the war camp: tents, banners, a campfire, and the army gathered around General Antler
   for (const [tx, ty, c] of [[40, 420, "#7a5a3a"], [150, 470, "#6a4a2a"], [30, 490, "#8a6a40"]]) { x.fillStyle = c; x.beginPath(); x.moveTo(tx, ty + 30); x.lineTo(tx + 30, ty - 6); x.lineTo(tx + 60, ty + 30); x.fill(); x.fillStyle = "#2a1a10"; x.beginPath(); x.moveTo(tx + 24, ty + 30); x.lineTo(tx + 30, ty + 12); x.lineTo(tx + 36, ty + 30); x.fill(); }
@@ -8211,11 +8228,219 @@ function drawIronLands(t) {
 $("iron-cv").addEventListener("pointerdown", (e) => {   // tap a battle: it's not ready yet
   const r = e.currentTarget.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * 960, py = (e.clientY - r.top) / r.height * 540;
   const p = IRON_STOPS.find((q) => Math.hypot(q.x - px, q.y - py) < 34);
+  if (p && p.play === "escape") { Sound.play("place"); startEscape(); return; }
   if (p) { Sound.play("nope"); $("iron-info").textContent = p.king ? "General Antler: “The Iron King's Fortress… one day, hero. We'll need every animal in the land for that fight.”" : `General Antler: “${p.name}? Our scouts are still out there. That battle is coming soon!”`; }
 });
 $("b-iron").onclick = openIronLands;
 $("iron-back").onclick = () => { cancelAnimationFrame(ironRaf); renderLevels(); show("s-levels"); };
 $("iron-practice").onclick = () => { cancelAnimationFrame(ironRaf); startMarch(); };
+/* ---------- THE GREAT ESCAPE (Iron Lands, battle 1): a robot convoy is hauling cages of captured animals to the fortress.
+   Chase it down the road and break the cages before they reach the gate. Freed animals join your army.
+   Wreck the Engine at the front and the whole convoy stops. ---------- */
+const ESCAPE = {
+  W: 960, H: 400, roadY: 220, gateX: 900, camp: 150,
+  startLeaves: 120, leavesPerSecond: 10,
+  engine: { hp: 1400, speed: 9, startX: 640 },
+  carts: 8, cartGap: 44, cartHp: 280,
+  cageAnimals: ["water", "fire", "plant", "air", "crab", "squirrel", "wizard", "water"],   // who is locked in each cage (front to back)
+  guardEvery: 3.2, guards: ["clanker", "clanker", "scout", "walker", "tesla", "walker", "tank"],
+  starsFor: [3, 5, 7],   // animals you need to free for 1, 2, 3 stars
+};
+const ESCAPE_EXTRA = { squirrel: { name: "Squirrel", hp: 50, dmg: 6, range: 26, rate: 0.5, speed: 50, sound: "crab" }, wizard: { name: "Wizard", hp: 60, dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", sound: "hacked" } };
+const escStats = (u) => u.side ? MARCH.robots[u.kind] : (MARCH.animals[u.kind] || ESCAPE_EXTRA[u.kind]);
+let E = null;
+function startEscape() {
+  cancelAnimationFrame(ironRaf);
+  const carts = []; for (let i = 0; i < ESCAPE.carts; i++) carts.push({ i, kind: ESCAPE.cageAnimals[i % ESCAPE.cageAnimals.length], hp: ESCAPE.cartHp, max: ESCAPE.cartHp, freed: false, lost: false, hitT: 0 });
+  E = { t: 0, leaves: ESCAPE.startLeaves, camp: ESCAPE.camp, engX: ESCAPE.engine.startX, engHp: ESCAPE.engine.hp, engHitT: 0, carts, units: [], fx: [],
+        guardT: 0.5, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
+  $("esc-end").hidden = true; show("s-escape"); escButtons(); Sound.init(); Sound.play("horn");
+  E.fx.push({ text: "Chase the convoy!", x: 300, y: 120, t: 2.2, c: "#ffd34d" });
+  E.raf = requestAnimationFrame(escLoop);
+}
+const cartX = (c) => E.engX - 40 - c.i * ESCAPE.cartGap;
+function escButtons() {
+  const box = $("esc-units"); box.innerHTML = "";
+  Object.entries(MARCH.animals).forEach(([k, a], n) => {
+    const b = document.createElement("button"); b.className = "tbtn"; b.id = "esc-" + k;
+    const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR[k], 0, 0, 32, 32);
+    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${a.name} <small>(${n + 1})</small><span class="c">${a.cost} leaves</span></span>`);
+    b.onclick = () => escSend(k); box.appendChild(b);
+  });
+  const ch = document.createElement("button"); ch.className = "tbtn"; ch.id = "esc-charge";
+  const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR.healer, 0, 0, 32, 32);
+  ch.appendChild(ic); ch.insertAdjacentHTML("beforeend", `<span>Antler's Charge! <small>(C)</small><span class="c" id="esc-charge-c"></span></span>`);
+  ch.onclick = escCharge; box.appendChild(ch);
+}
+function escAddAnimal(k, x, free) { E.units.push({ side: 0, kind: k, x, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: escStats({ side: 0, kind: k }).hp, max: escStats({ side: 0, kind: k }).hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6, free }); }
+function escSend(k) {
+  if (!E || E.over) return; const a = MARCH.animals[k];
+  if (E.leaves < a.cost) { Sound.play("nope"); return; }
+  E.leaves -= a.cost; Sound.play("place"); escAddAnimal(k, 40);
+}
+function escCharge() {
+  if (!E || E.over || E.chargeCool > 0) { Sound.play("nope"); return; }
+  E.chargeT = MARCH.chargeSeconds; E.chargeCool = MARCH.chargeEvery; Sound.play("horn"); E.fx.push({ text: "CHARGE!", x: 300, y: 90, t: 1.6, c: "#ffd34d" });
+}
+function escLoop(now) {
+  if (!E) return;
+  const dt = Math.min(0.05, (now - E.last) / 1000); E.last = now;
+  if (!E.paused && !E.over) for (let i = 0; i < E.speed; i++) escUpdate(dt);
+  escDraw(); escHud(); E.raf = requestAnimationFrame(escLoop);
+}
+function escTargets(side) {   // things the given side can attack: for animals, robots + cages + the engine; for robots, animals
+  if (side === 1) return E.units.filter((u) => u.side === 0 && u.hp > 0).map((u) => ({ x: u.x, y: u.y, obj: u }));
+  const out = E.units.filter((u) => u.side === 1 && u.hp > 0).map((u) => ({ x: u.x, y: u.y, obj: u }));
+  for (const c of E.carts) if (!c.freed && !c.lost) out.push({ x: cartX(c), y: ESCAPE.roadY, cart: c });
+  if (E.engHp > 0) out.push({ x: E.engX, y: ESCAPE.roadY, engine: true });
+  return out;
+}
+function escUpdate(dt) {
+  E.t += dt; E.leaves += ESCAPE.leavesPerSecond * dt;
+  if (E.chargeT > 0) E.chargeT -= dt; if (E.chargeCool > 0) E.chargeCool -= dt;
+  if (E.engHitT > 0) E.engHitT -= dt;
+  // the convoy rolls on toward the gate (unless its engine is wrecked)
+  if (E.engHp > 0) E.engX += ESCAPE.engine.speed * dt;
+  for (const c of E.carts) { if (c.hitT > 0) c.hitT -= dt; if (!c.freed && !c.lost && cartX(c) >= ESCAPE.gateX) { c.lost = true; E.fx.push({ text: "A cage got away!", x: ESCAPE.gateX - 60, y: ESCAPE.roadY - 50, t: 1.6, c: "#ff6a4a" }); Sound.play("hit"); } }
+  // guards jump off the convoy and run back to stop you
+  E.guardT -= dt;
+  if (E.guardT <= 0 && E.engHp > 0) {
+    E.guardT = Math.max(1.6, ESCAPE.guardEvery - E.t * 0.03);
+    const pool = ESCAPE.guards.slice(0, Math.min(ESCAPE.guards.length, 3 + Math.floor(E.t / 12))), k = pool[Math.random() * pool.length | 0], r = MARCH.robots[k], tough = 1 + E.t / 200;
+    const live = E.carts.filter((c) => !c.freed && !c.lost), from = live.length ? cartX(live[live.length - 1]) - 20 : E.engX - 40;
+    E.units.push({ side: 1, kind: k, x: from, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
+  }
+  for (const u of E.units) {
+    if (u.hp <= 0) continue;
+    const S = escStats(u), dir = u.side ? -1 : 1, charge = !u.side && E.chargeT > 0;
+    u.cool -= dt; if (u.slowT > 0) u.slowT -= dt; if (u.hitT > 0) u.hitT -= dt;
+    let foe = null, best = 1e9;
+    for (const o of escTargets(u.side)) { const d = (o.x - u.x) * dir; if (d > -14 && d < best) { best = d; foe = o; } }
+    if (foe && best <= S.range) { if (u.cool <= 0) escHit(u, S, foe, charge); }
+    else if (u.side && u.x <= 44) { if (u.cool <= 0) { u.cool = S.rate; E.camp -= S.dmg; Sound.play("hit"); E.fx.push({ spark: true, x: 40, y: u.y, t: 0.25, c: "#ff6a4a" }); } }
+    else if (!u.side && !foe) { u.x = Math.min(u.x + S.speed * dt, ESCAPE.gateX - 20); }
+    else u.x += dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+  }
+  for (const u of E.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) E.leaves += 8; for (let i = 0; i < 6; i++) E.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  E.units = E.units.filter((u) => !u.gone);
+  for (const f of E.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
+  E.fx = E.fx.filter((f) => f.t > 0);
+  const left = E.carts.filter((c) => !c.freed && !c.lost).length;
+  if (E.camp <= 0) escEnd(false);
+  else if (!left) escEnd(true);
+}
+function escHit(u, S, foe, charge) {
+  u.cool = S.rate; const d = S.dmg * (charge ? 2 : 1);
+  const hit = (t) => {
+    if (t.obj) { t.obj.hp -= d; t.obj.hitT = 0.12; if (S.slows) t.obj.slowT = 1.5; }
+    else if (t.cart) { const c = t.cart; c.hp -= d; c.hitT = 0.12; if (c.hp <= 0 && !c.freed) escFree(c); }
+    else if (t.engine) { E.engHp -= d; E.engHitT = 0.12; if (E.engHp <= 0) { E.engHp = 0; E.fx.push({ text: "ENGINE WRECKED! The convoy stopped!", x: E.engX - 120, y: ESCAPE.roadY - 70, t: 2.4, c: "#ffd34d" }); Sound.play("smash"); for (let i = 0; i < 20; i++) E.fx.push({ spark: true, x: E.engX + Math.random() * 40 - 20, y: ESCAPE.roadY + Math.random() * 30 - 15, t: 0.6, c: i % 2 ? "#ff8a3a" : "#5a5a6a" }); } }
+  };
+  if (S.splash) { for (const t of escTargets(u.side)) if (Math.abs(t.x - foe.x) <= S.splash) hit(t); } else hit(foe);
+  if (S.shot) E.fx.push({ shot: true, x0: u.x, y0: u.y - 6, x1: foe.x, y1: foe.y - 6, t: 0.2, c: S.shot });
+  if (!u.side && S.sound) Sound.play(S.sound);
+}
+function escFree(c) {
+  c.freed = true; const x0 = cartX(c);
+  escAddAnimal(c.kind, x0, true); escAddAnimal(c.kind, x0 + 8, true);   // the freed animals join your army
+  E.fx.push({ text: `Freed! +2 ${(MARCH.animals[c.kind] || ESCAPE_EXTRA[c.kind]).name}s`, x: x0 - 40, y: ESCAPE.roadY - 50, t: 1.8, c: "#9be28a" });
+  for (let i = 0; i < 12; i++) E.fx.push({ spark: true, x: x0 + Math.random() * 30 - 15, y: ESCAPE.roadY + Math.random() * 30 - 20, t: 0.5, c: i % 2 ? "#ffd34d" : "#9be28a" });
+  Sound.play("upgrade");
+}
+let ESC_BG = null;
+function escBackground() {
+  const c = document.createElement("canvas"); c.width = ESCAPE.W; c.height = ESCAPE.H; const x = c.getContext("2d");
+  let sd = 9; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const g = x.createLinearGradient(0, 0, ESCAPE.W, 0); g.addColorStop(0, "#4a3a2a"); g.addColorStop(1, "#2a1a20"); x.fillStyle = g; x.fillRect(0, 0, ESCAPE.W, ESCAPE.H);
+  for (let i = 0; i < 1400; i++) { x.fillStyle = R() < 0.5 ? "#5a4434" : "#20140f"; x.fillRect(R() * ESCAPE.W | 0, R() * ESCAPE.H | 0, 2, 2); }
+  for (let i = 0; i < 26; i++) { const px = R() * ESCAPE.W, py = R() < 0.5 ? 30 + R() * 120 : 290 + R() * 100; x.fillStyle = "#16110f"; x.fillRect(px, py, 10, 4); x.fillRect(px + 3, py - 5, 4, 5); }   // robot scrap
+  for (let i = 0; i < 10; i++) { const px = R() * ESCAPE.W, py = R() < 0.5 ? 20 + R() * 120 : 300 + R() * 90; x.fillStyle = "#2a2018"; x.fillRect(px, py, 4, 26); x.fillRect(px - 6, py + 6, 16, 3); }   // burned trees
+  const rg = x.createLinearGradient(0, 0, ESCAPE.W, 0); rg.addColorStop(0, "#9a7a52"); rg.addColorStop(1, "#5a4a46"); x.fillStyle = rg; x.fillRect(0, ESCAPE.roadY - 40, ESCAPE.W, 80);
+  x.fillStyle = "rgba(0,0,0,0.18)"; x.fillRect(0, ESCAPE.roadY + 34, ESCAPE.W, 6);
+  x.fillStyle = "#3a2e26"; for (let px = 0; px < ESCAPE.W; px += 22) { x.fillRect(px, ESCAPE.roadY - 14, 14, 3); x.fillRect(px + 8, ESCAPE.roadY + 12, 14, 3); }   // wheel ruts
+  // the fortress gate on the right
+  const I = "#140b14"; x.fillStyle = I; x.fillRect(ESCAPE.gateX + 10, 0, ESCAPE.W - ESCAPE.gateX - 10, ESCAPE.H); for (let by = 0; by < ESCAPE.H; by += 10) x.fillRect(ESCAPE.gateX + 4, by, 6, 6);
+  x.fillStyle = "#ff7a3a"; x.beginPath(); x.moveTo(ESCAPE.gateX + 10, ESCAPE.roadY + 40); x.lineTo(ESCAPE.gateX + 10, ESCAPE.roadY - 20); x.arc(ESCAPE.gateX + 30, ESCAPE.roadY - 20, 20, Math.PI, 0); x.lineTo(ESCAPE.gateX + 50, ESCAPE.roadY + 40); x.fill();
+  x.fillStyle = I; for (let gx = ESCAPE.gateX + 12; gx < ESCAPE.gateX + 50; gx += 6) x.fillRect(gx, ESCAPE.roadY - 30, 2, 70);
+  for (const wy of [60, 120, 300, 350]) { x.fillStyle = "#ff4a2a"; x.fillRect(ESCAPE.gateX + 30, wy, 6, 8); }
+  // your camp on the left
+  x.fillStyle = "#6a4a2a"; x.beginPath(); x.moveTo(0, 140); x.lineTo(28, 100); x.lineTo(56, 140); x.fill(); x.beginPath(); x.moveTo(0, 330); x.lineTo(28, 290); x.lineTo(56, 330); x.fill();
+  x.fillStyle = "#5a3a1e"; x.fillRect(14, 150, 3, 50); x.fillStyle = "#2f8a3a"; x.fillRect(17, 150, 24, 14);
+  return c;
+}
+function escDraw() {
+  const cv = $("esc-cv"), x = cv.getContext("2d"); x.imageSmoothingEnabled = false;
+  if (!ESC_BG) ESC_BG = escBackground(); x.drawImage(ESC_BG, 0, 0);
+  if (E.chargeT > 0) { x.fillStyle = `rgba(255,211,77,${0.08 + 0.06 * Math.sin(E.t * 12)})`; x.fillRect(0, 0, ESCAPE.W, ESCAPE.H); }
+  const ry = ESCAPE.roadY;
+  // the chain linking the convoy
+  const live = E.carts.filter((c) => !c.lost);
+  x.strokeStyle = "#2a2a30"; x.lineWidth = 3; x.beginPath(); x.moveTo(E.engX - 20, ry + 4); x.lineTo(Math.max(0, E.engX - 40 - (ESCAPE.carts - 1) * ESCAPE.cartGap), ry + 4); x.stroke();
+  // the cages
+  for (const c of E.carts) {
+    if (c.lost) continue; const cx = cartX(c); if (cx < -30) continue;
+    x.fillStyle = "#4a3020"; x.fillRect(cx - 18, ry - 4, 36, 18); x.fillStyle = "#16110f"; x.beginPath(); x.arc(cx - 10, ry + 16, 6, 0, Math.PI * 2); x.arc(cx + 10, ry + 16, 6, 0, Math.PI * 2); x.fill();
+    const img = SPR[c.kind]; if (img && !c.freed) x.drawImage(img, cx - 13, ry - 30, 26, 26);
+    if (!c.freed) { x.fillStyle = c.hitT > 0 ? "#ffffff" : "#5a5a66"; for (let bx = cx - 16; bx <= cx + 14; bx += 6) x.fillRect(bx, ry - 32, 2, 30); x.fillRect(cx - 18, ry - 34, 36, 3); }
+    else { x.fillStyle = "#5a5a66"; x.fillRect(cx - 18, ry - 6, 8, 3); x.fillRect(cx + 10, ry - 10, 8, 3); x.fillRect(cx - 4, ry - 16, 3, 12); }   // a broken cage
+    if (!c.freed && c.hp < c.max) { x.fillStyle = "#200"; x.fillRect(cx - 16, ry - 42, 32, 4); x.fillStyle = "#ffd34d"; x.fillRect(cx - 16, ry - 42, 32 * Math.max(0, c.hp / c.max), 4); }
+  }
+  // the engine (a big robot tractor pulling everything)
+  if (E.engHp > 0 || true) {
+    const ex = E.engX; x.globalAlpha = E.engHitT > 0 ? 0.6 : 1;
+    if (E.engHp > 0) { x.drawImage(SPR.tank, ex - 34, ry - 50, 68, 68); for (let i = 0; i < 3; i++) { x.fillStyle = "rgba(40,30,40,0.6)"; x.beginPath(); x.arc(ex - 20 - i * 6, ry - 52 - ((E.t * 30 + i * 10) % 30), 5 + i * 2, 0, Math.PI * 2); x.fill(); } }
+    else { x.fillStyle = "#2a2a30"; x.fillRect(ex - 26, ry - 14, 52, 26); x.fillStyle = "#ff8a3a"; x.fillRect(ex - 6 + Math.sin(E.t * 9) * 3, ry - 26, 6, 10); }
+    x.globalAlpha = 1;
+    if (E.engHp > 0) { x.fillStyle = "#200"; x.fillRect(ex - 30, ry - 58, 60, 5); x.fillStyle = "#ff5a4a"; x.fillRect(ex - 30, ry - 58, 60 * E.engHp / ESCAPE.engine.hp, 5); x.fillStyle = "#fff"; x.font = "10px sans-serif"; x.fillText("ENGINE", ex - 18, ry - 62); }
+  }
+  for (const u of [...E.units].sort((a, b) => a.y - b.y)) {
+    const S = escStats(u), sz = 30, hop = Math.abs(Math.sin(E.t * 8 + u.wob)) * 3, fly = u.kind === "air" ? -10 + Math.sin(E.t * 4 + u.wob) * 3 : 0;
+    x.fillStyle = "rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(u.x, u.y + 12, 10, 3, 0, 0, Math.PI * 2); x.fill();
+    const img = (u.side ? SPRF : SPR)[u.kind]; if (img) { if (u.hitT > 0) x.globalAlpha = 0.6; x.drawImage(img, u.x - sz / 2, u.y - sz + 12 - hop + fly, sz, sz); x.globalAlpha = 1; }
+    if (u.free) { x.fillStyle = "#9be28a"; x.fillRect(u.x - 2, u.y - sz + 2 + fly, 4, 4); }   // a little green mark on freed animals
+    if (u.hp < u.max) { x.fillStyle = "#200"; x.fillRect(u.x - 12, u.y - sz + 6 + fly, 24, 3); x.fillStyle = u.side ? "#ff5a4a" : "#6ee06a"; x.fillRect(u.x - 12, u.y - sz + 6 + fly, 24 * Math.max(0, u.hp / u.max), 3); }
+  }
+  for (const f of E.fx) {
+    if (f.shot) { const k = 1 - f.t / 0.2; x.fillStyle = f.c; x.fillRect(f.x0 + (f.x1 - f.x0) * k - 2, f.y0 + (f.y1 - f.y0) * k - 2, 4, 4); }
+    else if (f.spark) { x.fillStyle = f.c; x.fillRect(f.x - 2, f.y - 2, 4, 4); }
+    else if (f.text) { x.font = "bold 16px " + getComputedStyle(document.body).getPropertyValue("--display"); x.fillStyle = "#000"; x.fillText(f.text, f.x + 2, f.y + 2); x.fillStyle = f.c; x.fillText(f.text, f.x, f.y); }
+  }
+  // top bar: camp health, cages freed / lost, distance to the gate
+  const freed = E.carts.filter((c) => c.freed).length, lost = E.carts.filter((c) => c.lost).length;
+  x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(8, 8, 180, 18); x.fillStyle = "#5ac85a"; x.fillRect(10, 10, 176 * Math.max(0, E.camp / ESCAPE.camp), 14); x.fillStyle = "#fff"; x.font = "12px sans-serif"; x.fillText(`Your camp ${Math.max(0, Math.ceil(E.camp))}`, 14, 21);
+  x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(200, 8, 300, 18); x.fillStyle = "#fff"; x.fillText(`Cages: ${freed} freed · ${lost} lost · ${ESCAPE.carts - freed - lost} left`, 208, 21);
+  const prog = Math.min(1, (E.engX - ESCAPE.engine.startX) / (ESCAPE.gateX + 40 + (ESCAPE.carts - 1) * ESCAPE.cartGap - ESCAPE.engine.startX));
+  x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(ESCAPE.W - 270, 8, 200, 18); x.fillStyle = "#d8402a"; x.fillRect(ESCAPE.W - 268, 10, 196 * prog, 14); x.fillStyle = "#fff"; x.fillText(E.engHp > 0 ? "Convoy to the gate" : "Convoy stopped!", ESCAPE.W - 262, 21);
+}
+function escHud() {
+  $("esc-leaves").textContent = Math.floor(E.leaves); $("esc-time").textContent = fmtTime(E.t);
+  for (const [k, a] of Object.entries(MARCH.animals)) { const b = $("esc-" + k); if (b) b.classList.toggle("broke", E.leaves < a.cost); }
+  const c = $("esc-charge-c"); if (c) c.textContent = E.chargeT > 0 ? "Charging!" : E.chargeCool > 0 ? `Ready in ${Math.ceil(E.chargeCool)}s` : "Ready!";
+  $("esc-pause").textContent = E.paused ? "Resume" : "Pause"; $("esc-speed").textContent = E.speed + "×";
+}
+function escEnd(survived) {
+  E.over = true;
+  const freed = E.carts.filter((c) => c.freed).length, stars = !survived ? 0 : ESCAPE.starsFor.filter((n) => freed >= n).length;
+  const s = slot(); let reward = 0;
+  if (s) { s.iron = s.iron || {}; const old = s.iron.escape || 0; if (stars > old) { reward = (stars - old) * 50; s.iron.escape = stars; s.acorns = (s.acorns || 0) + reward; } saveSlots(slots); }
+  Sound.play(stars ? "win" : "lose");
+  $("esc-end").hidden = false;
+  $("esc-end-box").innerHTML = stars
+    ? `<h2>The Great Escape!</h2><div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div><p>You freed <b>${freed}</b> of ${ESCAPE.carts} cages in ${fmtTime(E.t)}.</p>${reward ? `<div class="acorns" style="font-size:20px">+${reward} Golden Acorns</div>` : ""}<p class="muted">General Antler: “Well done, hero! Every animal you freed is another soldier for the march on the Iron King.”</p>`
+    : survived ? `<h2>The convoy got away</h2><p>You only freed <b>${freed}</b> of ${ESCAPE.carts} cages. You need ${ESCAPE.starsFor[0]} to win. Try wrecking the Engine at the front to stop the whole convoy!</p>`
+    : `<h2>Your camp was overrun</h2><p class="muted">The robot guards pushed all the way back to your camp. Send Tree Giants in front to hold them off.</p>`;
+  $("esc-end-box").insertAdjacentHTML("beforeend", `<div class="row"><button id="esc-back">← Back to the Iron Lands</button><button class="go" id="esc-again">Play again</button></div>`);
+  $("esc-again").onclick = startEscape; $("esc-back").onclick = leaveEscape;
+}
+function leaveEscape() { if (E) cancelAnimationFrame(E.raf); E = null; openIronLands(); }
+document.addEventListener("keydown", (e) => {
+  if (!E || $("s-escape").hidden || e.target.tagName === "INPUT") return;
+  const keys = Object.keys(MARCH.animals), n = parseInt(e.key, 10);
+  if (n >= 1 && n <= keys.length) escSend(keys[n - 1]); else if (e.key === "c" || e.key === "C") escCharge();
+});
+$("esc-pause").onclick = () => { if (E) E.paused = !E.paused; };
+$("esc-speed").onclick = () => { if (E) E.speed = E.speed === 1 ? 2 : E.speed === 2 ? 3 : 1; };
+$("esc-quit").onclick = leaveEscape;
 // Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 25.
 async function askForBoard(g, won, score, stars) {
   const box = $("o-ask"); if (!box) return;
