@@ -92,6 +92,10 @@ button.go:hover { background: #f58b42; }
 .skin-card .looks { display: flex; flex-wrap: wrap; gap: 8px; }
 .skin-card .look { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 3px; min-width: 0; width: 64px; font-size: 12px; background: #1a2620; border: 2px solid #2e3a34; border-radius: 8px; box-shadow: none; }
 .skin-card .look canvas { width: 52px; height: 52px; image-rendering: pixelated; }
+.skin-card .look-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.skin-card .look { position: relative; }
+.skin-card .look .dup { position: absolute; top: 2px; right: 3px; background: #ffd34d; color: #2a2000; font-weight: 700; font-size: 11px; border-radius: 6px; padding: 0 4px; }
+.skin-card .sell-dup { font-size: 11px; padding: 2px 5px; min-width: 0; width: 64px; background: #3a3418; border-color: #a8861a; color: #ffd34d; box-shadow: none; }
 .skin-card .look.on { border-color: #ffd34d; background: #3a3418; box-shadow: 0 0 10px rgba(255,211,77,0.45); }
 .skin-card .look.locked { opacity: 0.6; cursor: default; } .skin-card .look:disabled { filter: none; }
 #s-levels #b-boards { --btn: #3fc4a8; --btn-dark: #1f7a68; }         /* Leaderboards: teal */
@@ -771,7 +775,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="back" id="b-skins-back">←&nbsp; Back to levels</button>
     <h2>Skins</h2>
     <div class="ach-count" id="skins-count"></div>
-    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page).</p>
+    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra for 50 Golden Acorns.</p>
     <div class="skin-grid" id="skin-grid"></div>
   </section>
   <section class="screen menu" id="s-achievements" hidden>
@@ -4747,7 +4751,9 @@ function rollBoxPrize(s, noMimic) {
   const gold = TOWER_ORDER.filter((k) => !SETTINGS.towers[k].boxUnlock && towerUnlocked(k) && !s.box.golden[k]);
   const ups = Object.keys(SETTINGS.permanentUpgrades).filter((k) => k !== "superTower" && ((s.perks || {})[k] || 0) < SETTINGS.permanentUpgrades[k].costs.length);
   const skinPairs = TOWER_ORDER.filter((k) => towerUnlocked(k)).flatMap((k) => Object.keys(TOWER_SKINS).filter((st) => !ownedLooks(s, k)[st]).map((st) => [k, st]));
-  const skinnable = skinPairs, newPets = Object.keys(PETS).filter((k) => !s.box.pets[k]);
+  // Tower Skins can now come out twice (duplicates can be sold on the Skins page for SKIN_SELL Golden Acorns)
+  const allSkinPairs = TOWER_ORDER.filter((k) => towerUnlocked(k)).flatMap((k) => Object.keys(TOWER_SKINS).map((st) => [k, st]));
+  const skinnable = allSkinPairs, newPets = Object.keys(PETS).filter((k) => !s.box.pets[k]);
   if ((kind === "golden" && !gold.length) || (kind === "upgrade" && !ups.length) || (kind === "skin" && !skinnable.length) || (kind === "pet" && !newPets.length)) kind = "acorns";   // nothing left of that kind: acorns instead
   s.box.found[kind] = (s.box.found[kind] || 0) + 1;
   if (kind === "acorns") {
@@ -4757,7 +4763,11 @@ function rollBoxPrize(s, noMimic) {
   if (kind === "leafboost") { s.box.leafBoosts = (s.box.leafBoosts || 0) + 1; return { kind, pic: "leaf", title: "Leaf Boost!", text: `Your next game starts with ${P.leafboost.leaves} extra Maple Leaves` }; }
   if (kind === "mimic") return { kind, pic: "mimic", mimic: true, title: "It's a trap!", text: "" };
   if (kind === "skin") {
-    const [k, st] = skinPairs[Math.random() * skinPairs.length | 0];
+    const [k, st] = allSkinPairs[Math.random() * allSkinPairs.length | 0];
+    if (ownedLooks(s, k)[st]) {   // a duplicate: keep it as a spare to sell
+      s.box.skinExtra = s.box.skinExtra || {}; s.box.skinExtra[k + ":" + st] = (s.box.skinExtra[k + ":" + st] || 0) + 1;
+      return { kind, pic: k, skin: st, title: "Duplicate Skin!", text: `Another ${TOWER_SKINS[st].name} look for your ${SETTINGS.towers[k].name}. Sell the extra on the Skins page for ${SKIN_SELL} Golden Acorns` };
+    }
     s.box.skinsOwned = s.box.skinsOwned || {}; s.box.skinsOwned[k] = s.box.skinsOwned[k] || {}; s.box.skinsOwned[k][st] = true;
     s.box.look = s.box.look || {}; s.box.look[k] = st;   // it starts wearing its new skin (change it on the Skins page)
     return { kind, pic: k, skin: st, title: "Tower Skin!", text: `Your ${SETTINGS.towers[k].name} got the ${TOWER_SKINS[st].name} look` };
@@ -5261,6 +5271,12 @@ $("b-achievements").onclick = () => { renderAchievements(); show("s-achievements
 /* ---------- the Skins page: pick the look each tower wears ---------- */
 const LOOKS = [["normal", "Normal"], ["gold", "Golden"], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name])];
 let skinAnim = null;
+const SKIN_SELL = 50;   // Golden Acorns you get for selling a duplicate Tower Skin
+function sellSkin(k, st) {
+  const s = slot(), key = k + ":" + st, ex = (s.box.skinExtra || {})[key] || 0; if (!ex) return;
+  s.box.skinExtra[key] = ex - 1; if (!s.box.skinExtra[key]) delete s.box.skinExtra[key];
+  s.acorns = (s.acorns || 0) + SKIN_SELL; saveSlots(slots); Sound.play("sell"); renderSkins();
+}
 function renderSkins() {
   const s = slot(), grid = $("skin-grid"); grid.innerHTML = ""; s.box = s.box || {};
   const towers = TOWER_ORDER.filter((k) => towerUnlocked(k));
@@ -5276,13 +5292,17 @@ function renderSkins() {
       if (st === "gold" && has) { const ga = x.createRadialGradient(28, 30, 4, 28, 30, 28); ga.addColorStop(0, "rgba(255,220,100,0.7)"); ga.addColorStop(0.6, "rgba(255,190,60,0.25)"); ga.addColorStop(1, "rgba(255,180,40,0)"); x.fillStyle = ga; x.fillRect(0, 0, 56, 56); }   // its glowing aura
       x.drawImage(st === "normal" ? SPR[k] : skinOf(SPR[k], st, st === "gold" ? 12 : 0), 4, 4, 48, 48);   // (frame 12: the shine isn't sweeping across)
       if (!has) { x.globalCompositeOperation = "source-atop"; x.fillStyle = "#2a2e36"; x.fillRect(0, 0, 56, 56); x.globalCompositeOperation = "source-over"; }   // a dark silhouette until you find it
-      b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>`);
+      const extra = (s.box.skinExtra || {})[k + ":" + st] || 0;
+      b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>${extra ? `<span class="dup">×${extra + 1}</span>` : ""}`);
       b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
-      card.querySelector(".looks").appendChild(b);
+      const cell = document.createElement("div"); cell.className = "look-cell"; cell.appendChild(b);
+      if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.textContent = `Sell 1 for ${SKIN_SELL} 🌰`; sb.title = `You have ${extra} extra. Sell one for ${SKIN_SELL} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
+      card.querySelector(".looks").appendChild(cell);
     }
     grid.appendChild(card);
   }
-  $("skins-count").textContent = `✨ ${got} / ${all} looks found`;
+  const dups = Object.values(s.box.skinExtra || {}).reduce((a, n) => a + n, 0);
+  $("skins-count").textContent = `✨ ${got} / ${all} looks found · 🌰 ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
 }
 $("b-skins").onclick = () => { Sound.init(); renderSkins(); show("s-skins"); };
 $("b-skins-back").onclick = () => { renderLevels(); show("s-levels"); };
