@@ -393,6 +393,19 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
+#s-march { align-items: center; gap: 8px; padding: 10px 16px; }
+.march-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: min(1100px, 100%); justify-content: center; }
+.march-title { font-family: var(--display); font-size: 20px; color: #ffd34d; } .march-title small { font-size: 12px; color: var(--muted); }
+.march-stat { font-size: 16px; } .march-lanes { display: flex; gap: 4px; align-items: center; }
+.march-lanes button.on { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
+.march-wrap { position: relative; width: min(1100px, 100%, calc((100vh - 260px) * 1.6667)); }
+.march-wrap canvas { width: 100%; height: auto; aspect-ratio: 640 / 384; image-rendering: pixelated; border: 3px solid #16191d; border-radius: 8px; display: block; cursor: pointer; }
+.march-end { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 8px; }
+.march-end-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 18px 22px; max-width: 460px; text-align: center; }
+.march-help { margin: 0; font-size: 14px; text-align: center; }
+.march-units { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; width: min(1100px, 100%); }
+.march-units .tbtn.broke { opacity: 0.5; } .march-units small { color: var(--muted); font-size: 11px; }
+.march-card { border-color: #ffd34d; position: relative; } .march-card .ribbon { position: absolute; top: 18px; right: 18px; background: #ffd34d; color: #2a2000; font-weight: 700; padding: 2px 10px; border-radius: 6px; font-size: 13px; }
 .rally { position: fixed; inset: 0; z-index: 80; background: rgba(6,8,12,0.88); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .rally-box { width: min(900px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 3px solid #ffd34d; border-radius: 14px; box-shadow: 0 0 40px rgba(255,211,77,0.25); padding: 12px; }
 .rally-box canvas { width: 100%; height: auto; aspect-ratio: 640 / 360; image-rendering: pixelated; border-radius: 8px; border: 2px solid #16191d; display: block; }
@@ -742,6 +755,18 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
   </div>
 
   <!-- Achievements (coming soon) -->
+  <section class="screen" id="s-march" hidden>
+    <div class="march-top">
+      <span class="march-title">⚔️ The March <small>(preview)</small></span>
+      <span class="march-stat">🍁 <b id="march-leaves">0</b> leaves</span><span class="march-stat">⏱ <b id="march-time">0:00</b></span>
+      <span class="march-lanes">Road: <button id="march-lane-0">Top</button><button id="march-lane-1">Middle</button><button id="march-lane-2">Bottom</button></span>
+      <button id="march-speed">1×</button><button id="march-pause">Pause</button><button id="march-quit">Quit</button>
+    </div>
+    <div class="march-wrap"><canvas id="march-cv" width="640" height="384"></canvas>
+      <div class="march-end" id="march-end" hidden><div class="march-end-box" id="march-end-box"></div></div></div>
+    <p class="muted march-help">Pick a road (tap it, or use ↑ ↓), then send animals down it (or press 1–5). They fight any robots they meet, then attack the fortress. Press C for Antler's Charge!</p>
+    <div class="march-units" id="march-units"></div>
+  </section>
   <section class="screen menu" id="s-skins" hidden>
     <button class="back" id="b-skins-back">←&nbsp; Back to levels</button>
     <h2>Skins</h2>
@@ -2210,7 +2235,7 @@ function renderFriends() {
 }
 
 /* ---------- screens ---------- */
-const SCREENS = ["s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
+const SCREENS = ["s-march", "s-settings", "s-title", "s-slots", "s-levels", "s-setup", "s-join", "s-lobby", "s-boards", "s-perks", "s-enemies", "s-towers", "s-serpent", "s-owl", "s-defector", "s-achievements", "s-skins", "game"];
 function show(id) { SCREENS.forEach((s) => ($(s).hidden = s !== id)); if (id === "s-slots" || id === "s-title") slotActive = false; }
 /* ---------- total time played in each save slot ---------- */
 // Counts every second you're inside a save slot (on its levels page, its shops, in its levels, anywhere) while the game is on screen.
@@ -3255,6 +3280,14 @@ function renderLevels() {
     b.disabled = !open;
     b.onclick = () => openSetup(L);
     box.appendChild(b);
+    if (L === "storm") {   // THE MARCH (preview): the battle mode, right after the Eye of the Storm
+      const m = document.createElement("button"); m.className = "card march-card"; m.id = "level-march";
+      const mc = document.createElement("canvas"); mc.width = 320; mc.height = 192; const mx = mc.getContext("2d"); mx.imageSmoothingEnabled = false; mx.drawImage(marchBackground(), 0, 0, 320, 192);
+      ["plant", "fire", "water"].forEach((k, i) => mx.drawImage(SPR[k], 60 + i * 22, 40 + i * 46, 24, 24)); ["clanker", "walker", "tank"].forEach((k, i) => mx.drawImage(SPRF[k], 220 - i * 18, 40 + i * 46, 24, 24));
+      m.appendChild(mc);
+      m.insertAdjacentHTML("beforeend", `<span class="ribbon">Preview</span><span class="k">⚔️ The March</span><span class="s">Fight back! Send your animals down three roads to knock down the robots' fortress, while the robots send their army at your camp. A preview of the new battle mode.</span>`);
+      m.onclick = startMarch; box.appendChild(m);
+    }
   });
   (SETTINGS.comingSoon || []).forEach((c, n) => {
     const b = document.createElement("button"); b.className = "card soon"; b.id = "soon-" + n; b.disabled = true;
@@ -7903,6 +7936,182 @@ function rallyScene(done) {
   setTimeout(() => next(0), 2600);   // the army marches in first
   Sound.play("horn");
 }
+/* ---------- THE MARCH (preview): a lanes battle. Your camp is on the left, the robots' fortress on the right, with 3 roads between.
+   Send animals down a road; the robots send their army back. When the armies meet, they fight. Knock down the fortress to win. ---------- */
+const MARCH = {
+  campHealth: 250, fortressHealth: 1600, startLeaves: 150, leavesPerSecond: 11,
+  lanes: [104, 196, 288],
+  animals: {   // cost in leaves; hp; dmg per hit; range in pixels; rate = seconds between hits; speed in pixels per second
+    water: { name: "Frog",       cost: 25, hp: 70,  dmg: 7,  range: 30,  rate: 0.6, speed: 40, slows: true, sound: "tongue" },
+    fire:  { name: "Dragon",     cost: 45, hp: 55,  dmg: 15, range: 115, rate: 1.0, speed: 32, shot: "#ff8a3c", sound: "fire" },
+    plant: { name: "Tree Giant", cost: 70, hp: 300, dmg: 13, range: 28,  rate: 1.1, speed: 22, sound: "plant" },
+    air:   { name: "Owl",        cost: 40, hp: 45,  dmg: 9,  range: 85,  rate: 0.7, speed: 58, shot: "#d6ecff", sound: "air" },
+    crab:  { name: "Crab",       cost: 55, hp: 95,  dmg: 11, range: 75,  rate: 1.2, speed: 30, splash: 34, shot: "#f4e2b8", sound: "crab" },
+  },
+  robots: {
+    clanker: { hp: 55,   dmg: 6,  range: 26, rate: 0.8, speed: 30 },
+    scout:   { hp: 38,   dmg: 5,  range: 26, rate: 0.5, speed: 62 },
+    walker:  { hp: 120,  dmg: 9,  range: 26, rate: 0.9, speed: 24 },
+    tesla:   { hp: 85,   dmg: 11, range: 95, rate: 1.2, speed: 22, shot: "#7ff3ff" },
+    tank:    { hp: 340,  dmg: 16, range: 30, rate: 1.3, speed: 16 },
+    boss:    { hp: 1300, dmg: 30, range: 36, rate: 1.5, speed: 12, big: true },
+  },
+  chargeEvery: 30, chargeSeconds: 6,   // General Antler's Charge: every animal hits twice as hard and moves 50% faster
+};
+let M = null;
+function marchUnlocked() { return true; }   // a preview: open for everyone for now
+function startMarch() {
+  M = { t: 0, leaves: MARCH.startLeaves, camp: MARCH.campHealth, fort: MARCH.fortressHealth, lane: 1, units: [], fx: [], spawnT: 3, bossT: 75,
+        chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
+  if (!M.bg) M.bg = marchBackground();
+  $("march-end").hidden = true; show("s-march"); marchButtons(); Sound.init(); Sound.play("horn");
+  cancelAnimationFrame(M.raf); M.raf = requestAnimationFrame(marchLoop);
+}
+function marchBackground() {
+  const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
+  let sd = 77; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const g = x.createLinearGradient(0, 0, 640, 0); g.addColorStop(0, "#4a9a3e"); g.addColorStop(0.45, "#3f8436"); g.addColorStop(0.72, "#4a4a3a"); g.addColorStop(1, "#2e2236"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);
+  for (let i = 0; i < 900; i++) { const px = R() * 640, py = R() * 384, k = px / 640; x.fillStyle = k < 0.6 ? (R() < 0.5 ? "#5bb04a" : "#2f6e2c") : (R() < 0.5 ? "#55505a" : "#2a2030"); x.fillRect(px | 0, py | 0, 2, 2); }
+  for (const y of MARCH.lanes) {   // the three roads
+    const rg = x.createLinearGradient(0, 0, 640, 0); rg.addColorStop(0, "#b8915a"); rg.addColorStop(0.6, "#8a7458"); rg.addColorStop(1, "#4a3e4a"); x.fillStyle = rg; x.fillRect(70, y - 18, 500, 36);
+    x.fillStyle = "rgba(0,0,0,0.15)"; x.fillRect(70, y + 14, 500, 4);
+    for (let i = 0; i < 60; i++) { x.fillStyle = R() < 0.5 ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)"; x.fillRect(70 + R() * 500, y - 16 + R() * 32, 3, 2); }
+  }
+  // your camp: the treehouse on the left
+  x.fillStyle = "#6a4426"; x.fillRect(18, 150, 22, 120); x.fillStyle = "#2f7a2c"; for (const [cx, cy, r] of [[29, 140, 34], [10, 160, 22], [50, 160, 22], [29, 112, 24]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
+  x.fillStyle = "#9a6a3a"; x.fillRect(12, 176, 34, 24); x.fillStyle = "#5a3a1e"; x.fillRect(24, 186, 10, 14); x.fillStyle = "#c8281e"; x.beginPath(); x.moveTo(8, 178); x.lineTo(29, 162); x.lineTo(50, 178); x.fill();
+  // the robots' fortress on the right
+  const I = "#170d20"; x.fillStyle = I; x.fillRect(582, 60, 58, 270); for (let by = 60; by < 330; by += 8) x.fillRect(576, by, 6, 5);
+  x.fillRect(590, 40, 20, 30); x.beginPath(); x.moveTo(588, 40); x.lineTo(600, 14); x.lineTo(612, 40); x.fill(); x.fillRect(616, 30, 20, 40); x.beginPath(); x.moveTo(614, 30); x.lineTo(626, 6); x.lineTo(638, 30); x.fill();
+  for (const y of MARCH.lanes) { x.fillStyle = "#ff7a3a"; x.beginPath(); x.moveTo(582, y + 16); x.lineTo(582, y - 6); x.arc(592, y - 6, 10, Math.PI, 0); x.lineTo(602, y + 16); x.fill(); x.fillStyle = I; for (let gx = 584; gx < 602; gx += 4) x.fillRect(gx, y - 14, 1, 30); }
+  for (const [wx, wy] of [[596, 50], [624, 44], [612, 150], [612, 240], [628, 120], [628, 210]]) { x.fillStyle = "#ff4a2a"; x.fillRect(wx, wy, 5, 6); }
+  return c;
+}
+function marchButtons() {
+  const box = $("march-units"); box.innerHTML = "";
+  Object.entries(MARCH.animals).forEach(([k, a], n) => {
+    const b = document.createElement("button"); b.className = "tbtn"; b.id = "march-" + k;
+    const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR[k], 0, 0, 32, 32);
+    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${a.name} <small>(${n + 1})</small><span class="c">${a.cost} leaves</span></span>`);
+    b.onclick = () => marchSend(k); box.appendChild(b);
+  });
+  const ch = document.createElement("button"); ch.className = "tbtn"; ch.id = "march-charge";
+  const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR.healer, 0, 0, 32, 32);
+  ch.appendChild(ic); ch.insertAdjacentHTML("beforeend", `<span>Antler's Charge! <small>(C)</small><span class="c" id="march-charge-c"></span></span>`);
+  ch.onclick = marchCharge; box.appendChild(ch);
+  [0, 1, 2].forEach((i) => { $("march-lane-" + i).onclick = () => { M.lane = i; marchHud(); }; });
+}
+function marchSend(k) {
+  if (!M || M.over) return; const a = MARCH.animals[k];
+  if (M.leaves < a.cost) { Sound.play("nope"); return; }
+  M.leaves -= a.cost; Sound.play("place");
+  M.units.push({ side: 0, kind: k, x: 70, y: MARCH.lanes[M.lane] + (Math.random() * 10 - 5), lane: M.lane, hp: a.hp, max: a.hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
+}
+function marchCharge() {
+  if (!M || M.over || M.chargeCool > 0) { Sound.play("nope"); return; }
+  M.chargeT = MARCH.chargeSeconds; M.chargeCool = MARCH.chargeEvery; Sound.play("horn");
+  M.fx.push({ text: "CHARGE!", x: 220, y: 60, t: 1.6, c: "#ffd34d" });
+}
+function marchSpawn() {
+  const t = M.t, pool = t < 25 ? ["clanker", "clanker", "scout"] : t < 60 ? ["clanker", "scout", "walker", "walker", "tesla"] : ["clanker", "walker", "tesla", "tank", "scout", "walker"];
+  const k = pool[Math.random() * pool.length | 0], r = MARCH.robots[k], lane = Math.random() * 3 | 0, tough = 1 + t / 240;
+  M.units.push({ side: 1, kind: k, x: 572, y: MARCH.lanes[lane] + (Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
+}
+function marchLoop(now) {
+  if (!M) return;
+  let dt = Math.min(0.05, (now - M.last) / 1000); M.last = now;
+  if (!M.paused && !M.over) for (let i = 0; i < M.speed; i++) marchUpdate(dt);
+  marchDraw(); marchHud();
+  M.raf = requestAnimationFrame(marchLoop);
+}
+function marchUpdate(dt) {
+  M.t += dt; M.leaves += MARCH.leavesPerSecond * dt;
+  if (M.chargeT > 0) M.chargeT -= dt; if (M.chargeCool > 0) M.chargeCool -= dt;
+  M.spawnT -= dt; if (M.spawnT <= 0) { marchSpawn(); M.spawnT = Math.max(1.3, 4.2 - M.t * 0.025); }
+  M.bossT -= dt; if (M.bossT <= 0) { M.bossT = 80; const lane = Math.random() * 3 | 0, r = MARCH.robots.boss; M.units.push({ side: 1, kind: "boss", x: 572, y: MARCH.lanes[lane], lane, hp: r.hp, max: r.hp, cool: 0, slowT: 0, hitT: 0, wob: 0 }); M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
+  for (const u of M.units) {
+    if (u.hp <= 0) continue;
+    const S = u.side ? MARCH.robots[u.kind] : MARCH.animals[u.kind], dir = u.side ? -1 : 1, charge = !u.side && M.chargeT > 0;
+    u.cool -= dt; if (u.slowT > 0) u.slowT -= dt; if (u.hitT > 0) u.hitT -= dt;
+    // the closest enemy ahead in the same road
+    let foe = null, best = 1e9;
+    for (const o of M.units) { if (o.side === u.side || o.hp <= 0 || o.lane !== u.lane) continue; const d = (o.x - u.x) * dir; if (d > -12 && d < best) { best = d; foe = o; } }
+    const baseD = u.side ? u.x - 70 : 572 - u.x;
+    if (foe && best <= S.range) { if (u.cool <= 0) marchHit(u, S, foe, charge); }
+    else if (baseD <= S.range * 0.4 + 4) {   // at the enemy's base: hit it
+      if (u.cool <= 0) { u.cool = S.rate; const d = S.dmg * (charge ? 2 : 1); if (u.side) { M.camp -= d; Sound.play("hit"); } else { M.fort -= d; if (S.sound) Sound.play(S.sound); } M.fx.push({ spark: true, x: u.side ? 66 : 578, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
+    } else u.x += dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+  }
+  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) M.leaves += 8; for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  M.units = M.units.filter((u) => !u.gone);
+  for (const f of M.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
+  M.fx = M.fx.filter((f) => f.t > 0);
+  if (M.fort <= 0 || M.camp <= 0) marchEnd(M.fort <= 0);
+}
+function marchHit(u, S, foe, charge) {
+  u.cool = S.rate; const d = S.dmg * (charge ? 2 : 1);
+  const hitOne = (o) => { o.hp -= d; o.hitT = 0.12; if (S.slows) o.slowT = 1.5; };
+  if (S.splash) { for (const o of M.units) if (o.side !== u.side && o.lane === u.lane && o.hp > 0 && Math.abs(o.x - foe.x) <= S.splash) hitOne(o); } else hitOne(foe);
+  if (S.shot) M.fx.push({ shot: true, x0: u.x, y0: u.y - 6, x1: foe.x, y1: foe.y - 6, t: 0.2, c: S.shot });
+  if (!u.side && S.sound) Sound.play(S.sound);
+}
+function marchDraw() {
+  const cv = $("march-cv"), x = cv.getContext("2d"); x.imageSmoothingEnabled = false;
+  x.drawImage(M.bg, 0, 0);
+  const ly = MARCH.lanes[M.lane]; x.fillStyle = "rgba(255,211,77,0.16)"; x.fillRect(70, ly - 20, 500, 40); x.strokeStyle = "rgba(255,211,77,0.7)"; x.lineWidth = 2; x.strokeRect(70, ly - 20, 500, 40);   // the road you're sending to
+  x.drawImage(SPR.healer, 40, ly - 30, 40, 40);   // General Antler stands at the start of the chosen road
+  if (M.chargeT > 0) { x.fillStyle = `rgba(255,211,77,${0.08 + 0.06 * Math.sin(M.t * 12)})`; x.fillRect(0, 0, 640, 384); }
+  const sorted = [...M.units].sort((a, b) => a.y - b.y);
+  for (const u of sorted) {
+    const S = u.side ? MARCH.robots[u.kind] : MARCH.animals[u.kind], sz = S.big ? 52 : 32, moving = true;
+    const hop = Math.abs(Math.sin(M.t * 8 + u.wob)) * (S.big ? 1 : 3), fly = u.kind === "air" ? -10 + Math.sin(M.t * 4 + u.wob) * 3 : 0;
+    x.fillStyle = "rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(u.x, u.y + 12, sz * 0.32, 4, 0, 0, Math.PI * 2); x.fill();
+    const img = (u.side ? SPRF : SPR)[u.kind]; if (img) { if (u.hitT > 0) x.globalAlpha = 0.6; x.drawImage(img, u.x - sz / 2, u.y - sz + 12 - hop + fly, sz, sz); x.globalAlpha = 1; }
+    if (u.slowT > 0) { x.fillStyle = "rgba(120,200,255,0.5)"; x.fillRect(u.x - 8, u.y + 8, 16, 3); }
+    if (u.hp < u.max) { const w = S.big ? 40 : 24; x.fillStyle = "#200"; x.fillRect(u.x - w / 2, u.y - sz + 6 + fly, w, 3); x.fillStyle = u.side ? "#ff5a4a" : "#6ee06a"; x.fillRect(u.x - w / 2, u.y - sz + 6 + fly, w * Math.max(0, u.hp / u.max), 3); }
+  }
+  for (const f of M.fx) {
+    if (f.shot) { const k = 1 - f.t / 0.2; x.fillStyle = f.c; x.fillRect(f.x0 + (f.x1 - f.x0) * k - 2, f.y0 + (f.y1 - f.y0) * k - 2, 4, 4); }
+    else if (f.spark) { x.fillStyle = f.c; x.fillRect(f.x - 2, f.y - 2, 4, 4); }
+    else if (f.text) { x.font = "bold 18px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center"; x.fillStyle = "#000"; x.fillText(f.text, f.x + 2, f.y + 2); x.fillStyle = f.c; x.fillText(f.text, f.x, f.y); x.textAlign = "left"; }
+  }
+  // health bars for the two bases
+  const bar = (bx, val, max, col, label) => { x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(bx, 8, 200, 18); x.fillStyle = col; x.fillRect(bx + 2, 10, 196 * Math.max(0, val / max), 14); x.fillStyle = "#fff"; x.font = "12px sans-serif"; x.fillText(`${label} ${Math.max(0, Math.ceil(val))}`, bx + 6, 21); };
+  bar(8, M.camp, MARCH.campHealth, "#5ac85a", "Your camp"); bar(432, M.fort, MARCH.fortressHealth, "#d8402a", "Robot fortress");
+}
+function marchHud() {
+  $("march-leaves").textContent = Math.floor(M.leaves);
+  $("march-time").textContent = fmtTime(M.t);
+  for (const [k, a] of Object.entries(MARCH.animals)) { const b = $("march-" + k); if (b) b.classList.toggle("broke", M.leaves < a.cost); }
+  const c = $("march-charge-c"); if (c) c.textContent = M.chargeT > 0 ? "Charging!" : M.chargeCool > 0 ? `Ready in ${Math.ceil(M.chargeCool)}s` : "Ready!";
+  [0, 1, 2].forEach((i) => $("march-lane-" + i).classList.toggle("on", M.lane === i));
+  $("march-pause").textContent = M.paused ? "Resume" : "Pause"; $("march-speed").textContent = M.speed + "×";
+}
+function marchEnd(won) {
+  M.over = true; Sound.play(won ? "win" : "lose");
+  $("march-end").hidden = false;
+  $("march-end-box").innerHTML = won
+    ? `<h2>The fortress falls!</h2><p class="muted">General Antler's army broke through in ${fmtTime(M.t)}. This is a preview of the battle mode: the real one will have more battles, all the way to the Iron King.</p>`
+    : `<h2>Your camp was overrun</h2><p class="muted">The robots pushed all the way to the treehouse. Try sending Tree Giants in front, with Dragons and Crabs behind them!</p>`;
+  $("march-end-box").insertAdjacentHTML("beforeend", `<div class="row"><button id="march-back">← Back to levels</button><button class="go" id="march-again">Play again</button></div>`);
+  $("march-again").onclick = startMarch; $("march-back").onclick = leaveMarch;
+}
+function leaveMarch() { if (M) cancelAnimationFrame(M.raf); M = null; renderLevels(); show("s-levels"); }
+document.addEventListener("keydown", (e) => {
+  if (!M || $("s-march").hidden || e.target.tagName === "INPUT") return;
+  const keys = Object.keys(MARCH.animals), n = parseInt(e.key, 10);
+  if (n >= 1 && n <= keys.length) marchSend(keys[n - 1]);
+  else if (e.key === "ArrowUp" || e.key === "w") { M.lane = Math.max(0, M.lane - 1); e.preventDefault(); }
+  else if (e.key === "ArrowDown" || e.key === "s") { M.lane = Math.min(2, M.lane + 1); e.preventDefault(); }
+  else if (e.key === "c" || e.key === "C") marchCharge();
+});
+$("march-cv").addEventListener("pointerdown", (e) => {   // tap a road to pick it
+  if (!M) return; const r = e.currentTarget.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * 384;
+  let bi = 0; MARCH.lanes.forEach((ly, i) => { if (Math.abs(ly - y) < Math.abs(MARCH.lanes[bi] - y)) bi = i; }); M.lane = bi;
+});
+$("march-pause").onclick = () => { if (M) M.paused = !M.paused; };
+$("march-speed").onclick = () => { if (M) M.speed = M.speed === 1 ? 2 : M.speed === 2 ? 3 : 1; };
+$("march-quit").onclick = leaveMarch;
 // Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 25.
 async function askForBoard(g, won, score, stars) {
   const box = $("o-ask"); if (!box) return;
