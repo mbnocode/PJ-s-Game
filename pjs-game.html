@@ -8164,7 +8164,7 @@ const IRON_STOPS = [   // the battles on the road to the Iron King (x, y on the 
   { name: "The Iron Bridge", x: 450, y: 320 },
   { name: "The Smog Factories", x: 570, y: 420 },
   { name: "The Spike Wall", x: 680, y: 280 },
-  { name: "The Iron King's Fortress", x: 820, y: 170, king: true },
+  { name: "The Iron King's Fortress", x: 820, y: 240, king: true },
 ];
 let ironRaf = 0;
 function openIronLands() {
@@ -8174,27 +8174,105 @@ function openIronLands() {
   const loop = () => { if ($("s-iron").hidden) return; drawIronLands((performance.now() - t0) / 1000); ironRaf = requestAnimationFrame(loop); };
   loop(); Sound.init(); Sound.play("horn");
 }
+// The Iron Lands' scenery: layers of jagged mountains and scorched, cracked ground (drawn once), plus lava rivers and cracks
+let IRON_BG = null;
+const IRON_RIVERS = [[[700, 214], [690, 240], [700, 262], [688, 292]], [[912, 214], [920, 246], [908, 270], [918, 300]], [[540, 250], [552, 272], [544, 296]]];
+const IRON_CRACKS = [[[300, 330], [330, 345], [325, 362], [360, 380]], [[600, 470], [630, 480], [640, 505], [680, 515]], [[760, 330], [790, 350], [820, 348], [850, 372]], [[420, 510], [455, 500], [470, 520]], [[880, 440], [910, 455], [940, 450]]];
+function ironBackground() {
+  const c = document.createElement("canvas"); c.width = 960; c.height = 540; const x = c.getContext("2d"), W = 960, H = 540;
+  let sd = 11; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  // a burning sky: black at the top, blood red in the middle, fiery orange at the horizon
+  const sky = x.createLinearGradient(0, 0, 0, 300); sky.addColorStop(0, "#07030a"); sky.addColorStop(0.35, "#2a0810"); sky.addColorStop(0.75, "#7a1a14"); sky.addColorStop(1, "#d8501c"); x.fillStyle = sky; x.fillRect(0, 0, W, 320);
+  for (let i = 0; i < 40; i++) { x.fillStyle = "rgba(255,200,180,0.35)"; x.fillRect(R() * W, R() * 90, 1, 1); }   // a few dim stars through the smoke
+  // jagged mountain layers, each lit along its top edge by the fire in the sky
+  const ridge = (y0, amp, step, col, rim, seed) => { let s2 = seed; const r2 = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647; const pts = [];
+    for (let px = -20; px <= W + 20; px += step) pts.push([px, y0 - r2() * amp - (r2() < 0.25 ? amp * 0.6 : 0)]);
+    x.fillStyle = col; x.beginPath(); x.moveTo(-20, 340); pts.forEach(([a, b], k) => { x.lineTo(a, b); if (k < pts.length - 1) x.lineTo(a + step / 2, b + amp * 0.5 * r2()); }); x.lineTo(W + 20, 340); x.fill();
+    x.strokeStyle = rim; x.lineWidth = 2; x.beginPath(); pts.forEach(([a, b], k) => k ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke(); };
+  ridge(230, 90, 44, "#3a1016", "rgba(255,110,60,0.5)", 3);
+  ridge(262, 70, 32, "#250a10", "rgba(255,80,40,0.45)", 7);
+  // the Iron King's crag: a huge black spire of rock, cracked and lit red
+  x.fillStyle = "#12060a"; x.beginPath(); x.moveTo(620, 330); x.lineTo(680, 250); x.lineTo(700, 214); x.lineTo(720, 200); x.lineTo(920, 200); x.lineTo(940, 214); x.lineTo(960, 250); x.lineTo(960, 330); x.fill();
+  x.fillStyle = "#24101a"; x.beginPath(); x.moveTo(700, 214); x.lineTo(680, 250); x.lineTo(650, 300); x.lineTo(690, 280); x.lineTo(712, 230); x.fill();   // lit left face
+  for (let i = 0; i < 12; i++) { const px = 700 + R() * 230, py = 205 + R() * 110; x.fillStyle = "rgba(255,90,40,0.25)"; x.fillRect(px, py, 1 + R() * 2, 6 + R() * 10); }
+  ridge(300, 40, 26, "#1a080c", "rgba(255,70,30,0.35)", 13);
+  // scorched, broken ground
+  const gr = x.createLinearGradient(0, 290, 0, H); gr.addColorStop(0, "#3a1a16"); gr.addColorStop(0.4, "#24120e"); gr.addColorStop(1, "#120a08"); x.fillStyle = gr; x.fillRect(0, 296, W, H - 296);
+  for (let i = 0; i < 500; i++) { x.fillStyle = R() < 0.5 ? "#4a2a22" : "#0e0806"; x.fillRect(R() * W | 0, 300 + R() * 240 | 0, 2 + R() * 3 | 0, 2); }
+  for (let i = 0; i < 18; i++) { const px = R() * W, py = 320 + R() * 210; x.fillStyle = "#0c0a0e"; x.fillRect(px, py, 10, 4); x.fillRect(px + 3, py - 5, 4, 5); x.fillStyle = "#3a3a44"; x.fillRect(px + 1, py, 3, 1); }   // broken robot scrap
+  for (let i = 0; i < 9; i++) { const px = R() * W, py = 320 + R() * 200; x.fillStyle = "#0e0a08"; x.fillRect(px, py - 20, 3, 22); x.fillRect(px - 5, py - 14, 13, 2); x.fillRect(px - 2, py - 20, 2, 6); }   // burned dead trees
+  // a dark edge all around (makes the middle feel lit)
+  const v = x.createRadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 620); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,0.55)"); x.fillStyle = v; x.fillRect(0, 0, W, H);
+  return c;
+}
+// The Iron King's fortress: black iron towers with horns and spikes, chains between them, smokestacks, and a burning face with a heart of iron
+function drawIronFortress(x, t, pulse) {
+  const I = "#0a0408", I2 = "#1a0c14", edge = "rgba(255,90,50,0.55)";
+  const spike = (sx, sy, w, h) => { x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + w / 2, sy - h); x.lineTo(sx + w, sy); x.fill(); };
+  const horn = (sx, sy, dir) => { x.beginPath(); x.moveTo(sx, sy); x.quadraticCurveTo(sx + dir * 26, sy - 10, sx + dir * 30, sy - 40); x.quadraticCurveTo(sx + dir * 16, sy - 16, sx + dir * 2, sy - 10); x.fill(); };
+  // smokestacks belching smoke
+  for (const sx of [730, 900]) { x.fillStyle = I; x.fillRect(sx, 120, 12, 82); for (let k = 0; k < 4; k++) { const ph = (t * 0.5 + k * 0.25) % 1; x.fillStyle = `rgba(30,16,22,${0.7 * (1 - ph)})`; x.beginPath(); x.arc(sx + 6 + ph * 20, 116 - ph * 70, 6 + ph * 16, 0, Math.PI * 2); x.fill(); } }
+  // the outer wall, lined with spikes
+  x.fillStyle = I; x.fillRect(722, 160, 196, 44); for (let bx = 722; bx < 918; bx += 10) spike(bx, 160, 8, 12);
+  x.fillStyle = I2; for (let bx = 728; bx < 914; bx += 16) x.fillRect(bx, 166, 2, 36);
+  // side towers with horned crowns
+  for (const [tx, dir] of [[740, -1], [878, 1]]) { x.fillStyle = I; x.fillRect(tx, 82, 26, 122); spike(tx - 4, 82, 34, 40); horn(tx + (dir < 0 ? 2 : 24), 92, dir); x.fillStyle = edge; x.fillRect(tx, 82, 2, 122);
+    for (let wy = 104; wy < 190; wy += 22) { x.fillStyle = Math.sin(t * 4 + wy + tx) > -0.6 ? "#ff4a24" : "#5a1408"; x.fillRect(tx + 10, wy, 6, 9); } }
+  // chains slung between the towers and the keep
+  x.strokeStyle = "#3a2a30"; x.lineWidth = 2; for (const [a, b] of [[766, 790], [850, 878]]) { x.beginPath(); x.moveTo(a, 100); x.quadraticCurveTo((a + b) / 2, 122, b, 100); x.stroke(); }
+  // the great keep: a tall black tower shaped like a crowned head
+  x.fillStyle = I; x.fillRect(790, 40, 60, 164); x.fillStyle = edge; x.fillRect(790, 40, 2, 164);
+  for (const [cx, h] of [[790, 26], [804, 40], [820, 58], [836, 40], [850, 26]]) spike(cx - 6, 42, 12, h);   // the iron crown
+  horn(792, 56, -1); horn(848, 56, 1);
+  // its face: two burning eyes and a jagged grinning mouth
+  const eye = `rgba(255,${80 + 90 * pulse | 0},40,1)`;
+  x.fillStyle = eye; x.beginPath(); x.moveTo(798, 70); x.lineTo(814, 74); x.lineTo(812, 80); x.lineTo(800, 78); x.fill(); x.beginPath(); x.moveTo(842, 70); x.lineTo(826, 74); x.lineTo(828, 80); x.lineTo(840, 78); x.fill();
+  x.fillStyle = `rgba(255,60,30,${0.25 * pulse})`; x.beginPath(); x.arc(806, 76, 12, 0, Math.PI * 2); x.arc(834, 76, 12, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#ff6a24"; x.beginPath(); x.moveTo(800, 94); for (let k = 0; k <= 8; k++) x.lineTo(800 + k * 5, 94 + (k % 2 ? 8 : 0)); x.lineTo(840, 102); x.lineTo(800, 102); x.fill();
+  // the Iron King's heart, set in the keep's chest, throbbing and casting red beams
+  x.fillStyle = `rgba(255,40,20,${0.18 + 0.12 * pulse})`; x.beginPath(); x.moveTo(820, 136); x.lineTo(760, 300); x.lineTo(800, 300); x.fill(); x.beginPath(); x.moveTo(820, 136); x.lineTo(880, 300); x.lineTo(840, 300); x.fill();
+  x.fillStyle = `rgba(255,50,30,${0.35 * pulse})`; x.beginPath(); x.arc(820, 134, 22, 0, Math.PI * 2); x.fill();
+  const hs = 1 + 0.08 * pulse; x.fillStyle = "#ff2a18"; x.beginPath(); x.moveTo(820, 134 + 12 * hs); x.lineTo(820 - 12 * hs, 134); x.arc(820 - 6 * hs, 130, 6 * hs, Math.PI, 0); x.arc(820 + 6 * hs, 130, 6 * hs, Math.PI, 0); x.lineTo(820, 134 + 12 * hs); x.fill();
+  x.fillStyle = "#ffd0a0"; x.fillRect(815, 128, 3, 3);
+  // the gate, glowing with fire, and red banners
+  x.fillStyle = `rgba(255,120,40,${0.75 + 0.25 * pulse})`; x.beginPath(); x.moveTo(806, 204); x.lineTo(806, 182); x.arc(820, 182, 14, Math.PI, 0); x.lineTo(834, 204); x.fill();
+  x.fillStyle = I; for (let gx = 808; gx < 834; gx += 5) x.fillRect(gx, 168, 2, 36);
+  for (const bx of [760, 872]) { const wv = Math.sin(t * 5 + bx) * 3; x.fillStyle = "#8a1410"; x.beginPath(); x.moveTo(bx, 166); x.lineTo(bx + 10, 166); x.lineTo(bx + 10 + wv, 194); x.lineTo(bx + 5, 188); x.lineTo(bx + wv, 194); x.fill(); x.fillStyle = "#1a0408"; x.fillRect(bx + 3, 172, 4, 4); }
+}
 function drawIronLands(t) {
   const cv = $("iron-cv"), x = cv.getContext("2d"), W = 960, H = 540; x.imageSmoothingEnabled = false;
   const pulse = 0.55 + 0.45 * Math.sin(t * 3);
-  // a blood-red sky full of smoke
-  const sky = x.createLinearGradient(0, 0, 0, H * 0.6); sky.addColorStop(0, "#1a0c18"); sky.addColorStop(0.6, "#5a1e22"); sky.addColorStop(1, "#a8442a"); x.fillStyle = sky; x.fillRect(0, 0, W, H);
-  for (let i = 0; i < 12; i++) { const cx = ((i * 97 + t * 8) % (W + 200)) - 100, cy = 40 + (i % 4) * 26; x.fillStyle = `rgba(30,16,24,${0.5 + (i % 3) * 0.12})`; x.beginPath(); x.ellipse(cx, cy, 70, 18, 0, 0, Math.PI * 2); x.fill(); }
-  // far jagged mountains
-  x.fillStyle = "#2a1420"; x.beginPath(); x.moveTo(0, 260); for (let i = 0; i <= 16; i++) x.lineTo(i * 60, 200 + ((i * 37) % 70)); x.lineTo(W, 300); x.lineTo(0, 300); x.fill();
-  // the Iron King's mountain and fortress in the top right
-  x.fillStyle = "#1c0e18"; x.beginPath(); x.moveTo(680, 300); x.lineTo(770, 190); x.lineTo(870, 190); x.lineTo(960, 280); x.lineTo(960, 320); x.fill();
-  x.fillStyle = `rgba(255,40,30,${0.15 + 0.1 * pulse})`; x.beginPath(); x.arc(820, 120, 110, 0, Math.PI * 2); x.fill();
-  const IRON = "#0e0610"; x.fillStyle = IRON; x.fillRect(770, 140, 100, 52); for (let bx = 770; bx < 870; bx += 8) x.fillRect(bx, 134, 5, 6);
-  for (const [tx, tw, th] of [[760, 20, 90], [860, 20, 90], [800, 40, 120]]) { x.fillRect(tx, 192 - th, tw, th); x.beginPath(); x.moveTo(tx - 3, 192 - th); x.lineTo(tx + tw / 2, 192 - th - 34); x.lineTo(tx + tw + 3, 192 - th); x.fill(); }
-  for (const [wx, wy] of [[766, 120], [866, 120], [812, 100], [828, 100], [812, 150], [828, 150]]) { x.fillStyle = Math.sin(t * 5 + wx) > -0.6 ? "#ff4a2a" : "#6a1810"; x.fillRect(wx, wy, 6, 8); }
-  x.fillStyle = "#ff3a24"; x.beginPath(); x.moveTo(820, 136); x.lineTo(810, 124); x.arc(815, 122, 5, Math.PI, 0); x.arc(825, 122, 5, Math.PI, 0); x.lineTo(820, 136); x.fill();   // the iron heart
-  // scorched ground
-  const gr = x.createLinearGradient(0, 290, 0, H); gr.addColorStop(0, "#3a2420"); gr.addColorStop(1, "#1e1410"); x.fillStyle = gr; x.fillRect(0, 290, W, H - 290);
+  if (!IRON_BG) IRON_BG = ironBackground();
+  x.drawImage(IRON_BG, 0, 0);
+  // red light pouring out from behind the fortress
+  const glow = x.createRadialGradient(820, 120, 10, 820, 120, 330); glow.addColorStop(0, `rgba(255,70,30,${0.32 + 0.12 * pulse})`); glow.addColorStop(0.5, "rgba(200,30,20,0.12)"); glow.addColorStop(1, "rgba(120,0,0,0)");
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  // storm clouds churning over the fortress
+  for (let i = 0; i < 14; i++) { const a = t * 0.08 + i * 0.45, cx2 = 820 + Math.cos(a) * (120 + (i % 4) * 40), cy2 = 30 + Math.sin(a) * 18 + (i % 3) * 8;
+    x.fillStyle = i % 2 ? "rgba(26,8,14,0.85)" : "rgba(44,12,20,0.75)"; x.beginPath(); x.ellipse(cx2, cy2, 60, 16, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "rgba(255,80,40,0.10)"; x.beginPath(); x.ellipse(cx2, cy2 + 8, 50, 6, 0, 0, Math.PI * 2); x.fill(); }   // lit from below by the fire
+  // red lightning striking the Iron King's spire
+  const bolt = (t * 0.6) % 4;
+  if (bolt < 0.18) { x.strokeStyle = "#ffb0a0"; x.lineWidth = 3; x.beginPath(); x.moveTo(760, 0); x.lineTo(784, 28); x.lineTo(774, 36); x.lineTo(808, 66); x.lineTo(800, 74); x.lineTo(822, 90); x.stroke();
+    x.strokeStyle = "rgba(255,60,40,0.6)"; x.lineWidth = 8; x.stroke(); x.fillStyle = "rgba(255,120,90,0.10)"; x.fillRect(0, 0, W, H); }
+  // the fortress: dark iron, spikes and horns, with a burning face and the Iron King's heart
+  drawIronFortress(x, t, pulse);
+  // lava rivers flowing down the mountains (the glow moves along them)
+  for (const river of IRON_RIVERS) {
+    x.strokeStyle = "#5a1408"; x.lineWidth = 6; x.beginPath(); river.forEach(([a, b], k) => k ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke();
+    x.strokeStyle = "#ff6a1a"; x.lineWidth = 3; x.stroke();
+    x.setLineDash([6, 14]); x.lineDashOffset = -t * 30; x.strokeStyle = "#ffd36a"; x.lineWidth = 2; x.stroke(); x.setLineDash([]); x.lineDashOffset = 0;
+  }
+  // glowing cracks of lava in the ground (they throb)
+  for (const crack of IRON_CRACKS) {
+    x.strokeStyle = `rgba(255,${90 + 60 * pulse | 0},30,${0.55 + 0.35 * pulse})`; x.lineWidth = 2; x.beginPath(); crack.forEach(([a, b], k) => k ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke();
+    x.strokeStyle = `rgba(255,80,20,${0.12 * pulse})`; x.lineWidth = 8; x.stroke();
+  }
+  // little fires
   let sd = 5; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 260; i++) { x.fillStyle = R() < 0.5 ? "#4a2e26" : "#160e0c"; x.fillRect(R() * W | 0, 300 + R() * 240 | 0, 3, 2); }
-  for (let i = 0; i < 14; i++) { const px = R() * W, py = 320 + R() * 210; x.fillStyle = "#121014"; x.fillRect(px, py, 8, 3); x.fillRect(px + 2, py - 4, 3, 4); }   // broken robot scrap
-  for (let i = 0; i < 8; i++) { const px = 60 + R() * 840, py = 330 + R() * 190, f = Math.sin(t * 6 + i) > 0; x.fillStyle = f ? "#ff8a3a" : "#ffd34d"; x.fillRect(px, py - (f ? 3 : 1), 3, 3 + (f ? 2 : 0)); }   // little fires
+  for (let i = 0; i < 10; i++) { const px = 60 + R() * 840, py = 330 + R() * 190, f = Math.sin(t * 6 + i) > 0; x.fillStyle = f ? "#ff8a3a" : "#ffd34d"; x.fillRect(px, py - (f ? 3 : 1), 3, 3 + (f ? 2 : 0)); }
+  // ash drifting down
+  for (let i = 0; i < 40; i++) { const ax = (i * 131 + t * (10 + i % 5 * 4)) % W, ay = (i * 71 + t * (16 + i % 7 * 3)) % H; x.fillStyle = i % 4 ? "rgba(180,160,150,0.5)" : "rgba(255,120,60,0.7)"; x.fillRect(ax, ay, 2, 2); }
   // the road from the camp to the fortress, through each battle
   const pts = [[200, 460], ...IRON_STOPS.map((p) => [p.x, p.y])];
   x.strokeStyle = "rgba(230,200,150,0.55)"; x.lineWidth = 4; x.setLineDash([10, 9]); x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke(); x.setLineDash([]);
