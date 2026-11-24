@@ -7797,15 +7797,47 @@ function rallyScene(done) {
     // the sky at sunrise
     const sky = x.createLinearGradient(0, 0, 0, H * 0.7); sky.addColorStop(0, "#241a44"); sky.addColorStop(0.55, "#a8506a"); sky.addColorStop(1, "#ffb070"); x.fillStyle = sky; x.fillRect(0, 0, W, H);
     const sunY = 210 - Math.min(t, 6) * 8; x.fillStyle = "rgba(255,220,140,0.35)"; x.beginPath(); x.arc(200, sunY, 48, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffe08a"; x.beginPath(); x.arc(200, sunY, 30, 0, Math.PI * 2); x.fill();
-    // the far mountains, with the Iron King's fortress glowing red on the tallest one
-    x.fillStyle = "#3a2448"; x.beginPath(); x.moveTo(0, 230); x.lineTo(90, 170); x.lineTo(170, 215); x.lineTo(300, 150); x.lineTo(380, 200); x.lineTo(500, 90); x.lineTo(600, 180); x.lineTo(640, 160); x.lineTo(640, 260); x.lineTo(0, 260); x.fill();
-    x.fillStyle = "#1a1024"; x.fillRect(478, 52, 44, 44); x.fillRect(470, 40, 12, 56); x.fillRect(518, 40, 12, 56); x.fillRect(493, 26, 14, 30);   // the fortress
-    for (const [bx, by] of [[470, 36], [518, 36], [493, 22]]) { x.beginPath(); x.moveTo(bx, by + 4); x.lineTo(bx + (bx === 493 ? 7 : 6), by - 10); x.lineTo(bx + (bx === 493 ? 14 : 12), by + 4); x.fill(); }   // spiky towers
+    // storm clouds churning around the Iron King's mountain, with flashes of red lightning
     const pulse = 0.55 + 0.45 * Math.sin(t * 3);
-    x.fillStyle = `rgba(255,40,30,${0.25 * pulse})`; x.beginPath(); x.arc(500, 70, 40, 0, Math.PI * 2); x.fill();
-    x.fillStyle = `rgba(255,${60 + 80 * pulse | 0},40,1)`; x.fillRect(489, 64, 6, 4); x.fillRect(505, 64, 6, 4);   // red eyes in the fortress
-    x.fillStyle = "#ff5a3a"; x.fillRect(496, 76, 8, 8);   // its glowing iron heart
-    for (const [wx, wy] of [[473, 50], [521, 50], [473, 70], [521, 70]]) { x.fillStyle = `rgba(255,90,60,${0.6 + 0.4 * pulse})`; x.fillRect(wx, wy, 6, 4); }
+    x.fillStyle = `rgba(255,40,30,${0.18 + 0.12 * pulse})`; x.beginPath(); x.arc(500, 70, 95, 0, Math.PI * 2); x.fill();   // a red glow behind the fortress
+    for (let i = 0; i < 9; i++) { const a = t * 0.15 + i * 0.7, cx2 = 500 + Math.cos(a) * (70 + (i % 3) * 18), cy2 = 34 + Math.sin(a) * 14;
+      x.fillStyle = i % 2 ? "rgba(36,20,46,0.85)" : "rgba(52,30,62,0.8)"; x.beginPath(); x.ellipse(cx2, cy2, 34, 12, 0, 0, Math.PI * 2); x.fill(); }
+    const flash = (t * 0.7) % 3.4 < 0.12;
+    if (flash) { x.strokeStyle = "#ff6a4a"; x.lineWidth = 2; x.beginPath(); x.moveTo(420, 20); x.lineTo(432, 44); x.lineTo(424, 50); x.lineTo(440, 82); x.stroke(); x.fillStyle = "rgba(255,90,70,0.12)"; x.fillRect(0, 0, W, H); }
+    // the far mountain range
+    x.fillStyle = "#3a2448"; x.beginPath(); x.moveTo(0, 230); x.lineTo(90, 170); x.lineTo(170, 215); x.lineTo(300, 150); x.lineTo(380, 205); x.lineTo(410, 190); x.lineTo(640, 220); x.lineTo(640, 260); x.lineTo(0, 260); x.fill();
+    // the Iron King's mountain: a huge dark crag, with the fortress built right into its peak
+    x.fillStyle = "#2a1a36"; x.beginPath(); x.moveTo(370, 260); x.lineTo(430, 170); x.lineTo(446, 176); x.lineTo(462, 128); x.lineTo(538, 128); x.lineTo(556, 172); x.lineTo(572, 166); x.lineTo(640, 250); x.lineTo(640, 260); x.fill();
+    x.fillStyle = "#3a2648"; x.beginPath(); x.moveTo(462, 128); x.lineTo(430, 170); x.lineTo(410, 230); x.lineTo(450, 200); x.lineTo(470, 150); x.fill();   // light on the left cliffs
+    x.strokeStyle = "#1a1024"; x.lineWidth = 1; x.beginPath(); x.moveTo(520, 140); x.lineTo(530, 170); x.lineTo(524, 200); x.moveTo(480, 150); x.lineTo(472, 185); x.stroke();   // cracks in the rock
+    // a winding road up the mountain, lit by the robots' red lamps
+    const road = [[400, 250], [470, 232], [430, 206], [500, 186], [462, 162], [500, 140]];
+    x.strokeStyle = "#20142a"; x.lineWidth = 3; x.beginPath(); road.forEach(([a, b], k) => k ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke();
+    road.forEach(([a, b], k) => { if (k) { x.fillStyle = (Math.floor(t * 4) + k) % 3 ? "#ff5a3a" : "#ffb070"; x.fillRect(a - 1, b - 4, 2, 2); } });
+    // the fortress (dark iron, battlements, spiky towers, glowing red windows)
+    const IRON = "#170d20", IRON2 = "#24162e", red = `rgba(255,${70 + 70 * pulse | 0},50,1)`;
+    const battle = (x0, x1, y) => { for (let bx = x0; bx < x1; bx += 6) x.fillRect(bx, y - 4, 4, 4); };
+    const spire = (x0, w, y, h) => { x.beginPath(); x.moveTo(x0 - 2, y); x.lineTo(x0 + w / 2, y - h); x.lineTo(x0 + w + 2, y); x.fill(); };
+    const flag = (fx, fy) => { x.fillStyle = "#3a2a2a"; x.fillRect(fx, fy - 10, 1, 10); x.fillStyle = "#c8281e"; const wv2 = Math.sin(t * 6 + fx) * 2; x.beginPath(); x.moveTo(fx + 1, fy - 10); x.lineTo(fx + 10, fy - 8 + wv2); x.lineTo(fx + 1, fy - 5); x.fill(); };
+    x.fillStyle = IRON; x.fillRect(448, 100, 104, 30); battle(448, 552, 100);   // the outer wall
+    x.fillStyle = IRON2; for (let bx = 452; bx < 550; bx += 12) x.fillRect(bx, 104, 1, 24);   // iron plates
+    x.fillStyle = IRON; x.fillRect(438, 66, 18, 64); battle(438, 456, 66); x.fillRect(544, 66, 18, 64); battle(544, 562, 66);   // the two big corner towers
+    spire(438, 18, 62, 30); spire(544, 18, 62, 30); flag(447, 32); flag(553, 32); x.fillStyle = IRON;
+    x.fillRect(466, 58, 12, 44); spire(466, 12, 58, 22); x.fillRect(522, 58, 12, 44); spire(522, 12, 58, 22);   // inner towers
+    x.fillRect(480, 44, 40, 58); battle(480, 520, 44);   // the great keep
+    x.fillRect(490, 24, 20, 22); spire(490, 20, 24, 22);   // the tall central spire
+    x.fillStyle = "#3a2448"; x.fillRect(436, 128, 128, 3);   // where the walls meet the rock
+    // glowing red windows (they flicker)
+    for (const [wx, wy, ww, wh] of [[443, 78, 4, 6], [553, 78, 4, 6], [443, 96, 4, 6], [553, 96, 4, 6], [470, 70, 4, 5], [526, 70, 4, 5], [486, 54, 4, 6], [510, 54, 4, 6], [497, 30, 6, 6]]) {
+      x.fillStyle = Math.sin(t * 5 + wx) > -0.7 ? red : "#5a1810"; x.fillRect(wx, wy, ww, wh); }
+    // the great gate, with fire glowing behind the portcullis
+    x.fillStyle = `rgba(255,120,40,${0.7 + 0.3 * pulse})`; x.beginPath(); x.moveTo(490, 130); x.lineTo(490, 116); x.arc(500, 116, 10, Math.PI, 0); x.lineTo(510, 130); x.fill();
+    x.fillStyle = IRON; for (let gx = 492; gx < 510; gx += 4) x.fillRect(gx, 106, 1, 24); x.fillRect(489, 118, 22, 1); x.fillRect(489, 124, 22, 1);
+    // the Iron King's glowing iron heart, set in the face of the keep, with two burning eyes above it
+    x.fillStyle = `rgba(255,40,30,${0.35 * pulse})`; x.beginPath(); x.arc(500, 80, 14, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#ff3a24"; x.beginPath(); x.moveTo(500, 90); x.lineTo(492, 80); x.arc(496, 78, 4, Math.PI, 0); x.arc(504, 78, 4, Math.PI, 0); x.lineTo(500, 90); x.fill();
+    x.fillStyle = `rgba(255,${200 + 55 * pulse | 0},150,1)`; x.fillRect(495, 77, 2, 2);
+    x.fillStyle = red; x.fillRect(488, 64, 7, 3); x.fillRect(505, 64, 7, 3);
     // the robot army on the far hills
     x.fillStyle = "#4a2c50"; x.beginPath(); x.moveTo(330, 260); x.quadraticCurveTo(470, 180, 640, 215); x.lineTo(640, 320); x.lineTo(330, 320); x.fill();
     for (let i = 0; i < 16; i++) { const rx = 400 + (i % 8) * 28 + (i > 7 ? 14 : 0), ry = 214 + (i > 7 ? 14 : 0) - (rx - 400) * 0.08 + Math.sin(t * 6 + i) * 1; x.drawImage(robotSil, rx, ry, 20, 20); }
@@ -7816,12 +7848,19 @@ function rallyScene(done) {
     for (let i = 0; i < 40; i++) { x.fillStyle = i % 3 ? "#5aa84a" : "#2f6a2e"; x.fillRect((i * 53) % W, 280 + ((i * 37) % 70), 2, 4); }   // grass
     // the army marching in from the left, then stopping
     const march = Math.min(1, t / 3.2), cheer = cheerAt ? (performance.now() - cheerAt) / 1000 : 0;
+    // the hidden towers march too: the Wolf, Hydra, Kraken and Hacked Robot at the back, and the Pegasus, Phoenix and Night Owl fly above
+    [["pegasus", 0], ["phoenix", 1], ["nightowl", 2]].forEach(([k, n]) => { const img = SPR[k]; if (!img) return;
+      const tx = -240 + march * 300 + n * 60, ty = 150 + n * 14 + Math.sin(t * 3 + n * 2) * 6 - (cheer ? 10 : 0);
+      x.drawImage(img, tx, ty, 38, 38); });
     TROOPS.forEach((k, i) => {
       const row = i % 3, col = Math.floor(i / 3), img = SPR[k]; if (!img) return;
       const tx = -260 + march * 300 + col * 40 + row * 14, ty = 262 + row * 26 - col * 1.5;
       const hop = march < 1 ? Math.abs(Math.sin(t * 9 + i)) * 4 : cheer ? Math.abs(Math.sin(cheer * 8 + i * 0.7)) * 14 : 0;
       x.drawImage(img, tx, ty - hop, 32, 32);
     });
+    [["wolf", 0], ["hydra", 1], ["kraken", 2], ["hacked", 3]].forEach(([k, n]) => { const img = SPR[k]; if (!img) return;
+      const tx = -230 + march * 300 + n * 46, ty = 312 - (n % 2) * 4, hop = march < 1 ? Math.abs(Math.sin(t * 8 + n)) * 4 : cheer ? Math.abs(Math.sin(cheer * 8 + n)) * 12 : 0;
+      x.drawImage(img, tx, ty - hop, 40, 40); });
     // General Antler, a great stag, out in front with the army's banner
     const lx = -20 + march * 320, ly = 222, lhop = march < 1 ? Math.abs(Math.sin(t * 7)) * 4 : cheer ? Math.abs(Math.sin(cheer * 6)) * 10 : 0;
     x.fillStyle = "#6a4a2a"; x.fillRect(lx + 50, ly - 40 - lhop, 3, 92);   // banner pole
