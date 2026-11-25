@@ -8027,12 +8027,12 @@ const ARMY = {
   squirrel: { name: "Squirrel",     cost: 30,  hp: 50,  dmg: 6,  range: 26,  rate: 0.5, speed: 52, stash: 5, sound: "crab" },   // each Squirrel on the map: floating maple leaves give 5 more
   wizard:   { name: "Wizard",       cost: 60,  hp: 60,  dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", aura: 90, sound: "hacked" },   // animals near a Wizard do 2x damage
   healer:   { name: "Healer Deer",  cost: 80,  hp: 450, dmg: 0,  heal: 14, range: 90, rate: 1.5, speed: 26, sound: "healer" },
-  pegasus:  { name: "Pegasus",      cost: 70,  hp: 120, dmg: 14, range: 120, rate: 0.9, speed: 75, shot: "#fff3a0", fly: true, multi: 3, sound: "pegasus" },
+  pegasus:  { name: "Pegasus",      cost: 70,  hp: 240, dmg: 14, range: 120, rate: 0.9, speed: 75, shot: "#fff3a0", fly: true, multi: 3, sound: "pegasus" },
   nightowl: { name: "Night Owl",    cost: 90,  hp: 70,  dmg: 12, range: 110, rate: 0.6, speed: 80, shot: "#a8b8ff", fly: true, multi: 2, farther: 3, sound: "nightowl" },   // hits harder the farther along the road it is (up to 3x)
   hacked:   { name: "Hacked Robot", cost: 85,  hp: 110, dmg: 13, range: 100, rate: 0.8, speed: 30, shot: "#7ff3ff", push: 14, sound: "hacked" },
   wolf:     { name: "Wolf",         cost: 75,  hp: 130, dmg: 15, range: 26,  rate: 0.6, speed: 50, pack: 5, sound: "wolf" },   // +5 damage for each other Wolf on the same road
-  hydra:    { name: "Hydra",        cost: 75,  hp: 220, dmg: 13, range: 50,  rate: 0.8, speed: 28, multi: 3, sound: "plant" },
-  phoenix:  { name: "Phoenix",      cost: 80,  hp: 150, dmg: 15, range: 95,  rate: 0.9, speed: 46, shot: "#ffb347", fly: true, splash: 30, rebirth: 0.5, sound: "phoenix" },   // comes back once: half health, double speed
+  hydra:    { name: "Hydra",        cost: 75,  hp: 420, dmg: 13, range: 50,  rate: 0.8, speed: 28, multi: 3, sound: "plant" },
+  phoenix:  { name: "Phoenix",      cost: 80,  hp: 280, dmg: 15, range: 95,  rate: 0.9, speed: 46, shot: "#ffb347", fly: true, splash: 30, rebirth: 0.5, sound: "phoenix" },   // comes back once: half health, double speed
   kraken:   { name: "Kraken",       cost: 85,  hp: 420, dmg: 15, range: 40,  rate: 1.2, speed: 20, splash: 40, sound: "kraken" },
 };
 const ARMY_UP = { costs: [100, 200, 350, 550, 800], hp: 0.15 };   // every upgrade: +15% health, plus that animal's own upgrade (below)
