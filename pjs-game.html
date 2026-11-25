@@ -8106,7 +8106,7 @@ const MARCH = {
     tesla:   { hp: 85,   dmg: 11, range: 95, rate: 1.2, speed: 22, shot: "#7ff3ff" },
     tank:    { hp: 340,  dmg: 16, range: 30, rate: 1.3, speed: 16 },
     boss:    { hp: 1300, dmg: 30, range: 36, rate: 1.5, speed: 12, big: true },
-    foreman: { name: "The Foreman", hp: 1800, dmg: 24, range: 36, rate: 1.4, speed: 12, big: true, grab: 6 },   // a crane robot: every 6 seconds it grabs the animal farthest along its road and drops it back at your camp
+    foreman: { name: "The Foreman", hp: 2200, dmg: 26, range: 36, rate: 1.4, speed: 12, big: true, grab: 5 },   // a crane robot: every 5 seconds it grabs the animal farthest along its road and drops it back at your camp
   },
   chargeEvery: 30, chargeSeconds: 6,   // General Antler's Charge: every animal hits twice as hard and moves 50% faster
 };
@@ -8118,7 +8118,7 @@ const BATTLES = {
   // The Iron Bridge: every robot (and the bridge gate) is IRON-PLATED, so each hit does 10 less damage.
   // The Smog Factories: thick smog hides the robots (only animals nearby can see them, and Owls and Night Owls clear much more of it).
   // Each road has its own factory: wreck it and that road stops sending robots. Wreck all three to win. Every 4th wave: the Foreman.
-  smog: { id: "smog", title: "🏭 The Smog Factories", camp: 280, fort: 9600, factories: 3200, startLeaves: 170, lps: 13, armor: 10, bossKind: "foreman", waveMult: 1.3, bossFirst: 50, bossEvery: 60, starsFor: [190, 130, 0],
+  smog: { id: "smog", title: "🏭 The Smog Factories", camp: 280, fort: 12000, factories: 4000, startLeaves: 170, lps: 13, armor: 10, bossKind: "foreman", waveMult: 1.45, robotHp: 1.35, bossFirst: 50, bossEvery: 60, starsFor: [190, 130, 0],
     pool: (t) => t < 20 ? ["clanker", "walker", "scout"] : t < 60 ? ["walker", "tesla", "scout", "clanker", "tank"] : ["walker", "tesla", "tank", "tank", "scout", "walker"],
     smog: { from: 250, see: 70, seeFly: 150 },
     // sharp turns: the top road dips down and back, the middle road drops down later, the bottom road snakes
@@ -8588,7 +8588,7 @@ function marchCharge() {
 }
 function marchSpawn(k, lane) {
   if (M.fac && M.fac[lane] <= 0) { const open = marchLanesOpen(); lane = open[Math.random() * open.length | 0]; }   // that road's factory is wrecked
-  const r = MARCH.robots[k], tough = (r.big ? 1 : 1 + M.t / 240) * M.D.robotHealth;
+  const r = MARCH.robots[k], tough = (r.big ? 1 : 1 + M.t / 240) * M.D.robotHealth * (M.cfg.robotHp || 1);   // (robotHp: some battles have tougher robots)
   M.units.push({ side: 1, kind: k, x: 546, y: MARCH.lanes[lane] + (k === "boss" ? 0 : Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: k === "boss" ? 0 : Math.random() * 6 });
   if (r.big) { M.fx.push({ text: k === "foreman" ? "The Foreman is coming!" : "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
 }
@@ -8824,13 +8824,51 @@ $("march-quit").onclick = leaveMarch;
 /* ---------- THE IRON LANDS: the war camp, where the animals fight back against the Iron King ----------
    Reached by joining General Antler's army in the rally scene. No battles yet: the road to the fortress is mapped,
    but every stop on it is still "Coming soon". */
-const IRON_STOPS = [   // the battles on the road to the Iron King (x, y on the 960 x 540 map)
-  { name: "The Great Escape", x: 340, y: 450, play: "escape" },
-  { name: "The Iron Bridge", x: 450, y: 320, play: "bridge", needs: "escape" },
-  { name: "The Smog Factories", x: 570, y: 420, play: "smog", needs: "bridge" },
-  { name: "The Spike Wall", x: 680, y: 280 },
-  { name: "The Iron King's Fortress", x: 820, y: 240, king: true },
+const IRON_STOPS = [   // the battles on the road to the Iron King (x, y on the 960 x 540 map); icon = its little pixel picture
+  { name: "The Great Escape", x: 340, y: 450, play: "escape", icon: "cage" },
+  { name: "The Iron Bridge", x: 450, y: 320, play: "bridge", needs: "escape", icon: "bridge" },
+  { name: "The Smog Factories", x: 570, y: 420, play: "smog", needs: "bridge", icon: "factory" },
+  { name: "The Spike Wall", x: 680, y: 280, icon: "spikes" },
+  { name: "The Iron King's Fortress", x: 820, y: 240, king: true, icon: "crown" },
 ];
+// each battle's own pixel icon (16 x 16, drawn twice as big on the map)
+let IRON_ICONS = null;
+function ironIcons() {
+  if (IRON_ICONS) return IRON_ICONS;
+  IRON_ICONS = {
+    cage: pixSprite(16, 16, ({ rect, P }) => {   // a robot cage with its door broken open, and a freed frog hopping out
+      rect(1, 2, 11, 2, "#6a6470"); rect(1, 13, 11, 13, "#4a4450"); for (const i of [1, 4, 7]) rect(i, 3, i, 12, "#9a94a0");
+      rect(10, 4, 11, 5, "#d8402a"); rect(10, 3, 10, 3, "#ffd34d");   // the broken red lock
+      for (let j = 4; j < 12; j++) P(12 + Math.floor((j - 4) / 3), j, "#9a94a0");   // the door swinging open
+      rect(9, 9, 13, 12, "#3aa04a"); rect(10, 8, 10, 8, "#ffffff"); rect(12, 8, 12, 8, "#ffffff"); P(10, 8, "#ffffff"); rect(10, 11, 12, 11, "#2a7a36"); P(14, 12, "#3aa04a");   // the frog
+    }),
+    bridge: pixSprite(16, 16, ({ rect, disc, P }) => {   // an iron bridge over glowing lava
+      rect(0, 11, 15, 15, "#d8402a"); for (let i = 0; i < 16; i += 3) P(i, 12, "#ffd34d"); rect(1, 14, 3, 14, "#ff8a3a"); rect(9, 13, 11, 13, "#ff8a3a");
+      rect(0, 6, 15, 7, "#6a6470"); rect(0, 5, 15, 5, "#9a94a0");   // the deck
+      for (const i of [1, 7, 13]) rect(i, 8, i + 1, 12, "#4a4450");   // pillars
+      for (let i = 0; i < 16; i += 2) rect(i, 2, i, 4, "#6a6470"); rect(0, 2, 15, 2, "#9a94a0");   // the railing
+    }),
+    factory: pixSprite(16, 16, ({ rect, disc, P }) => {   // a smoky factory
+      disc(4, 3, 2.4, "#8a8a7a"); disc(8, 2, 2.2, "#6a6a5a"); disc(12, 3, 2, "#8a8a7a");   // smog
+      rect(3, 5, 4, 9, "#3a3440"); rect(10, 6, 11, 9, "#3a3440");   // smokestacks
+      rect(1, 9, 14, 15, "#4a3a3a"); for (let i = 1; i < 15; i += 4) { P(i, 8, "#4a3a3a"); P(i + 1, 8, "#4a3a3a"); P(i + 2, 7, "#4a3a3a"); }   // saw-tooth roof
+      rect(3, 11, 4, 12, "#ffb040"); rect(7, 11, 8, 12, "#ffb040"); rect(11, 11, 12, 12, "#ffb040");   // glowing windows
+      for (let i = 1; i < 15; i += 2) P(i, 15, i % 4 === 1 ? "#ffd34d" : "#16121a");   // hazard stripes
+    }),
+    spikes: pixSprite(16, 16, ({ rect, P }) => {   // a wall covered in iron spikes
+      rect(1, 7, 14, 15, "#4a4450"); for (let i = 1; i < 15; i += 4) rect(i, 9, i + 2, 10, "#3a3440"); for (let i = 3; i < 15; i += 4) rect(i, 13, i + 2, 14, "#3a3440");
+      for (let i = 1; i < 15; i += 3) { rect(i, 5, i + 1, 6, "#9a94a0"); P(i, 3, "#c8c2d0"); P(i, 4, "#c8c2d0"); P(i + 1, 4, "#9a94a0"); }   // the spikes on top
+      P(7, 11, "#d8402a"); P(8, 11, "#d8402a");   // a red robot eye peeking through
+    }),
+    crown: pixSprite(16, 16, ({ rect, P }) => {   // the Iron King's crown
+      rect(2, 8, 13, 13, "#d8a020"); rect(2, 12, 13, 13, "#a87818");
+      for (const i of [2, 7, 12]) { rect(i, 4, i + 1, 7, "#d8a020"); P(i, 3, "#ffd34d"); }
+      rect(4, 6, 5, 7, "#d8a020"); rect(10, 6, 11, 7, "#d8a020");
+      rect(4, 9, 5, 10, "#d8402a"); rect(7, 9, 8, 10, "#4ac8ff"); rect(10, 9, 11, 10, "#d8402a"); P(3, 8, "#fff0a0"); P(8, 8, "#fff0a0");
+    }),
+  };
+  return IRON_ICONS;
+}
 let ironRaf = 0;
 function openIronLands() {
   const s = slot(); if (s && !s.joinedFight) { s.joinedFight = true; saveSlots(slots); }
@@ -8946,10 +8984,13 @@ function drawIronLands(t) {
     x.fillStyle = "rgba(0,0,0,0.4)"; x.beginPath(); x.arc(p.x + 2, p.y + 3, r, 0, Math.PI * 2); x.fill();
     x.fillStyle = p.king ? "#4a1010" : "#3a2a2a"; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill();
     x.strokeStyle = p.king ? `rgba(255,80,60,${0.6 + 0.4 * pulse})` : "#8a7060"; x.lineWidth = 3; x.stroke();
-    if (p.play && !locked) {   // a battle you can play: a glowing sword, and your stars
-      x.strokeStyle = `rgba(255,211,77,${0.5 + 0.5 * pulse})`; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r + 5, 0, Math.PI * 2); x.stroke();
-      x.fillStyle = "#e8e8f0"; x.fillRect(p.x - 2, p.y - 12, 4, 18); x.fillStyle = "#ffd34d"; x.fillRect(p.x - 7, p.y + 4, 14, 3); x.fillRect(p.x - 1, p.y + 7, 2, 5);
-    } else { x.fillStyle = "#c8b8a0"; x.fillRect(p.x - 7, p.y - 2, 14, 11); x.strokeStyle = "#c8b8a0"; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y - 3, 5, Math.PI, 0); x.stroke(); }   // a lock
+    if (p.play && !locked) { x.strokeStyle = `rgba(255,211,77,${0.5 + 0.5 * pulse})`; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r + 5, 0, Math.PI * 2); x.stroke(); }   // a battle you can play glows
+    const ic = ironIcons()[p.icon], isz = p.king ? 40 : 32; x.imageSmoothingEnabled = false;
+    if (ic) { x.globalAlpha = locked || !p.play ? 0.45 : 1; x.drawImage(ic, p.x - isz / 2, p.y - isz / 2 - (p.play && !locked ? Math.abs(Math.sin(t * 3 + i)) * 2 : 0), isz, isz); x.globalAlpha = 1; }   // each battle's own icon (faded until you can play it)
+    if (locked) {   // a little padlock badge
+      const lx = p.x + r - 6, ly = p.y + r - 8; x.fillStyle = "#16121a"; x.fillRect(lx - 7, ly - 7, 14, 15);
+      x.fillStyle = "#c8b8a0"; x.fillRect(lx - 5, ly - 1, 10, 8); x.strokeStyle = "#c8b8a0"; x.lineWidth = 2; x.beginPath(); x.arc(lx, ly - 2, 3.5, Math.PI, 0); x.stroke();
+    }
     x.font = "bold 14px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center";
     x.fillStyle = "#000"; x.fillText(p.name, p.x + 1, p.y + r + 18); x.fillStyle = p.king ? "#ff8a6a" : "#f0e0c8"; x.fillText(p.name, p.x, p.y + r + 17);
     x.font = "12px sans-serif"; x.fillStyle = p.play && !locked ? "#ffd34d" : "#c8a888"; x.fillText(locked ? "Win the last battle first" : p.play ? (st ? "★".repeat(st) + "☆".repeat(3 - st) : "Tap to play!") : "Coming soon", p.x, p.y + r + 32); x.textAlign = "left";
