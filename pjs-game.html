@@ -8094,6 +8094,57 @@ function battleNextBox(id, list, n) {
   box.querySelectorAll(".pic").forEach((el) => el.replaceWith(spriteCanvas(el.dataset.k, 32)));
   box.hidden = false;
 }
+// ---- pixel-art camp pieces (drawn on a tiny grid, then blown up 2x so every pixel shows) ----
+function pixSprite(w, h, draw) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d");
+  const grid = []; for (let j = 0; j < h; j++) grid.push(new Array(w).fill(null));
+  const P = (i, j, col) => { i = Math.round(i); j = Math.round(j); if (i >= 0 && j >= 0 && i < w && j < h) grid[j][i] = col; };
+  const rect = (x0, y0, x1, y1, col) => { for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) P(i, j, col); };
+  const disc = (cx, cy, r, f) => { for (let j = Math.floor(cy - r); j <= cy + r; j++) for (let i = Math.floor(cx - r); i <= cx + r; i++) { const dx = i + 0.5 - cx, dy = j + 0.5 - cy, d = Math.hypot(dx, dy); if (d <= r) { const col = typeof f === "function" ? f(dx / r, dy / r, i, j) : f; if (col) P(i, j, col); } } };
+  draw({ P, rect, disc, get: (i, j) => (grid[j] || [])[i] });
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {   // a dark outline around everything
+    if (grid[j][i]) { x.fillStyle = grid[j][i]; x.fillRect(i, j, 1, 1); continue; }
+    if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => grid[j + b] && grid[j + b][i + a] && grid[j + b][i + a] !== "#00000000")) { x.fillStyle = "#1a120c"; x.fillRect(i, j, 1, 1); }
+  }
+  const big = document.createElement("canvas"); big.width = w * 2; big.height = h * 2; const bx = big.getContext("2d"); bx.imageSmoothingEnabled = false; bx.drawImage(c, 0, 0, w * 2, h * 2);
+  return big;
+}
+const PIX = {};
+function pixTent(cloth, shade, light) {   // a canvas tent with a dark open door and a pole on top
+  return pixSprite(20, 15, ({ P, rect }) => {
+    for (let j = 1; j < 14; j++) { const half = j; for (let i = 10 - half; i <= 9 + half; i++) { const left = i < 10; P(i, j, i === 10 - half || i === 10 - half + 1 ? light : left ? cloth : shade); } }
+    for (let j = 7; j < 14; j++) { const half = Math.floor((j - 6) / 2); for (let i = 10 - half - 1; i <= 9 + half; i++) P(i, j, "#2a1a10"); }   // the door
+    P(9, 0, "#5a3a1e"); P(10, 0, "#5a3a1e"); P(10, -1, "#5a3a1e");
+    rect(0, 14, 19, 14, "#4a3020");   // the bottom edge
+    for (let i = 2; i < 18; i += 4) P(i, 13, shade);   // stitching
+  });
+}
+function pixFlag(frame) {   // a wooden pole with a green banner and a Golden Acorn on it (2 frames: it waves)
+  return pixSprite(14, 22, ({ P, rect }) => {
+    rect(0, 0, 1, 21, "#6a4426"); P(0, 0, "#ffd34d"); P(1, 0, "#ffd34d");   // pole with a gold tip
+    for (let j = 1; j < 10; j++) { const wv = frame ? Math.round(Math.sin(j * 0.7) * 1) : Math.round(Math.cos(j * 0.7) * 1); const len = 11 - Math.abs(j - 5) * 0 ; for (let i = 2; i < 2 + len; i++) { const jj = j + (i > 7 ? wv : 0); P(i, jj, i === 2 ? "#1f6a28" : (i + j) % 7 === 0 ? "#3aa448" : "#2f8a3a"); } }
+    for (let i = 2; i < 13; i += 2) P(i, 10 + (frame && i > 7 ? 1 : 0), "#1f6a28");   // a jagged bottom edge
+    rect(6, 3, 8, 3, "#8a5a1e"); rect(5, 4, 9, 6, "#ffd34d"); rect(6, 7, 8, 7, "#c89a1a"); P(7, 8, "#c89a1a"); P(6, 5, "#fff3b0");   // the acorn
+  });
+}
+function pixTreehouse() {   // a big leafy tree with a wooden house in it, a red roof, a window and a rope ladder
+  return pixSprite(38, 66, ({ P, rect, disc }) => {
+    rect(15, 24, 22, 65, "#6a4426"); rect(15, 24, 16, 65, "#8a5a32"); rect(21, 24, 22, 65, "#4a2e18");   // trunk
+    for (let j = 30; j < 64; j += 5) P(18, j, "#4a2e18"), P(19, j + 2, "#4a2e18");   // bark
+    rect(12, 62, 25, 65, "#6a4426"); P(11, 65, "#6a4426"); P(26, 65, "#6a4426");   // roots
+    const leaf = (dx, dy) => dy < -0.35 && dx < 0.2 ? "#5ac850" : dy > 0.45 ? "#1f5a20" : "#2f8a3a";
+    for (const [cx, cy, r] of [[19, 14, 12], [8, 20, 8], [30, 20, 8], [12, 9, 7], [27, 9, 7], [19, 4, 6]]) disc(cx, cy, r, leaf);
+    for (const [i, j] of [[10, 12], [24, 6], [30, 17], [15, 19], [21, 2]]) P(i, j, "#8ae070");   // highlights
+    rect(9, 26, 28, 36, "#a8743c"); for (let j = 28; j < 36; j += 3) rect(9, j, 28, j, "#8a5a2a");   // the house's planks
+    for (let i = 7; i <= 30; i++) { const h2 = Math.min(i - 7, 30 - i, 6); rect(i, 26 - h2, i, 26, (i < 19 ? "#e0402a" : "#b82818")); }   // red roof
+    rect(7, 26, 30, 26, "#7a1810");
+    rect(12, 29, 15, 32, "#ffd36a"); P(13, 30, "#fff3b0"); rect(12, 29, 15, 29, "#5a3a1e");   // a glowing window
+    rect(21, 29, 25, 36, "#4a2e18"); P(24, 33, "#ffd34d");   // the door
+    rect(6, 36, 31, 37, "#5a3a1e");   // the porch
+    for (let j = 38; j < 64; j++) { P(25, j, "#c8a870"); P(29, j, "#c8a870"); if (j % 3 === 0) rect(25, j, 29, j, "#a88a58"); }   // rope ladder
+  });
+}
+function pixCamp() { if (!PIX.tree) { PIX.tree = pixTreehouse(); PIX.tents = [pixTent("#b08850", "#7a5a32", "#d8b070"), pixTent("#9a6a3a", "#6a4426", "#c08a50"), pixTent("#8a7a5a", "#5a4a32", "#b8a878")]; PIX.flags = [pixFlag(0), pixFlag(1)]; } return PIX; }
 // ---- shared scenery pieces for the Iron Lands battles ----
 const ROBOT_FACTORIES = [];   // where the dark factories stand in the lanes battles (for the smoke and the glow)
 // A dark robot factory: soot-black brick, a saw-tooth roof, smokestacks, glowing windows, hazard stripes and a big glowing door facing your camp
@@ -8156,12 +8207,10 @@ function marchBackground() {
     x.fillStyle = "#3a3440"; x.fillRect(452, y - 18, 78, 36); x.fillStyle = "#2a2430"; for (let px = 456; px < 530; px += 12) x.fillRect(px, y - 18, 1, 36); x.fillStyle = "#6a6470"; for (let px = 458; px < 530; px += 12) { x.fillRect(px, y - 15, 2, 2); x.fillRect(px, y + 13, 2, 2); }   // iron plates
     for (let k = 0; k < 6; k++) { x.fillStyle = k % 2 ? "#e8b420" : "#16121a"; x.fillRect(452, y - 18 + k * 6, 3, 6); }   // hazard line where robot land starts
   }
-  // your camp: the treehouse on the left
-  x.fillStyle = "#6a4426"; x.fillRect(18, 150, 22, 120); x.fillStyle = "#4a2e18"; x.fillRect(22, 160, 4, 100);
-  x.fillStyle = "#2f7a2c"; for (const [cx, cy, r] of [[29, 140, 34], [10, 160, 22], [50, 160, 22], [29, 112, 24]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
-  x.fillStyle = "#3f9a38"; for (const [cx, cy, r] of [[22, 128, 14], [40, 116, 10]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
-  x.fillStyle = "#9a6a3a"; x.fillRect(12, 176, 34, 24); x.fillStyle = "#5a3a1e"; x.fillRect(24, 186, 10, 14); x.fillStyle = "#c8281e"; x.beginPath(); x.moveTo(8, 178); x.lineTo(29, 162); x.lineTo(50, 178); x.fill();
-  x.fillStyle = "#5a3a1e"; x.fillRect(48, 60, 3, 40); x.fillRect(48, 300, 3, 40); x.fillStyle = "#2f8a3a"; x.fillRect(51, 60, 16, 10); x.fillRect(51, 300, 16, 10);   // banners
+  // your camp: a pixel-art treehouse and banners on the left
+  const PX = pixCamp(); x.imageSmoothingEnabled = false;
+  x.drawImage(PX.tree, -12, 66);
+  x.drawImage(PX.flags[0], 46, 34); x.drawImage(PX.flags[1], 46, 300);
   // the Iron King's dark castle behind the factories: a black wall with spiked towers rising between them
   const I = "#140a14", I2 = "#22121e"; x.fillStyle = I; x.fillRect(578, 0, 62, 384);
   for (let by = 4; by < 384; by += 9) for (let bx = 580 + ((by / 9) % 2 ? 0 : 5); bx < 640; bx += 11) { x.fillStyle = I2; x.fillRect(bx, by, 9, 7); }
@@ -8518,8 +8567,9 @@ function drawIronLands(t) {
     x.font = "12px sans-serif"; x.fillStyle = p.play && !locked ? "#ffd34d" : "#c8a888"; x.fillText(locked ? "Win the last battle first" : p.play ? (st ? "★".repeat(st) + "☆".repeat(3 - st) : "Tap to play!") : "Coming soon", p.x, p.y + r + 32); x.textAlign = "left";
   });
   // the war camp: tents, banners, a campfire, and the army gathered around General Antler
-  for (const [tx, ty, c] of [[40, 420, "#7a5a3a"], [150, 470, "#6a4a2a"], [30, 490, "#8a6a40"]]) { x.fillStyle = c; x.beginPath(); x.moveTo(tx, ty + 30); x.lineTo(tx + 30, ty - 6); x.lineTo(tx + 60, ty + 30); x.fill(); x.fillStyle = "#2a1a10"; x.beginPath(); x.moveTo(tx + 24, ty + 30); x.lineTo(tx + 30, ty + 12); x.lineTo(tx + 36, ty + 30); x.fill(); }
-  for (const bx of [100, 200]) { x.fillStyle = "#5a3a1e"; x.fillRect(bx, 380, 3, 60); const wv = Math.sin(t * 5 + bx) * 3; x.fillStyle = "#2f8a3a"; x.beginPath(); x.moveTo(bx + 3, 380); x.lineTo(bx + 34, 384 + wv); x.lineTo(bx + 32, 402 + wv); x.lineTo(bx + 3, 400); x.fill(); if (ACORN_IMG.complete) x.drawImage(ACORN_IMG, bx + 12, 384 + wv / 2, 12, 14); }
+  { const PX = pixCamp(); x.imageSmoothingEnabled = false;
+    [[30, 398, 0], [140, 452, 1], [20, 470, 2]].forEach(([tx, ty, k]) => x.drawImage(PX.tents[k], tx, ty, 60, 45));
+    for (const bx of [100, 200]) x.drawImage(PX.flags[Math.floor(t * 3 + bx) % 2], bx, 372); }
   const fx = 120, fy = 470; x.fillStyle = "#3a2010"; x.fillRect(fx - 12, fy + 6, 24, 5);
   for (let i = 0; i < 6; i++) { const h = 10 + Math.abs(Math.sin(t * 9 + i * 1.7)) * 14; x.fillStyle = i % 2 ? "#ff8a3a" : "#ffd34d"; x.fillRect(fx - 9 + i * 3, fy + 6 - h, 3, h); }
   x.fillStyle = `rgba(255,160,60,${0.12 + 0.05 * Math.sin(t * 8)})`; x.beginPath(); x.arc(fx, fy, 60, 0, Math.PI * 2); x.fill();
@@ -8735,9 +8785,10 @@ function escBackground() {
   ROBOT_FACTORIES_ESC.length = 0; ROBOT_FACTORIES_ESC.push({ x: gx, y: ry, w: 60, h: 150 });
   // pipes and chains running into the castle
   x.strokeStyle = "#2a2230"; x.lineWidth = 5; x.beginPath(); x.moveTo(gx + 58, ry - 40); x.lineTo(W, ry - 40); x.moveTo(gx + 58, ry + 50); x.lineTo(W, ry + 50); x.stroke();
-  // your camp on the left: tents and a banner
-  for (const [tx, ty, col] of [[0, 140, "#7a5a3a"], [0, 330, "#6a4a2a"], [40, 120, "#8a6a40"]]) { x.fillStyle = col; x.beginPath(); x.moveTo(tx, ty); x.lineTo(tx + 28, ty - 40); x.lineTo(tx + 56, ty); x.fill(); x.fillStyle = "#2a1a10"; x.beginPath(); x.moveTo(tx + 22, ty); x.lineTo(tx + 28, ty - 16); x.lineTo(tx + 34, ty); x.fill(); }
-  x.fillStyle = "#5a3a1e"; x.fillRect(14, 150, 3, 50); x.fillStyle = "#2f8a3a"; x.fillRect(17, 150, 24, 14);
+  // your camp on the left: pixel-art tents and a banner
+  const PX = pixCamp(); x.imageSmoothingEnabled = false;
+  x.drawImage(PX.tents[0], -6, 80, 60, 45); x.drawImage(PX.tents[1], 44, 60, 60, 45); x.drawImage(PX.tents[2], -6, 300, 60, 45); x.drawImage(PX.tents[1], 40, 330, 60, 45);
+  x.drawImage(PX.flags[0], 20, 128); x.drawImage(PX.flags[1], 20, 270);
   return c;
 }
 const ROBOT_FACTORIES_ESC = [];
