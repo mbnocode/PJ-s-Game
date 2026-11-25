@@ -409,7 +409,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .iron-info { max-width: 900px; text-align: center; font-size: 18px; line-height: 1.4; margin: 0; color: #f0e0c8; }
 #s-levels #b-iron { color: #fff0e0; background: #8a2a20; border-color: #4a1010; box-shadow: 0 3px 0 #4a1010; }
 #s-escape { align-items: center; gap: 8px; padding: 10px 16px; }
-#s-escape .esc-wrap { width: min(1100px, 100%, calc((100vh - 250px) * 2.4)); } #esc-cv { aspect-ratio: 960 / 400; height: auto; }   /* (it's wider than the other battles: keep its real shape) */
+#s-escape .esc-wrap { width: min(1400px, 100%, calc((100vh - 250px) * 3.2)); } #esc-cv { aspect-ratio: 960 / 300; height: auto; }   /* (it's wider than the other battles: keep its real shape) */
 #s-march { align-items: center; gap: 8px; padding: 10px 16px; }
 .march-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: min(1100px, 100%); justify-content: center; }
 .march-title { font-family: var(--display); font-size: 20px; color: #ffd34d; } .march-title small { font-size: 12px; color: var(--muted); }
@@ -795,7 +795,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <span class="march-stat">🍁 <b id="esc-leaves">0</b> leaves</span><span class="march-stat">⏱ <b id="esc-time">0:00</b></span>
       <button id="esc-speed">1×</button><button id="esc-pause">Pause</button><button id="esc-quit">Quit</button>
     </div>
-    <div class="march-wrap esc-wrap"><canvas id="esc-cv" width="960" height="400"></canvas>
+    <div class="march-wrap esc-wrap"><canvas id="esc-cv" width="960" height="300"></canvas>
       <div class="nextwave battle-next" id="esc-next" hidden></div>
       <div class="march-end" id="esc-end" hidden><div class="march-end-box" id="esc-end-box"></div></div></div>
     <p class="muted march-help">A robot convoy is hauling caged animals to the fortress! Send animals (or press the number keys) to chase it and break the cages. Freed animals join your army. Wreck the <b>Engine</b> at the front to stop the whole convoy. Press C for Antler's Charge!</p>
@@ -8620,7 +8620,7 @@ $("iron-practice").onclick = () => { cancelAnimationFrame(ironRaf); startMarch()
    Chase it down the road and break the cages before they reach the gate. Freed animals join your army.
    Wreck the Engine at the front and the whole convoy stops. ---------- */
 const ESCAPE = {
-  W: 960, H: 400, roadY: 220, gateX: 900, camp: 150,
+  W: 960, H: 300, roadY: 152, gateX: 900, camp: 150,
   startLeaves: 120, leavesPerSecond: 10,
   engine: { hp: 1400, speed: 9, startX: 640 },
   carts: 8, cartGap: 44, cartHp: 280,
@@ -8637,7 +8637,7 @@ function startEscape() {
   E = { t: 0, leaves: ESCAPE.startLeaves, camp: ESCAPE.camp, engX: ESCAPE.engine.startX, engHp: ESCAPE.engine.hp, engHitT: 0, carts, units: [], fx: [],
         wave: 0, waveAt: 1, queue: [], next: null, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
   $("esc-end").hidden = true; show("s-escape"); escButtons(); Sound.init(); Sound.play("horn");
-  E.fx.push({ text: "Chase the convoy!", x: 300, y: 120, t: 2.2, c: "#ffd34d" });
+  E.fx.push({ text: "Chase the convoy!", x: 300, y: 70, t: 2.2, c: "#ffd34d" });
   E.next = escRollWave(1); battleNextBox("esc-next", E.next, 1);
   E.raf = requestAnimationFrame(escLoop);
 }
@@ -8758,7 +8758,7 @@ function escBackground() {
   for (let i = 0; i < 2200; i++) { x.fillStyle = R() < 0.5 ? "#5a4434" : "#1e140f"; x.fillRect(R() * W | 0, R() * H | 0, 2, 2); }
   const offRoad = () => { let py; do { py = R() * H; } while (Math.abs(py - ry) < 52); return py; };
   // a burned forest along both edges: black trunks and bare branches
-  for (let i = 0; i < 36; i++) { const px = R() * (gx - 40), py = R() < 0.5 ? 6 + R() * 60 : H - 70 + R() * 60, h = 20 + R() * 24;
+  for (let i = 0; i < 36; i++) { const px = 110 + R() * (gx - 150), py = R() < 0.5 ? 34 + R() * 50 : H - 40 + R() * 36, h = 20 + R() * 24;
     x.fillStyle = "#120c0a"; x.fillRect(px, py - h, 4, h); x.fillRect(px - 6, py - h * 0.7, 8, 2); x.fillRect(px + 2, py - h * 0.5, 9, 2); x.fillRect(px - 3, py - h - 4, 2, 6);
     if (R() < 0.3) { x.fillStyle = "#ff7a2a"; x.fillRect(px + 1, py - h * 0.4, 2, 2); } }   // still smouldering
   // craters, ash drifts, broken fences and scattered robot scrap
@@ -8778,20 +8778,20 @@ function escBackground() {
   // the Iron King's dark castle behind, and the convoy's destination: a huge dark factory whose door swallows the cages
   const I = "#120a12", I2 = "#20121c"; x.fillStyle = I; x.fillRect(gx - 10, 0, W - gx + 10, H);
   for (let by = 4; by < H; by += 9) for (let bx = gx - 8 + ((by / 9) % 2 ? 0 : 5); bx < W; bx += 11) { x.fillStyle = I2; x.fillRect(bx, by, 9, 7); }
-  for (const [tx, ty, tw, th] of [[gx - 40, 120, 30, 110], [gx - 6, 96, 26, 96], [gx + 26, 128, 30, 128], [gx - 40, H, 30, 104], [gx - 4, H, 24, 80], [gx + 26, H, 30, 112]]) {   // spiked towers above and below the factory
+  for (const [tx, ty, tw, th] of [[gx - 40, 76, 30, 66], [gx - 6, 70, 26, 70], [gx + 26, 78, 30, 78], [gx - 40, H, 30, 70], [gx - 4, H, 24, 56], [gx + 26, H, 30, 74]]) {   // spiked towers above and below the factory
     x.fillStyle = I; x.fillRect(tx, ty - th, tw, th); x.beginPath(); x.moveTo(tx - 3, ty - th); x.lineTo(tx + tw / 2, ty - th - 30); x.lineTo(tx + tw + 3, ty - th); x.fill();
     for (let bx = tx; bx < tx + tw; bx += 6) x.fillRect(bx, ty - th - 3, 4, 3);
     x.fillStyle = "rgba(255,110,60,0.35)"; x.fillRect(tx, ty - th, 2, th);
     for (let wy = ty - th + 12; wy < ty - 10; wy += 30) { x.fillStyle = "#ff3a1a"; x.fillRect(tx + tw / 2 - 2, wy, 5, 8); x.fillStyle = "rgba(255,58,26,0.22)"; x.fillRect(tx + tw / 2 - 5, wy - 3, 11, 14); }
   }
-  drawDarkFactory(x, gx, ry, 60, 150, 21);
-  ROBOT_FACTORIES_ESC.length = 0; ROBOT_FACTORIES_ESC.push({ x: gx, y: ry, w: 60, h: 150 });
+  drawDarkFactory(x, gx, ry, 60, 126, 21);
+  ROBOT_FACTORIES_ESC.length = 0; ROBOT_FACTORIES_ESC.push({ x: gx, y: ry, w: 60, h: 126 });
   // pipes and chains running into the castle
   x.strokeStyle = "#2a2230"; x.lineWidth = 5; x.beginPath(); x.moveTo(gx + 58, ry - 40); x.lineTo(W, ry - 40); x.moveTo(gx + 58, ry + 50); x.lineTo(W, ry + 50); x.stroke();
   // your camp on the left: pixel-art tents and a banner
   const PX = pixCamp(); x.imageSmoothingEnabled = false;
-  x.drawImage(PX.tents[0], -6, 80, 60, 45); x.drawImage(PX.tents[1], 44, 60, 60, 45); x.drawImage(PX.tents[2], -6, 300, 60, 45); x.drawImage(PX.tents[1], 40, 330, 60, 45);
-  x.drawImage(PX.flags[0], 20, 128); x.drawImage(PX.flags[1], 20, 270);
+  x.drawImage(PX.tents[0], -6, 50, 60, 45); x.drawImage(PX.tents[1], 44, 30, 60, 45); x.drawImage(PX.tents[2], -6, 206, 60, 45); x.drawImage(PX.tents[1], 44, 236, 60, 45);
+  x.drawImage(PX.flags[0], 22, 64); x.drawImage(PX.flags[1], 22, 196);
   return c;
 }
 const ROBOT_FACTORIES_ESC = [];
