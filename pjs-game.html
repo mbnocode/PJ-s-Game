@@ -8094,37 +8094,114 @@ function battleNextBox(id, list, n) {
   box.querySelectorAll(".pic").forEach((el) => el.replaceWith(spriteCanvas(el.dataset.k, 32)));
   box.hidden = false;
 }
+// ---- shared scenery pieces for the Iron Lands battles ----
+const ROBOT_FACTORIES = [];   // where the dark factories stand in the lanes battles (for the smoke and the glow)
+// A dark robot factory: soot-black brick, a saw-tooth roof, smokestacks, glowing windows, hazard stripes and a big glowing door facing your camp
+function drawDarkFactory(x, fx, fy, w, h, seed) {
+  let sd = seed; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const top = fy - h / 2;
+  // smokestacks behind the roof
+  for (const sx of [fx + w * 0.62, fx + w * 0.84]) { x.fillStyle = "#120c14"; x.fillRect(sx, top - 26, 7, 30); x.fillStyle = "#3a2a30"; x.fillRect(sx - 1, top - 28, 9, 3); x.fillStyle = "#ff5a2a"; x.fillRect(sx + 2, top - 18, 3, 2); }
+  // the building
+  x.fillStyle = "#1a141e"; x.fillRect(fx, top, w, h);
+  for (let by = top + 3; by < top + h; by += 5) for (let bx = fx + ((by / 5) % 2 ? 0 : 4); bx < fx + w; bx += 8) { x.fillStyle = R() < 0.5 ? "#221a28" : "#16101a"; x.fillRect(bx, by, 7, 4); }   // bricks
+  x.fillStyle = "rgba(255,110,60,0.35)"; x.fillRect(fx, top, 2, h);   // fire-lit edge facing the battle
+  // saw-tooth roof
+  x.fillStyle = "#0e0a12"; x.beginPath(); x.moveTo(fx - 2, top); for (let k = 0; k < 3; k++) { const sx = fx - 2 + k * (w + 4) / 3; x.lineTo(sx, top - 10); x.lineTo(sx + (w + 4) / 3, top); } x.fill();
+  x.fillStyle = "#ff8a3a"; for (let k = 0; k < 3; k++) x.fillRect(fx + 1 + k * (w + 4) / 3, top - 8, 2, 6);   // lit roof windows
+  // glowing windows
+  for (const wy of [top + 8, top + h - 16]) for (const wx of [fx + w - 16, fx + w - 8]) { x.fillStyle = "#ff4a24"; x.fillRect(wx, wy, 5, 6); x.fillStyle = "rgba(255,74,36,0.25)"; x.fillRect(wx - 2, wy - 2, 9, 10); }
+  // the big door, glowing with the furnace inside, with hazard stripes around it
+  const dw = 22, dh = 30, dy = fy - dh / 2 + 4;
+  for (let k = 0; k < 8; k++) { x.fillStyle = k % 2 ? "#e8b420" : "#16121a"; x.fillRect(fx - 3, dy - 4 + k * ((dh + 8) / 8), 4, (dh + 8) / 8); }
+  x.fillStyle = "#ff7a2a"; x.fillRect(fx + 1, dy, dw, dh); x.fillStyle = "#ffcf6a"; x.fillRect(fx + 1, dy + dh - 8, dw, 8);
+  x.fillStyle = "#16121a"; for (let k = 0; k < 4; k++) x.fillRect(fx + 1, dy + 2 + k * 6, dw, 2);   // half-open shutter
+  // a gear sign above the door
+  x.fillStyle = "#3a3440"; x.beginPath(); x.arc(fx + w / 2 + 4, top + 12, 7, 0, Math.PI * 2); x.fill(); x.fillStyle = "#1a141e"; x.beginPath(); x.arc(fx + w / 2 + 4, top + 12, 3, 0, Math.PI * 2); x.fill();
+  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; x.fillStyle = "#3a3440"; x.fillRect(fx + w / 2 + 4 + Math.cos(a) * 8 - 2, top + 12 + Math.sin(a) * 8 - 2, 4, 4); }
+}
+function drawFactorySmoke(x, t) {   // animated smoke and a glow pulsing from each factory door
+  const pulse = 0.5 + 0.5 * Math.sin(t * 3);
+  for (const f of ROBOT_FACTORIES) {
+    for (const sx of [f.x + f.w * 0.62 + 3, f.x + f.w * 0.84 + 3]) for (let k = 0; k < 4; k++) {
+      const ph = (t * 0.45 + k * 0.25 + f.y * 0.01) % 1; x.fillStyle = `rgba(28,20,26,${0.6 * (1 - ph)})`; x.beginPath(); x.arc(sx - ph * 14, f.y - f.h / 2 - 28 - ph * 46, 4 + ph * 10, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = `rgba(255,110,40,${0.12 + 0.1 * pulse})`; x.beginPath(); x.ellipse(f.x - 4, f.y + 4, 24, 16, 0, 0, Math.PI * 2); x.fill();
+  }
+}
+// The lanes battles: your camp in a green meadow on the left, fading into scorched robot land on the right, where
+// a dark factory stands at the end of each road (robots come out of it), with the Iron King's dark castle behind them
 function marchBackground() {
   const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
   let sd = 77; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  const g = x.createLinearGradient(0, 0, 640, 0); g.addColorStop(0, "#4a9a3e"); g.addColorStop(0.45, "#3f8436"); g.addColorStop(0.72, "#4a4a3a"); g.addColorStop(1, "#2e2236"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);
-  for (let i = 0; i < 900; i++) { const px = R() * 640, py = R() * 384, k = px / 640; x.fillStyle = k < 0.6 ? (R() < 0.5 ? "#5bb04a" : "#2f6e2c") : (R() < 0.5 ? "#55505a" : "#2a2030"); x.fillRect(px | 0, py | 0, 2, 2); }
-  for (const y of MARCH.lanes) {   // the three roads
-    const rg = x.createLinearGradient(0, 0, 640, 0); rg.addColorStop(0, "#b8915a"); rg.addColorStop(0.6, "#8a7458"); rg.addColorStop(1, "#4a3e4a"); x.fillStyle = rg; x.fillRect(70, y - 18, 500, 36);
-    x.fillStyle = "rgba(0,0,0,0.15)"; x.fillRect(70, y + 14, 500, 4);
-    for (let i = 0; i < 60; i++) { x.fillStyle = R() < 0.5 ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)"; x.fillRect(70 + R() * 500, y - 16 + R() * 32, 3, 2); }
+  // ground: meadow -> burnt grass -> scorched earth
+  const g = x.createLinearGradient(0, 0, 640, 0); g.addColorStop(0, "#4a9a3e"); g.addColorStop(0.38, "#3f8436"); g.addColorStop(0.55, "#5a5a34"); g.addColorStop(0.7, "#3e2e26"); g.addColorStop(1, "#22161c"); x.fillStyle = g; x.fillRect(0, 0, 640, 384);
+  for (let i = 0; i < 1400; i++) { const px = R() * 640, py = R() * 384, k = px / 640; x.fillStyle = k < 0.45 ? (R() < 0.5 ? "#5bb04a" : "#2f6e2c") : k < 0.62 ? (R() < 0.5 ? "#6a6a3a" : "#2e2a1c") : (R() < 0.5 ? "#4a3430" : "#160e10"); x.fillRect(px | 0, py | 0, 2, 2); }
+  // meadow details: grass tufts, flowers, bushes and rocks
+  for (let i = 0; i < 70; i++) { const px = R() * 260, py = R() * 384; x.fillStyle = "#6cc85a"; x.fillRect(px, py, 1, 4); x.fillRect(px + 2, py + 1, 1, 3); x.fillRect(px - 2, py + 1, 1, 3); }
+  for (let i = 0; i < 30; i++) { const px = R() * 240, py = R() * 384; x.fillStyle = ["#ffd34d", "#ff8ac8", "#ffffff", "#9ad0ff"][i % 4]; x.fillRect(px, py, 2, 2); }
+  for (let i = 0; i < 9; i++) { const px = 80 + R() * 170, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 30)) continue; x.fillStyle = "#2a6a28"; x.beginPath(); x.arc(px, py, 9, 0, Math.PI * 2); x.arc(px + 8, py + 2, 7, 0, Math.PI * 2); x.fill(); x.fillStyle = "#3f8a3a"; x.beginPath(); x.arc(px - 2, py - 3, 5, 0, Math.PI * 2); x.fill(); }
+  for (let i = 0; i < 14; i++) { const px = R() * 520, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#6a6a70"; x.fillRect(px, py, 8, 5); x.fillStyle = "#8a8a92"; x.fillRect(px + 1, py, 5, 2); }
+  // the in-between: burnt stumps and patches of dead grass
+  for (let i = 0; i < 10; i++) { const px = 290 + R() * 110, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#2a1e16"; x.fillRect(px, py, 6, 8); x.fillStyle = "#4a3624"; x.fillRect(px, py, 6, 2); }
+  // robot land: craters, oil puddles, scrap and pipes
+  for (let i = 0; i < 8; i++) { const px = 400 + R() * 140, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 30)) continue; x.fillStyle = "#1a1014"; x.beginPath(); x.ellipse(px, py, 12, 6, 0, 0, Math.PI * 2); x.fill(); x.strokeStyle = "#4a3430"; x.lineWidth = 2; x.stroke(); }
+  for (let i = 0; i < 8; i++) { const px = 380 + R() * 160, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#0a080e"; x.beginPath(); x.ellipse(px, py, 9, 4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(120,90,200,0.35)"; x.fillRect(px - 3, py - 1, 4, 1); }
+  for (let i = 0; i < 16; i++) { const px = 360 + R() * 190, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#121014"; x.fillRect(px, py, 9, 3); x.fillRect(px + 3, py - 4, 3, 4); x.fillStyle = "#3a3a44"; x.fillRect(px + 1, py, 3, 1); }
+  // the roads: dirt with edge stones, wheel ruts and pebbles, turning into iron plating near the factories
+  for (const y of MARCH.lanes) {
+    const rg = x.createLinearGradient(70, 0, 530, 0); rg.addColorStop(0, "#b8915a"); rg.addColorStop(0.55, "#8a7458"); rg.addColorStop(0.8, "#4a3e44"); rg.addColorStop(1, "#2e2832"); x.fillStyle = rg; x.fillRect(70, y - 18, 460, 36);
+    for (let px = 72; px < 470; px += 7 + R() * 6) { x.fillStyle = R() < 0.5 ? "#7a6a54" : "#5a4a3a"; x.fillRect(px, y - 20, 5, 3); x.fillRect(px + 2, y + 17, 5, 3); }   // edge stones
+    x.fillStyle = "rgba(0,0,0,0.14)"; x.fillRect(70, y - 8, 460, 2); x.fillRect(70, y + 6, 460, 2);   // wheel ruts
+    for (let i = 0; i < 50; i++) { x.fillStyle = R() < 0.5 ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.14)"; x.fillRect(70 + R() * 400, y - 15 + R() * 30, 2, 2); }
+    x.fillStyle = "#3a3440"; x.fillRect(452, y - 18, 78, 36); x.fillStyle = "#2a2430"; for (let px = 456; px < 530; px += 12) x.fillRect(px, y - 18, 1, 36); x.fillStyle = "#6a6470"; for (let px = 458; px < 530; px += 12) { x.fillRect(px, y - 15, 2, 2); x.fillRect(px, y + 13, 2, 2); }   // iron plates
+    for (let k = 0; k < 6; k++) { x.fillStyle = k % 2 ? "#e8b420" : "#16121a"; x.fillRect(452, y - 18 + k * 6, 3, 6); }   // hazard line where robot land starts
   }
   // your camp: the treehouse on the left
-  x.fillStyle = "#6a4426"; x.fillRect(18, 150, 22, 120); x.fillStyle = "#2f7a2c"; for (const [cx, cy, r] of [[29, 140, 34], [10, 160, 22], [50, 160, 22], [29, 112, 24]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
+  x.fillStyle = "#6a4426"; x.fillRect(18, 150, 22, 120); x.fillStyle = "#4a2e18"; x.fillRect(22, 160, 4, 100);
+  x.fillStyle = "#2f7a2c"; for (const [cx, cy, r] of [[29, 140, 34], [10, 160, 22], [50, 160, 22], [29, 112, 24]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
+  x.fillStyle = "#3f9a38"; for (const [cx, cy, r] of [[22, 128, 14], [40, 116, 10]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
   x.fillStyle = "#9a6a3a"; x.fillRect(12, 176, 34, 24); x.fillStyle = "#5a3a1e"; x.fillRect(24, 186, 10, 14); x.fillStyle = "#c8281e"; x.beginPath(); x.moveTo(8, 178); x.lineTo(29, 162); x.lineTo(50, 178); x.fill();
-  // the robots' fortress on the right
-  const I = "#170d20"; x.fillStyle = I; x.fillRect(582, 60, 58, 270); for (let by = 60; by < 330; by += 8) x.fillRect(576, by, 6, 5);
-  x.fillRect(590, 40, 20, 30); x.beginPath(); x.moveTo(588, 40); x.lineTo(600, 14); x.lineTo(612, 40); x.fill(); x.fillRect(616, 30, 20, 40); x.beginPath(); x.moveTo(614, 30); x.lineTo(626, 6); x.lineTo(638, 30); x.fill();
-  for (const y of MARCH.lanes) { x.fillStyle = "#ff7a3a"; x.beginPath(); x.moveTo(582, y + 16); x.lineTo(582, y - 6); x.arc(592, y - 6, 10, Math.PI, 0); x.lineTo(602, y + 16); x.fill(); x.fillStyle = I; for (let gx = 584; gx < 602; gx += 4) x.fillRect(gx, y - 14, 1, 30); }
-  for (const [wx, wy] of [[596, 50], [624, 44], [612, 150], [612, 240], [628, 120], [628, 210]]) { x.fillStyle = "#ff4a2a"; x.fillRect(wx, wy, 5, 6); }
+  x.fillStyle = "#5a3a1e"; x.fillRect(48, 60, 3, 40); x.fillRect(48, 300, 3, 40); x.fillStyle = "#2f8a3a"; x.fillRect(51, 60, 16, 10); x.fillRect(51, 300, 16, 10);   // banners
+  // the Iron King's dark castle behind the factories: a black wall with spiked towers rising between them
+  const I = "#140a14", I2 = "#22121e"; x.fillStyle = I; x.fillRect(578, 0, 62, 384);
+  for (let by = 4; by < 384; by += 9) for (let bx = 580 + ((by / 9) % 2 ? 0 : 5); bx < 640; bx += 11) { x.fillStyle = I2; x.fillRect(bx, by, 9, 7); }
+  for (const [ty, th] of [[52, 52], [148, 26], [240, 26], [384, 60]]) {   // towers in the gaps between the factories (and at the top and bottom)
+    x.fillStyle = I; x.fillRect(560, ty - th, 26, th); x.beginPath(); x.moveTo(557, ty - th); x.lineTo(573, ty - th - 26); x.lineTo(589, ty - th); x.fill();
+    for (let bx = 560; bx < 586; bx += 6) x.fillRect(bx, ty - th - 3, 4, 3);
+    x.fillStyle = "#ff3a1a"; x.fillRect(570, ty - th + 6, 5, 7); x.fillStyle = "rgba(255,58,26,0.25)"; x.fillRect(567, ty - th + 3, 11, 13);
+    x.fillStyle = "rgba(255,110,60,0.35)"; x.fillRect(560, ty - th, 2, th);
+  }
+  for (const [tx, ty] of [[600, 10], [622, 60], [604, 150], [626, 210], [600, 290], [622, 350]]) { x.fillStyle = "#0c060c"; x.fillRect(tx, ty, 14, 40); x.beginPath(); x.moveTo(tx - 2, ty); x.lineTo(tx + 7, ty - 18); x.lineTo(tx + 16, ty); x.fill(); x.fillStyle = "#ff3a1a"; x.fillRect(tx + 5, ty + 10, 4, 6); }
+  x.fillStyle = "#ff2a18"; x.beginPath(); x.moveTo(616, 205); x.lineTo(606, 194); x.arc(611, 191, 5, Math.PI, 0); x.arc(621, 191, 5, Math.PI, 0); x.lineTo(616, 205); x.fill();   // the iron heart
+  x.fillStyle = "rgba(255,40,20,0.18)"; x.beginPath(); x.arc(616, 196, 18, 0, Math.PI * 2); x.fill();
+  // a dark factory at the end of each road (robots come out of its door), with pipes feeding it from the castle
+  ROBOT_FACTORIES.length = 0;
+  MARCH.lanes.forEach((y, i) => {
+    x.strokeStyle = "#2a2230"; x.lineWidth = 5; x.beginPath(); x.moveTo(578, y - 18); x.lineTo(568, y - 18); x.moveTo(578, y + 16); x.lineTo(568, y + 16); x.stroke();
+    x.fillStyle = "#e8b420"; x.fillRect(572, y - 20, 2, 4);
+    const f = { x: 528, y, w: 42, h: 58 }; ROBOT_FACTORIES.push(f); drawDarkFactory(x, f.x, f.y, f.w, f.h, 40 + i * 13);
+  });
   return c;
 }
-// The Iron Bridge: a lava river across the middle, with an iron bridge (and drawbridge) carrying all three roads
+// The Iron Bridge: a river of lava across the middle, crossed by an iron bridge (with a drawbridge) on each road
 function bridgeBackground() {
   const c = marchBackground(), x = c.getContext("2d");
-  x.fillStyle = "#2a1410"; x.fillRect(270, 0, 140, 384);
-  const lv = x.createLinearGradient(280, 0, 400, 0); lv.addColorStop(0, "#8a2a0a"); lv.addColorStop(0.5, "#ff7a1a"); lv.addColorStop(1, "#8a2a0a"); x.fillStyle = lv; x.fillRect(280, 0, 120, 384);
   let sd = 3; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 160; i++) { x.fillStyle = R() < 0.5 ? "#ffd36a" : "#c83a0a"; x.fillRect(282 + R() * 116, R() * 384, 3, 2); }
-  for (const y of MARCH.lanes) {   // the iron bridge decks over the lava, with railings and rivets
-    x.fillStyle = "#3a3440"; x.fillRect(264, y - 22, 152, 44); x.fillStyle = "#4e4856"; x.fillRect(264, y - 18, 152, 36);
-    x.fillStyle = "#26222c"; for (let bx = 268; bx < 414; bx += 12) x.fillRect(bx, y - 18, 2, 36); x.fillStyle = "#8a8496"; for (let bx = 270; bx < 414; bx += 12) { x.fillRect(bx, y - 20, 2, 2); x.fillRect(bx, y + 18, 2, 2); }
-    x.fillStyle = "#16121a"; x.fillRect(264, y - 24, 152, 3); x.fillRect(264, y + 21, 152, 3);
+  // scorched, rocky banks
+  x.fillStyle = "#1e120e"; x.fillRect(262, 0, 156, 384);
+  for (let i = 0; i < 60; i++) { x.fillStyle = R() < 0.5 ? "#3a2418" : "#120a08"; x.fillRect(264 + (R() < 0.5 ? R() * 18 : 134 + R() * 18), R() * 384, 4, 3); }
+  // the lava: hot in the middle, a dark crust drifting on it
+  const lv = x.createLinearGradient(280, 0, 400, 0); lv.addColorStop(0, "#7a1e06"); lv.addColorStop(0.2, "#e84a10"); lv.addColorStop(0.5, "#ffb04a"); lv.addColorStop(0.8, "#e84a10"); lv.addColorStop(1, "#7a1e06"); x.fillStyle = lv; x.fillRect(280, 0, 120, 384);
+  for (let i = 0; i < 40; i++) { const px = 284 + R() * 108, py = R() * 384; x.fillStyle = "#3a1408"; x.beginPath(); x.ellipse(px, py, 6 + R() * 8, 3 + R() * 3, R(), 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff8a2a"; x.fillRect(px - 2, py, 4, 1); }
+  for (let i = 0; i < 120; i++) { x.fillStyle = R() < 0.5 ? "#ffe08a" : "#ff6a1a"; x.fillRect(282 + R() * 116, R() * 384, 2, 2); }
+  x.fillStyle = "rgba(255,120,40,0.18)"; x.fillRect(262, 0, 18, 384); x.fillRect(400, 0, 18, 384);   // heat glow on the banks
+  for (const y of MARCH.lanes) {   // the iron bridge on each road: pillars, girders, deck plates, railings and rivets
+    x.fillStyle = "#16121a"; for (const px of [290, 340, 390]) x.fillRect(px - 4, y + 18, 8, 26);   // pillars into the lava
+    x.fillStyle = "#2a2430"; x.fillRect(262, y + 16, 156, 6); x.strokeStyle = "#2a2430"; x.lineWidth = 2; x.beginPath(); for (let px = 262; px < 418; px += 12) { x.moveTo(px, y + 22); x.lineTo(px + 6, y + 30); x.lineTo(px + 12, y + 22); } x.stroke();   // girders
+    x.fillStyle = "#3a3440"; x.fillRect(262, y - 22, 156, 44); x.fillStyle = "#4e4856"; x.fillRect(262, y - 18, 156, 36);
+    x.fillStyle = "#26222c"; for (let bx = 266; bx < 416; bx += 12) x.fillRect(bx, y - 18, 2, 36); x.fillStyle = "#8a8496"; for (let bx = 268; bx < 416; bx += 12) { x.fillRect(bx, y - 20, 2, 2); x.fillRect(bx, y + 18, 2, 2); }
+    x.fillStyle = "#16121a"; x.fillRect(262, y - 26, 156, 4); for (let px = 262; px < 418; px += 10) x.fillRect(px, y - 30, 2, 6);   // railing
+    x.fillRect(262, y + 21, 156, 3);
   }
   return c;
 }
@@ -8155,7 +8232,7 @@ function marchCharge() {
 }
 function marchSpawn(k, lane) {
   const r = MARCH.robots[k], tough = k === "boss" ? 1 : 1 + M.t / 240;
-  M.units.push({ side: 1, kind: k, x: 572, y: MARCH.lanes[lane] + (k === "boss" ? 0 : Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: k === "boss" ? 0 : Math.random() * 6 });
+  M.units.push({ side: 1, kind: k, x: 546, y: MARCH.lanes[lane] + (k === "boss" ? 0 : Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: k === "boss" ? 0 : Math.random() * 6 });
   if (k === "boss") { M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
 }
 function marchLoop(now) {
@@ -8198,13 +8275,13 @@ function marchUpdate(dt) {
       if (hurt.length && u.cool <= 0) { u.cool = S.rate; for (const o of hurt) { o.hp = Math.min(o.max, o.hp + S.heal); M.fx.push({ spark: true, x: o.x, y: o.y - 18, t: 0.4, c: "#9be28a" }); } if (Math.random() < 0.3) Sound.play("healer"); }
       if (foe && best <= S.range * 0.6) continue;   // stays behind the front line
     }
-    const baseD = u.side ? u.x - 70 : 572 - u.x;
+    const baseD = u.side ? u.x - 70 : 532 - u.x;
     if (!S.heal && foe && best <= S.range) { if (u.cool <= 0) marchHit(u, S, foe, charge); }
     else if (!S.heal && baseD <= S.range * 0.4 + 4) {   // at the enemy's base: hit it
       if (u.cool <= 0) { u.cool = S.rate;
         if (u.side) { M.camp -= S.dmg; Sound.play("hit"); }
         else { const d = armyDamage(u, S, C.armor, M.units, charge); M.fort -= d; if (!d) M.fx.push({ text: "Clank!", x: 560, y: u.y - 20, t: 0.6, c: "#c8d0e0" }); if (S.sound) Sound.play(S.sound); }
-        M.fx.push({ spark: true, x: u.side ? 66 : 578, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
+        M.fx.push({ spark: true, x: u.side ? 66 : 530, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
     } else {
       let nx = u.x + dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
       if (DB && M.bridgeUp && !S.fly) { if (dir > 0 && u.x < DB.x0 && nx >= DB.x0 - 6) nx = DB.x0 - 6; if (dir < 0 && u.x > DB.x1 && nx <= DB.x1 + 6) nx = DB.x1 + 6; }   // wait at the edge
@@ -8221,7 +8298,7 @@ function marchHit(u, S, foe, charge) {
   u.cool = S.rate;
   const armor = u.side ? 0 : M.cfg.armor;
   const d = u.side ? S.dmg : armyDamage(u, S, armor, M.units, charge);
-  const hitOne = (o) => { o.hp -= d; o.hitT = 0.12; if (S.slows) o.slowT = 1.5; if (S.push && o.side) o.x = Math.min(572, o.x + S.push); };
+  const hitOne = (o) => { o.hp -= d; o.hitT = 0.12; if (S.slows) o.slowT = 1.5; if (S.push && o.side) o.x = Math.min(546, o.x + S.push); };
   let targets = [foe];
   if (S.splash) targets = M.units.filter((o) => o.side !== u.side && o.lane === u.lane && o.hp > 0 && Math.abs(o.x - foe.x) <= S.splash);
   else if (S.multi) targets = M.units.filter((o) => o.side !== u.side && o.lane === u.lane && o.hp > 0 && (o.x - u.x) * (u.side ? -1 : 1) > -12 && Math.abs(o.x - u.x) <= S.range).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, S.multi);
@@ -8232,7 +8309,7 @@ function marchHit(u, S, foe, charge) {
 }
 function marchDraw() {
   const cv = $("march-cv"), x = cv.getContext("2d"), C = M.cfg, DB = C.drawbridge; x.imageSmoothingEnabled = false;
-  x.drawImage(M.bg, 0, 0);
+  x.drawImage(M.bg, 0, 0); drawFactorySmoke(x, M.t);
   if (DB) {   // the drawbridge section: when it's up, the decks are gone and the lava shows; just before, it flashes
     for (const y of MARCH.lanes) {
       if (M.bridgeUp) { const lv = x.createLinearGradient(DB.x0, 0, DB.x1, 0); lv.addColorStop(0, "#c83a0a"); lv.addColorStop(0.5, "#ffb04a"); lv.addColorStop(1, "#c83a0a"); x.fillStyle = lv; x.fillRect(DB.x0, y - 22, DB.x1 - DB.x0, 44);
@@ -8240,7 +8317,7 @@ function marchDraw() {
       else { x.strokeStyle = M.bridgeWarn && Math.floor(M.t * 6) % 2 ? "#ff5a3a" : "#16121a"; x.lineWidth = 3; x.strokeRect(DB.x0, y - 20, DB.x1 - DB.x0, 40); }
     }
   }
-  const ly = MARCH.lanes[M.lane]; x.fillStyle = "rgba(255,211,77,0.16)"; x.fillRect(70, ly - 20, 500, 40); x.strokeStyle = "rgba(255,211,77,0.7)"; x.lineWidth = 2; x.strokeRect(70, ly - 20, 500, 40);   // the road you're sending to
+  const ly = MARCH.lanes[M.lane]; x.fillStyle = "rgba(255,211,77,0.16)"; x.fillRect(70, ly - 20, 458, 40); x.strokeStyle = "rgba(255,211,77,0.7)"; x.lineWidth = 2; x.strokeRect(70, ly - 20, 458, 40);   // the road you're sending to
   x.drawImage(SPR.healer, 40, ly - 30, 40, 40);   // General Antler stands at the start of the chosen road
   if (M.chargeT > 0) { x.fillStyle = `rgba(255,211,77,${0.08 + 0.06 * Math.sin(M.t * 12)})`; x.fillRect(0, 0, 640, 384); }
   const sorted = [...M.units].sort((a, b) => a.y - b.y);
@@ -8620,28 +8697,54 @@ function escFree(c) {
 }
 let ESC_BG = null;
 function escBackground() {
-  const c = document.createElement("canvas"); c.width = ESCAPE.W; c.height = ESCAPE.H; const x = c.getContext("2d");
+  const W = ESCAPE.W, H = ESCAPE.H, ry = ESCAPE.roadY, gx = ESCAPE.gateX;
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
   let sd = 9; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  const g = x.createLinearGradient(0, 0, ESCAPE.W, 0); g.addColorStop(0, "#4a3a2a"); g.addColorStop(1, "#2a1a20"); x.fillStyle = g; x.fillRect(0, 0, ESCAPE.W, ESCAPE.H);
-  for (let i = 0; i < 1400; i++) { x.fillStyle = R() < 0.5 ? "#5a4434" : "#20140f"; x.fillRect(R() * ESCAPE.W | 0, R() * ESCAPE.H | 0, 2, 2); }
-  for (let i = 0; i < 26; i++) { const px = R() * ESCAPE.W, py = R() < 0.5 ? 30 + R() * 120 : 290 + R() * 100; x.fillStyle = "#16110f"; x.fillRect(px, py, 10, 4); x.fillRect(px + 3, py - 5, 4, 5); }   // robot scrap
-  for (let i = 0; i < 10; i++) { const px = R() * ESCAPE.W, py = R() < 0.5 ? 20 + R() * 120 : 300 + R() * 90; x.fillStyle = "#2a2018"; x.fillRect(px, py, 4, 26); x.fillRect(px - 6, py + 6, 16, 3); }   // burned trees
-  const rg = x.createLinearGradient(0, 0, ESCAPE.W, 0); rg.addColorStop(0, "#9a7a52"); rg.addColorStop(1, "#5a4a46"); x.fillStyle = rg; x.fillRect(0, ESCAPE.roadY - 40, ESCAPE.W, 80);
-  x.fillStyle = "rgba(0,0,0,0.18)"; x.fillRect(0, ESCAPE.roadY + 34, ESCAPE.W, 6);
-  x.fillStyle = "#3a2e26"; for (let px = 0; px < ESCAPE.W; px += 22) { x.fillRect(px, ESCAPE.roadY - 14, 14, 3); x.fillRect(px + 8, ESCAPE.roadY + 12, 14, 3); }   // wheel ruts
-  // the fortress gate on the right
-  const I = "#140b14"; x.fillStyle = I; x.fillRect(ESCAPE.gateX + 10, 0, ESCAPE.W - ESCAPE.gateX - 10, ESCAPE.H); for (let by = 0; by < ESCAPE.H; by += 10) x.fillRect(ESCAPE.gateX + 4, by, 6, 6);
-  x.fillStyle = "#ff7a3a"; x.beginPath(); x.moveTo(ESCAPE.gateX + 10, ESCAPE.roadY + 40); x.lineTo(ESCAPE.gateX + 10, ESCAPE.roadY - 20); x.arc(ESCAPE.gateX + 30, ESCAPE.roadY - 20, 20, Math.PI, 0); x.lineTo(ESCAPE.gateX + 50, ESCAPE.roadY + 40); x.fill();
-  x.fillStyle = I; for (let gx = ESCAPE.gateX + 12; gx < ESCAPE.gateX + 50; gx += 6) x.fillRect(gx, ESCAPE.roadY - 30, 2, 70);
-  for (const wy of [60, 120, 300, 350]) { x.fillStyle = "#ff4a2a"; x.fillRect(ESCAPE.gateX + 30, wy, 6, 8); }
-  // your camp on the left
-  x.fillStyle = "#6a4a2a"; x.beginPath(); x.moveTo(0, 140); x.lineTo(28, 100); x.lineTo(56, 140); x.fill(); x.beginPath(); x.moveTo(0, 330); x.lineTo(28, 290); x.lineTo(56, 330); x.fill();
+  // scorched ground, a little greener near your camp
+  const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "#3e4a2a"); g.addColorStop(0.18, "#4a3a2a"); g.addColorStop(0.75, "#3a2620"); g.addColorStop(1, "#22141a"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 2200; i++) { x.fillStyle = R() < 0.5 ? "#5a4434" : "#1e140f"; x.fillRect(R() * W | 0, R() * H | 0, 2, 2); }
+  const offRoad = () => { let py; do { py = R() * H; } while (Math.abs(py - ry) < 52); return py; };
+  // a burned forest along both edges: black trunks and bare branches
+  for (let i = 0; i < 36; i++) { const px = R() * (gx - 40), py = R() < 0.5 ? 6 + R() * 60 : H - 70 + R() * 60, h = 20 + R() * 24;
+    x.fillStyle = "#120c0a"; x.fillRect(px, py - h, 4, h); x.fillRect(px - 6, py - h * 0.7, 8, 2); x.fillRect(px + 2, py - h * 0.5, 9, 2); x.fillRect(px - 3, py - h - 4, 2, 6);
+    if (R() < 0.3) { x.fillStyle = "#ff7a2a"; x.fillRect(px + 1, py - h * 0.4, 2, 2); } }   // still smouldering
+  // craters, ash drifts, broken fences and scattered robot scrap
+  for (let i = 0; i < 12; i++) { const px = 80 + R() * (gx - 160), py = offRoad(); x.fillStyle = "#170f0c"; x.beginPath(); x.ellipse(px, py, 16, 7, 0, 0, Math.PI * 2); x.fill(); x.strokeStyle = "#4a3428"; x.lineWidth = 2; x.stroke(); x.fillStyle = "rgba(255,120,60,0.25)"; x.fillRect(px - 3, py - 1, 6, 2); }
+  for (let i = 0; i < 20; i++) { const px = R() * W, py = offRoad(); x.fillStyle = "rgba(150,140,130,0.18)"; x.beginPath(); x.ellipse(px, py, 20, 5, 0, 0, Math.PI * 2); x.fill(); }
+  for (let px = 70; px < gx - 60; px += 26 + R() * 30) { if (R() < 0.35) continue; for (const fy of [ry - 50, ry + 46]) { x.fillStyle = "#3a2a1e"; x.fillRect(px, fy, 3, 12); x.fillRect(px + 14, fy + 2, 3, 10); x.fillRect(px, fy + 3, 17, 2); if (R() < 0.5) x.fillRect(px + 3, fy + 8, 10, 2); } }
+  for (let i = 0; i < 30; i++) { const px = R() * gx, py = offRoad(); x.fillStyle = "#121014"; x.fillRect(px, py, 10, 4); x.fillRect(px + 3, py - 5, 4, 5); x.fillStyle = "#4a4a56"; x.fillRect(px + 1, py, 3, 1); if (R() < 0.3) { x.fillStyle = "#e8b420"; x.fillRect(px + 6, py + 1, 2, 2); } }
+  // the road: packed dirt with edge stones, deep wheel ruts and puddles of oil, turning to iron near the factory
+  const rg = x.createLinearGradient(0, 0, W, 0); rg.addColorStop(0, "#9a7a52"); rg.addColorStop(0.7, "#6a5646"); rg.addColorStop(1, "#3a3036"); x.fillStyle = rg; x.fillRect(0, ry - 40, W, 80);
+  for (let px = 0; px < gx - 90; px += 8 + R() * 7) { x.fillStyle = R() < 0.5 ? "#6a5a48" : "#4a3c30"; x.fillRect(px, ry - 43, 6, 4); x.fillRect(px + 3, ry + 39, 6, 4); }
+  x.fillStyle = "rgba(0,0,0,0.18)"; x.fillRect(0, ry + 34, W, 6);
+  x.fillStyle = "#3a2e26"; for (let px = 0; px < W; px += 22) { x.fillRect(px, ry - 14, 14, 3); x.fillRect(px + 8, ry + 12, 14, 3); }   // wheel ruts
+  for (let i = 0; i < 6; i++) { const px = 120 + R() * (gx - 260), py = ry + (R() < 0.5 ? -26 : 24); x.fillStyle = "#0e0a10"; x.beginPath(); x.ellipse(px, py, 10, 4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(140,110,220,0.4)"; x.fillRect(px - 4, py - 1, 5, 1); }
+  for (let i = 0; i < 120; i++) { x.fillStyle = R() < 0.5 ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.14)"; x.fillRect(R() * (gx - 80), ry - 36 + R() * 72, 2, 2); }
+  x.fillStyle = "#3a3440"; x.fillRect(gx - 90, ry - 40, 92, 80); x.fillStyle = "#2a2430"; for (let px = gx - 86; px < gx; px += 14) x.fillRect(px, ry - 40, 1, 80);
+  for (let k = 0; k < 14; k++) { x.fillStyle = k % 2 ? "#e8b420" : "#16121a"; x.fillRect(gx - 92, ry - 40 + k * (80 / 14), 4, 80 / 14); }   // hazard line
+  // the Iron King's dark castle behind, and the convoy's destination: a huge dark factory whose door swallows the cages
+  const I = "#120a12", I2 = "#20121c"; x.fillStyle = I; x.fillRect(gx - 10, 0, W - gx + 10, H);
+  for (let by = 4; by < H; by += 9) for (let bx = gx - 8 + ((by / 9) % 2 ? 0 : 5); bx < W; bx += 11) { x.fillStyle = I2; x.fillRect(bx, by, 9, 7); }
+  for (const [tx, ty, tw, th] of [[gx - 40, 120, 30, 110], [gx - 6, 96, 26, 96], [gx + 26, 128, 30, 128], [gx - 40, H, 30, 104], [gx - 4, H, 24, 80], [gx + 26, H, 30, 112]]) {   // spiked towers above and below the factory
+    x.fillStyle = I; x.fillRect(tx, ty - th, tw, th); x.beginPath(); x.moveTo(tx - 3, ty - th); x.lineTo(tx + tw / 2, ty - th - 30); x.lineTo(tx + tw + 3, ty - th); x.fill();
+    for (let bx = tx; bx < tx + tw; bx += 6) x.fillRect(bx, ty - th - 3, 4, 3);
+    x.fillStyle = "rgba(255,110,60,0.35)"; x.fillRect(tx, ty - th, 2, th);
+    for (let wy = ty - th + 12; wy < ty - 10; wy += 30) { x.fillStyle = "#ff3a1a"; x.fillRect(tx + tw / 2 - 2, wy, 5, 8); x.fillStyle = "rgba(255,58,26,0.22)"; x.fillRect(tx + tw / 2 - 5, wy - 3, 11, 14); }
+  }
+  drawDarkFactory(x, gx, ry, 60, 150, 21);
+  ROBOT_FACTORIES_ESC.length = 0; ROBOT_FACTORIES_ESC.push({ x: gx, y: ry, w: 60, h: 150 });
+  // pipes and chains running into the castle
+  x.strokeStyle = "#2a2230"; x.lineWidth = 5; x.beginPath(); x.moveTo(gx + 58, ry - 40); x.lineTo(W, ry - 40); x.moveTo(gx + 58, ry + 50); x.lineTo(W, ry + 50); x.stroke();
+  // your camp on the left: tents and a banner
+  for (const [tx, ty, col] of [[0, 140, "#7a5a3a"], [0, 330, "#6a4a2a"], [40, 120, "#8a6a40"]]) { x.fillStyle = col; x.beginPath(); x.moveTo(tx, ty); x.lineTo(tx + 28, ty - 40); x.lineTo(tx + 56, ty); x.fill(); x.fillStyle = "#2a1a10"; x.beginPath(); x.moveTo(tx + 22, ty); x.lineTo(tx + 28, ty - 16); x.lineTo(tx + 34, ty); x.fill(); }
   x.fillStyle = "#5a3a1e"; x.fillRect(14, 150, 3, 50); x.fillStyle = "#2f8a3a"; x.fillRect(17, 150, 24, 14);
   return c;
 }
+const ROBOT_FACTORIES_ESC = [];
 function escDraw() {
   const cv = $("esc-cv"), x = cv.getContext("2d"); x.imageSmoothingEnabled = false;
   if (!ESC_BG) ESC_BG = escBackground(); x.drawImage(ESC_BG, 0, 0);
+  { const keep = ROBOT_FACTORIES.slice(); ROBOT_FACTORIES.length = 0; ROBOT_FACTORIES.push(...ROBOT_FACTORIES_ESC); drawFactorySmoke(x, E.t); ROBOT_FACTORIES.length = 0; ROBOT_FACTORIES.push(...keep); }
   if (E.chargeT > 0) { x.fillStyle = `rgba(255,211,77,${0.08 + 0.06 * Math.sin(E.t * 12)})`; x.fillRect(0, 0, ESCAPE.W, ESCAPE.H); }
   const ry = ESCAPE.roadY;
   // the chain linking the convoy
