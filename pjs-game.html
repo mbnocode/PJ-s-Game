@@ -4379,7 +4379,7 @@ function drawLavaSquare(x, tx, ty) {
 }
 // The dirt path, drawn as one bumpy, curvy strip instead of square tiles.
 function makePathLayer(map) {
-  const W = 320, H = 192, mask = new Uint8Array(W * H);
+  const W = map.pw || 320, H = map.ph || 192, mask = new Uint8Array(W * H);   // (pw/ph: the Iron Lands use other sizes)
   let sd = map.total | 0;
   const R = () => (sd = (sd * 16807 + 11) % 2147483647) / 2147483647;
   const a = R() * 6, b = R() * 6, c = R() * 6;
@@ -8119,10 +8119,16 @@ const BATTLES = {
   smog: { id: "smog", title: "🏭 The Smog Factories", camp: 280, fort: 9600, factories: 3200, startLeaves: 170, lps: 13, armor: 10, bossKind: "foreman", waveMult: 1.3, bossFirst: 50, bossEvery: 60, starsFor: [190, 130, 0],
     pool: (t) => t < 20 ? ["clanker", "walker", "scout"] : t < 60 ? ["walker", "tesla", "scout", "clanker", "tank"] : ["walker", "tesla", "tank", "tank", "scout", "walker"],
     smog: { from: 250, see: 70, seeFly: 150 },
+    // sharp turns: the top road dips down and back, the middle road drops down later, the bottom road snakes
+    curve: (i, x) => x > 446 ? 0 : i === 0 ? 30 * (smoothStep(130, 175, x) - smoothStep(300, 345, x))
+      : i === 1 ? 28 * (smoothStep(215, 260, x) - smoothStep(395, 440, x))
+      : -20 * Math.sin(Math.PI * 2 * Math.max(0, Math.min(1, (x - 90) / 340))) * (x < 90 ? 0 : 1),
     back: "iron", help: "Thick smog hides the robots: animals only see robots near them, but Owls and Night Owls clear a big patch. Each road has its own factory: wreck it and that road stops sending robots. Wreck all three to win! The factory guards are IRON-PLATED too (each hit does 10 less). Watch out for the Foreman's crane." },
   bridge: { id: "bridge", title: "🌉 The Iron Bridge", camp: 260, fort: 2400, startLeaves: 160, lps: 12, armor: 10, bossFirst: 60, bossEvery: 70,
     pool: (t) => t < 20 ? ["clanker", "clanker", "walker"] : t < 60 ? ["clanker", "walker", "tesla", "scout", "walker"] : ["walker", "tesla", "tank", "walker", "scout", "tank"],
     drawbridge: { x0: 300, x1: 380, every: 22, up: 6, warn: 3 },
+    // twisty roads through the meadow, then dead straight across the bridge (and onto the iron plates)
+    curve: (i, x) => { const t = Math.max(0, Math.min(1, (x - 84) / 168)); return x > 252 ? 0 : i === 0 ? 26 * Math.sin(2 * Math.PI * t) : i === 1 ? -24 * Math.sin(Math.PI * t) : -26 * Math.sin(2 * Math.PI * t); },
     starsFor: [180, 120, 0],   // finish within this much camp health lost... (see marchEnd)
     back: "iron", help: "The bridge guards are IRON-PLATED: each hit does 10 less damage, so weak hits just bounce off. Army Upgrades help you break through! Watch the drawbridge: when it rises, anything on it falls into the lava (flyers are safe)." },
 };
@@ -8136,7 +8142,7 @@ function startMarch(which, diffKey) {
   ixStart(M, cfg.id ? diffKey : "normal"); ARMY_SPAN = { x0: 70, x1: 532 };
   if (cfg.factories) M.fac = [cfg.factories, cfg.factories, cfg.factories];
   if (!SPR.foreman) makeForemanSprite();
-  natureInit(M, 640, 384, 236, 524, (px, py) => MARCH.lanes.some((ly) => Math.abs(py - ly) < 22) || (cfg.drawbridge && px > 258 && px < 422));
+  natureInit(M, 640, 384, 236, 524, (px, py) => nearRoad(px, py, 22) || (cfg.drawbridge && px > 258 && px < 422));
   M.bg = cfg.drawbridge ? bridgeBackground() : marchBackground();
   $("march-title").innerHTML = cfg.title; $("march-help").textContent = cfg.help;
   $("march-end").hidden = true; show("s-march"); marchButtons(); Sound.init(); Sound.play("horn");
@@ -8160,6 +8166,31 @@ function makeForemanSprite() {
     x.fillStyle = "rgba(20,16,20,0.6)"; for (let i = -c.height; i < c.width; i += Math.max(3, c.width / 6)) { x.beginPath(); x.moveTo(i, c.height * 0.62); x.lineTo(i + c.width / 12, c.height * 0.62); x.lineTo(i + c.width / 12 + c.width / 20, c.height * 0.7); x.lineTo(i + c.width / 20, c.height * 0.7); x.fill(); }   // a hazard stripe
     dst.foreman = c;
   }
+}
+/* ---------- IRON LANDS ROADS: the same dirt road as the very first level (The Meadow), painted by makePathLayer.
+   Each lanes battle can bend its roads with cfg.curve(road, x) (how far up or down the road is at x). ---------- */
+const smoothStep = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+function roadY(i, x) { return MARCH.lanes[i] + (M && M.cfg && M.cfg.curve ? M.cfg.curve(i, x) : 0); }
+function laneHighlight(i) {   // a see-through yellow band with a bright outline, along road i
+  const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
+  const line = () => { x.beginPath(); for (let px = 72; px <= 526; px += 4) { const py = roadY(i, px); px === 72 ? x.moveTo(px, py) : x.lineTo(px, py); } };
+  x.lineJoin = "round"; x.lineCap = "butt";
+  line(); x.strokeStyle = "rgba(255,211,77,0.75)"; x.lineWidth = 42; x.stroke();
+  x.globalCompositeOperation = "destination-out"; line(); x.strokeStyle = "#000"; x.lineWidth = 38; x.stroke();
+  x.globalCompositeOperation = "source-over"; line(); x.strokeStyle = "rgba(255,211,77,0.16)"; x.lineWidth = 38; x.stroke();
+  return c;
+}
+function nearRoad(px, py, d) { return [0, 1, 2].some((i) => Math.abs(roadY(i, px) - py) < d); }
+// a road as straight little pieces, the way makePathLayer wants it
+function ironPath(pts) {
+  const segs = []; let total = 0;
+  for (let k = 1; k < pts.length; k++) { const a = pts[k - 1], b = pts[k], len = Math.hypot(b.x - a.x, b.y - a.y); segs.push({ a, b, start: total, len }); total += len; }
+  return { segs, total };
+}
+// meadow road picture for roads given in big-canvas pixels (scale 2: each road pixel is 2x2, like on The Meadow)
+function meadowRoads(W, H, lines, seed) {
+  const paths = lines.map((pts) => ironPath(pts.map((p) => ({ x: p.x, y: p.y }))));
+  return makePathLayer({ theme: "meadow", pw: W / 2, ph: H / 2, total: paths[0].total + seed, segs: paths[0].segs, paths });   // (segs: the pebbles get scattered along the first road)
 }
 // the roads whose factory is still standing (in the Smog Factories; every road otherwise)
 function marchLanesOpen() { const open = [0, 1, 2].filter((i) => !M.fac || M.fac[i] > 0); return open.length ? open : [0, 1, 2]; }
@@ -8464,20 +8495,19 @@ function marchBackground() {
   // meadow details: grass tufts, flowers, bushes and rocks
   for (let i = 0; i < 70; i++) { const px = R() * 260, py = R() * 384; x.fillStyle = "#6cc85a"; x.fillRect(px, py, 1, 4); x.fillRect(px + 2, py + 1, 1, 3); x.fillRect(px - 2, py + 1, 1, 3); }
   for (let i = 0; i < 30; i++) { const px = R() * 240, py = R() * 384; x.fillStyle = ["#ffd34d", "#ff8ac8", "#ffffff", "#9ad0ff"][i % 4]; x.fillRect(px, py, 2, 2); }
-  for (let i = 0; i < 9; i++) { const px = 80 + R() * 170, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 30)) continue; x.fillStyle = "#2a6a28"; x.beginPath(); x.arc(px, py, 9, 0, Math.PI * 2); x.arc(px + 8, py + 2, 7, 0, Math.PI * 2); x.fill(); x.fillStyle = "#3f8a3a"; x.beginPath(); x.arc(px - 2, py - 3, 5, 0, Math.PI * 2); x.fill(); }
-  for (let i = 0; i < 14; i++) { const px = R() * 520, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#6a6a70"; x.fillRect(px, py, 8, 5); x.fillStyle = "#8a8a92"; x.fillRect(px + 1, py, 5, 2); }
+  for (let i = 0; i < 9; i++) { const px = 80 + R() * 170, py = R() * 384; if (nearRoad(px, py, 30)) continue; x.fillStyle = "#2a6a28"; x.beginPath(); x.arc(px, py, 9, 0, Math.PI * 2); x.arc(px + 8, py + 2, 7, 0, Math.PI * 2); x.fill(); x.fillStyle = "#3f8a3a"; x.beginPath(); x.arc(px - 2, py - 3, 5, 0, Math.PI * 2); x.fill(); }
+  for (let i = 0; i < 14; i++) { const px = R() * 520, py = R() * 384; if (nearRoad(px, py, 26)) continue; x.fillStyle = "#6a6a70"; x.fillRect(px, py, 8, 5); x.fillStyle = "#8a8a92"; x.fillRect(px + 1, py, 5, 2); }
   // the in-between: burnt stumps and patches of dead grass
-  for (let i = 0; i < 10; i++) { const px = 290 + R() * 110, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#2a1e16"; x.fillRect(px, py, 6, 8); x.fillStyle = "#4a3624"; x.fillRect(px, py, 6, 2); }
+  for (let i = 0; i < 10; i++) { const px = 290 + R() * 110, py = R() * 384; if (nearRoad(px, py, 26)) continue; x.fillStyle = "#2a1e16"; x.fillRect(px, py, 6, 8); x.fillStyle = "#4a3624"; x.fillRect(px, py, 6, 2); }
   // robot land: craters, oil puddles, scrap and pipes
-  for (let i = 0; i < 8; i++) { const px = 400 + R() * 140, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 30)) continue; x.fillStyle = "#1a1014"; x.beginPath(); x.ellipse(px, py, 12, 6, 0, 0, Math.PI * 2); x.fill(); x.strokeStyle = "#4a3430"; x.lineWidth = 2; x.stroke(); }
-  for (let i = 0; i < 8; i++) { const px = 380 + R() * 160, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#0a080e"; x.beginPath(); x.ellipse(px, py, 9, 4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(120,90,200,0.35)"; x.fillRect(px - 3, py - 1, 4, 1); }
-  for (let i = 0; i < 16; i++) { const px = 360 + R() * 190, py = R() * 384; if (MARCH.lanes.some((ly) => Math.abs(ly - py) < 26)) continue; x.fillStyle = "#121014"; x.fillRect(px, py, 9, 3); x.fillRect(px + 3, py - 4, 3, 4); x.fillStyle = "#3a3a44"; x.fillRect(px + 1, py, 3, 1); }
-  // the roads: dirt with edge stones, wheel ruts and pebbles, turning into iron plating near the factories
+  for (let i = 0; i < 8; i++) { const px = 400 + R() * 140, py = R() * 384; if (nearRoad(px, py, 30)) continue; x.fillStyle = "#1a1014"; x.beginPath(); x.ellipse(px, py, 12, 6, 0, 0, Math.PI * 2); x.fill(); x.strokeStyle = "#4a3430"; x.lineWidth = 2; x.stroke(); }
+  for (let i = 0; i < 8; i++) { const px = 380 + R() * 160, py = R() * 384; if (nearRoad(px, py, 26)) continue; x.fillStyle = "#0a080e"; x.beginPath(); x.ellipse(px, py, 9, 4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(120,90,200,0.35)"; x.fillRect(px - 3, py - 1, 4, 1); }
+  for (let i = 0; i < 16; i++) { const px = 360 + R() * 190, py = R() * 384; if (nearRoad(px, py, 26)) continue; x.fillStyle = "#121014"; x.fillRect(px, py, 9, 3); x.fillRect(px + 3, py - 4, 3, 4); x.fillStyle = "#3a3a44"; x.fillRect(px + 1, py, 3, 1); }
+  // the roads: the same dirt road as The Meadow (following each battle's curves), turning into iron plating near the factories
+  const lines = [];
+  for (let i = 0; i < 3; i++) for (const off of [-4, 4]) { const pts = []; for (let px = 56; px <= 540; px += 4) pts.push({ x: px, y: roadY(i, px) + off }); lines.push(pts); }
+  x.imageSmoothingEnabled = false; x.drawImage(meadowRoads(640, 384, lines, 31 + (M && M.cfg.id ? M.cfg.id.length * 7 : 0)), 0, 0, 640, 384);
   for (const y of MARCH.lanes) {
-    const rg = x.createLinearGradient(70, 0, 530, 0); rg.addColorStop(0, "#b8915a"); rg.addColorStop(0.55, "#8a7458"); rg.addColorStop(0.8, "#4a3e44"); rg.addColorStop(1, "#2e2832"); x.fillStyle = rg; x.fillRect(70, y - 18, 460, 36);
-    for (let px = 72; px < 470; px += 7 + R() * 6) { x.fillStyle = R() < 0.5 ? "#7a6a54" : "#5a4a3a"; x.fillRect(px, y - 20, 5, 3); x.fillRect(px + 2, y + 17, 5, 3); }   // edge stones
-    x.fillStyle = "rgba(0,0,0,0.14)"; x.fillRect(70, y - 8, 460, 2); x.fillRect(70, y + 6, 460, 2);   // wheel ruts
-    for (let i = 0; i < 50; i++) { x.fillStyle = R() < 0.5 ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.14)"; x.fillRect(70 + R() * 400, y - 15 + R() * 30, 2, 2); }
     x.fillStyle = "#3a3440"; x.fillRect(452, y - 18, 78, 36); x.fillStyle = "#2a2430"; for (let px = 456; px < 530; px += 12) x.fillRect(px, y - 18, 1, 36); x.fillStyle = "#6a6470"; for (let px = 458; px < 530; px += 12) { x.fillRect(px, y - 15, 2, 2); x.fillRect(px, y + 13, 2, 2); }   // iron plates
     for (let k = 0; k < 6; k++) { x.fillStyle = k % 2 ? "#e8b420" : "#16121a"; x.fillRect(452, y - 18 + k * 6, 3, 6); }   // hazard line where robot land starts
   }
@@ -8592,6 +8622,10 @@ function marchUpdate(dt) {
     const sees = M.units.filter((a) => a.side === 0 && a.hp > 0);
     for (const o of M.units) if (o.side === 1) o.seen = o.x < C.smog.from || sees.some((a) => Math.hypot(a.x - o.x, a.y - o.y) < (a.kind === "air" || a.kind === "nightowl" ? C.smog.seeFly : C.smog.see));
   }
+  for (const u of M.units) {   // everyone walks along their own (maybe curvy) road
+    if (u.jy === undefined) u.jy = Math.max(-6, Math.min(6, u.y - MARCH.lanes[u.lane]));
+    u.y = roadY(u.lane, u.x) + u.jy;
+  }
   for (const u of M.units) {
     if (u.hp <= 0) continue;
     const S = uStats(u), dir = u.side ? -1 : 1, charge = !u.side && M.chargeT > 0;
@@ -8599,7 +8633,7 @@ function marchUpdate(dt) {
     if (u.frozenT > 0) { u.frozenT -= dt; continue; }   // frozen solid: can't move or attack
     if (!u.side && M.fac && M.fac[u.lane] <= 0) {   // this road's factory is wrecked: march over to a road that still has one
       const open = marchLanesOpen(); const to = open.reduce((a, b) => Math.abs(b - u.lane) < Math.abs(a - u.lane) ? b : a, open[0]);
-      if (M.fac[to] > 0) { u.lane = to; u.y = MARCH.lanes[to] + (Math.random() * 10 - 5); }
+      if (M.fac[to] > 0) { u.lane = to; u.jy = Math.random() * 10 - 5; u.y = roadY(to, u.x) + u.jy; }
     }
     if (u.side && S.grab) {   // the Foreman's crane: grabs the animal farthest along its road and drops it back at your camp
       u.grabT = (u.grabT ?? 3) - dt;
@@ -8694,7 +8728,8 @@ function marchDraw() {
       else { x.strokeStyle = M.bridgeWarn && Math.floor(M.t * 6) % 2 ? "#ff5a3a" : "#16121a"; x.lineWidth = 3; x.strokeRect(DB.x0, y - 20, DB.x1 - DB.x0, 40); }
     }
   }
-  const ly = MARCH.lanes[M.lane]; x.fillStyle = "rgba(255,211,77,0.16)"; x.fillRect(70, ly - 20, 458, 40); x.strokeStyle = "rgba(255,211,77,0.7)"; x.lineWidth = 2; x.strokeRect(70, ly - 20, 458, 40);   // the road you're sending to
+  const ly = MARCH.lanes[M.lane];   // the road you're sending to: a glowing band that follows its bends
+  M.hl = M.hl || []; if (!M.hl[M.lane]) M.hl[M.lane] = laneHighlight(M.lane); x.drawImage(M.hl[M.lane], 0, 0);
   x.drawImage(SPR.healer, 40, ly - 30, 40, 40);   // General Antler stands at the start of the chosen road
   if (M.chargeT > 0) { x.fillStyle = `rgba(255,211,77,${0.08 + 0.06 * Math.sin(M.t * 12)})`; x.fillRect(0, 0, 640, 384); }
   const sorted = [...M.units].sort((a, b) => a.y - b.y);
@@ -8779,8 +8814,7 @@ document.addEventListener("keydown", (e) => {
 $("march-cv").addEventListener("pointermove", (e) => { if (M) M.mouse = ixCanvasPos(e, e.currentTarget); });
 $("march-cv").addEventListener("pointerdown", (e) => {   // tap a road to pick it (or grab a leaf, or drop a Freeze / Mega Fireball)
   if (!M) return; const p = ixCanvasPos(e, e.currentTarget); M.mouse = p; if (ixClick(M, p.x, p.y)) return;
-  const r = e.currentTarget.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * 384;
-  let bi = 0; MARCH.lanes.forEach((ly, i) => { if (Math.abs(ly - y) < Math.abs(MARCH.lanes[bi] - y)) bi = i; }); M.lane = bi;
+  let bi = 0; [0, 1, 2].forEach((i) => { if (Math.abs(roadY(i, p.x) - p.y) < Math.abs(roadY(bi, p.x) - p.y)) bi = i; }); M.lane = bi;
 });
 $("march-pause").onclick = () => { if (M) M.paused = !M.paused; };
 $("march-speed").onclick = () => { if (M) M.speed = M.speed === 1 ? 2 : M.speed === 2 ? 3 : 1; };
@@ -9127,12 +9161,10 @@ function escBackground() {
   for (let px = 70; px < gx - 60; px += 26 + R() * 30) { if (R() < 0.35) continue; for (const fy of [ry - 50, ry + 46]) { x.fillStyle = "#3a2a1e"; x.fillRect(px, fy, 3, 12); x.fillRect(px + 14, fy + 2, 3, 10); x.fillRect(px, fy + 3, 17, 2); if (R() < 0.5) x.fillRect(px + 3, fy + 8, 10, 2); } }
   for (let i = 0; i < 30; i++) { const px = R() * gx, py = offRoad(); x.fillStyle = "#121014"; x.fillRect(px, py, 10, 4); x.fillRect(px + 3, py - 5, 4, 5); x.fillStyle = "#4a4a56"; x.fillRect(px + 1, py, 3, 1); if (R() < 0.3) { x.fillStyle = "#e8b420"; x.fillRect(px + 6, py + 1, 2, 2); } }
   // the road: packed dirt with edge stones, deep wheel ruts and puddles of oil, turning to iron near the factory
-  const rg = x.createLinearGradient(0, 0, W, 0); rg.addColorStop(0, "#9a7a52"); rg.addColorStop(0.7, "#6a5646"); rg.addColorStop(1, "#3a3036"); x.fillStyle = rg; x.fillRect(0, ry - 40, W, 80);
-  for (let px = 0; px < gx - 90; px += 8 + R() * 7) { x.fillStyle = R() < 0.5 ? "#6a5a48" : "#4a3c30"; x.fillRect(px, ry - 43, 6, 4); x.fillRect(px + 3, ry + 39, 6, 4); }
-  x.fillStyle = "rgba(0,0,0,0.18)"; x.fillRect(0, ry + 34, W, 6);
-  x.fillStyle = "#3a2e26"; for (let px = 0; px < W; px += 22) { x.fillRect(px, ry - 14, 14, 3); x.fillRect(px + 8, ry + 12, 14, 3); }   // wheel ruts
+  // (the same dirt road as The Meadow: three road-widths side by side make it wide enough for the convoy)
+  { const lines = [-24, -8, 8, 24].map((off) => { const pts = []; for (let px = -16; px <= gx - 60; px += 8) pts.push({ x: px, y: ry + off }); return pts; });
+    x.imageSmoothingEnabled = false; x.drawImage(meadowRoads(W, H, lines, 57), 0, 0, W, H); }
   for (let i = 0; i < 6; i++) { const px = 120 + R() * (gx - 260), py = ry + (R() < 0.5 ? -26 : 24); x.fillStyle = "#0e0a10"; x.beginPath(); x.ellipse(px, py, 10, 4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(140,110,220,0.4)"; x.fillRect(px - 4, py - 1, 5, 1); }
-  for (let i = 0; i < 120; i++) { x.fillStyle = R() < 0.5 ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.14)"; x.fillRect(R() * (gx - 80), ry - 36 + R() * 72, 2, 2); }
   x.fillStyle = "#3a3440"; x.fillRect(gx - 90, ry - 40, 92, 80); x.fillStyle = "#2a2430"; for (let px = gx - 86; px < gx; px += 14) x.fillRect(px, ry - 40, 1, 80);
   for (let k = 0; k < 14; k++) { x.fillStyle = k % 2 ? "#e8b420" : "#16121a"; x.fillRect(gx - 92, ry - 40 + k * (80 / 14), 4, 80 / 14); }   // hazard line
   // the Iron King's dark castle behind, and the convoy's destination: a huge dark factory whose door swallows the cages
