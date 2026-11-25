@@ -410,6 +410,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .army-card canvas { width: 48px; height: 48px; image-rendering: pixelated; flex: none; }
 .army-card .army-info { flex: 1; min-width: 0; } .army-card .k { font-family: var(--display); font-size: 17px; }
 .army-card .pips { color: #ffd34d; letter-spacing: 1px; font-size: 13px; } .army-card .pips .muted { letter-spacing: 0; margin-left: 4px; }
+.army-card .army-special { font-size: 12px; color: #ffd34d; margin-top: 2px; }
 .army-card button { min-width: 92px; } .army-card button small { font-size: 12px; }
 .acorn-cost { display: inline-flex; align-items: center; gap: 3px; } .acorn-cost::before { content: ""; width: 1em; height: 1.12em; background: var(--acorn) center / contain no-repeat; display: inline-block; }
 #army-acorns .acorns { justify-content: center; font-size: 22px; }
@@ -8023,15 +8024,15 @@ const ARMY = {
   plant:    { name: "Tree Giant",   cost: 70,  hp: 300, dmg: 13, range: 28,  rate: 1.1, speed: 22, sound: "plant" },
   air:      { name: "Owl",          cost: 40,  hp: 45,  dmg: 9,  range: 85,  rate: 0.7, speed: 58, shot: "#d6ecff", fly: true, sound: "air" },
   crab:     { name: "Crab",         cost: 55,  hp: 95,  dmg: 11, range: 75,  rate: 1.2, speed: 30, splash: 34, shot: "#f4e2b8", sound: "crab" },
-  squirrel: { name: "Squirrel",     cost: 30,  hp: 50,  dmg: 6,  range: 26,  rate: 0.5, speed: 52, sound: "crab" },
-  wizard:   { name: "Wizard",       cost: 60,  hp: 60,  dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", sound: "hacked" },
-  healer:   { name: "Healer Deer",  cost: 80,  hp: 120, dmg: 0,  heal: 14, range: 90, rate: 1.5, speed: 26, sound: "healer" },
-  pegasus:  { name: "Pegasus",      cost: 120, hp: 120, dmg: 14, range: 120, rate: 0.9, speed: 45, shot: "#fff3a0", fly: true, multi: 3, sound: "pegasus" },
-  nightowl: { name: "Night Owl",    cost: 90,  hp: 70,  dmg: 12, range: 110, rate: 0.6, speed: 50, shot: "#a8b8ff", fly: true, multi: 2, sound: "nightowl" },
+  squirrel: { name: "Squirrel",     cost: 30,  hp: 50,  dmg: 6,  range: 26,  rate: 0.5, speed: 52, stash: 5, sound: "crab" },   // each Squirrel on the map: floating maple leaves give 5 more
+  wizard:   { name: "Wizard",       cost: 60,  hp: 60,  dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", aura: 90, sound: "hacked" },   // animals near a Wizard do 2x damage
+  healer:   { name: "Healer Deer",  cost: 80,  hp: 450, dmg: 0,  heal: 14, range: 90, rate: 1.5, speed: 26, sound: "healer" },
+  pegasus:  { name: "Pegasus",      cost: 120, hp: 120, dmg: 14, range: 120, rate: 0.9, speed: 75, shot: "#fff3a0", fly: true, multi: 3, sound: "pegasus" },
+  nightowl: { name: "Night Owl",    cost: 90,  hp: 70,  dmg: 12, range: 110, rate: 0.6, speed: 80, shot: "#a8b8ff", fly: true, multi: 2, farther: true, sound: "nightowl" },   // hits harder the farther along the road it is (up to 3x)
   hacked:   { name: "Hacked Robot", cost: 85,  hp: 110, dmg: 13, range: 100, rate: 0.8, speed: 30, shot: "#7ff3ff", push: 14, sound: "hacked" },
   wolf:     { name: "Wolf",         cost: 75,  hp: 130, dmg: 15, range: 26,  rate: 0.6, speed: 50, pack: true, sound: "wolf" },
   hydra:    { name: "Hydra",        cost: 140, hp: 220, dmg: 13, range: 50,  rate: 0.8, speed: 28, multi: 3, sound: "plant" },
-  phoenix:  { name: "Phoenix",      cost: 160, hp: 150, dmg: 15, range: 95,  rate: 0.9, speed: 46, shot: "#ffb347", fly: true, splash: 30, sound: "phoenix" },
+  phoenix:  { name: "Phoenix",      cost: 160, hp: 150, dmg: 15, range: 95,  rate: 0.9, speed: 46, shot: "#ffb347", fly: true, splash: 30, rebirth: true, sound: "phoenix" },   // comes back once: half health, double speed
   kraken:   { name: "Kraken",       cost: 180, hp: 420, dmg: 15, range: 40,  rate: 1.2, speed: 20, splash: 40, sound: "kraken" },
 };
 const ARMY_UP = { costs: [100, 200, 350, 550, 800], dmg: 7, hp: 0.2, heal: 5 };   // each upgrade: +7 damage, +20% health (Healer: +5 healing)
@@ -8045,11 +8046,24 @@ function armyRoster() {   // the soldiers you can send (towers you've unlocked),
   for (const k of Object.keys(ARMY)) { all[k] = armyStats(k); if (towerUnlocked(k)) have[k] = all[k]; }
   MARCH.all = all; MARCH.animals = have;
 }
-// how hard an animal hits: its damage, plus the Wolf pack bonus, minus the robot's armor, then doubled by Antler's Charge
+// how hard an animal hits: its damage, + 5 for every other Wolf on the map (Wolves), x up to 3 the farther along the road (Night Owl),
+// x 2 next to a Wizard, minus the robot's armor, then doubled by Antler's Charge
+let ARMY_SPAN = { x0: 70, x1: 532 };   // where the road starts and ends in the current battle (for the Night Owl)
 function armyDamage(u, S, armor, units, charge) {
   let d = S.dmg;
-  if (S.pack) d += 2 * Math.min(1, units.filter((o) => o !== u && o.side === u.side && o.kind === "wolf" && o.hp > 0 && Math.abs(o.x - u.x) < 44 && Math.abs(o.y - u.y) < 40).length);
-  return Math.max(0, d - (armor || 0)) * (charge ? 2 : 1);
+  if (S.pack) d += 5 * units.filter((o) => o !== u && o.side === u.side && o.kind === "wolf" && o.hp > 0).length;
+  if (S.farther) d *= 1 + 2 * Math.max(0, Math.min(1, (u.x - ARMY_SPAN.x0) / (ARMY_SPAN.x1 - ARMY_SPAN.x0)));
+  if (units.some((o) => o !== u && o.side === u.side && o.kind === "wizard" && o.hp > 0 && (o.lane === undefined || o.lane === u.lane) && Math.abs(o.x - u.x) <= ARMY.wizard.aura)) d *= 2;
+  return Math.round(Math.max(0, d - (armor || 0)) * (charge ? 2 : 1));
+}
+// the Phoenix rises from its ashes once: half its health, but twice as fast
+function armyRebirth(B) {
+  for (const u of B.units) if (u.side === 0 && u.hp <= 0 && !u.fell && u.kind === "phoenix" && !u.reborn) {
+    u.reborn = true; u.hp = u.max / 2; u.speedMult = 2;
+    B.fx.push({ text: "Reborn!", x: u.x, y: u.y - 34, t: 1.4, c: "#ffb347" });
+    for (let i = 0; i < 14; i++) B.fx.push({ spark: true, x: u.x + Math.random() * 30 - 15, y: u.y + Math.random() * 30 - 25, t: 0.6, c: i % 2 ? "#ff8a3a" : "#ffd34d" });
+    Sound.play("phoenix");
+  }
 }
 const MARCH = {
   lanes: [104, 196, 288],
@@ -8083,7 +8097,7 @@ function startMarch(which, diffKey) {
   armyRoster(); cancelAnimationFrame(ironRaf); if (M) cancelAnimationFrame(M.raf);
   M = { cfg, t: 0, leaves: cfg.startLeaves, camp: cfg.camp, fort: cfg.fort, lane: 1, units: [], fx: [], wave: 0, waveAt: 4, queue: [], next: null,
         chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0, bridgeUp: false, bridgeT: 0 };
-  ixStart(M, cfg.id ? diffKey : "normal");
+  ixStart(M, cfg.id ? diffKey : "normal"); ARMY_SPAN = { x0: 70, x1: 532 };
   M.bg = cfg.drawbridge ? bridgeBackground() : marchBackground();
   $("march-title").innerHTML = cfg.title; $("march-help").textContent = cfg.help;
   $("march-end").hidden = true; show("s-march"); marchButtons(); Sound.init(); Sound.play("horn");
@@ -8155,7 +8169,8 @@ function ixUpdate(B, dt, W, H) {
   }
 }
 function ixCollect(B, part, vac) {
-  const amt = Math.max(1, Math.round(SETTINGS.bonusLeaf.leaves * (part || 1))); B.leaves += amt;
+  const squirrels = B.units.filter((u) => u.side === 0 && u.kind === "squirrel" && u.hp > 0).length;   // every Squirrel on the map adds 5
+  const amt = Math.max(1, Math.round((SETTINGS.bonusLeaf.leaves + ARMY.squirrel.stash * squirrels) * (part || 1))); B.leaves += amt;
   B.fx.push({ text: (vac ? "Vroom! +" : "+") + amt, x: B.leaf.x, y: B.leaf.y - 10, t: 1, c: "#ffd34d" });
   for (let i = 0; i < 8; i++) B.fx.push({ spark: true, x: B.leaf.x + Math.random() * 20 - 10, y: B.leaf.y + Math.random() * 20 - 10, t: 0.4, c: "#ffb347" });
   B.leaf = null; Sound.play("heal");
@@ -8505,11 +8520,12 @@ function marchUpdate(dt) {
         else { const d = armyDamage(u, S, C.armor, M.units, charge); M.fort -= d; if (!d) M.fx.push({ text: "Clank!", x: 560, y: u.y - 20, t: 0.6, c: "#c8d0e0" }); if (S.sound) Sound.play(S.sound); }
         M.fx.push({ spark: true, x: u.side ? 66 : 530, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
     } else {
-      let nx = u.x + dir * S.speed * (u.side ? M.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+      let nx = u.x + dir * S.speed * (u.speedMult || 1) * (u.side ? M.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
       if (DB && M.bridgeUp && !S.fly) { if (dir > 0 && u.x < DB.x0 && nx >= DB.x0 - 6) nx = DB.x0 - 6; if (dir < 0 && u.x > DB.x1 && nx <= DB.x1 + 6) nx = DB.x1 + 6; }   // wait at the edge
       u.x = nx;
     }
   }
+  armyRebirth(M);
   for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) M.killPts += Math.round(u.max); if (u.side && !u.fell) M.leaves += 8; if (!u.fell) for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   M.units = M.units.filter((u) => !u.gone);
   for (const f of M.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
@@ -8775,6 +8791,13 @@ $("iron-cv").addEventListener("pointerdown", (e) => {   // tap a battle: it's no
   if (p) { Sound.play("nope"); $("iron-info").textContent = p.king ? "General Antler: “The Iron King's Fortress… one day, hero. We'll need every animal in the land for that fight.”" : `General Antler: “${p.name}? Our scouts are still out there. That battle is coming soon!”`; }
 });
 $("b-iron").onclick = openIronLands;
+const ARMY_SPECIAL = {
+  water: "Slows the robots it licks", crab: "Splash damage", healer: "Heals hurt animals near it, and is very tough",
+  pegasus: "Hits 3 robots at once, and flies fast", nightowl: "Hits 2 robots at once and flies fast. Hits harder the farther along the road it gets (up to 3x)",
+  hacked: "Knocks robots backward", wolf: "Every other Wolf on the map gives it +5 damage", hydra: "Bites 3 robots at once",
+  phoenix: "Splash damage. When it falls, it's reborn once with half its health and double speed", kraken: "Very tough, with splash damage",
+  wizard: "Animals near a Wizard do 2x damage", squirrel: "Every Squirrel on the map makes floating maple leaves worth 5 more",
+};
 function openArmy() { cancelAnimationFrame(ironRaf); renderArmy(); show("s-army"); }
 function renderArmy() {
   const s = slot(), grid = $("army-grid"); grid.innerHTML = ""; s.army = s.army || {};
@@ -8786,7 +8809,8 @@ function renderArmy() {
     card.appendChild(c);
     card.insertAdjacentHTML("beforeend", `<div class="army-info"><div class="k">${st.name}</div>
       <div class="pips">${"<b>■</b>".repeat(L)}${"□".repeat(max - L)} <span class="muted">Level ${L}</span></div>
-      <div class="muted">${st.heal ? `Heals ${st.heal}` : `Damage ${st.dmg}`} · Health ${st.hp}${ARMY[k].fly ? " · Flies" : ""}${ARMY[k].multi ? ` · Hits ${ARMY[k].multi} at once` : ""}${ARMY[k].splash ? " · Splash" : ""}</div></div>`);
+      <div class="muted">${st.heal ? `Heals ${st.heal}` : `Damage ${st.dmg}`} · Health ${st.hp}${ARMY[k].fly ? " · Flies" : ""}${ARMY[k].multi ? ` · Hits ${ARMY[k].multi} at once` : ""}${ARMY[k].splash ? " · Splash" : ""}</div>
+      ${ARMY_SPECIAL[k] ? `<div class="army-special">✨ ${ARMY_SPECIAL[k]}</div>` : ""}</div>`);
     const b = document.createElement("button"); b.id = "army-up-" + k;
     if (L >= max) { b.textContent = "MAX"; b.disabled = true; }
     else { b.className = "go"; b.innerHTML = `Upgrade<br><small class="acorn-cost">${cost}</small>`; b.disabled = (s.acorns || 0) < cost;
@@ -8819,7 +8843,7 @@ function startEscape(diffKey) {
   const carts = []; for (let i = 0; i < ESCAPE.carts; i++) carts.push({ i, kind: ESCAPE.cageAnimals[i % ESCAPE.cageAnimals.length], hp: ESCAPE.cartHp, max: ESCAPE.cartHp, freed: false, lost: false, hitT: 0 });
   E = { t: 0, leaves: ESCAPE.startLeaves, camp: ESCAPE.camp, engX: ESCAPE.engine.startX, engHp: ESCAPE.engine.hp, engHitT: 0, carts, units: [], fx: [],
         wave: 0, waveAt: 1, queue: [], next: null, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
-  ixStart(E, typeof diffKey === "string" ? diffKey : "normal");
+  ixStart(E, typeof diffKey === "string" ? diffKey : "normal"); ARMY_SPAN = { x0: 40, x1: ESCAPE.gateX };
   $("esc-end").hidden = true; show("s-escape"); escButtons(); Sound.init(); Sound.play("horn");
   E.fx.push({ text: "Chase the convoy!", x: 300, y: 70, t: 2.2, c: "#ffd34d" });
   E.next = escRollWave(1); battleNextBox("esc-next", E.next, 1);
@@ -8904,9 +8928,10 @@ function escUpdate(dt) {
     }
     if (foe && best <= S.range) { if (u.cool <= 0) escHit(u, S, foe, charge); }
     else if (u.side && u.x <= 44) { if (u.cool <= 0) { u.cool = S.rate; E.camp -= S.dmg; Sound.play("hit"); E.fx.push({ spark: true, x: 40, y: u.y, t: 0.25, c: "#ff6a4a" }); } }
-    else if (!u.side && !foe) { u.x = Math.min(u.x + S.speed * dt, ESCAPE.gateX - 20); }
-    else u.x += dir * S.speed * (u.side ? E.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+    else if (!u.side && !foe) { u.x = Math.min(u.x + S.speed * (u.speedMult || 1) * dt, ESCAPE.gateX - 20); }
+    else u.x += dir * S.speed * (u.speedMult || 1) * (u.side ? E.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
   }
+  armyRebirth(E);
   for (const u of E.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) { E.leaves += 8; E.killPts += Math.round(u.max); } for (let i = 0; i < 6; i++) E.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   E.units = E.units.filter((u) => !u.gone);
   for (const f of E.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
