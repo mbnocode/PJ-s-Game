@@ -417,6 +417,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .march-lanes button.on { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
 .march-wrap { position: relative; width: min(1100px, 100%, calc((100vh - 260px) * 1.6667)); }
 .march-wrap canvas { width: 100%; height: auto; aspect-ratio: 640 / 384; image-rendering: pixelated; border: 3px solid #16191d; border-radius: 8px; display: block; cursor: pointer; }
+.nextwave.battle-next { bottom: 8px; padding: 6px 10px; pointer-events: none; opacity: 0.93; }
+.nextwave.battle-next .nf canvas { width: 32px; height: 32px; } .nextwave.battle-next .nw-in { color: #fff; margin-left: 4px; }
 .march-end { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 8px; }
 .march-end-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 18px 22px; max-width: 460px; text-align: center; }
 .march-help { margin: 0; font-size: 14px; text-align: center; }
@@ -791,6 +793,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <button id="esc-speed">1×</button><button id="esc-pause">Pause</button><button id="esc-quit">Quit</button>
     </div>
     <div class="march-wrap esc-wrap"><canvas id="esc-cv" width="960" height="400"></canvas>
+      <div class="nextwave battle-next" id="esc-next" hidden></div>
       <div class="march-end" id="esc-end" hidden><div class="march-end-box" id="esc-end-box"></div></div></div>
     <p class="muted march-help">A robot convoy is hauling caged animals to the fortress! Send animals (or press the number keys) to chase it and break the cages. Freed animals join your army. Wreck the <b>Engine</b> at the front to stop the whole convoy. Press C for Antler's Charge!</p>
     <div class="march-units" id="esc-units"></div>
@@ -803,6 +806,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <button id="march-speed">1×</button><button id="march-pause">Pause</button><button id="march-quit">Quit</button>
     </div>
     <div class="march-wrap"><canvas id="march-cv" width="640" height="384"></canvas>
+      <div class="nextwave battle-next" id="march-next" hidden></div>
       <div class="march-end" id="march-end" hidden><div class="march-end-box" id="march-end-box"></div></div></div>
     <p class="muted march-help" id="march-help"></p>
     <div class="march-units" id="march-units"></div>
@@ -8050,26 +8054,45 @@ const BATTLES = {
   march: { title: "⚔️ The March <small>(preview)</small>", camp: 250, fort: 1600, startLeaves: 150, lps: 11, armor: 0, bossFirst: 75, bossEvery: 80,
     pool: (t) => t < 25 ? ["clanker", "clanker", "scout"] : t < 60 ? ["clanker", "scout", "walker", "walker", "tesla"] : ["clanker", "walker", "tesla", "tank", "scout", "walker"],
     back: "levels", help: "Pick a road (tap it, or use ↑ ↓), then send animals down it (or press the number keys). They fight any robots they meet, then attack the fortress. Press C for Antler's Charge!" },
-  // The Iron Bridge: every robot (and the bridge gate) is IRON-PLATED, so each hit does 17 less damage. No animal's
-  // base damage gets past 17 (even a Wolf pack, and Antler's Charge only doubles what gets through), so you need Army Upgrades to win.
-  bridge: { id: "bridge", title: "🌉 The Iron Bridge", camp: 260, fort: 2400, startLeaves: 160, lps: 12, armor: 17, bossFirst: 60, bossEvery: 70,
+  // The Iron Bridge: every robot (and the bridge gate) is IRON-PLATED, so each hit does 10 less damage.
+  bridge: { id: "bridge", title: "🌉 The Iron Bridge", camp: 260, fort: 2400, startLeaves: 160, lps: 12, armor: 10, bossFirst: 60, bossEvery: 70,
     pool: (t) => t < 20 ? ["clanker", "clanker", "walker"] : t < 60 ? ["clanker", "walker", "tesla", "scout", "walker"] : ["walker", "tesla", "tank", "walker", "scout", "tank"],
     drawbridge: { x0: 300, x1: 380, every: 22, up: 6, warn: 3 },
     starsFor: [180, 120, 0],   // finish within this much camp health lost... (see marchEnd)
-    back: "iron", help: "The bridge guards are IRON-PLATED: each hit does 17 less damage, so you'll need Army Upgrades to break through! Watch the drawbridge: when it rises, anything on it falls into the lava (flyers are safe)." },
+    back: "iron", help: "The bridge guards are IRON-PLATED: each hit does 10 less damage, so weak hits just bounce off. Army Upgrades help you break through! Watch the drawbridge: when it rises, anything on it falls into the lava (flyers are safe)." },
 };
 let M = null;
 function marchUnlocked() { return true; }   // a preview: open for everyone for now
 function startMarch(which) {
   const cfg = BATTLES[typeof which === "string" ? which : "march"];
   armyRoster(); cancelAnimationFrame(ironRaf); if (M) cancelAnimationFrame(M.raf);
-  M = { cfg, t: 0, leaves: cfg.startLeaves, camp: cfg.camp, fort: cfg.fort, lane: 1, units: [], fx: [], spawnT: 3, bossT: cfg.bossFirst,
+  M = { cfg, t: 0, leaves: cfg.startLeaves, camp: cfg.camp, fort: cfg.fort, lane: 1, units: [], fx: [], wave: 0, waveAt: 4, queue: [], next: null,
         chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0, bridgeUp: false, bridgeT: 0 };
   M.bg = cfg.drawbridge ? bridgeBackground() : marchBackground();
   $("march-title").innerHTML = cfg.title; $("march-help").textContent = cfg.help;
   $("march-end").hidden = true; show("s-march"); marchButtons(); Sound.init(); Sound.play("horn");
   if (cfg.armor) M.fx.push({ text: `Iron-plated robots: -${cfg.armor} damage per hit!`, x: 320, y: 70, t: 3, c: "#c8d0e0" });
+  M.next = marchRollWave(1, M.waveAt); battleNextBox("march-next", M.next, 1);
   M.raf = requestAnimationFrame(marchLoop);
+}
+// Waves: every WAVE_LEN seconds a new wave starts, spread over the wave. The next one is shown ahead of time, like in the towers levels.
+const WAVE_LEN = 18;
+function marchRollWave(n, at) {
+  const C = M.cfg, pool = C.pool(at), count = Math.round(3 + n * 1.4), out = [];
+  for (let i = 0; i < count; i++) out.push({ kind: pool[Math.random() * pool.length | 0], lane: Math.random() * 3 | 0 });
+  if (n % (C.bossWaves || 4) === 0) out.push({ kind: "boss", lane: Math.random() * 3 | 0 });
+  return out;
+}
+// The "Coming next" box for a battle: the robots in the next wave (Bosses first, then the most common), and a countdown
+function battleNextBox(id, list, n) {
+  const box = $(id); if (!box) return;
+  if (!list) { box.hidden = true; return; }
+  const count = {}; for (const e of list) count[e.kind] = (count[e.kind] || 0) + 1;
+  const top = Object.keys(count).sort((a, b) => ((b === "boss") - (a === "boss")) || (count[b] - count[a])).slice(0, 4);
+  box.innerHTML = `<div class="t">Coming next · Wave ${n} <span class="nw-in" id="${id}-in"></span></div><div class="foes">${top.map((k) =>
+    `<div class="nf${k === "boss" ? " boss" : ""}"><span class="pic" data-k="${k}"></span><span class="n">${SETTINGS.robots[k] ? SETTINGS.robots[k].name : k}</span><span class="c">× ${count[k]}</span></div>`).join("")}</div>`;
+  box.querySelectorAll(".pic").forEach((el) => el.replaceWith(spriteCanvas(el.dataset.k, 32)));
+  box.hidden = false;
 }
 function marchBackground() {
   const c = document.createElement("canvas"); c.width = 640; c.height = 384; const x = c.getContext("2d");
@@ -8130,9 +8153,10 @@ function marchCharge() {
   M.chargeT = MARCH.chargeSeconds; M.chargeCool = MARCH.chargeEvery; Sound.play("horn");
   M.fx.push({ text: "CHARGE!", x: 220, y: 60, t: 1.6, c: "#ffd34d" });
 }
-function marchSpawn() {
-  const pool = M.cfg.pool(M.t), k = pool[Math.random() * pool.length | 0], r = MARCH.robots[k], lane = Math.random() * 3 | 0, tough = 1 + M.t / 240;
-  M.units.push({ side: 1, kind: k, x: 572, y: MARCH.lanes[lane] + (Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
+function marchSpawn(k, lane) {
+  const r = MARCH.robots[k], tough = k === "boss" ? 1 : 1 + M.t / 240;
+  M.units.push({ side: 1, kind: k, x: 572, y: MARCH.lanes[lane] + (k === "boss" ? 0 : Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: k === "boss" ? 0 : Math.random() * 6 });
+  if (k === "boss") { M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
 }
 function marchLoop(now) {
   if (!M) return;
@@ -8146,8 +8170,12 @@ function marchUpdate(dt) {
   const C = M.cfg, DB = C.drawbridge;
   M.t += dt; M.leaves += C.lps * dt;
   if (M.chargeT > 0) M.chargeT -= dt; if (M.chargeCool > 0) M.chargeCool -= dt;
-  M.spawnT -= dt; if (M.spawnT <= 0) { marchSpawn(); M.spawnT = Math.max(1.3, 4.2 - M.t * 0.025); }
-  M.bossT -= dt; if (M.bossT <= 0) { M.bossT = C.bossEvery; const lane = Math.random() * 3 | 0, r = MARCH.robots.boss; M.units.push({ side: 1, kind: "boss", x: 572, y: MARCH.lanes[lane], lane, hp: r.hp, max: r.hp, cool: 0, slowT: 0, hitT: 0, wob: 0 }); M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
+  if (M.t >= M.waveAt) {   // a new wave starts: its robots come out one by one over the wave
+    M.wave++; const list = M.next, gap = WAVE_LEN * 0.8 / Math.max(1, list.length);
+    list.forEach((e, i) => M.queue.push({ ...e, at: M.waveAt + i * gap }));
+    M.waveAt += WAVE_LEN; M.next = marchRollWave(M.wave + 1, M.waveAt); battleNextBox("march-next", M.next, M.wave + 1);
+  }
+  while (M.queue.length && M.queue[0].at <= M.t) { const e = M.queue.shift(); marchSpawn(e.kind, e.lane); }
   // the drawbridge: rises every so often; anything walking on it falls into the lava
   if (DB) {
     const cyc = M.t % DB.every, up = cyc >= DB.every - DB.up;
@@ -8241,9 +8269,10 @@ function marchHud() {
   const c = $("march-charge-c"); if (c) c.textContent = M.chargeT > 0 ? "Charging!" : M.chargeCool > 0 ? `Ready in ${Math.ceil(M.chargeCool)}s` : "Ready!";
   [0, 1, 2].forEach((i) => $("march-lane-" + i).classList.toggle("on", M.lane === i));
   $("march-pause").textContent = M.paused ? "Resume" : "Pause"; $("march-speed").textContent = M.speed + "×";
+  const nin = $("march-next-in"); if (nin) nin.textContent = `in ${Math.max(0, Math.ceil(M.waveAt - M.t))}s`;
 }
 function marchEnd(won) {
-  M.over = true; Sound.play(won ? "win" : "lose");
+  M.over = true; $("march-next").hidden = true; Sound.play(won ? "win" : "lose");
   const C = M.cfg; let extra = "";
   if (C.id && won) {   // an Iron Lands battle: stars for how much of your camp is left, and Golden Acorns for new stars
     const left = M.camp / C.camp, stars = left >= 0.7 ? 3 : left >= 0.35 ? 2 : 1, s = slot();
@@ -8476,10 +8505,17 @@ function startEscape() {
   cancelAnimationFrame(ironRaf); armyRoster();
   const carts = []; for (let i = 0; i < ESCAPE.carts; i++) carts.push({ i, kind: ESCAPE.cageAnimals[i % ESCAPE.cageAnimals.length], hp: ESCAPE.cartHp, max: ESCAPE.cartHp, freed: false, lost: false, hitT: 0 });
   E = { t: 0, leaves: ESCAPE.startLeaves, camp: ESCAPE.camp, engX: ESCAPE.engine.startX, engHp: ESCAPE.engine.hp, engHitT: 0, carts, units: [], fx: [],
-        guardT: 0.5, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
+        wave: 0, waveAt: 1, queue: [], next: null, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
   $("esc-end").hidden = true; show("s-escape"); escButtons(); Sound.init(); Sound.play("horn");
   E.fx.push({ text: "Chase the convoy!", x: 300, y: 120, t: 2.2, c: "#ffd34d" });
+  E.next = escRollWave(1); battleNextBox("esc-next", E.next, 1);
   E.raf = requestAnimationFrame(escLoop);
+}
+const ESC_WAVE = 13;   // seconds between waves of guards
+function escRollWave(n) {
+  const pool = ESCAPE.guards.slice(0, Math.min(ESCAPE.guards.length, 3 + n)), out = [];
+  for (let i = 0; i < 2 + Math.round(n * 1.6); i++) out.push({ kind: pool[Math.random() * pool.length | 0] });
+  return out;
 }
 const cartX = (c) => E.engX - 40 - c.i * ESCAPE.cartGap;
 function escButtons() {
@@ -8526,10 +8562,14 @@ function escUpdate(dt) {
   if (E.engHp > 0) E.engX += ESCAPE.engine.speed * dt;
   for (const c of E.carts) { if (c.hitT > 0) c.hitT -= dt; if (!c.freed && !c.lost && cartX(c) >= ESCAPE.gateX) { c.lost = true; E.fx.push({ text: "A cage got away!", x: ESCAPE.gateX - 60, y: ESCAPE.roadY - 50, t: 1.6, c: "#ff6a4a" }); Sound.play("hit"); } }
   // guards jump off the convoy and run back to stop you
-  E.guardT -= dt;
-  if (E.guardT <= 0 && E.engHp > 0) {
-    E.guardT = Math.max(1.6, ESCAPE.guardEvery - E.t * 0.03);
-    const pool = ESCAPE.guards.slice(0, Math.min(ESCAPE.guards.length, 3 + Math.floor(E.t / 12))), k = pool[Math.random() * pool.length | 0], r = MARCH.robots[k], tough = 1 + E.t / 200;
+  if (E.engHp > 0 && E.t >= E.waveAt) {
+    E.wave++; const list = E.next, gap = ESC_WAVE * 0.8 / Math.max(1, list.length);
+    list.forEach((e, i) => E.queue.push({ ...e, at: E.waveAt + i * gap }));
+    E.waveAt += ESC_WAVE; E.next = escRollWave(E.wave + 1); battleNextBox("esc-next", E.next, E.wave + 1);
+  }
+  if (E.engHp <= 0 && E.next) { E.next = null; E.queue = []; battleNextBox("esc-next", null); }   // the convoy stopped: no more guards
+  while (E.queue.length && E.queue[0].at <= E.t) {
+    const k = E.queue.shift().kind, r = MARCH.robots[k], tough = 1 + E.t / 200;
     const live = E.carts.filter((c) => !c.freed && !c.lost), from = live.length ? cartX(live[live.length - 1]) - 20 : E.engX - 40;
     E.units.push({ side: 1, kind: k, x: from, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
   }
@@ -8648,9 +8688,10 @@ function escHud() {
   for (const [k, a] of Object.entries(MARCH.animals)) { const b = $("esc-" + k); if (b) b.classList.toggle("broke", E.leaves < a.cost); }
   const c = $("esc-charge-c"); if (c) c.textContent = E.chargeT > 0 ? "Charging!" : E.chargeCool > 0 ? `Ready in ${Math.ceil(E.chargeCool)}s` : "Ready!";
   $("esc-pause").textContent = E.paused ? "Resume" : "Pause"; $("esc-speed").textContent = E.speed + "×";
+  const nin = $("esc-next-in"); if (nin) nin.textContent = `in ${Math.max(0, Math.ceil(E.waveAt - E.t))}s`;
 }
 function escEnd(survived) {
-  E.over = true;
+  E.over = true; $("esc-next").hidden = true;
   const freed = E.carts.filter((c) => c.freed).length, stars = !survived ? 0 : ESCAPE.starsFor.filter((n) => freed >= n).length;
   const s = slot(); let reward = 0;
   if (s) { s.iron = s.iron || {}; const old = s.iron.escape || 0; if (stars > old) { reward = (stars - old) * 50; s.iron.escape = stars; s.acorns = (s.acorns || 0) + reward; } saveSlots(slots); }
