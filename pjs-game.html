@@ -397,6 +397,14 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
+.iron-wrap { position: relative; }
+.iron-diff { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 10px; }
+.iron-diff-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 16px 20px; max-width: 640px; text-align: center; }
+.iron-diff-box .diff-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
+.iron-diff-box .diff-row button { display: flex; flex-direction: column; gap: 3px; } .iron-diff-box .diff-row small { font-size: 11px; opacity: 0.85; }
+.ix-score { margin: 8px 0; } .ix-score .big { font-family: var(--display); font-size: 30px; color: #ffd34d; } .ix-score .muted { font-size: 13px; }
+.march-units .ixbtn { background: #1c2430; border-color: #4a6a8a; } .march-units .ixbtn.armed { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
+.march-end-box { max-height: 100%; overflow-y: auto; } .march-end-box .board-ask { margin: 8px 0; }
 .army-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; width: min(1100px, 100%); }
 .army-card { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 10px; text-align: left; }
 .army-card canvas { width: 48px; height: 48px; image-rendering: pixelated; flex: none; }
@@ -419,7 +427,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .march-wrap canvas { width: 100%; height: auto; aspect-ratio: 640 / 384; image-rendering: pixelated; border: 3px solid #16191d; border-radius: 8px; display: block; cursor: pointer; }
 .nextwave.battle-next { bottom: 8px; padding: 6px 10px; pointer-events: none; opacity: 0.93; }
 .nextwave.battle-next .nf canvas { width: 32px; height: 32px; } .nextwave.battle-next .nw-in { color: #fff; margin-left: 4px; }
-.march-end { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 8px; }
+.march-end { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border-radius: 8px; }
 .march-end-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 18px 22px; max-width: 460px; text-align: center; }
 .march-help { margin: 0; font-size: 14px; text-align: center; }
 .march-units { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 5px; width: min(1100px, 100%); }
@@ -785,9 +793,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="army-grid" id="army-grid"></div>
   </section>
   <section class="screen" id="s-iron" hidden>
-    <div class="iron-wrap"><canvas id="iron-cv" width="960" height="540"></canvas></div>
+    <div class="iron-wrap"><canvas id="iron-cv" width="960" height="540"></canvas><div class="iron-diff" id="iron-diff" hidden></div></div>
     <p class="iron-info" id="iron-info"></p>
-    <div class="row"><button id="iron-back">← Back to the world map</button><button class="go" id="iron-army">⬆ Army Upgrades</button><button id="iron-practice">⚔️ Practice battle (preview)</button></div>
+    <div class="row"><button id="iron-back">← Back to the world map</button><button class="go" id="iron-army">⬆ Army Upgrades</button><button id="iron-board">🏆 Leaderboard</button><button id="iron-practice">⚔️ Practice battle (preview)</button></div>
   </section>
   <section class="screen" id="s-escape" hidden>
     <div class="march-top">
@@ -3900,11 +3908,12 @@ const BOARD_TAB_COLORS = {
   tundra: ["#eef4fb", "#8aa0bc", "#1e2c40"], glacier: ["#8fd3ff", "#2f78b8", "#0c2a48"], blizzard: ["#c4cee0", "#5a6a84", "#1e2636"],
   infinity: ["#7a4ac0", "#2e1856", "#f6efff"], skyislands: ["#8ec8f4", "#3a6a9e", "#0c2a48"], thunder: ["#6a80b8", "#2e3c6c", "#f4f7ff"],
   storm: ["#4e5296", "#1e2050", "#eef0ff"],   // the 3 sky levels: one family of sky blues, getting stormier
+  ironescape: ["#8a2a20", "#3a0e0a", "#fff0e0"], ironbridge: ["#6a2018", "#2a0806", "#ffe0c8"],   // the Iron Lands: blood red
 };
 async function renderBoards(code) {
   const tabs = $("board-tabs"); tabs.innerHTML = "";
-  LEVEL_ORDER.forEach((L) => {
-    const b = document.createElement("button"); b.id = "board-" + L; b.textContent = SETTINGS.levels[L].name;
+  [...LEVEL_ORDER, ...Object.keys(IRON_BOARDS)].forEach((L) => {
+    const b = document.createElement("button"); b.id = "board-" + L; b.textContent = SETTINGS.levels[L] ? SETTINGS.levels[L].name : "⚔️ " + IRON_BOARDS[L].replace("Iron Lands: ", "");
     const c = BOARD_TAB_COLORS[L]; if (c) { b.className = "lvtab"; b.style.cssText = `--tab:${c[0]};--tab2:${c[1]};--tab-ink:${c[2]}`; }   // each level's button is the color of its terrain
     b.setAttribute("aria-pressed", String(!code && boardLevel === L));
     b.onclick = () => { boardLevel = L; renderBoards(); };
@@ -3915,7 +3924,7 @@ async function renderBoards(code) {
     const rows = code
       ? await sb(`players?challenge_code=eq.${encodeURIComponent(code)}&select=nickname,difficulty,score,stars,wave,status&order=score.desc&limit=50`)
       : await levelTop(boardLevel, "nickname,difficulty,score,stars,wave,status");
-    const title = code ? `Challenge ${esc(code)}` : `Top ${BOARD_SIZE} · ${SETTINGS.levels[boardLevel].name}<small class="bnote">Only each player's best ${BOARD_PER_PLAYER} games count.</small>`;
+    const title = code ? `Challenge ${esc(code)}` : `Top ${BOARD_SIZE} · ${levelNameOf(boardLevel)}<small class="bnote">Only each player's best ${BOARD_PER_PLAYER} games count.</small>`;
     list.innerHTML = `<div class="bt">${title}</div>` + (rows.length
       ? `<table><thead><tr><th>#</th><th>Player</th><th>Score</th><th>Difficulty</th><th>Result</th></tr></thead><tbody>${rows.map((p, i) =>
           `<tr><td class="r">${i + 1}</td><td class="nm">${esc(p.nickname)}</td><td class="sc">${p.score.toLocaleString()}</td><td>${esc((SETTINGS.difficulties[p.difficulty] || {}).name || p.difficulty)}</td><td>${resultText(p)}</td></tr>`).join("")}</tbody></table>`
@@ -8066,11 +8075,12 @@ const BATTLES = {
 };
 let M = null;
 function marchUnlocked() { return true; }   // a preview: open for everyone for now
-function startMarch(which) {
+function startMarch(which, diffKey) {
   const cfg = BATTLES[typeof which === "string" ? which : "march"];
   armyRoster(); cancelAnimationFrame(ironRaf); if (M) cancelAnimationFrame(M.raf);
   M = { cfg, t: 0, leaves: cfg.startLeaves, camp: cfg.camp, fort: cfg.fort, lane: 1, units: [], fx: [], wave: 0, waveAt: 4, queue: [], next: null,
         chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0, bridgeUp: false, bridgeT: 0 };
+  ixStart(M, cfg.id ? diffKey : "normal");
   M.bg = cfg.drawbridge ? bridgeBackground() : marchBackground();
   $("march-title").innerHTML = cfg.title; $("march-help").textContent = cfg.help;
   $("march-end").hidden = true; show("s-march"); marchButtons(); Sound.init(); Sound.play("horn");
@@ -8096,6 +8106,96 @@ function battleNextBox(id, list, n) {
     `<div class="nf${k === "boss" ? " boss" : ""}"><span class="pic" data-k="${k}"></span><span class="n">${SETTINGS.robots[k] ? SETTINGS.robots[k].name : k}</span><span class="c">× ${count[k]}</span></div>`).join("")}</div>`;
   box.querySelectorAll(".pic").forEach((el) => el.replaceWith(spriteCanvas(el.dataset.k, 32)));
   box.hidden = false;
+}
+/* ---------- IRON LANDS EXTRAS: difficulty, Freeze and Mega Fireball, floating maple leaves, the Leaf Vacuum, score and leaderboard ---------- */
+const IRON_BOARDS = { ironescape: "Iron Lands: The Great Escape", ironbridge: "Iron Lands: The Iron Bridge" };
+const IRON_PAR = { ironescape: 70, ironbridge: 110 };   // seconds: win faster than this for a speed bonus
+function levelNameOf(L) { return (SETTINGS.levels[L] || {}).name || IRON_BOARDS[L] || L; }
+const IX_RADIUS = 52;   // how big the Freeze and Mega Fireball circles are (in battle pixels)
+function ixStart(B, diffKey) {
+  B.diffKey = SETTINGS.difficulties[diffKey] ? diffKey : "normal"; B.D = SETTINGS.difficulties[B.diffKey];
+  B.leaf = null; B.leafT = 6 + Math.random() * 2; B.armed = null; B.mouse = null; B.killPts = 0;
+}
+function ixButtons(box, B, prefix) {   // the Freeze, Mega Fireball and Leaf Vacuum buttons, after the soldiers
+  const A = SETTINGS.abilities;
+  const mk = (id, img, label, sub, onclick) => { const b = document.createElement("button"); b.className = "tbtn ixbtn"; b.id = prefix + id;
+    const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; if (img) icx.drawImage(img, 0, 0, 32, 32);
+    b.appendChild(ic); b.insertAdjacentHTML("beforeend", `<span>${label}<span class="c" id="${prefix}${id}-c">${sub}</span></span>`); b.onclick = onclick; box.appendChild(b); return b; };
+  mk("freeze", SPR.icecrystal, `${A.freeze.name} <small>(F)</small>`, `${A.freeze.cost} leaves`, () => ixArm(B, "freeze"));
+  mk("fireball", SPR.fire, `${A.fireball.name} <small>(B)</small>`, `${A.fireball.cost} leaves`, () => ixArm(B, "fireball"));
+  if (vacuumLevel(slot()) > 0) mk("vacuum", SPR.leafvacuum, "Leaf Vacuum <small>(V)</small>", slot().vacuumOff ? "Off" : "On", () => ixVacuum(prefix));
+}
+function ixVacuum(prefix) { const s = slot(); s.vacuumOff = !s.vacuumOff; saveSlots(slots); Sound.play("place"); const c = $(prefix + "vacuum-c"); if (c) c.textContent = s.vacuumOff ? "Off" : "On"; }
+function ixArm(B, k) {
+  if (!B || B.over) return; const A = SETTINGS.abilities[k];
+  if (B.armed === k) { B.armed = null; return; }
+  if (B.leaves < A.cost) { Sound.play("nope"); return; }
+  B.armed = k; Sound.play("place");
+}
+function ixHud(B, prefix) {
+  for (const k of ["freeze", "fireball"]) { const b = $(prefix + k); if (!b) continue; b.classList.toggle("broke", B.leaves < SETTINGS.abilities[k].cost); b.classList.toggle("armed", B.armed === k); }
+}
+// a maple leaf floats up now and then: tap it for leaves (the Leaf Vacuum grabs it for you)
+function ixUpdate(B, dt, W, H) {
+  const BL = SETTINGS.bonusLeaf;
+  if (B.leaf) {
+    B.leaf.t += dt;
+    const s = slot(), lvl = vacuumLevel(s);
+    if (lvl > 0 && !s.vacuumOff && B.leaf.t >= (SETTINGS.leafVacuum.waitSeconds || 1.2)) ixCollect(B, SETTINGS.leafVacuum.collect[lvl - 1], true);
+    else if (B.leaf && B.leaf.t >= BL.staySeconds) B.leaf = null;
+  } else if ((B.leafT -= dt) <= 0) {
+    B.leafT = BL.everySecondsMin + Math.random() * (BL.everySecondsMax - BL.everySecondsMin);
+    B.leaf = { x: 110 + Math.random() * (W - 260), y: 40 + Math.random() * (H - 80), t: 0 };
+  }
+}
+function ixCollect(B, part, vac) {
+  const amt = Math.max(1, Math.round(SETTINGS.bonusLeaf.leaves * (part || 1))); B.leaves += amt;
+  B.fx.push({ text: (vac ? "Vroom! +" : "+") + amt, x: B.leaf.x, y: B.leaf.y - 10, t: 1, c: "#ffd34d" });
+  for (let i = 0; i < 8; i++) B.fx.push({ spark: true, x: B.leaf.x + Math.random() * 20 - 10, y: B.leaf.y + Math.random() * 20 - 10, t: 0.4, c: "#ffb347" });
+  B.leaf = null; Sound.play("heal");
+}
+// a tap on the battlefield: grab the leaf, or drop the Freeze or Mega Fireball that's ready
+function ixClick(B, px, py, extra) {
+  if (!B || B.over) return false;
+  if (B.leaf && Math.hypot(px - B.leaf.x, py - B.leaf.y) < 22) { ixCollect(B, 1, false); return true; }
+  if (!B.armed) return false;
+  const k = B.armed, A = SETTINGS.abilities[k]; B.armed = null;
+  if (B.leaves < A.cost) { Sound.play("nope"); return true; }
+  B.leaves -= A.cost;
+  const hits = B.units.filter((u) => u.side === 1 && u.hp > 0 && Math.hypot(u.x - px, u.y - py) <= IX_RADIUS);
+  if (k === "freeze") { for (const u of hits) u.frozenT = A.seconds; if (extra && extra.freeze) extra.freeze(px, py, A.seconds); B.fx.push({ ring: true, x: px, y: py, t: 0.6, c: "#c8f0ff" }); B.fx.push({ text: hits.length ? `Freeze! x${hits.length}` : "Freeze!", x: px, y: py - 30, t: 1.2, c: "#c8f0ff" }); Sound.play("water"); }
+  else { for (const u of hits) { u.hp -= A.damage; u.hitT = 0.15; } if (extra && extra.fireball) extra.fireball(px, py, A.damage); B.fx.push({ ring: true, x: px, y: py, t: 0.6, c: "#ff8a3a" }); for (let i = 0; i < 24; i++) B.fx.push({ spark: true, x: px + Math.random() * 80 - 40, y: py + Math.random() * 60 - 30, t: 0.6, c: i % 2 ? "#ff8a3a" : "#ffd34d" }); B.fx.push({ text: hits.length ? `Mega Fireball! x${hits.length}` : "Mega Fireball!", x: px, y: py - 30, t: 1.2, c: "#ffb347" }); Sound.play("smash"); }
+  return true;
+}
+function ixDraw(x, B) {
+  if (B.leaf) { const k = B.leaf.t / SETTINGS.bonusLeaf.staySeconds, bob = Math.sin(B.leaf.t * 4) * 3; x.globalAlpha = k > 0.75 ? 0.5 + 0.5 * Math.sin(B.leaf.t * 20) : 1;
+    x.fillStyle = "rgba(255,211,77,0.25)"; x.beginPath(); x.arc(B.leaf.x, B.leaf.y + bob, 16, 0, Math.PI * 2); x.fill(); x.drawImage(SPR.leaf, B.leaf.x - 12, B.leaf.y - 12 + bob, 24, 24); x.globalAlpha = 1; }
+  for (const f of B.fx) if (f.ring) { const k = 1 - f.t / 0.6; x.strokeStyle = f.c; x.lineWidth = 3; x.globalAlpha = 1 - k; x.beginPath(); x.arc(f.x, f.y, IX_RADIUS * (0.4 + 0.6 * k), 0, Math.PI * 2); x.stroke(); x.globalAlpha = 1; }
+  if (B.armed && B.mouse) { x.strokeStyle = B.armed === "freeze" ? "rgba(200,240,255,0.9)" : "rgba(255,150,60,0.9)"; x.fillStyle = B.armed === "freeze" ? "rgba(200,240,255,0.15)" : "rgba(255,120,40,0.15)"; x.lineWidth = 2; x.setLineDash([6, 4]); x.beginPath(); x.arc(B.mouse.x, B.mouse.y, IX_RADIUS, 0, Math.PI * 2); x.fill(); x.stroke(); x.setLineDash([]); }
+}
+function ixFrozenTint(x, u, sz, fly) { if (u.frozenT > 0) { x.fillStyle = "rgba(170,225,255,0.45)"; x.fillRect(u.x - sz / 2, u.y - sz + 12 + fly, sz, sz); x.fillStyle = "#e8f8ff"; x.fillRect(u.x - 2, u.y - sz + 8 + fly, 4, 4); } }
+function ixCanvasPos(e, cv) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * cv.width, y: (e.clientY - r.top) / r.height * cv.height }; }
+// the final score: points for robots destroyed (and cages freed / the win), x a speed bonus, x how little damage your camp took, x the difficulty
+function ixScore(B, board, won, base, campLeft, campMax) {
+  const speed = won ? Math.max(0.5, Math.min(2, IRON_PAR[board] / Math.max(1, B.t))) : 1;
+  const health = 0.5 + 1.5 * Math.max(0, campLeft) / campMax, diff = B.D.scoreTimes || 1;
+  const score = Math.min(2900000, Math.round(base * speed * health * diff));
+  const s = slot(); if (s) { s.ironBest = s.ironBest || {}; const key = board + ":" + B.diffKey; if (score > (s.ironBest[key] || 0)) s.ironBest[key] = score; saveSlots(slots); }
+  const f = (n) => n.toFixed(2).replace(/\.?0+$/, "");
+  return { score, html: `<div class="ix-score"><div class="big">${score.toLocaleString()}</div><div class="muted">${base.toLocaleString()} points × ${f(speed)} speed${won ? ` (${fmtTime(B.t)})` : ""} × ${f(health)} camp health × ${f(diff)} ${B.D.name}</div></div><div class="board-ask" id="o-ask"></div>` };
+}
+function ixBoard(B, board, won, score, stars, campLeft, wave) {
+  askForBoard({ level: board, diffKey: B.diffKey, wave: Math.max(1, wave), health: Math.max(0, Math.round(campLeft)), realTime: B.t / Math.max(1, B.speedAvg || 1) + 2 }, won, score, stars);
+}
+// choosing a difficulty before an Iron Lands battle
+function ironPickDifficulty(name, go) {
+  const box = $("iron-diff"), D = SETTINGS.difficulties, last = PREFS.ironDiff || "normal";
+  box.innerHTML = `<div class="iron-diff-box"><h2>${name}</h2><p class="muted">Choose a difficulty. Harder robots are tougher and faster, but your score is multiplied more.</p>
+    <div class="diff-row">${Object.entries(D).map(([k, d]) => `<button class="${k === last ? "go" : ""}" id="idiff-${k}"><b>${d.name}</b><small>Robots ${Math.round(d.robotHealth * 100)}% health · Score ×${d.scoreTimes}</small></button>`).join("")}</div>
+    <button class="link" id="idiff-x">Cancel</button></div>`;
+  box.hidden = false;
+  for (const k of Object.keys(D)) $("idiff-" + k).onclick = () => { PREFS.ironDiff = k; savePrefs(); box.hidden = true; go(k); };
+  $("idiff-x").onclick = () => { box.hidden = true; };
 }
 // ---- pixel-art camp pieces (drawn on a tiny grid, then blown up 2x so every pixel shows) ----
 function pixSprite(w, h, draw) {
@@ -8269,6 +8369,7 @@ function marchButtons() {
   const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR.healer, 0, 0, 32, 32);
   ch.appendChild(ic); ch.insertAdjacentHTML("beforeend", `<span>Antler's Charge! <small>(C)</small><span class="c" id="march-charge-c"></span></span>`);
   ch.onclick = marchCharge; box.appendChild(ch);
+  ixButtons(box, M, "march-ix-");
   [0, 1, 2].forEach((i) => { $("march-lane-" + i).onclick = () => { M.lane = i; marchHud(); }; });
 }
 function marchSend(k) {
@@ -8283,7 +8384,7 @@ function marchCharge() {
   M.fx.push({ text: "CHARGE!", x: 220, y: 60, t: 1.6, c: "#ffd34d" });
 }
 function marchSpawn(k, lane) {
-  const r = MARCH.robots[k], tough = k === "boss" ? 1 : 1 + M.t / 240;
+  const r = MARCH.robots[k], tough = (k === "boss" ? 1 : 1 + M.t / 240) * M.D.robotHealth;
   M.units.push({ side: 1, kind: k, x: 546, y: MARCH.lanes[lane] + (k === "boss" ? 0 : Math.random() * 10 - 5), lane, hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: k === "boss" ? 0 : Math.random() * 6 });
   if (k === "boss") { M.fx.push({ text: "A Boss is coming!", x: 420, y: MARCH.lanes[lane] - 34, t: 2, c: "#ff6a4a" }); Sound.play("horn"); }
 }
@@ -8297,7 +8398,7 @@ function marchLoop(now) {
 const uStats = (u) => u.side ? MARCH.robots[u.kind] : (MARCH.all[u.kind] || MARCH.animals[u.kind]);
 function marchUpdate(dt) {
   const C = M.cfg, DB = C.drawbridge;
-  M.t += dt; M.leaves += C.lps * dt;
+  M.t += dt; M.leaves += C.lps * dt; ixUpdate(M, dt, 640, 384);
   if (M.chargeT > 0) M.chargeT -= dt; if (M.chargeCool > 0) M.chargeCool -= dt;
   if (M.t >= M.waveAt) {   // a new wave starts: its robots come out one by one over the wave
     M.wave++; const list = M.next, gap = WAVE_LEN * 0.8 / Math.max(1, list.length);
@@ -8318,7 +8419,9 @@ function marchUpdate(dt) {
   for (const u of M.units) {
     if (u.hp <= 0) continue;
     const S = uStats(u), dir = u.side ? -1 : 1, charge = !u.side && M.chargeT > 0;
-    u.cool -= dt; if (u.slowT > 0) u.slowT -= dt; if (u.hitT > 0) u.hitT -= dt;
+    if (u.hitT > 0) u.hitT -= dt;
+    if (u.frozenT > 0) { u.frozenT -= dt; continue; }   // frozen solid: can't move or attack
+    u.cool -= dt; if (u.slowT > 0) u.slowT -= dt;
     // the closest enemy ahead in the same road
     let foe = null, best = 1e9;
     for (const o of M.units) { if (o.side === u.side || o.hp <= 0 || o.lane !== u.lane) continue; const d = (o.x - u.x) * dir; if (d > -12 && d < best) { best = d; foe = o; } }
@@ -8335,12 +8438,12 @@ function marchUpdate(dt) {
         else { const d = armyDamage(u, S, C.armor, M.units, charge); M.fort -= d; if (!d) M.fx.push({ text: "Clank!", x: 560, y: u.y - 20, t: 0.6, c: "#c8d0e0" }); if (S.sound) Sound.play(S.sound); }
         M.fx.push({ spark: true, x: u.side ? 66 : 530, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
     } else {
-      let nx = u.x + dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+      let nx = u.x + dir * S.speed * (u.side ? M.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
       if (DB && M.bridgeUp && !S.fly) { if (dir > 0 && u.x < DB.x0 && nx >= DB.x0 - 6) nx = DB.x0 - 6; if (dir < 0 && u.x > DB.x1 && nx <= DB.x1 + 6) nx = DB.x1 + 6; }   // wait at the edge
       u.x = nx;
     }
   }
-  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side && !u.fell) M.leaves += 8; if (!u.fell) for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) M.killPts += Math.round(u.max); if (u.side && !u.fell) M.leaves += 8; if (!u.fell) for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   M.units = M.units.filter((u) => !u.gone);
   for (const f of M.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
   M.fx = M.fx.filter((f) => f.t > 0);
@@ -8380,6 +8483,7 @@ function marchDraw() {
     const img = (u.side ? SPRF : SPR)[u.kind]; if (img) { if (u.hitT > 0) x.globalAlpha = 0.6; x.drawImage(img, u.x - sz / 2, u.y - sz + 12 - hop + fly, sz, sz); x.globalAlpha = 1; }
     if (u.side && C.armor) { x.fillStyle = "#9aa4b8"; x.fillRect(u.x - (S.big ? 14 : 8), u.y - 4, S.big ? 28 : 16, 3); }   // iron plating
     if (u.slowT > 0) { x.fillStyle = "rgba(120,200,255,0.5)"; x.fillRect(u.x - 8, u.y + 8, 16, 3); }
+    ixFrozenTint(x, u, sz, fly);
     if (u.hp < u.max) { const w = S.big ? 40 : 24; x.fillStyle = "#200"; x.fillRect(u.x - w / 2, u.y - sz + 6 + fly, w, 3); x.fillStyle = u.side ? "#ff5a4a" : "#6ee06a"; x.fillRect(u.x - w / 2, u.y - sz + 6 + fly, w * Math.max(0, u.hp / u.max), 3); }
   }
   for (const f of M.fx) {
@@ -8387,6 +8491,7 @@ function marchDraw() {
     else if (f.spark) { x.fillStyle = f.c; x.fillRect(f.x - 2, f.y - 2, 4, 4); }
     else if (f.text) { x.font = "bold 16px " + getComputedStyle(document.body).getPropertyValue("--display"); x.textAlign = "center"; x.fillStyle = "#000"; x.fillText(f.text, f.x + 2, f.y + 2); x.fillStyle = f.c; x.fillText(f.text, f.x, f.y); x.textAlign = "left"; }
   }
+  ixDraw(x, M);
   // health bars for the two bases
   const bar = (bx, val, max, col, label) => { x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(bx, 8, 200, 18); x.fillStyle = col; x.fillRect(bx + 2, 10, 196 * Math.max(0, val / max), 14); x.fillStyle = "#fff"; x.font = "12px sans-serif"; x.fillText(`${label} ${Math.max(0, Math.ceil(val))}`, bx + 6, 21); };
   bar(8, M.camp, C.camp, "#5ac85a", "Your camp"); bar(432, M.fort, C.fort, "#d8402a", C.drawbridge ? "Bridge gate" : "Robot fortress");
@@ -8398,11 +8503,14 @@ function marchHud() {
   const c = $("march-charge-c"); if (c) c.textContent = M.chargeT > 0 ? "Charging!" : M.chargeCool > 0 ? `Ready in ${Math.ceil(M.chargeCool)}s` : "Ready!";
   [0, 1, 2].forEach((i) => $("march-lane-" + i).classList.toggle("on", M.lane === i));
   $("march-pause").textContent = M.paused ? "Resume" : "Pause"; $("march-speed").textContent = M.speed + "×";
+  ixHud(M, "march-ix-");
   const nin = $("march-next-in"); if (nin) nin.textContent = `in ${Math.max(0, Math.ceil(M.waveAt - M.t))}s`;
 }
 function marchEnd(won) {
   M.over = true; $("march-next").hidden = true; Sound.play(won ? "win" : "lose");
   const C = M.cfg; let extra = "";
+  let scoreHtml = "";
+  if (C.id) { const sc = ixScore(M, "iron" + C.id, won, M.killPts + (won ? 8000 : 0), M.camp, C.camp); scoreHtml = sc.html; M.finalScore = sc.score; }
   if (C.id && won) {   // an Iron Lands battle: stars for how much of your camp is left, and Golden Acorns for new stars
     const left = M.camp / C.camp, stars = left >= 0.7 ? 3 : left >= 0.35 ? 2 : 1, s = slot();
     s.iron = s.iron || {}; const old = s.iron[C.id] || 0; let reward = 0;
@@ -8411,13 +8519,14 @@ function marchEnd(won) {
   }
   $("march-end").hidden = false;
   $("march-end-box").innerHTML = C.id === "bridge"
-    ? (won ? `<h2>The Iron Bridge is ours!</h2>${extra}<p class="muted">General Antler: “Those iron plates didn't stand a chance against your upgraded army. On to the Smog Factories!”</p>`
-           : `<h2>Pushed back from the bridge</h2><p class="muted">General Antler: “Their iron plating is too thick! Spend Golden Acorns on <b>Army Upgrades</b> so our animals hit hard enough to break through.”</p>`)
+    ? (won ? `<h2>The Iron Bridge is ours!</h2>${extra}${scoreHtml}<p class="muted">General Antler: “Those iron plates didn't stand a chance against your upgraded army. On to the Smog Factories!”</p>`
+           : `<h2>Pushed back from the bridge</h2>${scoreHtml}<p class="muted">General Antler: “Their iron plating is too thick! Spend Golden Acorns on <b>Army Upgrades</b> so our animals hit hard enough to break through.”</p>`)
     : won ? `<h2>The fortress falls!</h2><p class="muted">General Antler's army broke through in ${fmtTime(M.t)}. This is a preview of the battle mode: the real one will have more battles, all the way to the Iron King.</p>`
     : `<h2>Your camp was overrun</h2><p class="muted">The robots pushed all the way to the treehouse. Try sending Tree Giants in front, with Dragons and Crabs behind them!</p>`;
   const backLabel = C.back === "iron" ? "← Back to the Iron Lands" : "← Back to levels";
   $("march-end-box").insertAdjacentHTML("beforeend", `<div class="row"><button id="march-back">${backLabel}</button>${C.back === "iron" && !won ? `<button id="march-upg">⬆ Army Upgrades</button>` : ""}<button class="go" id="march-again">Play again</button></div>`);
-  $("march-again").onclick = () => startMarch(C.id || "march"); $("march-back").onclick = leaveMarch;
+  const dk = M.diffKey; $("march-again").onclick = () => startMarch(C.id || "march", dk); $("march-back").onclick = leaveMarch;
+  if (C.id) { const st = won ? (M.camp / C.camp >= 0.7 ? 3 : M.camp / C.camp >= 0.35 ? 2 : 1) : 0; ixBoard(M, "iron" + C.id, won, M.finalScore, st, M.camp, M.wave); }
   if ($("march-upg")) $("march-upg").onclick = () => { if (M) cancelAnimationFrame(M.raf); M = null; openArmy(); };
 }
 function leaveMarch() { const back = M && M.cfg.back; if (M) cancelAnimationFrame(M.raf); M = null; if (back === "iron") openIronLands(); else { renderLevels(); show("s-levels"); } }
@@ -8428,9 +8537,15 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowUp" || e.key === "w") { M.lane = Math.max(0, M.lane - 1); e.preventDefault(); }
   else if (e.key === "ArrowDown" || e.key === "s") { M.lane = Math.min(2, M.lane + 1); e.preventDefault(); }
   else if (e.key === "c" || e.key === "C") marchCharge();
+  else if (e.key === "f" || e.key === "F") ixArm(M, "freeze");
+  else if (e.key === "b" || e.key === "B") ixArm(M, "fireball");
+  else if ((e.key === "v" || e.key === "V") && vacuumLevel(slot()) > 0) ixVacuum("march-ix-");
+  else if (e.key === "Escape") M.armed = null;
 });
-$("march-cv").addEventListener("pointerdown", (e) => {   // tap a road to pick it
-  if (!M) return; const r = e.currentTarget.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * 384;
+$("march-cv").addEventListener("pointermove", (e) => { if (M) M.mouse = ixCanvasPos(e, e.currentTarget); });
+$("march-cv").addEventListener("pointerdown", (e) => {   // tap a road to pick it (or grab a leaf, or drop a Freeze / Mega Fireball)
+  if (!M) return; const p = ixCanvasPos(e, e.currentTarget); M.mouse = p; if (ixClick(M, p.x, p.y)) return;
+  const r = e.currentTarget.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * 384;
   let bi = 0; MARCH.lanes.forEach((ly, i) => { if (Math.abs(ly - y) < Math.abs(MARCH.lanes[bi] - y)) bi = i; }); M.lane = bi;
 });
 $("march-pause").onclick = () => { if (M) M.paused = !M.paused; };
@@ -8588,8 +8703,8 @@ $("iron-cv").addEventListener("pointerdown", (e) => {   // tap a battle: it's no
   const p = IRON_STOPS.find((q) => Math.hypot(q.x - px, q.y - py) < 34);
   const iron = (slot() && slot().iron) || {};
   if (p && p.needs && !iron[p.needs]) { Sound.play("nope"); $("iron-info").textContent = `General Antler: “First we need to win ${IRON_STOPS.find((q) => q.play === p.needs).name}, hero.”`; return; }
-  if (p && p.play === "escape") { Sound.play("place"); startEscape(); return; }
-  if (p && p.play === "bridge") { Sound.play("place"); startMarch("bridge"); return; }
+  if (p && p.play === "escape") { Sound.play("place"); ironPickDifficulty("The Great Escape", (d) => startEscape(d)); return; }
+  if (p && p.play === "bridge") { Sound.play("place"); ironPickDifficulty("The Iron Bridge", (d) => startMarch("bridge", d)); return; }
   if (p) { Sound.play("nope"); $("iron-info").textContent = p.king ? "General Antler: “The Iron King's Fortress… one day, hero. We'll need every animal in the land for that fight.”" : `General Antler: “${p.name}? Our scouts are still out there. That battle is coming soon!”`; }
 });
 $("b-iron").onclick = openIronLands;
@@ -8613,6 +8728,7 @@ function renderArmy() {
   }
 }
 $("iron-army").onclick = openArmy;
+$("iron-board").onclick = () => { cancelAnimationFrame(ironRaf); boardLevel = "ironescape"; renderBoards(); show("s-boards"); };
 $("army-back").onclick = openIronLands;
 $("iron-back").onclick = () => { cancelAnimationFrame(ironRaf); renderLevels(); show("s-levels"); };
 $("iron-practice").onclick = () => { cancelAnimationFrame(ironRaf); startMarch(); };
@@ -8631,11 +8747,12 @@ const ESCAPE = {
 const ESCAPE_EXTRA = { squirrel: { name: "Squirrel", hp: 50, dmg: 6, range: 26, rate: 0.5, speed: 50, sound: "crab" }, wizard: { name: "Wizard", hp: 60, dmg: 12, range: 100, rate: 1.1, speed: 30, shot: "#c890ff", sound: "hacked" } };
 const escStats = (u) => u.side ? MARCH.robots[u.kind] : (MARCH.all[u.kind] || ESCAPE_EXTRA[u.kind]);
 let E = null;
-function startEscape() {
+function startEscape(diffKey) {
   cancelAnimationFrame(ironRaf); armyRoster();
   const carts = []; for (let i = 0; i < ESCAPE.carts; i++) carts.push({ i, kind: ESCAPE.cageAnimals[i % ESCAPE.cageAnimals.length], hp: ESCAPE.cartHp, max: ESCAPE.cartHp, freed: false, lost: false, hitT: 0 });
   E = { t: 0, leaves: ESCAPE.startLeaves, camp: ESCAPE.camp, engX: ESCAPE.engine.startX, engHp: ESCAPE.engine.hp, engHitT: 0, carts, units: [], fx: [],
         wave: 0, waveAt: 1, queue: [], next: null, chargeT: 0, chargeCool: 8, over: false, paused: false, speed: 1, last: performance.now(), raf: 0 };
+  ixStart(E, typeof diffKey === "string" ? diffKey : "normal");
   $("esc-end").hidden = true; show("s-escape"); escButtons(); Sound.init(); Sound.play("horn");
   E.fx.push({ text: "Chase the convoy!", x: 300, y: 70, t: 2.2, c: "#ffd34d" });
   E.next = escRollWave(1); battleNextBox("esc-next", E.next, 1);
@@ -8660,6 +8777,7 @@ function escButtons() {
   const ic = document.createElement("canvas"); ic.width = 32; ic.height = 32; const icx = ic.getContext("2d"); icx.imageSmoothingEnabled = false; icx.drawImage(SPR.healer, 0, 0, 32, 32);
   ch.appendChild(ic); ch.insertAdjacentHTML("beforeend", `<span>Antler's Charge! <small>(C)</small><span class="c" id="esc-charge-c"></span></span>`);
   ch.onclick = escCharge; box.appendChild(ch);
+  ixButtons(box, E, "esc-ix-");
 }
 function escAddAnimal(k, x, free) { E.units.push({ side: 0, kind: k, x, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: escStats({ side: 0, kind: k }).hp, max: escStats({ side: 0, kind: k }).hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6, free }); }
 function escSend(k) {
@@ -8685,11 +8803,12 @@ function escTargets(side) {   // things the given side can attack: for animals, 
   return out;
 }
 function escUpdate(dt) {
-  E.t += dt; E.leaves += ESCAPE.leavesPerSecond * dt;
+  E.t += dt; E.leaves += ESCAPE.leavesPerSecond * dt; ixUpdate(E, dt, ESCAPE.W - 60, ESCAPE.H);
   if (E.chargeT > 0) E.chargeT -= dt; if (E.chargeCool > 0) E.chargeCool -= dt;
   if (E.engHitT > 0) E.engHitT -= dt;
   // the convoy rolls on toward the gate (unless its engine is wrecked)
-  if (E.engHp > 0) E.engX += ESCAPE.engine.speed * dt;
+  if (E.engFrozenT > 0) E.engFrozenT -= dt;
+  else if (E.engHp > 0) E.engX += ESCAPE.engine.speed * E.D.robotSpeed * dt;
   for (const c of E.carts) { if (c.hitT > 0) c.hitT -= dt; if (!c.freed && !c.lost && cartX(c) >= ESCAPE.gateX) { c.lost = true; E.fx.push({ text: "A cage got away!", x: ESCAPE.gateX - 60, y: ESCAPE.roadY - 50, t: 1.6, c: "#ff6a4a" }); Sound.play("hit"); } }
   // guards jump off the convoy and run back to stop you
   if (E.engHp > 0 && E.t >= E.waveAt) {
@@ -8699,14 +8818,16 @@ function escUpdate(dt) {
   }
   if (E.engHp <= 0 && E.next) { E.next = null; E.queue = []; battleNextBox("esc-next", null); }   // the convoy stopped: no more guards
   while (E.queue.length && E.queue[0].at <= E.t) {
-    const k = E.queue.shift().kind, r = MARCH.robots[k], tough = 1 + E.t / 200;
+    const k = E.queue.shift().kind, r = MARCH.robots[k], tough = (1 + E.t / 200) * E.D.robotHealth;
     const live = E.carts.filter((c) => !c.freed && !c.lost), from = live.length ? cartX(live[live.length - 1]) - 20 : E.engX - 40;
     E.units.push({ side: 1, kind: k, x: from, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: r.hp * tough, max: r.hp * tough, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
   }
   for (const u of E.units) {
     if (u.hp <= 0) continue;
     const S = escStats(u), dir = u.side ? -1 : 1, charge = !u.side && E.chargeT > 0;
-    u.cool -= dt; if (u.slowT > 0) u.slowT -= dt; if (u.hitT > 0) u.hitT -= dt;
+    if (u.hitT > 0) u.hitT -= dt;
+    if (u.frozenT > 0) { u.frozenT -= dt; continue; }   // frozen solid
+    u.cool -= dt; if (u.slowT > 0) u.slowT -= dt;
     let foe = null, best = 1e9;
     for (const o of escTargets(u.side)) { const d = (o.x - u.x) * dir; if (d > -14 && d < best) { best = d; foe = o; } }
     if (S.heal) {   // the Healer Deer heals hurt animals near it
@@ -8717,9 +8838,9 @@ function escUpdate(dt) {
     if (foe && best <= S.range) { if (u.cool <= 0) escHit(u, S, foe, charge); }
     else if (u.side && u.x <= 44) { if (u.cool <= 0) { u.cool = S.rate; E.camp -= S.dmg; Sound.play("hit"); E.fx.push({ spark: true, x: 40, y: u.y, t: 0.25, c: "#ff6a4a" }); } }
     else if (!u.side && !foe) { u.x = Math.min(u.x + S.speed * dt, ESCAPE.gateX - 20); }
-    else u.x += dir * S.speed * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
+    else u.x += dir * S.speed * (u.side ? E.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt;
   }
-  for (const u of E.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) E.leaves += 8; for (let i = 0; i < 6; i++) E.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  for (const u of E.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) { E.leaves += 8; E.killPts += Math.round(u.max); } for (let i = 0; i < 6; i++) E.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   E.units = E.units.filter((u) => !u.gone);
   for (const f of E.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
   E.fx = E.fx.filter((f) => f.t > 0);
@@ -8825,6 +8946,7 @@ function escDraw() {
     const S = escStats(u), sz = 30, hop = Math.abs(Math.sin(E.t * 8 + u.wob)) * 3, fly = S.fly ? -10 + Math.sin(E.t * 4 + u.wob) * 3 : 0;
     x.fillStyle = "rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(u.x, u.y + 12, 10, 3, 0, 0, Math.PI * 2); x.fill();
     const img = (u.side ? SPRF : SPR)[u.kind]; if (img) { if (u.hitT > 0) x.globalAlpha = 0.6; x.drawImage(img, u.x - sz / 2, u.y - sz + 12 - hop + fly, sz, sz); x.globalAlpha = 1; }
+    ixFrozenTint(x, u, sz, fly);
     if (u.free) { x.fillStyle = "#9be28a"; x.fillRect(u.x - 2, u.y - sz + 2 + fly, 4, 4); }   // a little green mark on freed animals
     if (u.hp < u.max) { x.fillStyle = "#200"; x.fillRect(u.x - 12, u.y - sz + 6 + fly, 24, 3); x.fillStyle = u.side ? "#ff5a4a" : "#6ee06a"; x.fillRect(u.x - 12, u.y - sz + 6 + fly, 24 * Math.max(0, u.hp / u.max), 3); }
   }
@@ -8833,6 +8955,8 @@ function escDraw() {
     else if (f.spark) { x.fillStyle = f.c; x.fillRect(f.x - 2, f.y - 2, 4, 4); }
     else if (f.text) { x.font = "bold 16px " + getComputedStyle(document.body).getPropertyValue("--display"); x.fillStyle = "#000"; x.fillText(f.text, f.x + 2, f.y + 2); x.fillStyle = f.c; x.fillText(f.text, f.x, f.y); }
   }
+  if (E.engFrozenT > 0 && E.engHp > 0) { x.fillStyle = "rgba(170,225,255,0.45)"; x.fillRect(E.engX - 34, ESCAPE.roadY - 50, 68, 68); }
+  ixDraw(x, E);
   // top bar: camp health, cages freed / lost, distance to the gate
   const freed = E.carts.filter((c) => c.freed).length, lost = E.carts.filter((c) => c.lost).length;
   x.fillStyle = "rgba(0,0,0,0.6)"; x.fillRect(8, 8, 180, 18); x.fillStyle = "#5ac85a"; x.fillRect(10, 10, 176 * Math.max(0, E.camp / ESCAPE.camp), 14); x.fillStyle = "#fff"; x.font = "12px sans-serif"; x.fillText(`Your camp ${Math.max(0, Math.ceil(E.camp))}`, 14, 21);
@@ -8845,6 +8969,7 @@ function escHud() {
   for (const [k, a] of Object.entries(MARCH.animals)) { const b = $("esc-" + k); if (b) b.classList.toggle("broke", E.leaves < a.cost); }
   const c = $("esc-charge-c"); if (c) c.textContent = E.chargeT > 0 ? "Charging!" : E.chargeCool > 0 ? `Ready in ${Math.ceil(E.chargeCool)}s` : "Ready!";
   $("esc-pause").textContent = E.paused ? "Resume" : "Pause"; $("esc-speed").textContent = E.speed + "×";
+  ixHud(E, "esc-ix-");
   const nin = $("esc-next-in"); if (nin) nin.textContent = `in ${Math.max(0, Math.ceil(E.waveAt - E.t))}s`;
 }
 function escEnd(survived) {
@@ -8853,19 +8978,31 @@ function escEnd(survived) {
   const s = slot(); let reward = 0;
   if (s) { s.iron = s.iron || {}; const old = s.iron.escape || 0; if (stars > old) { reward = (stars - old) * 50; s.iron.escape = stars; s.acorns = (s.acorns || 0) + reward; } saveSlots(slots); }
   Sound.play(stars ? "win" : "lose");
+  const sc = ixScore(E, "ironescape", !!stars, E.killPts + freed * 1500 + (stars ? 5000 : 0), E.camp, ESCAPE.camp);
   $("esc-end").hidden = false;
   $("esc-end-box").innerHTML = stars
-    ? `<h2>The Great Escape!</h2><div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div><p>You freed <b>${freed}</b> of ${ESCAPE.carts} cages in ${fmtTime(E.t)}.</p>${reward ? `<div class="acorns" style="font-size:20px">+${reward} Golden Acorns</div>` : ""}<p class="muted">General Antler: “Well done, hero! Every animal you freed is another soldier for the march on the Iron King.”</p>`
-    : survived ? `<h2>The convoy got away</h2><p>You only freed <b>${freed}</b> of ${ESCAPE.carts} cages. You need ${ESCAPE.starsFor[0]} to win. Try wrecking the Engine at the front to stop the whole convoy!</p>`
-    : `<h2>Your camp was overrun</h2><p class="muted">The robot guards pushed all the way back to your camp. Send Tree Giants in front to hold them off.</p>`;
+    ? `<h2>The Great Escape!</h2><div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div><p>You freed <b>${freed}</b> of ${ESCAPE.carts} cages in ${fmtTime(E.t)}.</p>${reward ? `<div class="acorns" style="font-size:20px">+${reward} Golden Acorns</div>` : ""}${sc.html}<p class="muted">General Antler: “Well done, hero! Every animal you freed is another soldier for the march on the Iron King.”</p>`
+    : survived ? `<h2>The convoy got away</h2>${sc.html}<p>You only freed <b>${freed}</b> of ${ESCAPE.carts} cages. You need ${ESCAPE.starsFor[0]} to win. Try wrecking the Engine at the front to stop the whole convoy!</p>`
+    : `<h2>Your camp was overrun</h2>${sc.html}<p class="muted">The robot guards pushed all the way back to your camp. Send Tree Giants in front to hold them off.</p>`;
   $("esc-end-box").insertAdjacentHTML("beforeend", `<div class="row"><button id="esc-back">← Back to the Iron Lands</button><button class="go" id="esc-again">Play again</button></div>`);
-  $("esc-again").onclick = startEscape; $("esc-back").onclick = leaveEscape;
+  const dk = E.diffKey; $("esc-again").onclick = () => startEscape(dk); $("esc-back").onclick = leaveEscape;
+  ixBoard(E, "ironescape", !!stars, sc.score, stars, E.camp, E.wave);
 }
 function leaveEscape() { if (E) cancelAnimationFrame(E.raf); E = null; openIronLands(); }
 document.addEventListener("keydown", (e) => {
   if (!E || $("s-escape").hidden || e.target.tagName === "INPUT") return;
   const keys = Object.keys(MARCH.animals), n = parseInt(e.key, 10);
   if (!isNaN(n)) { const k = keys[(n + 9) % 10]; if (k) escSend(k); } else if (e.key === "c" || e.key === "C") escCharge();
+  else if (e.key === "f" || e.key === "F") ixArm(E, "freeze");
+  else if (e.key === "b" || e.key === "B") ixArm(E, "fireball");
+  else if ((e.key === "v" || e.key === "V") && vacuumLevel(slot()) > 0) ixVacuum("esc-ix-");
+  else if (e.key === "Escape") E.armed = null;
+});
+$("esc-cv").addEventListener("pointermove", (e) => { if (E) E.mouse = ixCanvasPos(e, e.currentTarget); });
+$("esc-cv").addEventListener("pointerdown", (e) => {   // grab a leaf, or drop a Freeze / Mega Fireball (it can freeze the Engine, or blast it)
+  if (!E) return; const p = ixCanvasPos(e, e.currentTarget); E.mouse = p;
+  ixClick(E, p.x, p.y, { freeze: (px, py, sec) => { if (E.engHp > 0 && Math.hypot(E.engX - px, ESCAPE.roadY - py) <= IX_RADIUS + 20) { E.engFrozenT = sec; E.fx.push({ text: "Convoy frozen!", x: E.engX - 50, y: ESCAPE.roadY - 66, t: 1.4, c: "#c8f0ff" }); } },
+    fireball: (px, py, dmg) => { if (E.engHp > 0 && Math.hypot(E.engX - px, ESCAPE.roadY - py) <= IX_RADIUS + 20) { E.engHp = Math.max(0, E.engHp - dmg); E.engHitT = 0.15; if (E.engHp <= 0) E.fx.push({ text: "ENGINE WRECKED! The convoy stopped!", x: E.engX - 120, y: ESCAPE.roadY - 70, t: 2.4, c: "#ffd34d" }); } } });
 });
 $("esc-pause").onclick = () => { if (E) E.paused = !E.paused; };
 $("esc-speed").onclick = () => { if (E) E.speed = E.speed === 1 ? 2 : E.speed === 2 ? 3 : 1; };
@@ -8873,7 +9010,7 @@ $("esc-quit").onclick = leaveEscape;
 // Ask for a nickname after a game: always after a win, and after a loss only if the score makes the Top 25.
 async function askForBoard(g, won, score, stars) {
   const box = $("o-ask"); if (!box) return;
-  const lvName = SETTINGS.levels[g.level].name;
+  const lvName = levelNameOf(g.level);
   if (!won) {
     box.innerHTML = `<p class="muted">Checking the leaderboard…</p>`;
     let top = null;
@@ -8899,7 +9036,7 @@ async function askForBoard(g, won, score, stars) {
       }
       rememberNick(nick);
       box.innerHTML = `<p class="muted">You're on the leaderboard for ${esc(lvName)} as <b>${esc(nick)}</b>! <button class="link" id="o-see">See it</button></p>`;
-      $("o-see").onclick = () => { G = null; boardLevel = g.level; renderBoards(); show("s-boards"); };
+      $("o-see").onclick = () => { G = null; if (typeof M !== "undefined" && M) { cancelAnimationFrame(M.raf); M = null; } if (typeof E !== "undefined" && E) { cancelAnimationFrame(E.raf); E = null; } boardLevel = g.level; renderBoards(); show("s-boards"); };
     } catch (e) {
       msg.textContent = /fetch|network|load failed/i.test(e.message || "") ? "Couldn't reach the leaderboard. Check the internet and try again."
         : /too many/i.test(e.message || "") ? "The leaderboard is busy right now. Try again in a minute."
