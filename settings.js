@@ -288,6 +288,7 @@ const SETTINGS = {
     // The Universe Golem (Infinity): stronger than the Glacier Golem, and it drops no Maple Leaves (neither do its Star Chunks).
     universegolem: { name: "Universe Golem", health: 3600, speed: 0.8, leaves: 0, points: 1000, baseHit: 60, isBoss: true, chunkEvery: 450, chunkType: "starchunk" },
     // The Universe Titan: the final boss of Infinity (wave 45). fixedHealth: exactly this much health on Normal.
+    superclanker: { name: "Super Clanker", health: 200000, speed: 1.0, leaves: 0, points: 30000, baseHit: 150, isBoss: true, fixedHealth: true },   // Infinity's wave 75 (and 100): a Clanker as big as the Universe Titan
     universetitan: { name: "Universe Titan", health: 75000, speed: 1.5, leaves: 0, points: 8000, baseHit: 100, isBoss: true, fixedHealth: true, chunkEvery: 2500, chunkType: "starchunk" },
     // ---- Eye of the Storm robots ----
     // Gust Runner: every dashEvery seconds a gust of wind pushes it dashSpeed times faster for dashSeconds.
@@ -841,7 +842,7 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "The road loops forever through space. Can you survive all 45 waves?", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "The road loops forever through space. Can you survive all 100 waves?", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
               lateToughness: { fromWave: 25, perWave: 0.08, untilWave: 35 },   // robots get 8% tougher every wave from wave 26 to 35 (1.8x), then stay that tough
@@ -900,7 +901,28 @@ const SETTINGS = {
                 [["universegolem", 4, 9, null, 3], ["yetimech", 2, 9], [["tank", "snowplow", "obsidian", "mummy", "diver"], 32, 0.35]],   // 43
                 [["universegolem", 5, 8, null, 3], ["boss", 1, 0, 10000], [["tank", "obsidian", "fireproof", "snowplow", "tesla", "emberbat", "snowdrone", "hider"], 40, 0.3]],   // 44
                 [["universetitan", 1, 0, null, 3]],                                     // 45: the Universe Titan (75,000 health), always glowing orange
-              ] },
+              ],
+              // Waves 46 to 100. A wave group can end with a speed number: 2.5 means that group moves 2.5x as fast ("super fast").
+              // Every 10th wave: SUPER FAST Universe Titans. Wave 75: the Super Clanker (200,000 health). Wave 100: everything at once.
+              extraWaves: (() => {
+                const mixes = [["tank", "obsidian", "fireproof", "snowplow"], ["emberbat", "snowdrone", "drone", "hider"], ["mummy", "splitter", "repair", "diver"], ["tesla", "crawler", "snowball", "penguin"]];
+                const out = [];
+                for (let w = 46; w <= 100; w++) {
+                  const k = w - 45, wave = [];
+                  if (w === 75) wave.push(["superclanker", 1, 0, null, 3], ["universegolem", 4, 8, null, 3, 2.5]);
+                  else if (w === 100) wave.push(["universegolem", 8, 5, null, 3, 2.5], ["universetitan", 2, 14, null, 3, 2], ["superclanker", 1, 0, null, 3]);
+                  else {
+                    wave.push(["universegolem", Math.min(6, 1 + Math.floor(k / 9)), 9, null, 3]);                                   // regular Universe Golems
+                    if (w >= 48) wave.push(["universegolem", Math.min(6, 1 + Math.floor((k - 3) / 8)), 7, null, 3, 2.5]);          // SUPER FAST Universe Golems
+                    if (w % 10 === 0) wave.push(["universetitan", 1 + Math.floor((w - 50) / 20), 16, null, 3, 2]);              // SUPER FAST Universe Titans
+                    else if (w % 10 === 5) wave.push(["universetitan", 1, 0, null, 3]);
+                    if (w % 7 === 0) wave.push(["boss", 1, 0, 12000 + k * 300], ["magmaking", 1, 0], ["glaciergolem", 1, 0]);
+                  }
+                  wave.push([mixes[w % mixes.length], 24 + Math.min(30, Math.floor(k / 2)), Math.max(0.2, 0.4 - k * 0.004)]);   // and a crowd of tough robots
+                  out.push(wave);
+                }
+                return out;
+              })() },
     // ---- The Sky Islands ----
     // islands: [square across, square down, width, height] of each floating island. Everything else is open sky:
     // nothing can be built there, and the road crosses it on rope bridges.
