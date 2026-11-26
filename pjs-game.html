@@ -416,6 +416,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .acct-box .row button { flex: 1 1 140px; }
 .acct-box .tip { font-size: 14px; color: #a9b8a6; margin: 10px 0 0; }
 .acct-box .cloud { background: #0f1a13; border-radius: 8px; padding: 10px 12px; margin: 10px 0; font-size: 15px; }
+.acct-box .pw-row { display: flex; gap: 8px; } .acct-box .pw-row input { flex: 1; } .acct-box .pw-row button { flex: 0 0 auto; min-height: 44px; padding: 6px 12px; }
+.acct-h4 { margin: 18px 0 4px; font-size: 17px; color: #ffe680; border-top: 1px solid #3a5a3e; padding-top: 12px; }
 .acct-msg { min-height: 1.3em; margin: 12px 0 0; font-weight: 700; }
 .acct-msg.bad { color: #ff8a7a; } .acct-msg.good { color: #9be28a; } .ix-score, .ix-score * { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; } .ix-score .big { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 800; font-size: 38px; letter-spacing: 0.5px; color: #ffd34d; text-shadow: 0 2px 0 #7a5a10, 0 0 14px rgba(255,211,77,0.35); }   /* a smooth (not pixel) font, so big scores are easy to read */ .ix-score .muted { font-size: 13px; }
 .march-units .ixbtn { background: #1c2430; border-color: #4a6a8a; } .march-units .ixbtn.armed { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
@@ -2411,6 +2413,8 @@ function acctErr(e) {
   const m = String((e && e.message) || e);
   if (/could not find the function|schema cache|does not exist/i.test(m)) return "Accounts aren't switched on yet: the game's online database needs its update (010_accounts.sql).";
   if (/failed to fetch|network|reach/i.test(m)) return "Couldn't reach the internet. Check your connection and try again.";
+  if (/wrong username or password/i.test(m) && !/First time/.test(m)) return `Wrong username or password. First time? Tap "✨ Make a new account" instead.`;
+  if (/username is taken/i.test(m)) return "Someone already has that username. Try a different one, or log in if it's yours.";
   return m.charAt(0).toUpperCase() + m.slice(1);
 }
 function openAccount() { $("acct").hidden = false; acctMsg(""); renderAccount(); }
@@ -2418,19 +2422,28 @@ function renderAccount() {
   const body = $("acct-body"), filled = slots.map((s, i) => [s, i]).filter(([s]) => s);
   if (!ACCT.pass) {
     body.innerHTML = `<p>Save your progress online with a username and password. Then log in on <b>any</b> computer to get it back.</p>
-      <label for="acct-user">Username</label><input id="acct-user" autocomplete="username" maxlength="20" placeholder="3 to 20 letters or numbers" value="${esc(ACCT.user)}">
-      <label for="acct-pass">Password</label><input id="acct-pass" type="password" autocomplete="current-password" maxlength="64" placeholder="at least 4 characters">
+      <label for="acct-user">Username</label><input id="acct-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="3 to 20 letters or numbers" value="${esc(ACCT.user)}">
+      <label for="acct-pass">Password</label>
+      <div class="pw-row"><input id="acct-pass" type="password" autocomplete="current-password" maxlength="64" placeholder="at least 4 characters"><button type="button" id="acct-show" aria-pressed="false" title="Show or hide the password">👁 Show</button></div>
+      <p class="tip" id="acct-check"></p>
+      <h4 class="acct-h4">🆕 First time? Make your account</h4>
+      <label for="acct-newslot" class="tip" style="margin-top:0">Save slot to put in your new account:</label>
+      <select id="acct-newslot">${filled.length ? filled.map(([s, i]) => `<option value="${i}">Slot ${i + 1} (${acctSlotInfo(s)})</option>`).join("") : `<option value="">(no saves on this computer yet)</option>`}</select>
+      <div class="row"><button class="go" id="acct-create" ${filled.length ? "" : "disabled"}>✨ Make a new account</button></div>
+      <h4 class="acct-h4">🔑 Already made one? Log in</h4>
       <div class="row"><button class="go" id="acct-login">Log in</button></div>
-      <p class="tip">New here? Pick the save slot to put in your new account:</p>
-      <select id="acct-newslot" aria-label="Save slot for the new account">${filled.length ? filled.map(([s, i]) => `<option value="${i}">Slot ${i + 1} (${acctSlotInfo(s)})</option>`).join("") : `<option value="">(no saves yet: play a level first)</option>`}</select>
-      <div class="row"><button id="acct-create" ${filled.length ? "" : "disabled"}>Make a new account</button></div>
       <p class="tip">Don't use a password from anything else, and don't share it. A grown-up can help you remember it!</p>`;
+    const chk = () => { const u = $("acct-user").value.trim().toLowerCase(), p = $("acct-pass").value, c = $("acct-check");   // live hints while typing
+      c.textContent = !u && !p ? "" : !/^[a-z0-9_]*$/.test(u) ? "⚠️ Usernames can only use letters, numbers and _ (no spaces)." : u.length < 3 ? "⚠️ Usernames need at least 3 letters." : p && p.length < 4 ? "⚠️ Passwords need at least 4 characters." : u !== $("acct-user").value.trim() ? `👍 Your username will be "${u}" (small letters).` : ""; };
+    $("acct-user").oninput = chk; $("acct-pass").oninput = chk;
+    $("acct-show").onclick = () => { const f = $("acct-pass"), on = f.type === "password"; f.type = on ? "text" : "password"; $("acct-show").textContent = on ? "🙈 Hide" : "👁 Show"; $("acct-show").setAttribute("aria-pressed", String(on)); f.focus(); };
     const go = (fn) => async () => { const u = $("acct-user").value.trim().toLowerCase(), p = $("acct-pass").value;
       if (!/^[a-z0-9_]{3,20}$/.test(u)) return acctMsg("Usernames are 3 to 20 letters, numbers or _ (no spaces).", "bad");
       if (p.length < 4) return acctMsg("Passwords need at least 4 characters.", "bad");
       acctMsg("Working…"); try { await fn(u, p); } catch (e) { acctMsg(acctErr(e), "bad"); } };
     $("acct-login").onclick = go(async (u, p) => {
-      const res = await rpc("account_load", { p_username: u, p_password: p }); if (res && res.error) throw new Error(res.error);
+      const res = await rpc("account_load", { p_username: u, p_password: p });
+      if (res && res.error) throw new Error(`Wrong username or password. Check the spelling (tap 👁 Show to see your password). First time? Tap "✨ Make a new account" instead.`);
       ACCT.user = u; ACCT.pass = p; ACCT.cloud = res; try { localStorage.setItem("pjs-game-acct-user", u); } catch (e) {}
       renderAccount(); acctMsg(`Hi ${u}! You're logged in.`, "good"); });
     $("acct-create").onclick = go(async (u, p) => {
