@@ -161,7 +161,7 @@ const SETTINGS = {
     // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads bites a different robot.
     // The Phoenix: the jackpot prize from the Mystery Box. Its fire feathers burn robots, and nothing can freeze, stun or trap it:
     // it bursts into flames instead ("rebirth") and scorches robots within rebirth.radius squares.
-    phoenix:  { name: "Phoenix", cost: 220, range: 2.8, damage: 27, attacksPerSecond: 1.3, burnDamagePerSecond: 8, burnSeconds: 2.5, boxUnlock: "phoenix",
+    phoenix:  { name: "Phoenix", cost: 220, range: 2.8, damage: 27, attacksPerSecond: 3, burnDamagePerSecond: 8, burnSeconds: 2.5, boxUnlock: "phoenix",
               rebirth: { radius: 1.5, damage: 40 },
               about: "Found in the Mystery Box. Shoots blazing feathers that burn robots. It can't be frozen or trapped: it bursts into flames instead.",
               upgradeChoices: [
