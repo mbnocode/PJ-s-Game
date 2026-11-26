@@ -403,7 +403,21 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .iron-diff-box .diff-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
 .iron-diff-box .diff-row button { display: flex; flex-direction: column; gap: 3px; } .iron-diff-box .diff-row small { font-size: 11px; opacity: 0.85; }
 .march-lanes button.wrecked { opacity: 0.45; text-decoration: line-through; }
-.ix-score { margin: 8px 0; } .ix-score, .ix-score * { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; } .ix-score .big { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 800; font-size: 38px; letter-spacing: 0.5px; color: #ffd34d; text-shadow: 0 2px 0 #7a5a10, 0 0 14px rgba(255,211,77,0.35); }   /* a smooth (not pixel) font, so big scores are easy to read */ .ix-score .muted { font-size: 13px; }
+.ix-score { margin: 8px 0; }
+#b-account { margin-top: 14px; }
+.acct { position: fixed; inset: 0; background: rgba(6, 14, 10, 0.72); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px; }
+.acct[hidden] { display: none; }
+.acct-box { position: relative; background: #1c2a20; border: 3px solid #4f7a52; border-radius: 12px; padding: 22px 24px 16px; width: 100%; max-width: 470px; max-height: 92vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.acct-box h3 { margin: 0 0 10px; font-family: var(--display); font-size: 26px; color: #ffd34d; }
+.acct-x { position: absolute; top: 8px; right: 8px; min-height: 36px; padding: 4px 12px; }
+.acct-box label { display: block; margin: 10px 0 4px; font-weight: 700; }
+.acct-box input, .acct-box select { width: 100%; box-sizing: border-box; font-size: 18px; padding: 10px 12px; border-radius: 8px; border: 2px solid #4f7a52; background: #0f1a13; color: #f0f4ea; }
+.acct-box .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.acct-box .row button { flex: 1 1 140px; }
+.acct-box .tip { font-size: 14px; color: #a9b8a6; margin: 10px 0 0; }
+.acct-box .cloud { background: #0f1a13; border-radius: 8px; padding: 10px 12px; margin: 10px 0; font-size: 15px; }
+.acct-msg { min-height: 1.3em; margin: 12px 0 0; font-weight: 700; }
+.acct-msg.bad { color: #ff8a7a; } .acct-msg.good { color: #9be28a; } .ix-score, .ix-score * { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; } .ix-score .big { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 800; font-size: 38px; letter-spacing: 0.5px; color: #ffd34d; text-shadow: 0 2px 0 #7a5a10, 0 0 14px rgba(255,211,77,0.35); }   /* a smooth (not pixel) font, so big scores are easy to read */ .ix-score .muted { font-size: 13px; }
 .march-units .ixbtn { background: #1c2430; border-color: #4a6a8a; } .march-units .ixbtn.armed { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
 .march-end-box { max-height: 100%; overflow-y: auto; } .march-end-box .board-ask { margin: 8px 0; }
 .army-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; width: min(1100px, 100%); }
@@ -687,6 +701,15 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="cards" id="slot-cards"></div>
     </div>
     <button id="b-serpent" aria-label="Something is hiding behind the tree…" title="Something is hiding behind the tree…" hidden></button>
+    <button class="go" id="b-account" title="Save your progress to an account, and get it back on any computer">☁️ Account: save &amp; move your progress</button>
+    <div class="acct" id="acct" role="dialog" aria-modal="true" aria-labelledby="acct-h" hidden>
+      <div class="acct-box">
+        <button class="acct-x" id="acct-x" aria-label="Close">✕</button>
+        <h3 id="acct-h">☁️ Your Account</h3>
+        <div id="acct-body"></div>
+        <p class="acct-msg" id="acct-msg" role="status"></p>
+      </div>
+    </div>
   </section>
 
   <!-- Levels -->
@@ -2235,7 +2258,7 @@ function loadSlots() {
   try { const v = JSON.parse(localStorage.getItem(SAVE_KEY)); if (Array.isArray(v) && v.length === 3) return v; } catch (e) {}
   return [null, null, null];
 }
-function saveSlots(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) {} }
+function saveSlots(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) {} if (typeof acctAutoSave === "function") acctAutoSave(); }
 let slots = loadSlots();
 let slotIndex = 0;
 const slot = () => slots[slotIndex];
@@ -2378,6 +2401,84 @@ function drawLineup(t) {
 $("b-play").onclick = () => { Sound.init(); renderSlots(); show("s-slots"); startSlotScene(); };
 addEventListener("resize", () => { if (slotScene && $("s-slots")) $("slot-scene").dataset.r = Date.now(); });
 $("b-slots-back").onclick = () => show("s-title");
+/* ---------- ACCOUNTS: a username + password keeps one save slot online, so you can load it on any computer.
+   The password is only kept in memory while the game is open (never saved on the computer). ---------- */
+const ACCT = { user: (() => { try { return localStorage.getItem("pjs-game-acct-user") || ""; } catch (e) { return ""; } })(), pass: null, cloud: null,
+  link: (() => { try { const v = localStorage.getItem("pjs-game-acct-link"); return v === null ? null : +v; } catch (e) { return null; } })(), timer: null };
+const acctSlotInfo = (s) => { if (!s) return "empty"; const beaten = Object.values(s.best || {}).filter((b) => b && b.stars).length; return `${beaten} level${beaten === 1 ? "" : "s"} beaten, ${s.acorns || 0} Golden Acorns`; };
+function acctMsg(t, kind) { const m = $("acct-msg"); m.textContent = t || ""; m.className = "acct-msg" + (kind ? " " + kind : ""); }
+function acctErr(e) {
+  const m = String((e && e.message) || e);
+  if (/could not find the function|schema cache|does not exist/i.test(m)) return "Accounts aren't switched on yet: the game's online database needs its update (010_accounts.sql).";
+  if (/failed to fetch|network|reach/i.test(m)) return "Couldn't reach the internet. Check your connection and try again.";
+  return m.charAt(0).toUpperCase() + m.slice(1);
+}
+function openAccount() { $("acct").hidden = false; acctMsg(""); renderAccount(); }
+function renderAccount() {
+  const body = $("acct-body"), filled = slots.map((s, i) => [s, i]).filter(([s]) => s);
+  if (!ACCT.pass) {
+    body.innerHTML = `<p>Save your progress online with a username and password. Then log in on <b>any</b> computer to get it back.</p>
+      <label for="acct-user">Username</label><input id="acct-user" autocomplete="username" maxlength="20" placeholder="3 to 20 letters or numbers" value="${esc(ACCT.user)}">
+      <label for="acct-pass">Password</label><input id="acct-pass" type="password" autocomplete="current-password" maxlength="64" placeholder="at least 4 characters">
+      <div class="row"><button class="go" id="acct-login">Log in</button></div>
+      <p class="tip">New here? Pick the save slot to put in your new account:</p>
+      <select id="acct-newslot" aria-label="Save slot for the new account">${filled.length ? filled.map(([s, i]) => `<option value="${i}">Slot ${i + 1} (${acctSlotInfo(s)})</option>`).join("") : `<option value="">(no saves yet: play a level first)</option>`}</select>
+      <div class="row"><button id="acct-create" ${filled.length ? "" : "disabled"}>Make a new account</button></div>
+      <p class="tip">Don't use a password from anything else, and don't share it. A grown-up can help you remember it!</p>`;
+    const go = (fn) => async () => { const u = $("acct-user").value.trim().toLowerCase(), p = $("acct-pass").value;
+      if (!/^[a-z0-9_]{3,20}$/.test(u)) return acctMsg("Usernames are 3 to 20 letters, numbers or _ (no spaces).", "bad");
+      if (p.length < 4) return acctMsg("Passwords need at least 4 characters.", "bad");
+      acctMsg("Working…"); try { await fn(u, p); } catch (e) { acctMsg(acctErr(e), "bad"); } };
+    $("acct-login").onclick = go(async (u, p) => {
+      const res = await rpc("account_load", { p_username: u, p_password: p }); if (res && res.error) throw new Error(res.error);
+      ACCT.user = u; ACCT.pass = p; ACCT.cloud = res; try { localStorage.setItem("pjs-game-acct-user", u); } catch (e) {}
+      renderAccount(); acctMsg(`Hi ${u}! You're logged in.`, "good"); });
+    $("acct-create").onclick = go(async (u, p) => {
+      const i = +$("acct-newslot").value; if (!slots[i]) return acctMsg("Pick a save slot first.", "bad");
+      await rpc("account_create", { p_username: u, p_password: p, p_save: { slot: slots[i], savedAt: Date.now() } });
+      ACCT.user = u; ACCT.pass = p; ACCT.link = i; ACCT.cloud = { save: { slot: slots[i] }, updated_at: new Date().toISOString() };
+      try { localStorage.setItem("pjs-game-acct-user", u); localStorage.setItem("pjs-game-acct-link", String(i)); } catch (e) {}
+      renderAccount(); acctMsg(`Account made! Slot ${i + 1} is saved to "${u}", and it will keep saving by itself.`, "good"); });
+    $("acct-pass").onkeydown = (e) => { if (e.key === "Enter") $("acct-login").click(); };
+    return;
+  }
+  const c = ACCT.cloud && ACCT.cloud.save && ACCT.cloud.save.slot, when = ACCT.cloud && ACCT.cloud.updated_at ? new Date(ACCT.cloud.updated_at).toLocaleString() : "";
+  body.innerHTML = `<p>Logged in as <b>${esc(ACCT.user)}</b>.</p>
+    <div class="cloud">☁️ Saved in your account: ${c ? `<b>${acctSlotInfo(c)}</b><br><span class="muted">last saved ${esc(when)}</span>` : "<b>nothing yet</b>"}</div>
+    <label for="acct-link">Keep saving this slot to your account automatically:</label>
+    <select id="acct-link"><option value="">Don't save automatically</option>${slots.map((s, i) => `<option value="${i}" ${ACCT.link === i ? "selected" : ""} ${s ? "" : "disabled"}>Slot ${i + 1} (${acctSlotInfo(s)})</option>`).join("")}</select>
+    <p class="tip">Save a slot now:</p>
+    <div class="row">${slots.map((s, i) => `<button class="go" data-up="${i}" ${s ? "" : "disabled"}>⬆ Save Slot ${i + 1}</button>`).join("")}</div>
+    <p class="tip">Get your account's save on this computer (it replaces what's in that slot):</p>
+    <div class="row">${slots.map((s, i) => `<button data-down="${i}" ${c ? "" : "disabled"}>⬇ Load into Slot ${i + 1}</button>`).join("")}</div>
+    <div class="row"><button id="acct-logout">Log out</button></div>`;
+  $("acct-link").onchange = (e) => { ACCT.link = e.target.value === "" ? null : +e.target.value; try { ACCT.link === null ? localStorage.removeItem("pjs-game-acct-link") : localStorage.setItem("pjs-game-acct-link", String(ACCT.link)); } catch (er) {}
+    if (ACCT.link !== null) acctUpload(ACCT.link).then(() => acctMsg(`Slot ${ACCT.link + 1} will now keep saving to your account.`, "good")).catch((er) => acctMsg(acctErr(er), "bad")); else acctMsg("Automatic saving is off.", ""); };
+  body.querySelectorAll("[data-up]").forEach((b) => b.onclick = async () => { const i = +b.dataset.up;
+    if (c && !confirm(`Replace the save in your account (${acctSlotInfo(c)}) with Slot ${i + 1} (${acctSlotInfo(slots[i])})?`)) return;
+    acctMsg("Saving…"); try { await acctUpload(i); renderAccount(); acctMsg(`Slot ${i + 1} is saved to your account!`, "good"); } catch (e) { acctMsg(acctErr(e), "bad"); } });
+  body.querySelectorAll("[data-down]").forEach((b) => b.onclick = async () => { const i = +b.dataset.down;
+    if (slots[i] && !confirm(`Replace Slot ${i + 1} (${acctSlotInfo(slots[i])}) with your account's save (${acctSlotInfo(c)})? What's in Slot ${i + 1} now will be gone.`)) return;
+    acctMsg("Loading…"); try { const res = await rpc("account_load", { p_username: ACCT.user, p_password: ACCT.pass }); if (res && res.error) throw new Error(res.error);
+      ACCT.cloud = res; const got = res.save && res.save.slot; if (!got) throw new Error("There's no save in your account yet.");
+      slots[i] = got; ACCT.link = i; try { localStorage.setItem("pjs-game-acct-link", String(i)); } catch (e) {}
+      saveSlots(slots); renderSlots(); renderAccount(); acctMsg(`Loaded! Your save is now in Slot ${i + 1}.`, "good"); } catch (e) { acctMsg(acctErr(e), "bad"); } });
+  $("acct-logout").onclick = () => { ACCT.pass = null; ACCT.cloud = null; renderAccount(); acctMsg("Logged out.", ""); };
+}
+async function acctUpload(i) {
+  if (!ACCT.pass || !slots[i]) return;
+  const res = await rpc("account_save", { p_username: ACCT.user, p_password: ACCT.pass, p_save: { slot: slots[i], savedAt: Date.now() } });
+  if (res && res.error) throw new Error(res.error);
+  ACCT.cloud = { save: { slot: JSON.parse(JSON.stringify(slots[i])) }, updated_at: res.updated_at };
+}
+function acctAutoSave() {   // after the game saves, quietly send the linked slot to the account too (at most every 5 seconds)
+  if (!ACCT.pass || ACCT.link === null || !slots[ACCT.link]) return;
+  clearTimeout(ACCT.timer); ACCT.timer = setTimeout(() => acctUpload(ACCT.link).catch(() => {}), 5000);
+}
+document.body.appendChild($("acct"));   // (on top of everything, not inside the save-slot screen)
+$("b-account").onclick = openAccount;
+$("acct-x").onclick = () => { $("acct").hidden = true; };
+$("acct").onclick = (e) => { if (e.target.id === "acct") $("acct").hidden = true; };
 $("b-levels-back").onclick = () => { renderSlots(); show("s-slots"); startSlotScene(); };
 
 /* ---------- save slot screen: a little meadow battle that loops forever ---------- */
@@ -4804,7 +4905,7 @@ function renderPerks() {
     ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? `Open with Mystery Key${s.materials.mysterykey > 1 ? ` (${s.materials.mysterykey} keys)` : ""}` : "🔒 Needs a Mystery Key"}</button>`}
     <div class="coll"><div class="ct">Collection${s.boxOpened ? ` · opened ${s.boxOpened}×` : ""}</div>${coll.map(([k, n, v]) => `<div class="ci${v ? " got" : ""}"><span>${v ? (k === "phoenix" || k === "kraken" ? "Jackpot" : n) : "???"}</span><b>${v || "not found yet"}</b></div>`).join("")}</div>
     <details class="droprates"><summary>Drop rates</summary>${boxDropRates(s)}</details>
-    ${pets.length ? `<label class="petpick">Your pet: <select id="pet-pick"><option value="">No pet</option>${pets.map((k) => `<option value="${k}" ${s.box.pet === k ? "selected" : ""}>${PETS[k]}</option>`).join("")}</select></label>` : ""}`;
+    ${pets.length ? `<label class="petpick">Your pet: <select id="pet-pick"><option value="">No pet</option>${pets.map((k) => `<option value="${k}" ${s.box.pet === k ? "selected" : ""}>${PETS[k]}</option>`).join("")}</select></label><p class="muted pet-power" id="pet-power">${PET_POWERS[s.box.pet] || "Pick a pet to see its special power."}</p>` : ""}`;
   const pc = spriteCanvas(opened ? "mysteryboxopen" : "mysterybox", 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc);
   box.appendChild(d);
   const serpBought = s.serpBought || s.boxOpened > 0 || Object.keys(SETTINGS.serpentShop || {}).some((k) => s.materials && k in s.materials);
@@ -4815,7 +4916,7 @@ function renderPerks() {
     sb.onclick = () => { Sound.play("place"); openSerpentShop("s-perks"); };
     d.appendChild(sb);
   }
-  const pp = d.querySelector("#pet-pick"); if (pp) pp.onchange = () => { s.box.pet = pp.value || null; saveSlots(slots); };
+  const pp = d.querySelector("#pet-pick"); if (pp) pp.onchange = () => { s.box.pet = pp.value || null; saveSlots(slots); const pw = d.querySelector("#pet-power"); if (pw) pw.textContent = PET_POWERS[s.box.pet] || "Pick a pet to see its special power."; };
   const ob = d.querySelector("button");
   if (ob && hasKey) ob.onclick = () => {   // the key gets used up, so the Serpent's Shop sells another
     const prize = rollBoxPrize(s);
@@ -6894,6 +6995,30 @@ function tickPet(dt) {
   const speed = Math.hypot(p.vx, p.vy); p.moving = speed > 12; if (Math.abs(p.vx) > 6) p.face = p.vx < 0 ? -1 : 1;
   if (p.moving || (p.hop || 0) % 1 > 0.02) p.hop = (p.hop || 0) + dt * Math.max(2.2, speed / 24); else p.hop = 0;   // hops: faster when it runs faster, and it always finishes a hop before stopping
   if (G.bonus && Math.hypot(G.bonus.x * T + 16 - p.x, G.bonus.y * T + 18 - p.y) < 10) { floatText(p.x, p.y - 22, "Got it!", "#ffd34d", 0.8); collectBonusLeaf(null, true); }
+  petPower(p, dt);
+}
+// Each pet has its own special power (only while a wave is on)
+const PET_POWERS = {
+  bunny: "🐰 Leaf Digger: every 20 seconds of a wave it digs up 15 leaves for you.",
+  chick: "🐥 Peck Attack: it pecks robots near it (8 damage, 2 times a second). Move your pointer to steer it into the fight!",
+  firefly: "✨ Light Up: hiding robots near it can't hide, so every tower can hit them. Every 15 seconds it flashes and slows robots near it.",
+};
+function petPower(p, dt) {
+  if (!G.waveActive) return;
+  const near = (R) => G.robots.filter((r) => !r.dead && !r.under && Math.hypot(rpos(r).x - p.x, rpos(r).y - (p.y - 8)) <= R);
+  if (p.kind === "bunny") {   // digs up leaves
+    p.digT = (p.digT ?? 20) - dt;
+    if (p.digT <= 0) { p.digT = 20; G.leaves += 15; updateShelf(); floatText(p.x, p.y - 24, "+15 leaves!", "#9be28a", 1.2); burst(p.x, p.y, "#8a5a2a", 10); burst(p.x, p.y - 4, "#6ab04c", 5); Sound.play("upgrade"); addStat("petLeaves", 15); }
+  } else if (p.kind === "chick") {   // pecks robots
+    p.peckT = (p.peckT || 0) - dt;
+    if (p.peckT <= 0) { const t = near(1.6 * T).sort((a, b) => Math.hypot(rpos(a).x - p.x, rpos(a).y - p.y) - Math.hypot(rpos(b).x - p.x, rpos(b).y - p.y))[0];
+      if (t) { p.peckT = 0.5; hurt(t, 8, true, false, "pet"); const q = rpos(t); p.face = q.x < p.x ? -1 : 1; p.peckAt = G.time; burst(q.x, q.y - 4, "#ffd34d", 4); floatText(q.x, q.y - 16, "Peck!", "#ffe680", 0.5); } }
+  } else if (p.kind === "firefly") {   // lights up hiders, and flashes now and then
+    for (const r of near(2.5 * T)) if (r.hideT > 0) { r.hideT = 0; floatText(rpos(r).x, rpos(r).y - 18, "Found you!", "#f4ff8a", 0.9); }
+    p.flashT = (p.flashT ?? 15) - dt;
+    if (p.flashT <= 0) { p.flashT = 15; const hit = near(2.2 * T); for (const r of hit) { r.slowT = Math.max(r.slowT || 0, 2); r.slowBy = Math.max(r.slowBy || 0, 0.5); }
+      G.fx.push({ kind: "splash", x: p.x, y: p.y - 10, r: 2.2 * T, t: 0.45, col: "240,255,140" }); floatText(p.x, p.y - 30, hit.length ? "Flash!" : "✨", "#f4ff8a", 0.9); }
+  }
 }
 function drawPet(x) {
   const p = G.pet; if (!p) return; const img = SPR["pet_" + p.kind]; if (!img) return;
@@ -6910,6 +7035,7 @@ function drawPet(x) {
   x.fillStyle = "rgba(0,0,0,0.2)"; x.beginPath(); x.ellipse(p.x, p.y + 1, 8 - hop * 0.4, 2.5 - hop * 0.12, 0, 0, Math.PI * 2); x.fill();   // its shadow shrinks as it hops up
   x.save(); x.translate(p.x, p.y - hop - fy); if (p.face < 0) x.scale(-1, 1); x.scale(1 / Math.sqrt(sq), sq);
   const pic = fly && Math.floor(G.time * 14) % 2 && SPR.pet_firefly2 ? SPR.pet_firefly2 : img;   // its wings flap
+  if (p.kind === "chick" && p.peckAt !== undefined && G.time - p.peckAt < 0.15) x.translate(3, 2);   // a quick peck forward
   x.imageSmoothingEnabled = false; x.drawImage(pic, -10, -19, 20, 20); x.restore();
 }
 function stormPowers(dt) {
