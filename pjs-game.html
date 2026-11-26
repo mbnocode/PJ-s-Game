@@ -8055,7 +8055,7 @@ const ARMY_PERKS = {
 // What's special about each animal right now (with its upgrades)
 function armySpecial(k, S) {
   return ({
-    water: `Slows the robots it licks for ${S.slowSec} seconds`, crab: `Splash damage (${S.splash} wide)`, healer: `Heals hurt animals near it for ${S.heal}, and is very tough`,
+    water: `Slows the robots it licks for ${S.slowSec} seconds`, crab: `Splash damage (${S.splash} wide)`, healer: `Heals hurt animals near it for ${S.heal}, and is very tough. At the end of the road it blows up: KABOOM for ${Math.round(200 + S.heal * 5)} damage`,
     plant: `Its vines hold ${S.hold} robot${S.hold > 1 ? "s" : ""} in place at a time`, fire: `Flies, and shoots fireballs from far away`, air: `Flies, and is very fast`,
     pegasus: `Hits ${S.multi} robots at once, and flies fast`, nightowl: `Hits ${S.multi} robots at once and flies fast. Up to ${S.farther}x damage the farther along the road it gets`,
     hacked: `Knocks robots backward`, wolf: `+${S.pack} damage for each other Wolf on the same road`, hydra: `Bites ${S.multi} robots at once`,
@@ -8656,16 +8656,13 @@ function marchUpdate(dt) {
       if (foe && best <= S.range * 0.6) continue;   // stays behind the front line
     }
     const baseD = u.side ? u.x - 70 : 532 - u.x;
+    if (S.heal && !u.side && baseD <= 4) { deerBlast(M, u, S, (d) => marchHitFort(u.lane, d), 548); continue; }   // the Healer Deer reached the end of the road: KABOOM
     if (!S.heal && foe && best <= S.range) { if (u.cool <= 0) marchHit(u, S, foe, charge); }
     else if (!S.heal && baseD <= S.range * 0.4 + 4) {   // at the enemy's base: hit it
       if (u.cool <= 0) { u.cool = S.rate;
         if (u.side) { M.camp -= S.dmg; Sound.play("hit"); }
         else { const d = armyDamage(u, S, C.armor, M.units, charge); if (!d) M.fx.push({ text: "Clank!", x: 560, y: u.y - 20, t: 0.6, c: "#c8d0e0" }); if (S.sound) Sound.play(S.sound);
-          if (M.fac) {   // the Smog Factories: hit this road's factory
-            if (M.fac[u.lane] > 0) { M.fac[u.lane] = Math.max(0, M.fac[u.lane] - d);
-              if (M.fac[u.lane] <= 0) { const fy = MARCH.lanes[u.lane]; M.fx.push({ text: "FACTORY WRECKED!", x: 470, y: fy - 40, t: 2, c: "#9be28a" }, { kind: "flash", t: 0.18 }, { kind: "shock", x: 550, y: fy, r: 90, t: 0.5, w: 6 }); for (let i = 0; i < 30; i++) M.fx.push({ spark: true, x: 530 + Math.random() * 50, y: fy - 30 + Math.random() * 60, t: 0.8, c: i % 3 ? "#ff8a3a" : "#5a5a5a" }); Sound.play("smash"); Sound.play("upgrade"); } }
-            M.fort = M.fac.reduce((a, b) => a + b, 0);
-          } else M.fort -= d; }
+          marchHitFort(u.lane, d); }
         M.fx.push({ spark: true, x: u.side ? 66 : 530, y: u.y, t: 0.25, c: u.side ? "#ff6a4a" : "#ffd34d" }); }
     } else {
       if (u.rootT > 0) u.rootT -= dt;
@@ -8703,6 +8700,25 @@ function drawWreckedFactory(x, f, t) {
   x.strokeStyle = "#3a3038"; x.lineWidth = 3; x.beginPath(); x.moveTo(f.x, top + 10); x.lineTo(f.x + f.w, top + 30); x.moveTo(f.x + 6, top + f.h - 6); x.lineTo(f.x + f.w - 6, top + 18); x.stroke();
   for (let i = 0; i < 6; i++) { const h = 6 + Math.abs(Math.sin(t * 8 + i * 1.7)) * 10; x.fillStyle = i % 2 ? "#ff8a3a" : "#ffd34d"; x.fillRect(f.x + 6 + i * 6, f.y + 12 - h, 4, h); }
   x.fillStyle = "rgba(255,140,60,0.15)"; x.beginPath(); x.arc(f.x + f.w / 2, f.y + 4, 26, 0, Math.PI * 2); x.fill();
+}
+// The Healer Deer at the end of the road: it blows up! A big blast hurts the robots' base (armor doesn't help) and every robot close by.
+function deerBlast(B, u, S, hitBase, bx) {
+  const dmg = Math.round(200 + S.heal * 5);   // 270 for a new deer, more as you upgrade it
+  hitBase(dmg);
+  for (const o of B.units) if (o.side === 1 && o.hp > 0 && Math.hypot(o.x - u.x, o.y - u.y) < 70) { o.hp -= dmg * 0.6; o.hitT = 0.15; }
+  u.hp = 0; u.blown = true;
+  B.fx.push({ kind: "flash", t: 0.15 }, { kind: "shock", x: bx, y: u.y, r: 80, t: 0.5, w: 7, col: "255,200,90" }, { text: `KABOOM! -${dmg}`, x: bx - 30, y: u.y - 34, t: 1.4, c: "#ffd34d" });
+  for (let i = 0; i < 34; i++) { const a = Math.random() * Math.PI * 2, d = Math.random() * 46; B.fx.push({ spark: true, x: bx + Math.cos(a) * d, y: u.y + Math.sin(a) * d * 0.7, t: 0.6, c: ["#ffd34d", "#ff8a3a", "#ffffff", "#9be28a"][i % 4] }); }
+  Sound.play("fire"); Sound.play("smash");
+}
+// damage the robots' base on road `lane`: its own factory in the Smog Factories, the fortress / bridge gate otherwise
+function marchHitFort(lane, d) {
+  const u = { lane };
+  if (M.fac) {   // the Smog Factories: hit this road's factory
+    if (M.fac[u.lane] > 0) { M.fac[u.lane] = Math.max(0, M.fac[u.lane] - d);
+      if (M.fac[u.lane] <= 0) { const fy = MARCH.lanes[u.lane]; M.fx.push({ text: "FACTORY WRECKED!", x: 470, y: fy - 40, t: 2, c: "#9be28a" }, { kind: "flash", t: 0.18 }, { kind: "shock", x: 550, y: fy, r: 90, t: 0.5, w: 6 }); for (let i = 0; i < 30; i++) M.fx.push({ spark: true, x: 530 + Math.random() * 50, y: fy - 30 + Math.random() * 60, t: 0.8, c: i % 3 ? "#ff8a3a" : "#5a5a5a" }); Sound.play("smash"); Sound.play("upgrade"); } }
+    M.fort = M.fac.reduce((a, b) => a + b, 0);
+  } else M.fort -= d;
 }
 function marchHit(u, S, foe, charge) {
   u.cool = S.rate;
@@ -9151,7 +9167,9 @@ function escUpdate(dt) {
     if (S.heal) {   // the Healer Deer heals hurt animals near it
       const hurt = E.units.filter((o) => o.side === u.side && o.hp > 0 && o.hp < o.max && Math.abs(o.x - u.x) <= S.range);
       if (hurt.length && u.cool <= 0) { u.cool = S.rate; for (const o of hurt) { o.hp = Math.min(o.max, o.hp + S.heal); E.fx.push({ spark: true, x: o.x, y: o.y - 18, t: 0.4, c: "#9be28a" }); } }
-      if (!foe || best > S.range * 0.6) u.x += S.speed * dt; continue;
+      if (!foe || best > S.range * 0.6) u.x += S.speed * dt;
+      if (u.x >= ESCAPE.gateX - 24) deerBlast(E, u, S, (d) => { if (E.engX > ESCAPE.gateX - 140 && E.engHp > 0) { E.engHp = Math.max(0, E.engHp - d); E.engHitT = 0.2; } }, ESCAPE.gateX - 10);   // reached the gate: KABOOM
+      continue;
     }
     if (foe && best <= S.range) { if (u.cool <= 0) escHit(u, S, foe, charge); }
     else if (u.side && u.x <= 44) { if (u.cool <= 0) { u.cool = S.rate; E.camp -= S.dmg; Sound.play("hit"); E.fx.push({ spark: true, x: 40, y: u.y, t: 0.25, c: "#ff6a4a" }); } }
