@@ -371,7 +371,7 @@ const SETTINGS = {
                 // What can come out of the box. chance = how likely each one is (they don't have to add up to 100).
                 prizes: {
                   acorns:    { chance: 38, min: 200, max: 600 },   // Acorn Pouch: a random pile of Golden Acorns
-                  golden:    { chance: 13 },                        // Golden Tower: one of your towers turns shiny gold (just for looks)
+                  golden:    { chance: 7 },                         // Golden Tower: one of your towers turns shiny gold (just for looks) (rarer than before)
                   skin:      { chance: 15 },                        // Tower Skin: a new look for one of your towers (Crystal, Shadow, Candy, Lava or Toxic)
                   pet:       { chance: 12 },                        // Pet: a little critter that follows you around the board and picks up maple leaves
                   mimic:     { chance: 8, taps: 12, seconds: 6, consolation: 50 },   // Box Mimic! Tap it taps times in seconds seconds to win 2 prizes (or it runs off and drops consolation Golden Acorns)
