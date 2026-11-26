@@ -537,6 +537,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .hud-acorns.bump { animation: acorn-bump .5s; }
 @keyframes acorn-bump { 40% { transform: translate(-50%, -50%) scale(1.35); } }
 @media (max-width: 900px) { @keyframes acorn-bump { 40% { transform: scale(1.35); } } }
+.ga { display: inline-block; width: 1em; height: 1.12em; vertical-align: -0.2em; background: var(--acorn) center / contain no-repeat; filter: drop-shadow(0 0 3px rgba(255, 210, 80, 0.45)); }   /* the Golden Acorn picture, inline in text */
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
 .acorns::before, .perk .cost::before { content: ""; width: 1.05em; height: 1.18em; background: var(--acorn) center / contain no-repeat; display: inline-block; filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.45)); }
 .def-deep { flex-shrink: 0; height: 2600px; width: 6px; border-radius: 3px; background: repeating-linear-gradient(to bottom, rgba(122,128,137,0.16) 0 14px, rgba(122,128,137,0) 14px 26px); position: relative; }   /* an old vacuum hose trailing down the page */
@@ -5311,7 +5312,7 @@ function renderAchievements() {
   for (let i = 0; i < ACH_BOXES; i++) {
     const a = ACHIEVEMENTS[i], d = document.createElement("div");
     if (a && hasAch(a.id)) {
-      d.className = "ach got"; d.innerHTML = `<span class="pic"></span><span class="n">${a.name}</span><span class="d">${a.about}</span><span class="rw">🌰 ${achReward(a.id)}</span>`;
+      d.className = "ach got"; d.innerHTML = `<span class="pic"></span><span class="n">${a.name}</span><span class="d">${a.about}</span><span class="rw"><span class="ga" aria-label="Golden Acorns"></span> ${achReward(a.id)}</span>`;
       d.querySelector(".pic").replaceWith(spriteCanvas(a.pic, 32));
     } else if (a) {
       const st = (slot().stats || {});
@@ -5351,13 +5352,13 @@ function renderSkins() {
       b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>${extra ? `<span class="dup">×${extra + 1}</span>` : ""}`);
       b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
       const cell = document.createElement("div"); cell.className = "look-cell"; cell.appendChild(b);
-      if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.textContent = `Sell 1 for ${SKIN_SELL} 🌰`; sb.title = `You have ${extra} extra. Sell one for ${SKIN_SELL} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
+      if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.innerHTML = `Sell 1 for ${SKIN_SELL} <span class="ga" aria-label="Golden Acorns"></span>`; sb.title = `You have ${extra} extra. Sell one for ${SKIN_SELL} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
       card.querySelector(".looks").appendChild(cell);
     }
     grid.appendChild(card);
   }
   const dups = Object.values(s.box.skinExtra || {}).reduce((a, n) => a + n, 0);
-  $("skins-count").textContent = `✨ ${got} / ${all} looks found · 🌰 ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
+  $("skins-count").innerHTML = `✨ ${got} / ${all} looks found · <span class="ga" aria-label="Golden Acorns"></span> ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
 }
 $("b-skins").onclick = () => { Sound.init(); renderSkins(); show("s-skins"); };
 $("b-skins-back").onclick = () => { renderLevels(); show("s-levels"); };
