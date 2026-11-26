@@ -417,6 +417,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .acct-box .tip { font-size: 14px; color: #a9b8a6; margin: 10px 0 0; }
 .acct-box .cloud { background: #0f1a13; border-radius: 8px; padding: 10px 12px; margin: 10px 0; font-size: 15px; }
 .acct-box .pw-row { display: flex; gap: 8px; } .acct-box .pw-row input { flex: 1; } .acct-box .pw-row button { flex: 0 0 auto; min-height: 44px; padding: 6px 12px; }
+.acct-big { font-size: 20px; line-height: 1.35; margin: 4px 0 8px; }
 .acct-h4 { margin: 18px 0 4px; font-size: 17px; color: #ffe680; border-top: 1px solid #3a5a3e; padding-top: 12px; }
 .acct-msg { min-height: 1.3em; margin: 12px 0 0; font-weight: 700; }
 .acct-msg.bad { color: #ff8a7a; } .acct-msg.good { color: #9be28a; } .ix-score, .ix-score * { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; } .ix-score .big { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 800; font-size: 38px; letter-spacing: 0.5px; color: #ffd34d; text-shadow: 0 2px 0 #7a5a10, 0 0 14px rgba(255,211,77,0.35); }   /* a smooth (not pixel) font, so big scores are easy to read */ .ix-score .muted { font-size: 13px; }
@@ -703,11 +704,11 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
       <div class="cards" id="slot-cards"></div>
     </div>
     <button id="b-serpent" aria-label="Something is hiding behind the tree…" title="Something is hiding behind the tree…" hidden></button>
-    <button class="go" id="b-account" title="Save your progress to an account, and get it back on any computer">☁️ Account: save &amp; move your progress</button>
+    <button class="go" id="b-account" title="Save your progress to an account, and get it back on any computer">☁️ Account</button>
     <div class="acct" id="acct" role="dialog" aria-modal="true" aria-labelledby="acct-h" hidden>
       <div class="acct-box">
         <button class="acct-x" id="acct-x" aria-label="Close">✕</button>
-        <h3 id="acct-h">☁️ Your Account</h3>
+        <h3 id="acct-h">☁️ Account</h3>
         <div id="acct-body"></div>
         <p class="acct-msg" id="acct-msg" role="status"></p>
       </div>
@@ -2407,76 +2408,77 @@ $("b-slots-back").onclick = () => show("s-title");
    The password is only kept in memory while the game is open (never saved on the computer). ---------- */
 const ACCT = { user: (() => { try { return localStorage.getItem("pjs-game-acct-user") || ""; } catch (e) { return ""; } })(), pass: null, cloud: null,
   link: (() => { try { const v = localStorage.getItem("pjs-game-acct-link"); return v === null ? null : +v; } catch (e) { return null; } })(), timer: null };
-const acctSlotInfo = (s) => { if (!s) return "empty"; const beaten = Object.values(s.best || {}).filter((b) => b && b.stars).length; return `${beaten} level${beaten === 1 ? "" : "s"} beaten, ${s.acorns || 0} Golden Acorns`; };
+const acctSlotInfo = (s) => { if (!s) return "empty"; const beaten = Object.values(s.best || {}).filter((b) => b && b.stars).length; return `${beaten} level${beaten === 1 ? "" : "s"}, ${s.acorns || 0} acorns`; };
 function acctMsg(t, kind) { const m = $("acct-msg"); m.textContent = t || ""; m.className = "acct-msg" + (kind ? " " + kind : ""); }
 function acctErr(e) {
   const m = String((e && e.message) || e);
-  if (/could not find the function|schema cache|does not exist/i.test(m)) return "Accounts aren't switched on yet: the game's online database needs its update (010_accounts.sql).";
-  if (/failed to fetch|network|reach/i.test(m)) return "Couldn't reach the internet. Check your connection and try again.";
-  if (/wrong username or password/i.test(m) && !/First time/.test(m)) return `Wrong username or password. First time? Tap "✨ Make a new account" instead.`;
-  if (/username is taken/i.test(m)) return "Someone already has that username. Try a different one, or log in if it's yours.";
+  if (/could not find the function|schema cache|does not exist/i.test(m)) return "Accounts aren't ready yet. Ask a grown-up.";
+  if (/failed to fetch|network|reach/i.test(m)) return "No internet. Try again.";
+  if (/wrong (username|name) or password/i.test(m) && !/New\?/.test(m)) return `Wrong name or password. New? Tap ✨ New account.`;
+  if (/username is taken/i.test(m)) return "That name is taken. Try another one!";
+  if (/too many tries/i.test(m)) return "Too many tries. Wait 10 minutes.";
   return m.charAt(0).toUpperCase() + m.slice(1);
 }
 function openAccount() { $("acct").hidden = false; acctMsg(""); renderAccount(); }
 function renderAccount() {
   const body = $("acct-body"), filled = slots.map((s, i) => [s, i]).filter(([s]) => s);
   if (!ACCT.pass) {
-    body.innerHTML = `<p>Save your progress online with a username and password. Then log in on <b>any</b> computer to get it back.</p>
-      <label for="acct-user">Username</label><input id="acct-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="3 to 20 letters or numbers" value="${esc(ACCT.user)}">
+    body.innerHTML = `<p class="acct-big">Save your game.<br>Play it on any computer!</p>
+      <label for="acct-user">Name</label><input id="acct-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="like pj_rocks" value="${esc(ACCT.user)}">
       <label for="acct-pass">Password</label>
-      <div class="pw-row"><input id="acct-pass" type="password" autocomplete="current-password" maxlength="64" placeholder="at least 4 characters"><button type="button" id="acct-show" aria-pressed="false" title="Show or hide the password">👁 Show</button></div>
+      <div class="pw-row"><input id="acct-pass" type="password" autocomplete="current-password" maxlength="64" placeholder="4 or more letters"><button type="button" id="acct-show" aria-pressed="false" title="Show or hide the password">👁 Show</button></div>
       <p class="tip" id="acct-check"></p>
-      <h4 class="acct-h4">🆕 First time? Make your account</h4>
-      <label for="acct-newslot" class="tip" style="margin-top:0">Save slot to put in your new account:</label>
-      <select id="acct-newslot">${filled.length ? filled.map(([s, i]) => `<option value="${i}">Slot ${i + 1} (${acctSlotInfo(s)})</option>`).join("") : `<option value="">(no saves on this computer yet)</option>`}</select>
-      <div class="row"><button class="go" id="acct-create" ${filled.length ? "" : "disabled"}>✨ Make a new account</button></div>
-      <h4 class="acct-h4">🔑 Already made one? Log in</h4>
-      <div class="row"><button class="go" id="acct-login">Log in</button></div>
-      <p class="tip">Don't use a password from anything else, and don't share it. A grown-up can help you remember it!</p>`;
+      <div class="row"><button class="go" id="acct-login">🔑 Log in</button></div>
+      <h4 class="acct-h4">New? Make one!</h4>
+      ${filled.length > 1 ? `<label for="acct-newslot" class="tip" style="margin-top:0">Which slot?</label>` : ""}
+      <select id="acct-newslot" ${filled.length > 1 ? "" : "hidden"}>${filled.length ? filled.map(([s, i]) => `<option value="${i}">Slot ${i + 1}: ${acctSlotInfo(s)}</option>`).join("") : `<option value="">none</option>`}</select>
+      <div class="row"><button class="go" id="acct-create" ${filled.length ? "" : "disabled"}>✨ New account</button></div>
+      ${filled.length ? "" : `<p class="tip">Play a level first, then make your account.</p>`}
+      <p class="tip">🤫 Keep your password secret!</p>`;
     const chk = () => { const u = $("acct-user").value.trim().toLowerCase(), p = $("acct-pass").value, c = $("acct-check");   // live hints while typing
-      c.textContent = !u && !p ? "" : !/^[a-z0-9_]*$/.test(u) ? "⚠️ Usernames can only use letters, numbers and _ (no spaces)." : u.length < 3 ? "⚠️ Usernames need at least 3 letters." : p && p.length < 4 ? "⚠️ Passwords need at least 4 characters." : u !== $("acct-user").value.trim() ? `👍 Your username will be "${u}" (small letters).` : ""; };
+      c.textContent = !u && !p ? "" : !/^[a-z0-9_]*$/.test(u) ? "⚠️ No spaces. Use letters, numbers or _" : u.length < 3 ? "⚠️ Name: 3 letters or more" : p && p.length < 4 ? "⚠️ Password: 4 letters or more" : u !== $("acct-user").value.trim() ? `👍 Your name: ${u}` : ""; };
     $("acct-user").oninput = chk; $("acct-pass").oninput = chk;
     $("acct-show").onclick = () => { const f = $("acct-pass"), on = f.type === "password"; f.type = on ? "text" : "password"; $("acct-show").textContent = on ? "🙈 Hide" : "👁 Show"; $("acct-show").setAttribute("aria-pressed", String(on)); f.focus(); };
     const go = (fn) => async () => { const u = $("acct-user").value.trim().toLowerCase(), p = $("acct-pass").value;
-      if (!/^[a-z0-9_]{3,20}$/.test(u)) return acctMsg("Usernames are 3 to 20 letters, numbers or _ (no spaces).", "bad");
-      if (p.length < 4) return acctMsg("Passwords need at least 4 characters.", "bad");
+      if (!/^[a-z0-9_]{3,20}$/.test(u)) return acctMsg("Name: 3 or more letters, no spaces.", "bad");
+      if (p.length < 4) return acctMsg("Password: 4 or more letters.", "bad");
       acctMsg("Working…"); try { await fn(u, p); } catch (e) { acctMsg(acctErr(e), "bad"); } };
     $("acct-login").onclick = go(async (u, p) => {
       const res = await rpc("account_load", { p_username: u, p_password: p });
-      if (res && res.error) throw new Error(`Wrong username or password. Check the spelling (tap 👁 Show to see your password). First time? Tap "✨ Make a new account" instead.`);
+      if (res && res.error) throw new Error(`Wrong name or password. New? Tap ✨ New account.`);
       ACCT.user = u; ACCT.pass = p; ACCT.cloud = res; try { localStorage.setItem("pjs-game-acct-user", u); } catch (e) {}
-      renderAccount(); acctMsg(`Hi ${u}! You're logged in.`, "good"); });
+      renderAccount(); acctMsg("✅ Logged in", "good"); });
     $("acct-create").onclick = go(async (u, p) => {
       const i = +$("acct-newslot").value; if (!slots[i]) return acctMsg("Pick a save slot first.", "bad");
       await rpc("account_create", { p_username: u, p_password: p, p_save: { slot: slots[i], savedAt: Date.now() } });
       ACCT.user = u; ACCT.pass = p; ACCT.link = i; ACCT.cloud = { save: { slot: slots[i] }, updated_at: new Date().toISOString() };
       try { localStorage.setItem("pjs-game-acct-user", u); localStorage.setItem("pjs-game-acct-link", String(i)); } catch (e) {}
-      renderAccount(); acctMsg(`Account made! Slot ${i + 1} is saved to "${u}", and it will keep saving by itself.`, "good"); });
+      renderAccount(); acctMsg(`Done! Your game is saved. ✅`, "good"); });
     $("acct-pass").onkeydown = (e) => { if (e.key === "Enter") $("acct-login").click(); };
     return;
   }
   const c = ACCT.cloud && ACCT.cloud.save && ACCT.cloud.save.slot, when = ACCT.cloud && ACCT.cloud.updated_at ? new Date(ACCT.cloud.updated_at).toLocaleString() : "";
-  body.innerHTML = `<p>Logged in as <b>${esc(ACCT.user)}</b>.</p>
-    <div class="cloud">☁️ Saved in your account: ${c ? `<b>${acctSlotInfo(c)}</b><br><span class="muted">last saved ${esc(when)}</span>` : "<b>nothing yet</b>"}</div>
-    <label for="acct-link">Keep saving this slot to your account automatically:</label>
-    <select id="acct-link"><option value="">Don't save automatically</option>${slots.map((s, i) => `<option value="${i}" ${ACCT.link === i ? "selected" : ""} ${s ? "" : "disabled"}>Slot ${i + 1} (${acctSlotInfo(s)})</option>`).join("")}</select>
-    <p class="tip">Save a slot now:</p>
-    <div class="row">${slots.map((s, i) => `<button class="go" data-up="${i}" ${s ? "" : "disabled"}>⬆ Save Slot ${i + 1}</button>`).join("")}</div>
-    <p class="tip">Get your account's save on this computer (it replaces what's in that slot):</p>
-    <div class="row">${slots.map((s, i) => `<button data-down="${i}" ${c ? "" : "disabled"}>⬇ Load into Slot ${i + 1}</button>`).join("")}</div>
+  body.innerHTML = `<p class="acct-big">Hi <b>${esc(ACCT.user)}</b>! 👋</p>
+    <div class="cloud">☁️ Saved: ${c ? `<b>${acctSlotInfo(c)}</b>` : "<b>nothing yet</b>"}</div>
+    <h4 class="acct-h4">⬆ Save this computer's game</h4>
+    <div class="row">${slots.map((s, i) => s ? `<button class="go" data-up="${i}">Save Slot ${i + 1}</button>` : "").join("")}</div>
+    <h4 class="acct-h4">⬇ Get your saved game here</h4>
+    <div class="row">${c ? slots.map((s, i) => `<button data-down="${i}">Put in Slot ${i + 1}${s ? "" : " (empty)"}</button>`).join("") : `<span class="tip">Save a game first.</span>`}</div>
+    <label for="acct-link" class="tip">🔁 Keep saving by itself:</label>
+    <select id="acct-link"><option value="">Off</option>${slots.map((s, i) => s ? `<option value="${i}" ${ACCT.link === i ? "selected" : ""}>Slot ${i + 1}</option>` : "").join("")}</select>
     <div class="row"><button id="acct-logout">Log out</button></div>`;
   $("acct-link").onchange = (e) => { ACCT.link = e.target.value === "" ? null : +e.target.value; try { ACCT.link === null ? localStorage.removeItem("pjs-game-acct-link") : localStorage.setItem("pjs-game-acct-link", String(ACCT.link)); } catch (er) {}
-    if (ACCT.link !== null) acctUpload(ACCT.link).then(() => acctMsg(`Slot ${ACCT.link + 1} will now keep saving to your account.`, "good")).catch((er) => acctMsg(acctErr(er), "bad")); else acctMsg("Automatic saving is off.", ""); };
+    if (ACCT.link !== null) acctUpload(ACCT.link).then(() => acctMsg(`🔁 Slot ${ACCT.link + 1} saves by itself now.`, "good")).catch((er) => acctMsg(acctErr(er), "bad")); else acctMsg("🔁 Off.", ""); };
   body.querySelectorAll("[data-up]").forEach((b) => b.onclick = async () => { const i = +b.dataset.up;
-    if (c && !confirm(`Replace the save in your account (${acctSlotInfo(c)}) with Slot ${i + 1} (${acctSlotInfo(slots[i])})?`)) return;
-    acctMsg("Saving…"); try { await acctUpload(i); renderAccount(); acctMsg(`Slot ${i + 1} is saved to your account!`, "good"); } catch (e) { acctMsg(acctErr(e), "bad"); } });
+    if (c && !confirm(`Save Slot ${i + 1} over your old save?\n\nOld: ${acctSlotInfo(c)}\nNew: ${acctSlotInfo(slots[i])}`)) return;
+    acctMsg("Saving…"); try { await acctUpload(i); renderAccount(); acctMsg(`Saved! ✅`, "good"); } catch (e) { acctMsg(acctErr(e), "bad"); } });
   body.querySelectorAll("[data-down]").forEach((b) => b.onclick = async () => { const i = +b.dataset.down;
-    if (slots[i] && !confirm(`Replace Slot ${i + 1} (${acctSlotInfo(slots[i])}) with your account's save (${acctSlotInfo(c)})? What's in Slot ${i + 1} now will be gone.`)) return;
+    if (slots[i] && !confirm(`Put your saved game in Slot ${i + 1}?\n\nSlot ${i + 1} now: ${acctSlotInfo(slots[i])}\nThis will be erased!`)) return;
     acctMsg("Loading…"); try { const res = await rpc("account_load", { p_username: ACCT.user, p_password: ACCT.pass }); if (res && res.error) throw new Error(res.error);
-      ACCT.cloud = res; const got = res.save && res.save.slot; if (!got) throw new Error("There's no save in your account yet.");
+      ACCT.cloud = res; const got = res.save && res.save.slot; if (!got) throw new Error("Nothing saved yet.");
       slots[i] = got; ACCT.link = i; try { localStorage.setItem("pjs-game-acct-link", String(i)); } catch (e) {}
-      saveSlots(slots); renderSlots(); renderAccount(); acctMsg(`Loaded! Your save is now in Slot ${i + 1}.`, "good"); } catch (e) { acctMsg(acctErr(e), "bad"); } });
-  $("acct-logout").onclick = () => { ACCT.pass = null; ACCT.cloud = null; renderAccount(); acctMsg("Logged out.", ""); };
+      saveSlots(slots); renderSlots(); renderAccount(); acctMsg(`Done! It's in Slot ${i + 1}. ✅`, "good"); } catch (e) { acctMsg(acctErr(e), "bad"); } });
+  $("acct-logout").onclick = () => { ACCT.pass = null; ACCT.cloud = null; renderAccount(); acctMsg("Bye! 👋", ""); };
 }
 async function acctUpload(i) {
   if (!ACCT.pass || !slots[i]) return;
