@@ -1371,7 +1371,11 @@ SPR.superclanker = SPR.clanker; SPRF.superclanker = SPRF.clanker;   // the Super
   // the pets
   SPR.pet_bunny = makeSprite(["................", "...ww...ww......", "...wpw.wpw......", "...wpw.wpw......", "...wpw.wpw......", "....wwwww.......", "...wwwwwww......", "..wwewwwewww....", "..wwwwpwwwww....", "..swwwwwwwws....", "...wwwwwwwwww...", "..wwwwwwwwwwwww.", "..wwwwwwwwwwwwsw", "..swwwwwwwwwwss.", "...ss.....ss....", "................"], false, { w: "#ffffff", p: "#ffb0c8", s: "#d6dbe4", e: "#2a2a33" });   // (soft, with no black outline)
   SPR.pet_chick = makeSprite(["................", "................", "......kkkk......", ".....kyyyyk.....", "....kyykyyyk....", "....kyyyyyyok...", "....kyyyyyyook..", "...kyyyyyyyk....", "..kyyyyyyyyyk...", "..kyYyyyyyyyk...", "..kyYYyyyyyyk...", "..kyyyyyyyyyk...", "...kyyyyyyyk....", "....kkkkkkk.....", ".....o...o......", "....oo..oo......"], false, { y: "#ffe066", Y: "#e8b830", o: "#ff8c1a" });
-  SPR.pet_firefly = makeSprite(["................", "....cc...cc.....", "...cwwc.cwwc....", "...cwwcccwwc....", "....ccNNNcc.....", ".....kNNNk......", ".....kNkNk......", ".....kNNNk......", ".....kyyyk......", "....kyyyyyk.....", "....kyyyyyk.....", ".....kyyyk......", "......kkk.......", "................", "................", "................"], false, { c: "#cfe8ff", w: "#ffffff", N: "#5a3a1a", y: "#fff066" });
+  // the Firefly: a little beetle with a red-orange head shield, a big shiny eye, curly antennae, see-through wings (2 frames: they flap)
+  // and a glowing lantern tail
+  const FFP = { c: "#9ccfff", w: "#e8f6ff", N: "#4a2a14", n: "#6a4020", R: "#ff6a3a", K: "#101010", y: "#f6ff4a", Y: "#ffffd8", g: "#a8e040" };
+  SPR.pet_firefly = makeSprite(["..........k..k..", "...........k.k..", "..ccc.......kk..", ".cwwwc.....kRRk.", ".cwwwwc...kRRRRk", "..cwwwwc.kRRRRRk", "...cwwwwcNNkwwkk", "....ccccNNNkwKk.", ".kkkkkkNNNNNkkk.", "kgyyyykNnNNNk...", "kyYYYYknNNNkk...", "kgyyyyknnNk.....", ".kkkkkkkkkk.....", "..k.k..k.k......", "................", "................"], false, FFP);
+  SPR.pet_firefly2 = makeSprite(["..........k..k..", "...........k.k..", "............kk..", "...........kRRk.", "..........kRRRRk", "........kkRRRRRk", ".......kNNNkwwkk", "..ccccccNNNkwKk.", ".cwwwwwcNNNNkkk.", "kcwwwwwcnNNNk...", "kycwwwcYnNNkk...", "kgycccyknNk.....", ".kkkkkkkkkk.....", "..k.k..k.k......", "................", "................"], false, FFP);
   SPR.pet_paw = SPR.pet_bunny;
   // the Box Mimic: the Mystery Box, with sharp teeth, a tongue and angry red eyes
   const mc = document.createElement("canvas"); mc.width = mc.height = 16; const mx = mc.getContext("2d"); mx.imageSmoothingEnabled = false; mx.drawImage(SPR.mysteryboxopen, 0, 0);
@@ -6895,10 +6899,18 @@ function drawPet(x) {
   const p = G.pet; if (!p) return; const img = SPR["pet_" + p.kind]; if (!img) return;
   const ph = (p.hop || 0) % 1, hopping = p.kind !== "firefly" && p.hop > 0, hop = hopping ? Math.sin(ph * Math.PI) * 4 : 0;   // a gentle arc up and down
   const sq = hopping ? (ph < 0.12 || ph > 0.88 ? 0.9 : 1 + Math.sin(ph * Math.PI) * 0.05) : 1 + Math.sin(G.time * 3) * 0.03;   // squashes as it lands and takes off, stretches in the air
-  if (p.kind === "firefly" && !PREFS.simple) { const g = x.createRadialGradient(p.x, p.y - 10, 1, p.x, p.y - 10, 18); g.addColorStop(0, `rgba(255,240,120,${0.45 + 0.2 * Math.sin(G.time * 6)})`); g.addColorStop(1, "rgba(255,240,120,0)"); x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y - 10, 18, 0, Math.PI * 2); x.fill(); }
+  const fly = p.kind === "firefly", fy = fly ? 10 + Math.sin(G.time * 4) * 3 : 0, tailX = p.x - (p.face < 0 ? -1 : 1) * 6, tailY = p.y - fy - 6;   // the Firefly's glowing tail
+  const glowK = 0.5 + 0.5 * Math.sin(G.time * 3.2);   // its lantern slowly brightens and dims
+  if (fly && !PREFS.simple) {
+    const g = x.createRadialGradient(tailX, tailY, 1, tailX, tailY, 16 + 6 * glowK); g.addColorStop(0, `rgba(240,255,120,${0.45 + 0.3 * glowK})`); g.addColorStop(0.5, `rgba(200,255,90,${0.18 + 0.12 * glowK})`); g.addColorStop(1, "rgba(200,255,90,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(tailX, tailY, 16 + 6 * glowK, 0, Math.PI * 2); x.fill();
+    p.trail = p.trail || []; if (Math.random() < 0.35) p.trail.push({ x: tailX + (Math.random() - 0.5) * 4, y: tailY + (Math.random() - 0.5) * 4, t: 0.9 });   // a sparkly glowing trail
+    p.trail = p.trail.filter((d) => (d.t -= 1 / 60) > 0); for (const d of p.trail) { x.fillStyle = `rgba(240,255,140,${d.t * 0.8})`; x.fillRect(Math.round(d.x), Math.round(d.y += 0.1), d.t > 0.5 ? 2 : 1, d.t > 0.5 ? 2 : 1); }
+  }
   x.fillStyle = "rgba(0,0,0,0.2)"; x.beginPath(); x.ellipse(p.x, p.y + 1, 8 - hop * 0.4, 2.5 - hop * 0.12, 0, 0, Math.PI * 2); x.fill();   // its shadow shrinks as it hops up
-  x.save(); x.translate(p.x, p.y - hop - (p.kind === "firefly" ? 10 + Math.sin(G.time * 4) * 3 : 0)); if (p.face < 0) x.scale(-1, 1); x.scale(1 / Math.sqrt(sq), sq);
-  x.imageSmoothingEnabled = false; x.drawImage(img, -10, -19, 20, 20); x.restore();
+  x.save(); x.translate(p.x, p.y - hop - fy); if (p.face < 0) x.scale(-1, 1); x.scale(1 / Math.sqrt(sq), sq);
+  const pic = fly && Math.floor(G.time * 14) % 2 && SPR.pet_firefly2 ? SPR.pet_firefly2 : img;   // its wings flap
+  x.imageSmoothingEnabled = false; x.drawImage(pic, -10, -19, 20, 20); x.restore();
 }
 function stormPowers(dt) {
   const RS = SETTINGS.robots;
