@@ -5780,6 +5780,7 @@ function openPanel(t) {
     if (ci !== undefined) t.picks = [...(t.picks || []), ci];
     G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade"); noteSpent(pr);
     if (t.level >= 3) earnAch("maxed");
+    if (t.kind === "hydra" && t.level >= 3) hydraAwaken(t);   // maxed out: the Hydra awakens with a mighty ROAR
     if (t.kind === "phoenix" && t.level >= 3) { t.rebornAt = -9; phoenixRebirth(t); t.maxBirthAt = G.time; floatText(t.x * T + 16, t.y * T - 18, "MAX PHOENIX!", "#ffd34d"); G.fx.push({ kind: "flash", t: 0.18 }); }   // maxed out: it bursts into flames and is reborn, stronger
     burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); updateShelf(); openPanel(t);
   };
@@ -6734,6 +6735,30 @@ function drawBite(x, f) {
   head(ex, ey, ang, open, 1);
   x.lineCap = "butt";
 }
+// The Hydra maxes out: it ROARS, a venom shockwave bites every robot in its range (3x damage), and it glows with venom from then on
+function hydraAwaken(t) {
+  t.maxAwakeAt = G.time; const s = towerStats(t), cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
+  floatText(cx, t.y * T - 22, "MAX HYDRA!", "#b6ff6a"); G.fx.push({ kind: "flash", t: 0.2 }); Sound.play("tongue"); Sound.play("smash");
+  for (const r of G.robots) { if (r.dead) continue; const q = rpos(r); if (Math.hypot(q.x - cx, q.y - cy) > R) continue;
+    G.fx.push({ kind: "chomp", x: q.x, y: q.y - 6, t: 0.3 }); hurt(r, s.damage * 3, true, false, "hydra"); burst(q.x, q.y - 4, "#5af08a", 6); }
+}
+// Venom mist around a max-level Hydra (behind it), and venom bubbles rising off it (front)
+function drawHydraVenom(x, cx, by, s2, t, front) {
+  if (!front) {
+    const pu = 0.5 + 0.5 * Math.sin(t * 2.6), g = x.createRadialGradient(cx, by - s2 * 0.35, s2 * 0.1, cx, by - s2 * 0.35, s2 * (0.95 + 0.1 * pu));
+    g.addColorStop(0, `rgba(120,255,150,${0.28 + 0.12 * pu})`); g.addColorStop(0.6, `rgba(60,200,110,${0.12 + 0.06 * pu})`); g.addColorStop(1, "rgba(40,160,80,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(cx, by - s2 * 0.35, s2 * (0.95 + 0.1 * pu), 0, Math.PI * 2); x.fill();
+    for (let i = 0; i < 5; i++) {   // swirling mist puffs around its feet
+      const a = t * 1.2 + i * 1.257, px = cx + Math.cos(a) * s2 * 0.48, py = by - 3 + Math.sin(a) * s2 * 0.14;
+      x.fillStyle = `rgba(110,240,140,${0.22 + 0.1 * Math.sin(t * 3 + i)})`; x.beginPath(); x.ellipse(px, py, s2 * 0.16, s2 * 0.07, 0, 0, Math.PI * 2); x.fill();
+    }
+    return;
+  }
+  for (let i = 0; i < 7; i++) {   // little venom bubbles floating up and popping
+    const ph = (t * 0.7 + i / 7) % 1, px = cx + Math.sin(i * 2.1 + t) * s2 * 0.38, py = by - s2 * 0.2 - ph * s2 * 0.9, rr = 1 + (1 - ph) * 1.5;
+    x.strokeStyle = `rgba(180,255,140,${0.85 * (1 - ph)})`; x.lineWidth = 1; x.beginPath(); x.arc(px, py, rr, 0, Math.PI * 2); x.stroke();
+  }
+}
 // The Hydra's CHOMP: two rows of teeth snap shut on the robot
 function drawChomp(x, f) {
   const k = 1 - f.t / 0.3, close = Math.min(1, k * 3), gap = 10 * (1 - close), a = f.t < 0.12 ? f.t / 0.12 : 1;
@@ -7621,6 +7646,16 @@ function draw() {
       if (Math.random() < 0.6) burst(cx + (Math.random() - 0.5) * w, py - Math.random() * hgt * 0.6, Math.random() < 0.5 ? "#ffd36b" : "#ff8c1a", 1);
     }
     if (t.kind === "phoenix") { rc += 4 + Math.sin(G.time * 3 + t.x) * 2; drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), false); }   // the Phoenix hovers in its own fire
+    // the Hydra at max level: toxic venom mist swirls around it; when it first gets maxed it rears up, shakes and ROARS
+    const aw = t.kind === "hydra" && t.maxAwakeAt !== undefined ? (G.time - t.maxAwakeAt) / 1.8 : 2;
+    if (t.kind === "hydra" && t.level >= 3 && !PREFS.simple) drawHydraVenom(x, cx, by, s2, G.time + t.x * 3, false);
+    let awOn = false;
+    if (aw >= 0 && aw < 1) {
+      for (let i = 0; i < 3; i++) { const k = aw * 1.6 - i * 0.22; if (k > 0 && k < 1) { x.strokeStyle = `rgba(90,255,160,${0.8 * (1 - k)})`; x.lineWidth = 4 * (1 - k) + 1; x.beginPath(); x.ellipse(cx, by - 4, s2 * (0.4 + k * 2.6), s2 * (0.15 + k * 0.9), 0, 0, Math.PI * 2); x.stroke(); } }   // venom shockwaves
+      if (!G.paused && Math.random() < 0.7) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 3, y: by - s2 * 1.6, vx: (Math.random() - 0.5) * 10, vy: 60 + Math.random() * 40, t: 0, life: 0.6, col: Math.random() < 0.5 ? "#5af08a" : "#b6ff6a" });   // venom rain
+      const grow = aw < 0.35 ? aw / 0.35 : aw < 0.7 ? 1 : 1 - (aw - 0.7) / 0.3, sc = 1 + 0.35 * grow, sh = aw < 0.6 ? Math.sin(G.time * 70) * 2.5 * (1 - aw / 0.6) : 0;
+      x.save(); x.translate(cx + sh, by); x.scale(sc, sc); x.translate(-cx, -by); awOn = true;
+    }
     const lk = t.kind === "wolf" && t.lunge ? Math.sin(Math.PI * Math.min(1, (t.recoil || 0) / 0.12)) : 0, lx = lk * (t.lunge ? t.lunge.x : 0), ly = lk * (t.lunge ? t.lunge.y : 0);   // the Wolf's pounce
     if (lk > 0.2) { x.globalAlpha = 0.28; x.drawImage(img, cx - s2 / 2 + lx * 0.4, by - s2 - rc + ly * 0.4, s2, s2); x.globalAlpha = 1; }   // an after-image
     if (birth >= 0 && birth < 1) {   // the bird shrinks into a glowing ember, then bursts back out a bit bigger
@@ -7632,6 +7667,12 @@ function draw() {
     else x.drawImage(img, cx - s2 / 2 + lx, by - s2 - rc + ly, s2, s2);
     if (t.kind === "kraken") drawKrakenEyes(x, cx - s2 / 2, by - s2 - rc, s2, face < 0, G.time + t.x);
     if (t.kind === "phoenix") drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), true);
+    if (awOn) {
+      x.restore();
+      if (aw > 0.12 && aw < 0.75) { const a = Math.min(1, (aw - 0.12) / 0.1) * Math.min(1, (0.75 - aw) / 0.12); x.save(); x.globalAlpha = a; x.font = "bold 14px system-ui, sans-serif"; x.textAlign = "center";
+        x.lineWidth = 4; x.strokeStyle = "#0e2a1a"; x.textAlign = "left"; x.strokeText("ROOOAR!", cx + s2 * 0.75 + Math.sin(G.time * 40) * 1.5, by - s2 * 0.75); x.fillStyle = "#b6ff6a"; x.fillText("ROOOAR!", cx + s2 * 0.75 + Math.sin(G.time * 40) * 1.5, by - s2 * 0.75); x.restore(); }
+    }
+    if (t.kind === "hydra" && t.level >= 3 && !PREFS.simple) drawHydraVenom(x, cx, by, s2, G.time + t.x * 3, true);
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower
       const k = Math.min(1, t.iceT), bw = sz * 0.9, bh = sz * 0.95, bx = cx - bw / 2, byy = by - bh;
