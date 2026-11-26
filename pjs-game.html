@@ -6402,10 +6402,15 @@ function fire(t, s, target) {
     Sound.play(t.kind);
   }
   t.recoil = 0.12;
+  if (t.kind === "wolf" && target) { const q = rpos(target), dx = q.x - (t.x * T + 16), dy = q.y - (t.y * T + 16), L = Math.hypot(dx, dy) || 1; t.lunge = { x: dx / L * 7, y: dy / L * 5 }; }   // pounce toward it
 }
 function landShot(sh) {
   const r = sh.target, s = sh.s;
   if (r.dead) return;
+  if (sh.kind === "wolf") {   // the Wolf's claws rake across the robot (bigger and brighter the harder it hits, like with a pack)
+    const q = rpos(r), big = Math.max(0, Math.min(1, ((s.damage || 9) - 9) / 60));
+    G.fx.push({ kind: "claw", x: q.x, y: q.y, t: 0.32, flip: Math.random() < 0.5, big }, { kind: "splash", x: q.x, y: q.y, r: 14 + 10 * big, t: 0.3, col: "150,210,255" });
+  }
   if (s.splash) {
     const c = rpos(r), R = s.splash * T;
     for (const o of G.robots) {
@@ -7393,8 +7398,10 @@ function draw() {
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
     else if (t.iceT > 0) x.filter = "saturate(0.4) brightness(1.15) hue-rotate(160deg)";   // frozen: icy blue   // trapped by a Pillar Titan: grayed out, but still visible
-    if (face < 0) { x.save(); x.translate(cx, 0); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
-    else x.drawImage(img, cx - s2 / 2, by - s2 - rc, s2, s2);
+    const lk = t.kind === "wolf" && t.lunge ? Math.sin(Math.PI * Math.min(1, (t.recoil || 0) / 0.12)) : 0, lx = lk * (t.lunge ? t.lunge.x : 0), ly = lk * (t.lunge ? t.lunge.y : 0);   // the Wolf's pounce
+    if (lk > 0.2) { x.globalAlpha = 0.28; x.drawImage(img, cx - s2 / 2 + lx * 0.4, by - s2 - rc + ly * 0.4, s2, s2); x.globalAlpha = 1; }   // an after-image
+    if (face < 0) { x.save(); x.translate(cx + lx, ly); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
+    else x.drawImage(img, cx - s2 / 2 + lx, by - s2 - rc + ly, s2, s2);
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower
       const k = Math.min(1, t.iceT), bw = sz * 0.9, bh = sz * 0.95, bx = cx - bw / 2, byy = by - bh;
@@ -7704,7 +7711,9 @@ function draw() {
     else if (sh.kind === "wolf") {   // three pale-blue claw slashes flying at the robot
       const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
       x.save(); x.translate(sh.x, sh.y); x.rotate(a); x.lineCap = "round";
-      for (const [col, w] of [["rgba(22,25,29,0.8)", 3.5], ["#cfeaff", 1.8]]) { x.strokeStyle = col; x.lineWidth = w; for (const o of [-4, 0, 4]) { x.beginPath(); x.arc(-4, o, 6, -0.9, 0.9); x.stroke(); } }
+      for (const [back, al] of [[16, 0.18], [8, 0.35]]) { x.strokeStyle = `rgba(140,205,255,${al})`; x.lineWidth = 4; for (const o of [-4, 0, 4]) { x.beginPath(); x.arc(-4 - back, o, 6, -0.9, 0.9); x.stroke(); } }   // a glowing speed trail
+      x.strokeStyle = "rgba(120,190,255,0.45)"; x.lineWidth = 7; for (const o of [-4, 0, 4]) { x.beginPath(); x.arc(-4, o, 6, -0.9, 0.9); x.stroke(); }   // the glow
+      for (const [col, w] of [["rgba(22,25,29,0.8)", 3.5], ["#eaf6ff", 1.8]]) { x.strokeStyle = col; x.lineWidth = w; for (const o of [-4, 0, 4]) { x.beginPath(); x.arc(-4, o, 6, -0.9, 0.9); x.stroke(); } }
       x.restore(); x.lineCap = "butt";
     }
     else if (sh.kind === "air") drawGust(x, sh);
@@ -7717,6 +7726,7 @@ function draw() {
     if (f.kind === "vine") drawVine(x, f);
     else if (f.kind === "bite") drawBite(x, f);
     else if (f.kind === "bolt") drawBolt(x, f);
+    else if (f.kind === "claw") ixDrawFx(x, f, 640, 384);   // the Wolf's claw rake
     else if (f.kind === "arc") drawArc(x, f);
     else if (f.kind === "tentacle") drawTentacle(x, f);
     if (f.kind === "zap") drawZap(x, f);
