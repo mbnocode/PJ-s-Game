@@ -175,7 +175,7 @@ const SETTINGS = {
     // The Kraken: the second jackpot prize from the Mystery Box. Its tentacles slam targets robots at once. Every grabEvery seconds
     // it grabs a robot: on the sky levels, a robot (not a Boss) on a rope bridge gets pulled right off it; anywhere else it gets
     // squeezed and held still for squeezeSeconds.
-    kraken:   { name: "Kraken", cost: 240, range: 3, damage: 30, attacksPerSecond: 1.0, targets: 2, boxUnlock: "kraken", grabEvery: 5, squeezeSeconds: 1.5,
+    kraken:   { name: "Kraken", cost: 240, range: 3, damage: 30, attacksPerSecond: 1.5, targets: 2, boxUnlock: "kraken", grabEvery: 5, squeezeSeconds: 1.5,
               about: "Found in the Mystery Box. Its tentacles slam 2 robots at once. On the sky levels it grabs robots right off the rope bridges! Anywhere else it squeezes a robot and holds it still.",
               upgradeChoices: [
                 [ { name: "Long Tentacles", about: "Reaches 1 more square.", rangePlus: 1 },
@@ -221,7 +221,7 @@ const SETTINGS = {
                 [ { name: "Alpha Wolf",   about: "Hits twice as hard.", damageTimes: 2 },
                   { name: "Strength in Numbers", about: "Every other Wolf on the board, anywhere, adds 8 damage to its attacks (on top of the bonus for Wolves next to it).", wolfCount: 8 } ],
               ] },
-    hydra:    { name: "Hydra", cost: 160, range: 3.7, damage: 24, attacksPerSecond: 1.11, targets: 3, serpentUnlock: "hydra",
+    hydra:    { name: "Hydra", cost: 160, range: 3.7, damage: 24, attacksPerSecond: 1.67, targets: 3, serpentUnlock: "hydra",
               flyingDamageTimes: 0.5,   // it can bite flying robots, but only does this much of its damage to them (0.5 = half)
               about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once.",
               // Pick ONE choice at each upgrade.
