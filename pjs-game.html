@@ -1328,7 +1328,7 @@ SPR.superclanker = SPR.clanker; SPRF.superclanker = SPRF.clanker;   // the Super
 { // Mystery Box prizes: the Kraken tower, the pets and the Box Mimic
   // The Kraken: a deep-sea monster with a huge spiked head, big glowing slit-pupil eyes under angry brows, glowing spots,
   // a sharp beak and curling tentacles lined with suckers
-  const KR = { P: "#24093e", p: "#4e1a7e", z: "#7f3cbc", Z: "#b884ee", y: "#ff3a1e", Y: "#ffd04a", o: "#8a0a0a", w: "#ffffff", t: "#ff5a3a", b: "#d8cbb0", B: "#8a7a60", S: "#f0b8dc", s: "#b56aa8", m: "#14060e" };   // FURIOUS: red eyes, red glowing spots
+  const KR = { P: "#2e0f4e", p: "#5a2290", z: "#8a46c8", Z: "#c094f2", y: "#ffe94a", w: "#ffffff", t: "#4fe8d6", r: "#ff3a2a", R: "#b01818", S: "#f0b8dc", s: "#b56aa8", m: "#2a0a1a", n: "#ff8aa0" };   // MAD (not evil): white eyes, a red anger mark, teal spots
   const HY = 12;   // the middle of its head
   const kin = (i, j) => { const dx = (i + 0.5 - 16) / 10.5, dy = (j + 0.5 - HY) / 9; return dx * dx + dy * dy <= 1 && j <= 19; };
   const headTop = (i) => { const dx = (i + 0.5 - 16) / 10.5; return dx * dx >= 1 ? 99 : HY - 9 * Math.sqrt(1 - dx * dx); };
@@ -1342,24 +1342,26 @@ SPR.superclanker = SPR.clanker; SPRF.superclanker = SPRF.clanker;   // the Super
     for (const [ex, ey] of EYE) {
       const L = ex < 16;
       if (j >= ey && j <= ey + 2 && i >= ex && i <= ex + 3) {
-        if (i === ex + (L ? 2 : 1)) return "k";                         // a slit pupil
-        if (i === ex + (L ? 1 : 2) && j === ey) return "w";             // a shine
-        if (j === ey + 1 && i === ex + (L ? 1 : 2)) return "Y";       // a hot yellow core
-        return (i === ex || i === ex + 3 || j === ey + 2) ? "o" : "y";  // blood-red with a dark rim
+        const inner = L ? i - ex : ex + 3 - i;   // 3 = the side nearest the middle
+        if (j === ey && inner >= 2) return "k";                                   // the angry brow pushes down into the eye
+        if (j >= ey + 1 && (inner === 1 || inner === 2)) return j === ey + 1 && inner === 1 ? "w" : "k";   // round pupils, glaring
+        return "w";
       }
     }
     if (kin(i, j)) {
       const dy = (j + 0.5 - HY) / 9, dx = (i + 0.5 - 16) / 10.5;
-      if (j >= 17 && j <= 18 && i >= 11 && i <= 20) {   // a snarling mouth full of fangs
-        if (j === 17) return i % 2 ? "w" : "m";               // top fangs
-        return i % 2 ? "m" : (i === 11 || i === 20 ? "m" : "w");   // bottom fangs
-      }
-      if (j === 16 && i >= 11 && i <= 20) return "k";
-      if ([[7, 9], [25, 10], [12, 6], [20, 6], [5, 13], [27, 14], [16, 9]].some(([a, c]) => a === i && c === j)) return "t";   // glowing spots
+      if (j === 17 && i >= 12 && i <= 19) return (i - 12) % 2 === 1 && i < 19 ? "w" : (i === 12 || i === 19 ? "k" : "w");   // gritted teeth
+      if ((j === 16 || j === 18) && i >= 12 && i <= 19) return "k";
+      if (j === 17 && (i === 11 || i === 20)) return "k";
+      if (j === 17 && (i === 14 || i === 16 || i === 18)) return "k";
+      if (j === 15 && (i === 7 || i === 8 || i === 23 || i === 24)) return "n";   // red, steaming-mad cheeks
+      if ((i === 22 && (j === 5 || j === 7)) || (i === 24 && (j === 5 || j === 7)) || (j === 6 && (i === 23)) || (i === 21 && j === 4) || (i === 25 && j === 4) || (i === 21 && j === 8) || (i === 25 && j === 8)) return "r";   // a cartoon anger mark
+
+      if ([[7, 9], [11, 6], [16, 5], [5, 13], [27, 13], [26, 10]].some(([a, c]) => a === i && c === j)) return "t";   // glowing spots
       if (dx < -0.2 && dy < -0.2 && (i + j) % 6 === 0) return "Z";
       return dy < -0.6 ? "Z" : dy < -0.15 ? "z" : dy < 0.5 ? "p" : "P";
     }
-    if (spike(i, j)) return (i + j) % 2 ? "Z" : "z";
+    // (no horns: it's mad, not evil)
     const tt = tent(i, j);
     if (tt !== -1) { if (tt > 0.2 && j % 2 === 0 && j < 29) return j % 4 === 0 ? "S" : "s"; return j < 21 ? "z" : j > 26 ? "P" : "p"; }   // suckers down one side
     return "."; }).join(""));
@@ -5115,7 +5117,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
-  kraken: "A giant, furious purple sea monster from the Mystery Box, with glowing red eyes and a mouth full of fangs. Its tentacles slam 2 robots at once, and every few seconds it grabs one: on the sky levels it pulls robots right off the rope bridges!",
+  kraken: "A giant purple sea monster from the Mystery Box, and it's MAD: angry eyebrows, gritted teeth and steam puffing out of its head. Its tentacles slam 2 robots at once, and every few seconds it grabs one: on the sky levels it pulls robots right off the rope bridges!",
   nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It attacks 2 robots at once and hits flying robots too. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
   hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
@@ -8394,12 +8396,10 @@ function ixLandFireball(B, m) {
   Sound.play("smash"); Sound.play("fire");
 }
 // The Kraken's eyes glow and pulse (x0, y0: the picture's top-left corner; flip: it's facing left)
-function drawKrakenEyes(x, x0, y0, size, flip, t) {
-  const pu = 0.55 + 0.45 * Math.sin(t * 5.5);   // a fast, furious pulse
-  for (const [ex, ey] of KRAKEN_EYES) {
-    const px = x0 + ((flip ? 32 - ex : ex) / 32) * size, py = y0 + (ey / 32) * size, R = size * (0.12 + 0.04 * pu);
-    const g = x.createRadialGradient(px, py, 0, px, py, R); g.addColorStop(0, `rgba(255,70,30,${0.65 * pu})`); g.addColorStop(1, "rgba(200,0,0,0)");
-    x.fillStyle = g; x.beginPath(); x.arc(px, py, R, 0, Math.PI * 2); x.fill();
+function drawKrakenEyes(x, x0, y0, size, flip, t) {   // it's MAD: puffs of steam blow out of both sides of its head
+  for (const side of [-1, 1]) for (let k = 0; k < 3; k++) {
+    const ph = (t * 0.9 + k / 3 + (side > 0 ? 0.5 : 0)) % 1, px = x0 + size / 2 + side * size * (0.36 + ph * 0.28), py = y0 + size * (0.22 - ph * 0.35), R = size * (0.05 + ph * 0.09);
+    x.fillStyle = `rgba(255,255,255,${0.75 * (1 - ph)})`; x.beginPath(); x.arc(px, py, R, 0, Math.PI * 2); x.fill();
   }
 }
 // The Phoenix's fire: a flickering glow, flame tongues licking up behind it, and embers floating away (front = just the embers, drawn on top)
