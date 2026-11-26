@@ -363,7 +363,7 @@ const SETTINGS = {
     // maxHeld: you can carry up to this many at a time. Opening the Mystery Box uses one up, then you can buy another.
     mysterykey: { name: "Mystery Key", cost: 250, maxHeld: 3, holdingText: "You have 3 keys: that's the most you can carry!", shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…",
                   holdingText: "You have one! Use it on the Mystery Box (Upgrades page)." },
-    hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head bites a different robot." },
+    hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head fires a venom laser at a different robot." },
   },
   // The Mystery Box on the Upgrades page. It needs the Mystery Key from the Serpent's Shop.
   mysteryBox: { name: "Mystery Box", about: "Locked tight. Only a Mystery Key can open it. Maybe someone hiding nearby sells one…",

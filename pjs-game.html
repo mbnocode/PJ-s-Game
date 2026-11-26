@@ -4846,7 +4846,7 @@ const TUT_TOWER = {
   nightowl: "<b>Night Owl:</b> from the Night Owl's shop! It attacks 2 robots at once and can hit flying robots. It starts out weak, but gets 10% stronger every wave. Save up for its last upgrade: it's really, really strong!",
   hacked: "<b>Hacked Robot:</b> from the Defector's shop! Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward.",
   wolf: "<b>Wolf:</b> from the Night Owl's shop! It hits like a Fire Dragon, and every Wolf right next to it adds 15 damage to each attack. Build a pack!",
-  hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads bites a different robot.",
+  hydra: "<b>Hydra:</b> the serpent's secret tower! Each of its three heads fires a thick venom laser at a different robot.",
 };
 function tutorialEvent(ev, kind) {
   if (!G.tutorial) return;
@@ -5252,7 +5252,7 @@ const TOWER_INFO = {
   plant: "A hulking tree. Thorny vines burst out of the ground and grab robots, holding them in place.",
   crab: "A beach crab that hurls seashells. Each shell splashes and hurts every robot nearby.",
   pegasus: "The Super Tower! A winged horse that shoots golden stars at 3 robots at once. It can see Hiders and hit flying robots.",
-  hydra: "A three-headed serpent from the Serpent's Shop. Each head lunges out and bites a different robot.",
+  hydra: "A three-headed serpent from the Serpent's Shop. Each head fires a thick venom laser at a different robot.",
 };
 function renderTowersInfo() {
   const s = slot(), TW = SETTINGS.towers;
@@ -5747,7 +5747,7 @@ function openPanel(t) {
   if (s.splash) lines.push(`Splash: soaks robots within ${s.splash} square${s.splash > 1 ? "s" : ""}`);
   if (s.wolfCount) lines.push(`Strength in Numbers: ${s.allWolves} other ${s.allWolves === 1 ? "Wolf" : "Wolves"} on the board, +${s.allWolves * s.wolfCount} damage`);
   if (s.packBonus) lines.push(s.pack ? `Pack: ${s.pack} ${s.pack > 1 ? "Wolves" : "Wolf"} next to it, +${s.pack * (s.packBonus + (s.packBonusPlus || 0))} damage` : `Pack: no Wolves next to it yet (+${s.packBonus + (s.packBonusPlus || 0)} damage for each one)`);
-  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Bites" : t.kind === "pegasus" || t.kind === "nightowl" || t.kind === "hacked" ? "Attacks" : "Grabs"} ${s.targets} robots at once`);
+  if ((s.targets || 1) > 1) lines.push(`${t.kind === "air" ? "Blasts" : t.kind === "hydra" ? "Lasers" : t.kind === "pegasus" || t.kind === "nightowl" || t.kind === "hacked" ? "Attacks" : "Grabs"} ${s.targets} robots at once`);
   if (s.pushBack && spec.upgradeChoices) lines.push(`Pushes robots back ${s.pushBack.toFixed(1)} squares`);
   if (s.holdSeconds && t.kind === "plant" && spec.upgradeChoices) lines.push(`Holds robots for ${s.holdSeconds.toFixed(1)}s`);
   if (s.burnDamagePerSecond && spec.upgradeChoices) lines.push(`Burns ${s.burnDamagePerSecond.toFixed(0)} per second for ${s.burnSeconds.toFixed(1)}s`);
@@ -6695,52 +6695,47 @@ function drawFourthHead(x, t) {
   x.lineCap = "round";
   for (const [col, w] of [["#16191d", 5], ["#163e36", 3.4], ["#2a6e5a", 1.5]]) { x.strokeStyle = col; x.lineWidth = w * k; x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(bx, by2, nx, ny); x.stroke(); }
   x.lineCap = "butt";
-  if (biting) return;   // while it bites, its head is out at the robot
+  // (its head stays put: it fires a laser now instead of biting)
   const [hx, hy] = P(hx0, hy0);
   x.drawImage(SPR.hydrahead, hx, hy, 11 * k, 8 * k);
   const pulse = 0.55 + 0.45 * Math.sin(G.time * 4 + t.x * 1.7), [gx, gy] = P(hx0 + 5.5, hy0 + 4.5);   // its eyes glow like the others
   const gr = x.createRadialGradient(gx, gy, 0, gx, gy, 4.5 * k + pulse * 1.5); gr.addColorStop(0, `rgba(255,40,20,${0.55 + 0.4 * pulse})`); gr.addColorStop(1, "rgba(255,0,0,0)");
   x.fillStyle = gr; x.fillRect(gx - 8, gy - 8, 16, 16);
 }
-function drawBite(x, f) {
+function drawBite(x, f) {   // (the Hydra's attack: each head fires a thick venom laser)
   const t = f.tower, sz = 32 * towerScale(t), cx = t.x * T + 16, by = t.y * T + 30, [ax, ay] = HYDRA_HEADS[f.head];
   const hx = cx + (ax - 16) * sz / 32, hy = by - sz + ay * sz / 32;
   if (!f.robot.dead) { const q = rpos(f.robot); f.tx = q.x; f.ty = q.y - 6; }
   if (f.tx === undefined) return;
-  const age = f.dur - f.t, k = age < 0.12 ? age / 0.12 : age < 0.18 ? 1 : Math.max(0, f.t / (f.dur - 0.18));
-  const at = (kk) => { const ex = hx + (f.tx - hx) * kk, ey = hy + (f.ty - hy) * kk, mx = (hx + ex) / 2, my = Math.min(hy, ey) - 12 * kk; return { ex, ey, mx, my }; };
-  const { ex, ey, mx, my } = at(k), striking = age < 0.18;
-  x.lineCap = "round";
-  if (striking) { x.strokeStyle = "rgba(90,255,200,0.25)"; x.lineWidth = 11; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }   // a glow around the striking neck
-  for (const [col, w] of [["#16191d", 8], ["#163e36", 6], ["#2a6e5a", 3]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
-  x.fillStyle = "#9cbc8c";   // scales down its neck
-  for (let u = 0.12; u < 0.92; u += 0.11) { const a = 1 - u, px = a * a * hx + 2 * a * u * mx + u * u * ex, py = a * a * hy + 2 * a * u * my + u * u * ey; x.fillRect(Math.round(px) - 1, Math.round(py) - 2, 2, 1); }
-  const head = (px, py, ang, open, alpha) => {   // a serpent head: snout, horn, glowing eye, and jaws with long fangs
-    x.save(); x.globalAlpha = alpha; x.translate(px, py); x.rotate(ang);
-    for (const sgn of [-1, 1]) {
-      x.save(); x.rotate(sgn * open);
-      x.fillStyle = "#16191d"; x.fillRect(-3, sgn > 0 ? 0 : -6, 14, 6);
-      x.fillStyle = sgn < 0 ? "#2a6e5a" : "#1f5546"; x.fillRect(-2, sgn > 0 ? 0.5 : -5, 12, 4.5);
-      x.fillStyle = "#ffffff"; for (let i = 1; i < 10; i += 2) x.fillRect(i, sgn > 0 ? -0.5 : -0.5, 1, 1.5);   // teeth
-      x.fillRect(9, sgn > 0 ? -2 : 0, 1.5, 2.5);   // a long fang at the front
-      x.restore();
-    }
-    x.fillStyle = "#16191d"; x.beginPath(); x.moveTo(-3, -6); x.lineTo(-8, -10); x.lineTo(-1, -6); x.fill();   // a horn
-    const gr = x.createRadialGradient(1, -3, 0, 1, -3, 7); gr.addColorStop(0, "rgba(255,40,20,0.95)"); gr.addColorStop(1, "rgba(255,0,0,0)"); x.fillStyle = gr; x.fillRect(-6, -10, 14, 14);
-    x.fillStyle = "#ffdd40"; x.fillRect(0, -4, 3, 2); x.fillStyle = "#ff2a1a"; x.fillRect(1, -4, 1, 2);   // a fierce slit eye
-    x.restore();
-  };
-  const ang = Math.atan2(ey - my, ex - mx), open = age < 0.12 ? 0.75 : 0.06;
-  if (age < 0.12) for (const back of [0.45, 0.22]) { const p = at(Math.max(0, k - back)); head(p.ex, p.ey, ang, open, 0.25); }   // after-images as it lunges
-  head(ex, ey, ang, open, 1);
-  x.lineCap = "butt";
+  const age = f.dur - f.t, charge = Math.min(1, age / 0.08), on = age >= 0.06, fade = age < 0.16 ? 1 : Math.max(0, f.t / (f.dur - 0.16));
+  // charging: a glowing ball of venom grows in its mouth
+  const orb = (on ? 6 * fade : 5 * charge) + 1.5, og = x.createRadialGradient(hx, hy, 0, hx, hy, orb * 2.2);
+  og.addColorStop(0, "rgba(255,255,255,0.95)"); og.addColorStop(0.35, "rgba(140,255,170,0.85)"); og.addColorStop(1, "rgba(60,220,120,0)");
+  x.fillStyle = og; x.beginPath(); x.arc(hx, hy, orb * 2.2, 0, Math.PI * 2); x.fill();
+  if (!on || fade <= 0) return;
+  const dx = f.tx - hx, dy = f.ty - hy, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, w = (8 + (f.big ? 4 : 0)) * fade * (0.9 + 0.1 * Math.sin(G.time * 60 + f.head));
+  x.save(); x.lineCap = "round";
+  const beam = (col, width) => { x.strokeStyle = col; x.lineWidth = width; x.beginPath(); x.moveTo(hx, hy); x.lineTo(f.tx, f.ty); x.stroke(); };
+  beam("rgba(60,230,130,0.28)", w * 2.6);   // the outer glow
+  beam("rgba(90,255,160,0.75)", w * 1.4);
+  beam("#5af08a", w);                        // the beam
+  beam("rgba(235,255,240,0.95)", w * 0.38);  // the white-hot core
+  for (let i = 0; i < 5; i++) {   // crackling energy along the beam
+    const u = (G.time * 3 + i / 5 + f.head * 0.13) % 1, wob = Math.sin(G.time * 40 + i * 2) * w * 0.9;
+    x.fillStyle = `rgba(220,255,200,${0.8 * fade})`; x.fillRect(hx + dx * u + nx * wob - 1, hy + dy * u + ny * wob - 1, 2, 2);
+  }
+  const ig = x.createRadialGradient(f.tx, f.ty, 0, f.tx, f.ty, w * 2);   // where it hits: a bright flare
+  ig.addColorStop(0, `rgba(255,255,255,${0.95 * fade})`); ig.addColorStop(0.4, `rgba(140,255,170,${0.7 * fade})`); ig.addColorStop(1, "rgba(60,220,120,0)");
+  x.fillStyle = ig; x.beginPath(); x.arc(f.tx, f.ty, w * 2, 0, Math.PI * 2); x.fill();
+  x.restore();
 }
+
 // The Hydra maxes out: it ROARS, a venom shockwave bites every robot in its range (3x damage), and it glows with venom from then on
 function hydraAwaken(t) {
   t.maxAwakeAt = G.time; const s = towerStats(t), cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T;
   floatText(cx, t.y * T - 22, "MAX HYDRA!", "#b6ff6a"); G.fx.push({ kind: "flash", t: 0.2 }); Sound.play("tongue"); Sound.play("smash");
   for (const r of G.robots) { if (r.dead) continue; const q = rpos(r); if (Math.hypot(q.x - cx, q.y - cy) > R) continue;
-    G.fx.push({ kind: "chomp", x: q.x, y: q.y - 6, t: 0.3 }); hurt(r, s.damage * 3, true, false, "hydra"); burst(q.x, q.y - 4, "#5af08a", 6); }
+    G.fx.push({ kind: "bite", tower: t, robot: r, head: Math.random() * 3 | 0, t: 0.45, dur: 0.45, hit: true, big: true }, { kind: "splash", x: q.x, y: q.y - 6, r: 22, t: 0.35, col: "90,255,160" }); hurt(r, s.damage * 3, true, false, "hydra"); burst(q.x, q.y - 4, "#5af08a", 6); }
 }
 // Venom mist around a max-level Hydra (behind it), and venom bubbles rising off it (front)
 function drawHydraVenom(x, cx, by, s2, t, front) {
@@ -7267,7 +7262,7 @@ function update(dt) {
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
     const airK = r.flying && !f.fullAir ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage (unless it has Serpent Eyes)
-    if (!r.dead) { const q0 = rpos(r); G.fx.push({ kind: "chomp", x: q0.x, y: q0.y - 6, t: 0.3 }, { kind: "splash", x: q0.x, y: q0.y - 4, r: 16, t: 0.28, col: "90,255,200" }); burst(q0.x, q0.y - 2, "#5af08a", 5); }   // CHOMP, a ring, and green venom drops
+    if (!r.dead) { const q0 = rpos(r); G.fx.push({ kind: "splash", x: q0.x, y: q0.y - 6, r: 18, t: 0.28, col: "90,255,160" }); burst(q0.x, q0.y - 6, "#d8ffe0", 4); burst(q0.x, q0.y - 4, "#5af08a", 6); }   // ZAP: a ring and sizzling venom sparks
     if (!r.dead) { hurt(r, f.dmg * airK * plowMul(r, f.tower.x * T + 16, f.tower.y * T + 16), f.vision, false, "hydra"); const q = rpos(r); burst(q.x, q.y - 4, "#7fe0c8", 6); burst(q.x, q.y - 4, "#ffffff", 3); }
   }
   for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;
@@ -8330,7 +8325,7 @@ const ARMY_PERKS = {
   nightowl: { add: (S, L) => { S.dmg += 4 * L; S.farther += 0.5 * L; }, text: "+4 damage, and up to 0.5x stronger at the end of the road" },
   hacked:   { add: (S, L) => { S.dmg += 5 * L; S.push += 6 * L; }, text: "+5 damage, knocks robots farther back" },
   wolf:     { add: (S, L) => { S.dmg += 3 * L; S.pack += 2 * L; }, text: "+2 damage for each other Wolf on its road, +3 damage" },
-  hydra:    { add: (S, L) => { S.dmg += 5 * L; S.multi += Math.floor(L / 2); }, text: "+5 damage (every 2 upgrades: a new head bites 1 more robot)" },
+  hydra:    { add: (S, L) => { S.dmg += 5 * L; S.multi += Math.floor(L / 2); }, text: "+5 damage (every 2 upgrades: a new head lasers 1 more robot)" },
   phoenix:  { add: (S, L) => { S.dmg += 5 * L; S.rebirth = Math.min(1, S.rebirth + 0.1 * L); }, text: "+5 damage, reborn with 10% more health" },
   kraken:   { add: (S, L) => { S.dmg += 5 * L; S.splash += 8 * L; S.hp *= 1 + 0.1 * L; }, text: "+5 damage, bigger splash, even tougher" },
 };
