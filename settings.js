@@ -175,7 +175,7 @@ const SETTINGS = {
     // The Kraken: the second jackpot prize from the Mystery Box. Its tentacles slam targets robots at once. Every grabEvery seconds
     // it grabs a robot: on the sky levels, a robot (not a Boss) on a rope bridge gets pulled right off it; anywhere else it gets
     // squeezed and held still for squeezeSeconds.
-    kraken:   { name: "Kraken", cost: 240, range: 3, damage: 30, attacksPerSecond: 1.5, targets: 2, boxUnlock: "kraken", grabEvery: 5, squeezeSeconds: 1.5,
+    kraken:   { name: "Kraken", cost: 240, range: 3, damage: 50, attacksPerSecond: 1.5, targets: 2, boxUnlock: "kraken", grabEvery: 5, squeezeSeconds: 1.5,
               about: "Found in the Mystery Box. Its tentacles slam 2 robots at once. On the sky levels it grabs robots right off the rope bridges! Anywhere else it squeezes a robot and holds it still.",
               upgradeChoices: [
                 [ { name: "Long Tentacles", about: "Reaches 1 more square.", rangePlus: 1 },

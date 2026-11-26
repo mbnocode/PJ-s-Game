@@ -1097,6 +1097,7 @@ function makeSprite(rows, flip, recolor = {}) {
 const ACORN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36"><defs><radialGradient id="n" cx="38%" cy="40%" r="70%"><stop offset="0" stop-color="#fff6c2"/><stop offset=".35" stop-color="#ffd84a"/><stop offset=".75" stop-color="#e8a417"/><stop offset="1" stop-color="#b06e0a"/></radialGradient><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9824a"/><stop offset="1" stop-color="#6e4220"/></linearGradient><clipPath id="cap"><path d="M3.5 14.5C3.5 8 9 4.5 16 4.5S28.5 8 28.5 14.5c0 1.6-1 2.6-2.6 2.6H6.1c-1.6 0-2.6-1-2.6-2.6z"/></clipPath></defs><path d="M16 34.5c-6.2-2.6-10.6-8.4-10.6-15.4h21.2c0 7-4.4 12.8-10.6 15.4z" fill="url(#n)" stroke="#5a3410" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.2 20.5c.4 4.2 2.6 7.6 5.6 9.8" fill="none" stroke="#fffbe0" stroke-width="2.2" stroke-linecap="round" opacity=".85"/><path d="M22.6 21c-.3 3.2-1.7 5.9-3.8 7.9" fill="none" stroke="#a8620a" stroke-width="1.2" stroke-linecap="round" opacity=".6"/><path d="M3.5 14.5C3.5 8 9 4.5 16 4.5S28.5 8 28.5 14.5c0 1.6-1 2.6-2.6 2.6H6.1c-1.6 0-2.6-1-2.6-2.6z" fill="url(#c)"/><g clip-path="url(#cap)" stroke="#4e2a10" stroke-width=".9" opacity=".75" fill="none"><path d="M0 8l14 12M5 2l18 16M12 0l18 16M19 0l14 12M-4 14l10 8"/><path d="M32 8L18 20M27 2L9 18M20 0L2 16M13 0L-1 12M36 14l-10 8"/></g><path d="M3.5 14.5C3.5 8 9 4.5 16 4.5S28.5 8 28.5 14.5c0 1.6-1 2.6-2.6 2.6H6.1c-1.6 0-2.6-1-2.6-2.6z" fill="none" stroke="#3a2008" stroke-width="1.6"/><path d="M7 9.2c2-2.3 5-3.4 8.5-3.4" fill="none" stroke="#e2b07a" stroke-width="1.4" stroke-linecap="round" opacity=".8"/><path d="M16 4.8c.2-1.8 1.2-3.2 3.2-3.8" fill="none" stroke="#3a2008" stroke-width="3" stroke-linecap="round"/><path d="M16 4.8c.2-1.8 1.2-3.2 3.2-3.8" fill="none" stroke="#8a5a2a" stroke-width="1.5" stroke-linecap="round"/><path d="M25.5 21.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="#fff"/></svg>`;
 const ACORN_URL = "data:image/svg+xml," + encodeURIComponent(ACORN_SVG);
 document.documentElement.style.setProperty("--acorn", `url("${ACORN_URL}")`);
+let KRAKEN_EYES = [[12, 14], [21, 14]];   // where the Kraken's eyes are in its 32 x 32 picture
 const ACORN_IMG = new Image(); ACORN_IMG.src = ACORN_URL;
 const SPR = {}, SPRF = {};
 for (const k in ART) { SPR[k] = makeSprite(ART[k]); SPRF[k] = makeSprite(ART[k], true); }
@@ -1325,16 +1326,45 @@ SPR.superclanker = SPR.clanker; SPRF.superclanker = SPRF.clanker;   // the Super
     "................"], false, { h: "#ffd36b" });
 }
 { // Mystery Box prizes: the Kraken tower, the pets and the Box Mimic
-  // The Kraken: a purple sea monster with a big round head, glowing yellow eyes and curling tentacles with pale suckers
-  const KR = { P: "#3e1a5e", p: "#6a2e98", z: "#a066d0", Z: "#d2a8f0", y: "#ffd34d", t: "#4fd1b8", w: "#ffffff" };
-  const kin = (i, j) => { const dx = (i + 0.5 - 16) / 10, dy = (j + 0.5 - 11) / 9.5; return dx * dx + dy * dy <= 1 && j <= 18; };
-  const tent = (i, j) => { if (j < 16 || j > 30) return false; for (let k = 0; k < 6; k++) { const bx = 6 + k * 4, cx = bx + Math.sin((j - 16) / 3 + k * 1.3) * (1 + (j - 16) * 0.15) + (k - 2.5) * (j - 16) * 0.12; if (Math.abs(i + 0.5 - cx) < (j > 27 ? 0.8 : 1.4)) return true; } return false; };
+  // The Kraken: a deep-sea monster with a huge spiked head, big glowing slit-pupil eyes under angry brows, glowing spots,
+  // a sharp beak and curling tentacles lined with suckers
+  const KR = { P: "#24093e", p: "#4e1a7e", z: "#7f3cbc", Z: "#b884ee", y: "#ff3a1e", Y: "#ffd04a", o: "#8a0a0a", w: "#ffffff", t: "#ff5a3a", b: "#d8cbb0", B: "#8a7a60", S: "#f0b8dc", s: "#b56aa8", m: "#14060e" };   // FURIOUS: red eyes, red glowing spots
+  const HY = 12;   // the middle of its head
+  const kin = (i, j) => { const dx = (i + 0.5 - 16) / 10.5, dy = (j + 0.5 - HY) / 9; return dx * dx + dy * dy <= 1 && j <= 19; };
+  const headTop = (i) => { const dx = (i + 0.5 - 16) / 10.5; return dx * dx >= 1 ? 99 : HY - 9 * Math.sqrt(1 - dx * dx); };
+  const spike = (i, j) => [[10, 1], [16, 0], [22, 1]].some(([sx, ay]) => j >= ay && j < headTop(sx) + 1 && Math.abs(i + 0.5 - (sx + 0.5)) <= 0.5 + (j - ay) * 0.5);   // three horns on top of its head
+  const tent = (i, j) => { if (j < 17 || j > 31) return -1; for (let k = 0; k < 6; k++) { const bx = 5.5 + k * 4.2, cx = bx + Math.sin((j - 17) / 3 + k * 1.3) * (1 + (j - 17) * 0.17) + (k - 2.5) * (j - 17) * 0.14, w = j > 28 ? 0.8 : j > 24 ? 1.3 : 1.7; if (Math.abs(i + 0.5 - cx) < w) return i + 0.5 - cx; } return -1; };
+  const EYE = [[10, 13], [18, 13]];   // each eye's top-left corner (4 wide, 3 tall)
+  // angry brows: thick dark bars, high at the outside and low near the middle
+  const BROW = new Set(); for (const [c, rr] of [[8, 10], [9, 10], [10, 10], [10, 11], [11, 11], [12, 11], [12, 12], [13, 12], [14, 12]]) { BROW.add(c + "," + rr); BROW.add((31 - c) + "," + rr); }   // thick scowling V brows
   let kr = Array.from({ length: 32 }, (_, j) => Array.from({ length: 32 }, (_, i) => {
-    if (kin(i, j)) { const dy = (j + 0.5 - 11) / 9.5, dx = (i + 0.5 - 16) / 10; if ((i === 12 || i === 19) && j === 12) return "k"; if ((i === 11 || i === 12 || i === 19 || i === 20) && (j === 11 || j === 12)) return "y";
-      if ((i * 7 + j * 3) % 11 === 0 && dy < 0.4) return "Z"; return dy < -0.5 ? "Z" : dx < -0.3 ? "z" : dy < 0.4 ? "p" : "P"; }
-    if (tent(i, j)) return (j + i) % 4 === 0 ? "Z" : j > 24 ? "P" : "p";
+    if (BROW.has(i + "," + j)) return "k";
+    for (const [ex, ey] of EYE) {
+      const L = ex < 16;
+      if (j >= ey && j <= ey + 2 && i >= ex && i <= ex + 3) {
+        if (i === ex + (L ? 2 : 1)) return "k";                         // a slit pupil
+        if (i === ex + (L ? 1 : 2) && j === ey) return "w";             // a shine
+        if (j === ey + 1 && i === ex + (L ? 1 : 2)) return "Y";       // a hot yellow core
+        return (i === ex || i === ex + 3 || j === ey + 2) ? "o" : "y";  // blood-red with a dark rim
+      }
+    }
+    if (kin(i, j)) {
+      const dy = (j + 0.5 - HY) / 9, dx = (i + 0.5 - 16) / 10.5;
+      if (j >= 17 && j <= 18 && i >= 11 && i <= 20) {   // a snarling mouth full of fangs
+        if (j === 17) return i % 2 ? "w" : "m";               // top fangs
+        return i % 2 ? "m" : (i === 11 || i === 20 ? "m" : "w");   // bottom fangs
+      }
+      if (j === 16 && i >= 11 && i <= 20) return "k";
+      if ([[7, 9], [25, 10], [12, 6], [20, 6], [5, 13], [27, 14], [16, 9]].some(([a, c]) => a === i && c === j)) return "t";   // glowing spots
+      if (dx < -0.2 && dy < -0.2 && (i + j) % 6 === 0) return "Z";
+      return dy < -0.6 ? "Z" : dy < -0.15 ? "z" : dy < 0.5 ? "p" : "P";
+    }
+    if (spike(i, j)) return (i + j) % 2 ? "Z" : "z";
+    const tt = tent(i, j);
+    if (tt !== -1) { if (tt > 0.2 && j % 2 === 0 && j < 29) return j % 4 === 0 ? "S" : "s"; return j < 21 ? "z" : j > 26 ? "P" : "p"; }   // suckers down one side
     return "."; }).join(""));
   kr = kr.map((row, j) => row.split("").map((ch, i) => ch !== "." ? ch : [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => ((kr[j + b] || "")[i + a] || ".") !== "." && ((kr[j + b] || "")[i + a] || ".") !== "k") ? "k" : ".").join(""));
+  KRAKEN_EYES = EYE.map(([ex, ey]) => [ex + 2, ey + 1]);   // (for the glow drawn in the game)
   SPR.kraken = makeSprite(kr, false, KR); SPRF.kraken = makeSprite(kr, true, KR);
   // the pets
   SPR.pet_bunny = makeSprite(["................", "...ww...ww......", "...wpw.wpw......", "...wpw.wpw......", "...wpw.wpw......", "....wwwww.......", "...wwwwwww......", "..wwewwwewww....", "..wwwwpwwwww....", "..swwwwwwwws....", "...wwwwwwwwww...", "..wwwwwwwwwwwww.", "..wwwwwwwwwwwwsw", "..swwwwwwwwwwss.", "...ss.....ss....", "................"], false, { w: "#ffffff", p: "#ffb0c8", s: "#d6dbe4", e: "#2a2a33" });   // (soft, with no black outline)
@@ -5085,7 +5115,7 @@ function renderEnemies() {
 }
 /* ---------- towers page (per save slot) ---------- */
 const TOWER_INFO = {
-  kraken: "A giant purple sea monster from the Mystery Box, with glowing yellow eyes. Its tentacles slam 2 robots at once, and every few seconds it grabs one: on the sky levels it pulls robots right off the rope bridges!",
+  kraken: "A giant, furious purple sea monster from the Mystery Box, with glowing red eyes and a mouth full of fangs. Its tentacles slam 2 robots at once, and every few seconds it grabs one: on the sky levels it pulls robots right off the rope bridges!",
   nightowl: "The shopkeeper's cousin: a dark, patient owl with glowing golden eyes. It attacks 2 robots at once and hits flying robots too. It starts out weak, but gets 10% stronger every wave, and its last upgrade is really, really strong.",
   hacked: "A rusty Clanker the Defector reprogrammed to fight for nature, painted green with a glowing teal eye. Its laser zaps robots, even flying ones, and some zaps hack a robot so it walks backward for a moment.",
   wolf: "A snarling charcoal wolf with glowing red eyes, from the Night Owl's shop. It hits as hard as a Fire Dragon, and it's stronger in a pack: every Wolf in the squares around it adds 15 damage to each attack.",
@@ -7420,6 +7450,7 @@ function draw() {
     }
     else if (face < 0) { x.save(); x.translate(cx + lx, ly); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
     else x.drawImage(img, cx - s2 / 2 + lx, by - s2 - rc + ly, s2, s2);
+    if (t.kind === "kraken") drawKrakenEyes(x, cx - s2 / 2, by - s2 - rc, s2, face < 0, G.time + t.x);
     if (t.kind === "phoenix") drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), true);
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower
@@ -8060,7 +8091,7 @@ const ARMY = {
   wolf:     { name: "Wolf",         cost: 75,  hp: 130, dmg: 15, range: 26,  rate: 0.6, speed: 50, pack: 5, sound: "wolf" },   // +5 damage for each other Wolf on the same road
   hydra:    { name: "Hydra",        cost: 75,  hp: 420, dmg: 20, range: 50,  rate: 0.55, speed: 28, multi: 3, sound: "plant" },
   phoenix:  { name: "Phoenix",      cost: 80,  hp: 280, dmg: 22, range: 95,  rate: 1 / 3, speed: 46, shot: "#ffb347", fly: true, splash: 30, rebirth: 0.5, sound: "phoenix" },   // comes back once: half health, double speed
-  kraken:   { name: "Kraken",       cost: 85,  hp: 420, dmg: 26, range: 40,  rate: 0.8, speed: 34, splash: 40, sound: "kraken" },
+  kraken:   { name: "Kraken",       cost: 85,  hp: 420, dmg: 50, range: 40,  rate: 0.8, speed: 34, splash: 40, sound: "kraken" },
 };
 const ARMY_UP = { costs: [100, 200, 350, 550, 800], hp: 0.15 };   // every upgrade: +15% health, plus that animal's own upgrade (below)
 // Each animal's own upgrade: what one level adds (L = how many upgrades it has), and how to say it
@@ -8361,6 +8392,15 @@ function ixLandFireball(B, m) {
   for (let i = 0; i < 30; i++) { const a = Math.random() * Math.PI * 2, d = Math.random() * IX_RADIUS * 1.2; B.fx.push({ spark: true, x: m.x + Math.cos(a) * d, y: m.y + Math.sin(a) * d * 0.7, t: 0.6, c: i % 2 ? "#ff8a3a" : "#ffd34d" }); }
   B.fx.push({ text: hits.length ? `Mega Fireball! x${hits.length}` : "Mega Fireball!", x: m.x, y: m.y - 30, t: 1.2, c: "#ffb347" });
   Sound.play("smash"); Sound.play("fire");
+}
+// The Kraken's eyes glow and pulse (x0, y0: the picture's top-left corner; flip: it's facing left)
+function drawKrakenEyes(x, x0, y0, size, flip, t) {
+  const pu = 0.55 + 0.45 * Math.sin(t * 5.5);   // a fast, furious pulse
+  for (const [ex, ey] of KRAKEN_EYES) {
+    const px = x0 + ((flip ? 32 - ex : ex) / 32) * size, py = y0 + (ey / 32) * size, R = size * (0.12 + 0.04 * pu);
+    const g = x.createRadialGradient(px, py, 0, px, py, R); g.addColorStop(0, `rgba(255,70,30,${0.65 * pu})`); g.addColorStop(1, "rgba(200,0,0,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(px, py, R, 0, Math.PI * 2); x.fill();
+  }
 }
 // The Phoenix's fire: a flickering glow, flame tongues licking up behind it, and embers floating away (front = just the embers, drawn on top)
 function drawPhoenixFlames(x, cx, cy, size, t, seed, power, front) {
