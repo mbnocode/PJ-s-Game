@@ -2424,7 +2424,7 @@ function acctErr(e) {
 const hasAny = (arr) => Array.isArray(arr) && arr.some(Boolean);
 function acctUseSlots(arr) {   // put the account's game on this computer (keeping a backup of what was here)
   try { if (hasAny(slots)) localStorage.setItem("pjs-game-slots-backup", JSON.stringify({ at: Date.now(), slots })); } catch (e) {}
-  slots = [0, 1, 2].map((i) => arr[i] || null); try { localStorage.setItem(SAVE_KEY, JSON.stringify(slots)); } catch (e) {}
+  slots = [0, 1, 2].map((i) => { const v = arr[i]; if (!v || typeof v !== "object") return null; if (!v.best || typeof v.best !== "object") v.best = {}; if (!v.created) v.created = Date.now(); return v; });   // (repair anything missing) try { localStorage.setItem(SAVE_KEY, JSON.stringify(slots)); } catch (e) {}
   renderSlots();
 }
 function openAccount() { $("acct").hidden = false; acctMsg(""); renderAccount(); }
