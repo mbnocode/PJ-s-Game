@@ -402,6 +402,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .iron-diff-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 16px 20px; max-width: 640px; text-align: center; }
 .iron-diff-box .diff-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
 .iron-diff-box .diff-row button { display: flex; flex-direction: column; gap: 3px; } .iron-diff-box .diff-row small { font-size: 11px; opacity: 0.85; }
+.march-lanes button.wrecked { opacity: 0.45; text-decoration: line-through; }
 .ix-score { margin: 8px 0; } .ix-score, .ix-score * { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; } .ix-score .big { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 800; font-size: 38px; letter-spacing: 0.5px; color: #ffd34d; text-shadow: 0 2px 0 #7a5a10, 0 0 14px rgba(255,211,77,0.35); }   /* a smooth (not pixel) font, so big scores are easy to read */ .ix-score .muted { font-size: 13px; }
 .march-units .ixbtn { background: #1c2430; border-color: #4a6a8a; } .march-units .ixbtn.armed { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
 .march-end-box { max-height: 100%; overflow-y: auto; } .march-end-box .board-ask { margin: 8px 0; }
@@ -8204,6 +8205,13 @@ function meadowRoads(W, H, lines, seed) {
   const paths = lines.map((pts) => ironPath(pts.map((p) => ({ x: p.x, y: p.y }))));
   return makePathLayer({ theme: "meadow", pw: W / 2, ph: H / 2, total: paths[0].total + seed, segs: paths[0].segs, paths });   // (segs: the pebbles get scattered along the first road)
 }
+// Pick the road to send soldiers down. In the Smog Factories a road whose factory is wrecked can't be picked (no robots come from it anymore)
+const LANE_NAMES = ["Top", "Middle", "Bottom"];
+function laneWrecked(i) { return !!(M && M.fac && M.fac[i] <= 0); }
+function marchPickLane(i) {
+  if (laneWrecked(i)) { M.fx.push({ text: `The ${LANE_NAMES[i]} factory is wrecked! Pick another road.`, x: 200, y: roadY(i, 260) - 20, t: 1.6, c: "#ffd34d" }); Sound.play("place"); return false; }
+  M.lane = i; marchHud(); return true;
+}
 // the roads whose factory is still standing (in the Smog Factories; every road otherwise)
 function marchLanesOpen() { const open = [0, 1, 2].filter((i) => !M.fac || M.fac[i] > 0); return open.length ? open : [0, 1, 2]; }
 // The "Coming next" box for a battle: the robots in the next wave (Bosses first, then the most common), and a countdown
@@ -8606,12 +8614,13 @@ function marchButtons() {
   ch.appendChild(ic); ch.insertAdjacentHTML("beforeend", `<span>Antler's Charge! <small>(C)</small><span class="c" id="march-charge-c"></span></span>`);
   ch.onclick = marchCharge; box.appendChild(ch);
   ixButtons(box, M, "march-ix-");
-  [0, 1, 2].forEach((i) => { $("march-lane-" + i).onclick = () => { M.lane = i; marchHud(); }; });
+  [0, 1, 2].forEach((i) => { $("march-lane-" + i).onclick = () => marchPickLane(i); });
 }
 function marchSend(k) {
   if (!M || M.over) return; const a = MARCH.animals[k]; if (!a) return;
   if (M.leaves < a.cost) { Sound.play("nope"); return; }
   M.leaves -= a.cost; Sound.play("place");
+  if (laneWrecked(M.lane)) { const open = marchLanesOpen().filter((j) => !laneWrecked(j)); if (open.length) M.lane = open[0]; }
   const u = { side: 0, kind: k, x: 70, y: MARCH.lanes[M.lane] + (Math.random() * 10 - 5), lane: M.lane, hp: a.hp, max: a.hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 };
   M.units.push(u); M.lastSent = { u, at: performance.now() };   // (tap a road right after to send it there instead)
 }
@@ -8750,7 +8759,8 @@ function marchHitFort(lane, d) {
   const u = { lane };
   if (M.fac) {   // the Smog Factories: hit this road's factory
     if (M.fac[u.lane] > 0) { M.fac[u.lane] = Math.max(0, M.fac[u.lane] - d);
-      if (M.fac[u.lane] <= 0) { const fy = MARCH.lanes[u.lane]; M.fx.push({ text: "FACTORY WRECKED!", x: 470, y: fy - 40, t: 2, c: "#9be28a" }, { kind: "flash", t: 0.18 }, { kind: "shock", x: 550, y: fy, r: 90, t: 0.5, w: 6 }); for (let i = 0; i < 30; i++) M.fx.push({ spark: true, x: 530 + Math.random() * 50, y: fy - 30 + Math.random() * 60, t: 0.8, c: i % 3 ? "#ff8a3a" : "#5a5a5a" }); Sound.play("smash"); Sound.play("upgrade"); } }
+      if (M.fac[u.lane] <= 0) { const fy = MARCH.lanes[u.lane];
+        if (M.lane === u.lane) { const open = marchLanesOpen().filter((j) => M.fac[j] > 0); if (open.length) { const to = open.reduce((a, b) => Math.abs(b - u.lane) < Math.abs(a - u.lane) ? b : a); M.lane = to; M.fx.push({ text: `Now sending to the ${LANE_NAMES[to]} road`, x: 160, y: roadY(to, 200) - 26, t: 2.2, c: "#9be28a" }); } } M.fx.push({ text: "FACTORY WRECKED!", x: 470, y: fy - 40, t: 2, c: "#9be28a" }, { kind: "flash", t: 0.18 }, { kind: "shock", x: 550, y: fy, r: 90, t: 0.5, w: 6 }); for (let i = 0; i < 30; i++) M.fx.push({ spark: true, x: 530 + Math.random() * 50, y: fy - 30 + Math.random() * 60, t: 0.8, c: i % 3 ? "#ff8a3a" : "#5a5a5a" }); Sound.play("smash"); Sound.play("upgrade"); } }
     M.fort = M.fac.reduce((a, b) => a + b, 0);
   } else M.fort -= d;
 }
@@ -8826,7 +8836,7 @@ function marchHud() {
   $("march-time").textContent = fmtTime(M.t);
   for (const [k, a] of Object.entries(MARCH.animals)) { const b = $("march-" + k); if (b) b.classList.toggle("broke", M.leaves < a.cost); }
   const c = $("march-charge-c"); if (c) c.textContent = M.chargeT > 0 ? "Charging!" : M.chargeCool > 0 ? `Ready in ${Math.ceil(M.chargeCool)}s` : "Ready!";
-  [0, 1, 2].forEach((i) => $("march-lane-" + i).classList.toggle("on", M.lane === i));
+  [0, 1, 2].forEach((i) => { const b = $("march-lane-" + i), w = laneWrecked(i); b.classList.toggle("on", M.lane === i); b.classList.toggle("wrecked", w); const t = (w ? "💥 " : "") + LANE_NAMES[i]; if (b.textContent !== t) b.textContent = t; b.title = w ? "This road's factory is wrecked: no robots come from it" : ""; });
   $("march-pause").textContent = M.paused ? "Resume" : "Pause"; $("march-speed").textContent = M.speed + "×";
   ixHud(M, "march-ix-");
   const nin = $("march-next-in"); if (nin) nin.textContent = `in ${Math.max(0, Math.ceil(M.waveAt - M.t))}s`;
@@ -8862,8 +8872,8 @@ document.addEventListener("keydown", (e) => {
   if (!M || $("s-march").hidden || e.target.tagName === "INPUT") return;
   const keys = Object.keys(MARCH.animals), n = parseInt(e.key, 10);
   if (!isNaN(n)) { const k = keys[(n + 9) % 10]; if (k) marchSend(k); }
-  else if (e.key === "ArrowUp" || e.key === "w") { M.lane = Math.max(0, M.lane - 1); e.preventDefault(); }
-  else if (e.key === "ArrowDown" || e.key === "s") { M.lane = Math.min(2, M.lane + 1); e.preventDefault(); }
+  else if (e.key === "ArrowUp" || e.key === "w") { marchPickLane(Math.max(0, M.lane - 1)); e.preventDefault(); }
+  else if (e.key === "ArrowDown" || e.key === "s") { marchPickLane(Math.min(2, M.lane + 1)); e.preventDefault(); }
   else if (e.key === "c" || e.key === "C") marchCharge();
   else if (e.key === "f" || e.key === "F") ixArm(M, "freeze");
   else if (e.key === "b" || e.key === "B") ixArm(M, "fireball");
@@ -8873,7 +8883,8 @@ document.addEventListener("keydown", (e) => {
 $("march-cv").addEventListener("pointermove", (e) => { if (M) M.mouse = ixCanvasPos(e, e.currentTarget); });
 $("march-cv").addEventListener("pointerdown", (e) => {   // tap a road to pick it (or grab a leaf, or drop a Freeze / Mega Fireball)
   if (!M) return; const p = ixCanvasPos(e, e.currentTarget); M.mouse = p; if (ixClick(M, p.x, p.y)) return;
-  let bi = 0; [0, 1, 2].forEach((i) => { if (Math.abs(roadY(i, p.x) - p.y) < Math.abs(roadY(bi, p.x) - p.y)) bi = i; }); M.lane = bi;
+  let bi = 0; [0, 1, 2].forEach((i) => { if (Math.abs(roadY(i, p.x) - p.y) < Math.abs(roadY(bi, p.x) - p.y)) bi = i; });
+  if (!marchPickLane(bi)) return;
   // tapped a soldier first, then a road? Move the soldier you just sent (still at your camp) onto the road you tapped
   const ls = M.lastSent; if (ls && performance.now() - ls.at < 2500 && ls.u.hp > 0 && ls.u.x < 120 && ls.u.lane !== bi) { ls.u.lane = bi; M.fx.push({ text: "This road!", x: 110, y: roadY(bi, 110) - 24, t: 0.8, c: "#ffd34d" }); }
   M.lastSent = null; marchHud();
