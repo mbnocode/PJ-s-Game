@@ -5625,6 +5625,7 @@ function openPanel(t) {
     if (ci !== undefined) t.picks = [...(t.picks || []), ci];
     G.leaves -= pr; t.spent += pr; t.level++; Sound.play("upgrade"); noteSpent(pr);
     if (t.level >= 3) earnAch("maxed");
+    if (t.kind === "phoenix" && t.level >= 3) { t.rebornAt = -9; phoenixRebirth(t); t.maxBirthAt = G.time; floatText(t.x * T + 16, t.y * T - 18, "MAX PHOENIX!", "#ffd34d"); G.fx.push({ kind: "flash", t: 0.18 }); }   // maxed out: it bursts into flames and is reborn, stronger
     burst(t.x * T + 16, t.y * T + 16, "#ffd34d", 14); updateHud(); updateShelf(); openPanel(t);
   };
   if ($("p-up")) $("p-up").onclick = () => doUpgrade();
@@ -7400,10 +7401,23 @@ function draw() {
     if (SMOOTH_SPRITES.has(t.kind)) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; }
     if (t.pillar) x.filter = "grayscale(0.85) brightness(0.7)";
     else if (t.iceT > 0) x.filter = "saturate(0.4) brightness(1.15) hue-rotate(160deg)";   // frozen: icy blue   // trapped by a Pillar Titan: grayed out, but still visible
+    let birth = t.kind === "phoenix" && t.maxBirthAt !== undefined ? (G.time - t.maxBirthAt) / 1.4 : 2;   // 0..1 while it's being reborn at max level
+    if (birth >= 0 && birth < 1) {   // a pillar of fire, a shrinking ember, then it bursts back out
+      const py = by - s2 / 2, k = birth, hgt = s2 * (1.6 + Math.sin(k * Math.PI) * 1.4), w = s2 * (0.35 + 0.25 * Math.sin(k * Math.PI));
+      const gp = x.createLinearGradient(0, py + s2 * 0.5, 0, py - hgt); gp.addColorStop(0, `rgba(255,240,180,${0.9 * Math.sin(k * Math.PI)})`); gp.addColorStop(0.5, `rgba(255,130,30,${0.7 * Math.sin(k * Math.PI)})`); gp.addColorStop(1, "rgba(255,60,0,0)");
+      x.fillStyle = gp; x.beginPath(); x.moveTo(cx - w, py + s2 * 0.5); x.quadraticCurveTo(cx - w * 0.6, py - hgt * 0.5, cx, py - hgt); x.quadraticCurveTo(cx + w * 0.6, py - hgt * 0.5, cx + w, py + s2 * 0.5); x.fill();
+      x.strokeStyle = `rgba(255,180,60,${1 - k})`; x.lineWidth = 3; x.beginPath(); x.ellipse(cx, by - 2, s2 * (0.3 + k * 1.4), s2 * (0.1 + k * 0.45), 0, 0, Math.PI * 2); x.stroke();   // a ring of fire spreading out
+      if (Math.random() < 0.6) burst(cx + (Math.random() - 0.5) * w, py - Math.random() * hgt * 0.6, Math.random() < 0.5 ? "#ffd36b" : "#ff8c1a", 1);
+    }
     if (t.kind === "phoenix") { rc += 4 + Math.sin(G.time * 3 + t.x) * 2; drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), false); }   // the Phoenix hovers in its own fire
     const lk = t.kind === "wolf" && t.lunge ? Math.sin(Math.PI * Math.min(1, (t.recoil || 0) / 0.12)) : 0, lx = lk * (t.lunge ? t.lunge.x : 0), ly = lk * (t.lunge ? t.lunge.y : 0);   // the Wolf's pounce
     if (lk > 0.2) { x.globalAlpha = 0.28; x.drawImage(img, cx - s2 / 2 + lx * 0.4, by - s2 - rc + ly * 0.4, s2, s2); x.globalAlpha = 1; }   // an after-image
-    if (face < 0) { x.save(); x.translate(cx + lx, ly); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
+    if (birth >= 0 && birth < 1) {   // the bird shrinks into a glowing ember, then bursts back out a bit bigger
+      const sc = birth < 0.4 ? 1 - birth / 0.4 * 0.85 : birth < 0.55 ? 0.15 : 0.15 + (birth - 0.55) / 0.45 * 1.05 - Math.max(0, birth - 0.85) / 0.15 * 0.2, w2 = s2 * sc;
+      if (birth > 0.3 && birth < 0.65) { x.fillStyle = `rgba(255,250,210,${1 - Math.abs(birth - 0.47) / 0.18})`; x.beginPath(); x.arc(cx, by - s2 / 2 - rc, s2 * 0.14, 0, Math.PI * 2); x.fill(); }   // the ember
+      x.drawImage(img, cx - w2 / 2, by - s2 / 2 - rc - w2 / 2, w2, w2);
+    }
+    else if (face < 0) { x.save(); x.translate(cx + lx, ly); x.scale(-1, 1); x.drawImage(img, -s2 / 2, by - s2 - rc, s2, s2); x.restore(); }
     else x.drawImage(img, cx - s2 / 2 + lx, by - s2 - rc + ly, s2, s2);
     if (t.kind === "phoenix") drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), true);
     x.filter = "none";
@@ -8366,8 +8380,22 @@ function drawPhoenixFlames(x, cx, cy, size, t, seed, power, front) {
         x.quadraticCurveTo(bx + (tx - bx) * 0.55 - nx * k * 1.4, by + (ty - by) * 0.55 - ny * k * 1.4, bx - nx * k, by - ny * k); x.fill();
       }
     }
+    if (power >= 1) {   // MAX: a big pulsing fiery aura around everything
+      const pu = 0.5 + 0.5 * Math.sin(t * 4 + seed), R2 = size * (1.25 + 0.12 * pu), g2 = x.createRadialGradient(cx, cy, size * 0.4, cx, cy, R2);
+      g2.addColorStop(0, `rgba(255,120,20,${0.22 + 0.1 * pu})`); g2.addColorStop(0.7, `rgba(255,60,0,${0.1 + 0.06 * pu})`); g2.addColorStop(1, "rgba(255,40,0,0)");
+      x.fillStyle = g2; x.beginPath(); x.arc(cx, cy, R2, 0, Math.PI * 2); x.fill();
+    }
     if (power >= 1) { x.strokeStyle = `rgba(255,200,80,${0.35 + 0.2 * Math.sin(t * 5 + seed)})`; x.lineWidth = 2; x.beginPath(); x.ellipse(cx, cy + size * 0.42, size * 0.55, size * 0.16, 0, 0, Math.PI * 2); x.stroke(); }   // a ring of fire at its feet when fully upgraded
     return;
+  }
+  if (power >= 1) {   // MAX: sparks shooting out of it in every direction
+    x.save(); x.lineCap = "round";
+    for (let i = 0; i < 12; i++) {
+      const tt = t * 1.7 + i / 12 + seed * 0.07, ph = tt % 1, a = i * 2.399 + Math.floor(tt) * 1.31, r0 = size * (0.25 + ph * 1.0), r1 = r0 + size * 0.14 * (1 - ph);
+      x.strokeStyle = i % 3 ? `rgba(255,${170 + (i % 2) * 60},60,${1 - ph})` : `rgba(255,250,210,${1 - ph})`; x.lineWidth = 2 - ph;
+      x.beginPath(); x.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 0.8); x.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1 * 0.8); x.stroke();
+    }
+    x.restore();
   }
   for (let i = 0; i < 6 + power * 4; i++) {   // embers rising and fading
     const ph = (t * 0.9 + i / (6 + power * 4) + seed * 0.13) % 1, px = cx + Math.sin(i * 2.3 + t * 2 + seed) * size * 0.4 * (0.4 + ph), py = cy + size * 0.1 - ph * size * 1.15;
