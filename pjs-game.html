@@ -4950,7 +4950,7 @@ const PETS = { bunny: "Bunny", chick: "Chick", firefly: "Firefly" }, PET_NAMES_N
 // The chance of each Mystery Box prize right now (a jackpot you already found can't come again, so the others go up a little)
 function boxDropRates(s) {
   const P = SETTINGS.mysteryBox.prizes, f = (s.box && s.box.found) || {};
-  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
+  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin (Crystal, Candy, Toxic, Lava, Golden or Shadow)", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
   const live = Object.entries(P).filter(([k]) => NAMES[k] && !((k === "phoenix" || k === "kraken") && f[k])), tot = live.reduce((a, [, p]) => a + p.chance, 0);
   return `<table>${Object.entries(P).filter(([k]) => NAMES[k]).map(([k, p]) => { const got = (k === "phoenix" || k === "kraken") && f[k];
     return `<tr><td>${NAMES[k]}</td><td>${got ? "found ✓" : (100 * p.chance / tot).toFixed(1).replace(/\.0$/, "") + "%"}</td></tr>`; }).join("")}</table>
@@ -4977,8 +4977,15 @@ function rollBoxPrize(s, noMimic) {
   if (kind === "leafboost") { s.box.leafBoosts = (s.box.leafBoosts || 0) + 1; return { kind, pic: "leaf", title: "Leaf Boost!", text: `Your next game starts with ${P.leafboost.leaves} extra Maple Leaves` }; }
   if (kind === "mimic") return { kind, pic: "mimic", mimic: true, title: "It's a trap!", text: "" };
   if (kind === "skin") {
-    const kinds = Object.keys(TOWER_SKINS), tot = kinds.reduce((a, st) => a + (TOWER_SKINS[st].weight || 1), 0);   // rarer skins have a smaller weight
-    let roll = Math.random() * tot, st = kinds[0]; for (const c of kinds) { roll -= TOWER_SKINS[c].weight || 1; if (roll < 0) { st = c; break; } }
+    // which skin: rarer skins have a smaller weight. Golden is one of the skins too
+    const wOf = (c) => c === "gold" ? (SETTINGS.mysteryBox.goldSkinWeight ?? 10) : (TOWER_SKINS[c].weight || 1);
+    const kinds = [...Object.keys(TOWER_SKINS), "gold"], tot = kinds.reduce((a, c) => a + wOf(c), 0);
+    let roll = Math.random() * tot, st = kinds[0]; for (const c of kinds) { roll -= wOf(c); if (roll < 0) { st = c; break; } }
+    if (st === "gold") {
+      if (gold.length) { const k = gold[Math.random() * gold.length | 0]; s.box.golden[k] = true; s.box.look = s.box.look || {}; s.box.look[k] = "gold"; s.box.found.golden = (s.box.found.golden || 0) + 1;
+        return { kind: "golden", pic: k, gold: true, title: "Golden Tower!", text: `Your ${SETTINGS.towers[k].name} is now shiny gold` }; }
+      st = Object.keys(TOWER_SKINS)[Math.random() * Object.keys(TOWER_SKINS).length | 0];   // every tower is gold already: a regular skin instead
+    }
     const towersHere = TOWER_ORDER.filter((tk) => towerUnlocked(tk)), k = towersHere[Math.random() * towersHere.length | 0];
     if (ownedLooks(s, k)[st]) {   // a duplicate: keep it as a spare to sell
       s.box.skinExtra = s.box.skinExtra || {}; s.box.skinExtra[k + ":" + st] = (s.box.skinExtra[k + ":" + st] || 0) + 1;
@@ -5496,12 +5503,12 @@ function sellSkin(k, st) {
 }
 // each look's chance per Mystery Box (worked out from the box's prize chances and the skin weights)
 function skinOdds() {
-  const P = SETTINGS.mysteryBox.prizes, s = slot(), found = (s && s.box && s.box.found) || {};
+  const P = SETTINGS.mysteryBox.prizes, s = slot(), found = (s && s.box && s.box.found) || {}, gw = SETTINGS.mysteryBox.goldSkinWeight ?? 10;
   const tot = Object.entries(P).filter(([k, p]) => p && p.chance && !((k === "phoenix" || k === "kraken") && found[k])).reduce((a, [, p]) => a + p.chance, 0);
-  const skinBox = P.skin.chance / tot, wTot = Object.values(TOWER_SKINS).reduce((a, v) => a + (v.weight || 1), 0);
+  const skinBox = P.skin.chance / tot, wTot = Object.values(TOWER_SKINS).reduce((a, v) => a + (v.weight || 1), 0) + gw;
   const pct = (v) => (v * 100 >= 10 ? (v * 100).toFixed(0) : (v * 100).toFixed(1)) + "%";
   const skins = Object.values(TOWER_SKINS).map((v) => [v.name, v.rarity || "", skinBox * (v.weight || 1) / wTot]).sort((a, b) => b[2] - a[2]);   // most common first
-  return [...skins, ["Golden", "Epic", P.golden.chance / tot]].sort((a, b) => b[2] - a[2]).map(([n, rar, v]) => ({ n, rar, p: pct(v) }));
+  return [...skins, ["Golden", "Epic", skinBox * gw / wTot]].sort((a, b) => b[2] - a[2]).map(([n, rar, v]) => ({ n, rar, p: pct(v) }));
 }
 function renderSkins() {
   const s = slot(), grid = $("skin-grid"); grid.innerHTML = ""; s.box = s.box || {};
