@@ -402,7 +402,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .iron-diff-box { background: var(--panel); border: 3px solid #ffd34d; border-radius: 12px; padding: 16px 20px; max-width: 640px; text-align: center; }
 .iron-diff-box .diff-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
 .iron-diff-box .diff-row button { display: flex; flex-direction: column; gap: 3px; } .iron-diff-box .diff-row small { font-size: 11px; opacity: 0.85; }
-.ix-score { margin: 8px 0; } .ix-score .big { font-family: var(--display); font-size: 30px; color: #ffd34d; } .ix-score .muted { font-size: 13px; }
+.ix-score { margin: 8px 0; } .ix-score, .ix-score * { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; } .ix-score .big { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 800; font-size: 38px; letter-spacing: 0.5px; color: #ffd34d; text-shadow: 0 2px 0 #7a5a10, 0 0 14px rgba(255,211,77,0.35); }   /* a smooth (not pixel) font, so big scores are easy to read */ .ix-score .muted { font-size: 13px; }
 .march-units .ixbtn { background: #1c2430; border-color: #4a6a8a; } .march-units .ixbtn.armed { background: #ffd34d; color: #2a2000; border-color: #a8861a; }
 .march-end-box { max-height: 100%; overflow-y: auto; } .march-end-box .board-ask { margin: 8px 0; }
 .army-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; width: min(1100px, 100%); }
@@ -8579,7 +8579,8 @@ function marchSend(k) {
   if (!M || M.over) return; const a = MARCH.animals[k]; if (!a) return;
   if (M.leaves < a.cost) { Sound.play("nope"); return; }
   M.leaves -= a.cost; Sound.play("place");
-  M.units.push({ side: 0, kind: k, x: 70, y: MARCH.lanes[M.lane] + (Math.random() * 10 - 5), lane: M.lane, hp: a.hp, max: a.hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 });
+  const u = { side: 0, kind: k, x: 70, y: MARCH.lanes[M.lane] + (Math.random() * 10 - 5), lane: M.lane, hp: a.hp, max: a.hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 };
+  M.units.push(u); M.lastSent = { u, at: performance.now() };   // (tap a road right after to send it there instead)
 }
 function marchCharge() {
   if (!M || M.over || M.chargeCool > 0) { Sound.play("nope"); return; }
@@ -8817,6 +8818,9 @@ $("march-cv").addEventListener("pointermove", (e) => { if (M) M.mouse = ixCanvas
 $("march-cv").addEventListener("pointerdown", (e) => {   // tap a road to pick it (or grab a leaf, or drop a Freeze / Mega Fireball)
   if (!M) return; const p = ixCanvasPos(e, e.currentTarget); M.mouse = p; if (ixClick(M, p.x, p.y)) return;
   let bi = 0; [0, 1, 2].forEach((i) => { if (Math.abs(roadY(i, p.x) - p.y) < Math.abs(roadY(bi, p.x) - p.y)) bi = i; }); M.lane = bi;
+  // tapped a soldier first, then a road? Move the soldier you just sent (still at your camp) onto the road you tapped
+  const ls = M.lastSent; if (ls && performance.now() - ls.at < 2500 && ls.u.hp > 0 && ls.u.x < 120 && ls.u.lane !== bi) { ls.u.lane = bi; M.fx.push({ text: "This road!", x: 110, y: roadY(bi, 110) - 24, t: 0.8, c: "#ffd34d" }); }
+  M.lastSent = null; marchHud();
 });
 $("march-pause").onclick = () => { if (M) M.paused = !M.paused; };
 $("march-speed").onclick = () => { if (M) M.speed = M.speed === 1 ? 2 : M.speed === 2 ? 3 : 1; };
