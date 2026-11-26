@@ -6707,22 +6707,44 @@ function drawBite(x, f) {
   if (!f.robot.dead) { const q = rpos(f.robot); f.tx = q.x; f.ty = q.y - 6; }
   if (f.tx === undefined) return;
   const age = f.dur - f.t, k = age < 0.12 ? age / 0.12 : age < 0.18 ? 1 : Math.max(0, f.t / (f.dur - 0.18));
-  const ex = hx + (f.tx - hx) * k, ey = hy + (f.ty - hy) * k, mx = (hx + ex) / 2, my = Math.min(hy, ey) - 10 * k;
+  const at = (kk) => { const ex = hx + (f.tx - hx) * kk, ey = hy + (f.ty - hy) * kk, mx = (hx + ex) / 2, my = Math.min(hy, ey) - 12 * kk; return { ex, ey, mx, my }; };
+  const { ex, ey, mx, my } = at(k), striking = age < 0.18;
   x.lineCap = "round";
-  for (const [col, w] of [["#16191d", 7], ["#163e36", 5], ["#2a6e5a", 2.5]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
-  // the head with its jaws: open on the way out, snapped shut when it bites
-  const ang = Math.atan2(ey - my, ex - mx), open = age < 0.12 ? 0.6 : 0.08;
-  x.save(); x.translate(ex, ey); x.rotate(ang);
-  for (const sgn of [-1, 1]) {
-    x.save(); x.rotate(sgn * open);
-    x.fillStyle = "#16191d"; x.fillRect(-2, sgn > 0 ? 0 : -4, 10, 4);
-    x.fillStyle = "#2a6e5a"; x.fillRect(-1, sgn > 0 ? 0.5 : -3.5, 8, 3);
-    x.fillStyle = "#ffffff"; for (let i = 1; i < 7; i += 2) x.fillRect(i, sgn > 0 ? 0 : -1, 1, 1);   // teeth
+  if (striking) { x.strokeStyle = "rgba(90,255,200,0.25)"; x.lineWidth = 11; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }   // a glow around the striking neck
+  for (const [col, w] of [["#16191d", 8], ["#163e36", 6], ["#2a6e5a", 3]]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(mx, my, ex, ey); x.stroke(); }
+  x.fillStyle = "#9cbc8c";   // scales down its neck
+  for (let u = 0.12; u < 0.92; u += 0.11) { const a = 1 - u, px = a * a * hx + 2 * a * u * mx + u * u * ex, py = a * a * hy + 2 * a * u * my + u * u * ey; x.fillRect(Math.round(px) - 1, Math.round(py) - 2, 2, 1); }
+  const head = (px, py, ang, open, alpha) => {   // a serpent head: snout, horn, glowing eye, and jaws with long fangs
+    x.save(); x.globalAlpha = alpha; x.translate(px, py); x.rotate(ang);
+    for (const sgn of [-1, 1]) {
+      x.save(); x.rotate(sgn * open);
+      x.fillStyle = "#16191d"; x.fillRect(-3, sgn > 0 ? 0 : -6, 14, 6);
+      x.fillStyle = sgn < 0 ? "#2a6e5a" : "#1f5546"; x.fillRect(-2, sgn > 0 ? 0.5 : -5, 12, 4.5);
+      x.fillStyle = "#ffffff"; for (let i = 1; i < 10; i += 2) x.fillRect(i, sgn > 0 ? -0.5 : -0.5, 1, 1.5);   // teeth
+      x.fillRect(9, sgn > 0 ? -2 : 0, 1.5, 2.5);   // a long fang at the front
+      x.restore();
+    }
+    x.fillStyle = "#16191d"; x.beginPath(); x.moveTo(-3, -6); x.lineTo(-8, -10); x.lineTo(-1, -6); x.fill();   // a horn
+    const gr = x.createRadialGradient(1, -3, 0, 1, -3, 7); gr.addColorStop(0, "rgba(255,40,20,0.95)"); gr.addColorStop(1, "rgba(255,0,0,0)"); x.fillStyle = gr; x.fillRect(-6, -10, 14, 14);
+    x.fillStyle = "#ffdd40"; x.fillRect(0, -4, 3, 2); x.fillStyle = "#ff2a1a"; x.fillRect(1, -4, 1, 2);   // a fierce slit eye
     x.restore();
+  };
+  const ang = Math.atan2(ey - my, ex - mx), open = age < 0.12 ? 0.75 : 0.06;
+  if (age < 0.12) for (const back of [0.45, 0.22]) { const p = at(Math.max(0, k - back)); head(p.ex, p.ey, ang, open, 0.25); }   // after-images as it lunges
+  head(ex, ey, ang, open, 1);
+  x.lineCap = "butt";
+}
+// The Hydra's CHOMP: two rows of teeth snap shut on the robot
+function drawChomp(x, f) {
+  const k = 1 - f.t / 0.3, close = Math.min(1, k * 3), gap = 10 * (1 - close), a = f.t < 0.12 ? f.t / 0.12 : 1;
+  x.save(); x.globalAlpha = a; x.translate(f.x, f.y);
+  for (const sgn of [-1, 1]) {
+    const y0 = sgn * (gap + 3);
+    x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(0, y0 + sgn * 3, 12, 4, 0, sgn > 0 ? 0 : Math.PI, sgn > 0 ? Math.PI : Math.PI * 2); x.fill();   // the jaw
+    x.fillStyle = "#ffffff"; for (let i = -9; i <= 9; i += 4.5) { x.beginPath(); x.moveTo(i - 2, y0); x.lineTo(i + 2, y0); x.lineTo(i, y0 - sgn * 5); x.fill(); }   // fangs pointing in
   }
-  { const gr = x.createRadialGradient(0, -2, 0, 0, -2, 5); gr.addColorStop(0, "rgba(255,40,20,0.9)"); gr.addColorStop(1, "rgba(255,0,0,0)"); x.fillStyle = gr; x.fillRect(-5, -7, 10, 10); }
-  x.fillStyle = "#ff2a1a"; x.fillRect(-1, -3, 2, 2);   // glowing red eye
-  x.restore(); x.lineCap = "butt";
+  if (close >= 1 && k < 0.6) { x.fillStyle = `rgba(255,255,255,${0.9 - k})`; x.font = "bold 9px system-ui, sans-serif"; x.textAlign = "center"; x.fillText("CHOMP!", 0, -18); }
+  x.restore();
 }
 function drawVine(x, f, now) {
   const { pts, reach } = vinePoints(f, now);
@@ -7220,6 +7242,7 @@ function update(dt) {
   for (const f of G.fx) if (f.kind === "bite" && !f.hit && (f.age = (f.age || 0) + dt) >= 0.12) {   // the Hydra's head chomps down
     f.hit = true; const r = f.robot;
     const airK = r.flying && !f.fullAir ? (SETTINGS.towers.hydra.flyingDamageTimes ?? 0.5) : 1;   // flying robots are harder to bite: half damage (unless it has Serpent Eyes)
+    if (!r.dead) { const q0 = rpos(r); G.fx.push({ kind: "chomp", x: q0.x, y: q0.y - 6, t: 0.3 }, { kind: "splash", x: q0.x, y: q0.y - 4, r: 16, t: 0.28, col: "90,255,200" }); burst(q0.x, q0.y - 2, "#5af08a", 5); }   // CHOMP, a ring, and green venom drops
     if (!r.dead) { hurt(r, f.dmg * airK * plowMul(r, f.tower.x * T + 16, f.tower.y * T + 16), f.vision, false, "hydra"); const q = rpos(r); burst(q.x, q.y - 4, "#7fe0c8", 6); burst(q.x, q.y - 4, "#ffffff", 3); }
   }
   for (const k in G.cool || {}) if (G.cool[k] > 0) G.cool[k] -= dt;
@@ -7932,6 +7955,7 @@ function draw() {
     if (f.kind === "splash") { x.strokeStyle = `rgba(${f.col || "120,200,255"},${f.t / 0.3})`; x.lineWidth = 3; x.beginPath(); x.arc(f.x, f.y, f.r * (1.1 - f.t), 0, Math.PI * 2); x.stroke(); }
     if (f.kind === "vine") drawVine(x, f);
     else if (f.kind === "bite") drawBite(x, f);
+    else if (f.kind === "chomp") drawChomp(x, f);
     else if (f.kind === "bolt") drawBolt(x, f);
     else if (f.kind === "claw") ixDrawFx(x, f, 640, 384);   // the Wolf's claw rake
     else if (f.kind === "arc") drawArc(x, f);
