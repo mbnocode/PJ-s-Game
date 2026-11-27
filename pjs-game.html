@@ -1529,7 +1529,7 @@ const TOWER_EYES = { air: [[8, 9, 7, 5, [[255, 211, 77]]], [18, 9, 7, 5, [[255, 
   nightowl: [[9, 7, 5, 4], [17, 7, 5, 4]], hacked: [[10, 6, 2, 2]], phoenix: [[25, 9, 2, 1]], kraken: [[10, 13, 4, 3], [18, 13, 4, 3]] };
 SPR.squirrel = makeSprite(ART.squirrel, false, { r: "#c8742e", R: "#8a4a1a", o: "#e3a15c", e: "#f4e2c0", w: "#ffffff", a: "#a8743e", A: "#5a3a1a" });   // 32 x 32 squirrel
 // Smooth (non-pixel) Pegasus drawn with canvas paths onto a 128 x 128 canvas, facing right.
-function makePegasusArt() {
+function makePegasusArt(flap = 0) {   // flap: how far the wings have swept down (0 = raised high; used to make the flapping frames)
   // 1) paint every part as one connected shape (no outlines between parts)
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
   const x = c.getContext("2d");
@@ -1542,11 +1542,11 @@ function makePegasusArt() {
   const wing = (ox, oy, scale, tint) => {
     const feathers = [[-2.15, 52], [-1.95, 58], [-1.75, 60], [-1.55, 56], [-1.35, 48], [-1.15, 38]];
     feathers.forEach(([a, len], i) => {
-      x.save(); x.translate(ox, oy); x.rotate(a); x.scale(scale, scale);
+      x.save(); x.translate(ox, oy); x.rotate(a - flap * (1 + i * 0.08)); x.scale(scale, scale * (1 - flap * 0.25));
       shape(() => x.ellipse(len / 2, 0, len / 2, 7.5 - i * 0.4, 0, 0, Math.PI * 2), lin(0, 0, len, 0, [[0, tint[0]], [1, tint[1]]]), "#9fb2cf", 1.4);
       x.restore();
     });
-    x.save(); x.translate(ox, oy); x.scale(scale, scale);
+    x.save(); x.translate(ox, oy); x.rotate(-flap * 0.8); x.scale(scale, scale * (1 - flap * 0.3));
     shape(() => { x.moveTo(-6, 4); x.quadraticCurveTo(-26, -20, -18, -40); x.quadraticCurveTo(4, -24, 8, 2); x.closePath(); }, lin(0, -40, 0, 4, [[0, tint[0]], [1, "#ffffff"]]));
     x.restore();
   };
@@ -1619,6 +1619,8 @@ function makePegasusArt() {
   return p;
 }
 SPR.pegasus = makePegasusArt();
+SPR.pegasus_flap = [SPR.pegasus, makePegasusArt(0.45), makePegasusArt(0.9), makePegasusArt(0.45)];   // the wings flapping: up, middle, down, middle
+for (const f of SPR.pegasus_flap) f.eyeRects = [[39, 13, 2, 2]];
 // The Wolf (Night Owl's shop): the Midnight Alpha. A detailed 48 x 48 wolf: midnight-blue fur with silver frost tips, a shaggy ruff,
 // big pointed ears, glowing red eyes, a scar over one eye, a gold collar, bared fangs, and a bushy tail hanging down like a real wolf's.
 SPR.wolf = (() => {
@@ -9077,6 +9079,7 @@ function draw() {
       if (!G.paused && Math.random() < 0.06) G.particles.push({ kind: "spark", x: ox, y: oy, vx: (Math.random() - 0.5) * 30, vy: -20 - Math.random() * 15, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#c8f4ff" : "#c8a2ff" });
     }
     let img = t.ice ? SPR.fire_ice : towerSprite(t.kind);
+    if (t.kind === "pegasus" && !PREFS.simple) img = SPR.pegasus_flap[Math.floor(G.time * 7 + t.x) % 4];   // the Pegasus flaps its wings
     if (t.kind === "fire" && t.level >= 3) img = (t.ice ? [SPR.fire_ice, SPR.fire_mid_ice, SPR.fire_down_ice, SPR.fire_mid_ice] : [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid])[Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
     img = towerLook(t.kind, img);   // (a Golden look or a Tower Skin)
     if (towerSkin(t.kind) === "gold" && !PREFS.simple) {   // the Golden look has a warm glowing aura that gently pulses
