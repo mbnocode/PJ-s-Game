@@ -8742,7 +8742,7 @@ const ARMY = {
   wolf:     { name: "Wolf",         cost: 75,  hp: 130, dmg: 15, range: 26,  rate: 0.6, speed: 50, pack: 5, sound: "wolf" },   // +5 damage for each other Wolf on the same road
   hydra:    { name: "Hydra",        cost: 75,  hp: 420, dmg: 20, range: 50,  rate: 0.55, speed: 28, multi: 3, sound: "plant" },
   phoenix:  { name: "Phoenix",      cost: 80,  hp: 280, dmg: 22, range: 95,  rate: 1 / 3, speed: 46, shot: "#ffb347", fly: true, splash: 30, rebirth: 0.5, sound: "phoenix" },   // comes back once: half health, double speed
-  kraken:   { name: "Kraken",       cost: 85,  hp: 420, dmg: 50, range: 40,  rate: 0.8, speed: 34, splash: 40, sound: "kraken" },
+  kraken:   { name: "Kraken",       cost: 85,  hp: 750, dmg: 0,  range: 40,  rate: 0.8, speed: 34, tank: true, sound: "kraken" },   // doesn't attack: a huge wall that stops robots and soaks up their hits
 };
 const ARMY_UP = { costs: [100, 200, 350, 550, 800], hp: 0.15 };   // every upgrade: +15% health, plus that animal's own upgrade (below)
 // Each animal's own upgrade: what one level adds (L = how many upgrades it has), and how to say it
@@ -8761,7 +8761,7 @@ const ARMY_PERKS = {
   wolf:     { add: (S, L) => { S.dmg += 3 * L; S.pack += 2 * L; }, text: "+2 damage for each other Wolf on its road, +3 damage" },
   hydra:    { add: (S, L) => { S.dmg += 5 * L; S.multi += Math.floor(L / 2); }, text: "+5 damage (every 2 upgrades: a new head lasers 1 more robot)" },
   phoenix:  { add: (S, L) => { S.dmg += 5 * L; S.rebirth = Math.min(1, S.rebirth + 0.1 * L); }, text: "+5 damage, reborn with 10% more health" },
-  kraken:   { add: (S, L) => { S.dmg += 5 * L; S.splash += 8 * L; S.hp *= 1 + 0.1 * L; }, text: "+5 damage, bigger splash, even tougher" },
+  kraken:   { add: (S, L) => { S.hp *= 1 + 0.15 * L; }, text: "A thicker tentacle wall: another +15% health" },
 };
 // What's special about each animal right now (with its upgrades)
 function armySpecial(k, S) {
@@ -8770,7 +8770,7 @@ function armySpecial(k, S) {
     plant: `Its vines hold ${S.hold} robot${S.hold > 1 ? "s" : ""} in place at a time`, fire: `Flies, and shoots fireballs from far away`, air: `Flies, and is very fast`,
     pegasus: `Hits ${S.multi} robots at once, and flies fast`, nightowl: `Hits ${S.multi} robots at once and flies fast. Up to ${S.farther}x damage the farther along the road it gets`,
     hacked: `Knocks robots backward`, wolf: `+${S.pack} damage for each other Wolf on the same road`, hydra: `Bites ${S.multi} robots at once`,
-    phoenix: `Splash damage. When it falls, it's reborn once with ${Math.round(S.rebirth * 100)}% health and double speed`, kraken: `Very tough, with splash damage`,
+    phoenix: `Splash damage. When it falls, it's reborn once with ${Math.round(S.rebirth * 100)}% health and double speed`, kraken: `Doesn't attack. A giant wall with ${S.hp} health: it stops robots on its road and takes their hits`,
     wizard: `Animals near a Wizard (${S.aura} wide) do 2x damage`, squirrel: `Every Squirrel on the map makes floating maple leaves worth ${S.stash} more`,
   })[k] || "";
 }
@@ -9451,9 +9451,9 @@ function marchUpdate(dt) {
     }
     const baseD = u.side ? u.x - 70 : 532 - u.x;
     if (S.heal && !u.side && baseD <= 4) { deerBlast(M, u, S, (d) => marchHitFort(u.lane, d), 548); continue; }   // the Healer Deer reached the end of the road: KABOOM
-    if (!S.heal && foe && best <= S.range) { if (u.cool <= 0) marchHit(u, S, foe, charge); }
+    if (!S.heal && foe && best <= S.range) { if (u.cool <= 0 && !S.tank) marchHit(u, S, foe, charge); }   // (the Kraken just stands its ground)
     else if (!S.heal && baseD <= S.range * 0.4 + 4) {   // at the enemy's base: hit it
-      if (u.cool <= 0) { u.cool = S.rate;
+      if (u.cool <= 0 && !S.tank) { u.cool = S.rate;
         if (u.side) { M.camp -= S.dmg; Sound.play("hit"); }
         else { const d = armyDamage(u, S, C.armor, M.units, charge); if (!d) M.fx.push({ text: "Clank!", x: 560, y: u.y - 20, t: 0.6, c: "#c8d0e0" }); if (S.sound) Sound.play(S.sound);
           marchHitFort(u.lane, d);
@@ -9857,7 +9857,7 @@ function renderArmy() {
     card.appendChild(c);
     card.insertAdjacentHTML("beforeend", `<div class="army-info"><div class="k">${st.name}</div>
       <div class="pips">${"<b>■</b>".repeat(L)}${"□".repeat(max - L)} <span class="muted">Level ${L}</span></div>
-      <div class="muted">${st.heal ? `Heals ${st.heal}` : `Damage ${st.dmg}`} · Health ${st.hp}${ARMY[k].fly ? " · Flies" : ""}${ARMY[k].multi ? ` · Hits ${ARMY[k].multi} at once` : ""}${ARMY[k].splash ? " · Splash" : ""}</div>
+      <div class="muted">${st.heal ? `Heals ${st.heal}` : st.tank ? `Doesn't attack` : `Damage ${st.dmg}`} · Health ${st.hp}${ARMY[k].fly ? " · Flies" : ""}${ARMY[k].multi ? ` · Hits ${ARMY[k].multi} at once` : ""}${ARMY[k].splash ? " · Splash" : ""}</div>
       <div class="army-special">✨ ${armySpecial(k, st)}</div>
       ${L < max ? `<div class="army-next">Next upgrade: ${ARMY_PERKS[k].text}, +15% health</div>` : ""}</div>`);
     const b = document.createElement("button"); b.id = "army-up-" + k;
@@ -9977,7 +9977,7 @@ function escUpdate(dt) {
       if (u.x >= ESCAPE.gateX - 24) deerBlast(E, u, S, (d) => { if (E.engX > ESCAPE.gateX - 140 && E.engHp > 0) { E.engHp = Math.max(0, E.engHp - d); E.engHitT = 0.2; } }, ESCAPE.gateX - 10);   // reached the gate: KABOOM
       continue;
     }
-    if (foe && best <= S.range) { if (u.cool <= 0) escHit(u, S, foe, charge); }
+    if (foe && best <= S.range) { if (u.cool <= 0 && !S.tank) escHit(u, S, foe, charge); }   // (the Kraken just stands its ground)
     else if (u.side && u.x <= 44) { if (u.cool <= 0) { u.cool = S.rate; E.camp -= S.dmg; Sound.play("hit"); E.fx.push({ spark: true, x: 40, y: u.y, t: 0.25, c: "#ff6a4a" }); } }
     else if (!u.side && !foe) { u.x = Math.min(u.x + S.speed * (u.speedMult || 1) * dt, ESCAPE.gateX - 20); }
     else { if (u.rootT > 0) u.rootT -= dt; u.x += dir * S.speed * (u.rootT > 0 ? 0 : 1) * (u.speedMult || 1) * (u.side ? E.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt; }
