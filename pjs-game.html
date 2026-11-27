@@ -5657,7 +5657,7 @@ $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 // Gift codes add Golden Acorns (or unlock a tower) in the save slot you're in (once per slot).
-const GIFT_CODES = {};   /* no codes right now. Add new ones like: "NAME": 1000 (acorns), "NAME": { tower: "wolf" }, "NAME": { achievements: true } */
+const GIFT_CODES = { "GALAXY": { galaxySkin: true } };   /* GALAXY: a random tower you have gets the Mythic Galaxy skin. Add new ones like: "NAME": 1000 (acorns), "NAME": { tower: "wolf" }, "NAME": { achievements: true } */
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
@@ -5665,7 +5665,7 @@ $("b-gift").onclick = () => {
   if (GIFT_CODES[code].scene) { $("gift-code").value = ""; msg.textContent = ""; rallyScene(() => {}); return; }   // a scene code just plays the scene
   s.gifts = s.gifts || [];
   if (s.gifts.includes(code)) { msg.textContent = "This save slot already used that code."; return; }
-  const gift = GIFT_CODES[code];
+  const gift = GIFT_CODES[code]; let got = "";
   if (gift.achievements) {
     s.achievements = s.achievements || {}; let n = 0; for (const a of ACHIEVEMENTS) if (!s.achievements[a.id]) { s.achievements[a.id] = Date.now(); n++; }
     if (gift.beatAll) {   // WIN: also beat all 15 levels (not Infinity) on Normal, with 3 stars (keeping any better scores)
@@ -5673,6 +5673,11 @@ $("b-gift").onclick = () => {
         if (!prev || prev.stars < 3) { s.best[L][gift.beatAll] = { stars: 3, score: prev ? prev.score : 0 }; n++; } }
     }
     if (!n) { msg.textContent = gift.beatAll ? "This save slot already has everything that code gives!" : "This save slot already has every achievement!"; return; }
+  } else if (gift.galaxySkin) {   // a random tower you have (that isn't Galaxy yet) gets the Galaxy skin
+    const ks = TOWER_ORDER.filter((k) => towerUnlocked(k) && !ownedLooks(s, k).galaxy);
+    if (!ks.length) { msg.textContent = "Every tower you have already has the Galaxy skin!"; return; }
+    const k = ks[Math.random() * ks.length | 0]; s.box = s.box || {}; s.box.skinsOwned = s.box.skinsOwned || {}; s.box.skinsOwned[k] = s.box.skinsOwned[k] || {}; s.box.skinsOwned[k].galaxy = true; s.box.look = s.box.look || {}; s.box.look[k] = "galaxy";
+    got = SETTINGS.towers[k].name;
   } else if (gift.tower) {
     if (towerUnlocked(gift.tower)) { msg.textContent = `You already have the ${SETTINGS.towers[gift.tower].name}!`; return; }
     const tw = SETTINGS.towers[gift.tower];
@@ -5681,7 +5686,7 @@ $("b-gift").onclick = () => {
   } else s.acorns = (s.acorns || 0) + gift;
   s.gifts.push(code); saveSlots(slots);
   Sound.play("upgrade"); $("gift-code").value = "";
-  msg.textContent = gift.beatAll ? `🏆 Every achievement, and all 15 levels beaten on Normal!` : gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
+  msg.textContent = gift.galaxySkin ? `🌌 Your ${got} got the Mythic Galaxy skin!` : gift.beatAll ? `🏆 Every achievement, and all 15 levels beaten on Normal!` : gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
 };
 $("gift-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-gift").click(); });
 $("b-perks").onclick = () => { Sound.init(); $("gift-msg").hidden = true; renderPerks(); show("s-perks"); };
