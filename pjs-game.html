@@ -9075,6 +9075,9 @@ function draw() {
       x.strokeStyle = `rgba(255,180,60,${1 - k})`; x.lineWidth = 3; x.beginPath(); x.ellipse(cx, by - 2, s2 * (0.3 + k * 1.4), s2 * (0.1 + k * 0.45), 0, 0, Math.PI * 2); x.stroke();   // a ring of fire spreading out
       if (Math.random() < 0.6) burst(cx + (Math.random() - 0.5) * w, py - Math.random() * hgt * 0.6, Math.random() < 0.5 ? "#ffd36b" : "#ff8c1a", 1);
     }
+    const maxFx = t.level >= 3 && !PREFS.simple && MAX_FX_KINDS.has(t.kind);
+    if (maxFx) rc += drawMaxFx(x, t, cx, by, s2, rc, face, false);   // max-upgrade animations (behind the tower; some lift it up)
+    if (t.level >= 3 && t.kind === "crab" && !towerSkin("crab")) img = skinOf(img, "gold", skinFrame("gold"));   // a maxed Crab gets a shiny golden shell
     const lookNow = PREFS.simple ? null : towerSkin(t.kind), lavaLook = lookNow === "lava";
     if (lookNow === "crystal") drawCrystalShards(x, cx, by, s2, G.time + t.x * 1.3 + t.y, false);   // crystal shards circling behind it
     if (lookNow === "shadow") drawShadowOrbs(x, cx, by, s2, G.time + t.x * 1.1 + t.y * 0.7, false);   // shadow orbs circling behind it
@@ -9101,6 +9104,7 @@ function draw() {
     else x.drawImage(img, cx - s2 / 2 + lx, by - s2 - rc + ly, s2, s2);
     if (t.kind === "kraken") drawKrakenEyes(x, cx - s2 / 2, by - s2 - rc, s2, face < 0, G.time + t.x);
     if (t.kind === "phoenix") drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), true);
+    if (maxFx) drawMaxFx(x, t, cx, by, s2, rc, face, true);   // ...and in front of it
     if (awOn) {
       x.restore();
       if (aw > 0.12 && aw < 0.75) { const a = Math.min(1, (aw - 0.12) / 0.1) * Math.min(1, (0.75 - aw) / 0.12); x.save(); x.globalAlpha = a; x.font = "bold 14px system-ui, sans-serif"; x.textAlign = "center";
@@ -9646,6 +9650,85 @@ function offerUnlockAll(next) {
   $("o-nounlock").onclick = () => next();
 }
 let IX_TIME = 0;   // a clock for effects that run when no game is going
+// ---- Max-upgrade animations (a fully upgraded tower gets its own special look) ----
+const MAX_FX_KINDS = new Set(["wizard", "healer", "squirrel", "water", "plant", "crab", "pegasus", "hacked", "kraken"]);
+function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
+  const tm = G.time + t.x * 1.37 + t.y * 0.71, k = t.kind, top = by - s2 - rc, mid = by - s2 / 2 - rc; let lift = 0;
+  const sp = (n, f) => { for (let i = 0; i < n; i++) f(i, ((i * 0.618034) % 1), ((i * 0.381966 + 0.13) % 1)); };   // n spots spread out nicely
+  if (!front) {
+    if (k === "wizard") {   // a ring of glowing magic runes slowly turning on the ground
+      x.save(); x.translate(cx, by - 2); x.scale(1, 0.38); x.strokeStyle = `rgba(150,120,255,${0.55 + 0.2 * Math.sin(tm * 2)})`; x.lineWidth = 2; x.beginPath(); x.arc(0, 0, s2 * 0.62, 0, Math.PI * 2); x.stroke();
+      x.strokeStyle = "rgba(120,220,255,0.5)"; x.lineWidth = 1; x.beginPath(); x.arc(0, 0, s2 * 0.48, 0, Math.PI * 2); x.stroke();
+      for (let i = 0; i < 8; i++) { const a = tm * 0.6 + i / 8 * Math.PI * 2; x.save(); x.translate(Math.cos(a) * s2 * 0.55, Math.sin(a) * s2 * 0.55); x.fillStyle = i % 2 ? "#c8a0ff" : "#8fe8ff"; x.fillRect(-2, -5, 4, 2); x.fillRect(-1, -5, 2, 9); x.fillRect(-3, 1, 6, 2); x.restore(); }
+      x.restore();
+    }
+    if (k === "healer") {   // a ring of flowers blooming around its feet
+      for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, fx = cx + Math.cos(a) * s2 * 0.55, fy = by - 1 + Math.sin(a) * s2 * 0.2, bob = Math.sin(tm * 2 + i) * 0.8, col = ["#ff9ad8", "#ffffff", "#ffd34d"][i % 3];
+        x.fillStyle = "#3a8a3a"; x.fillRect(fx - 0.5, fy - 3 + bob, 1, 4); x.fillStyle = col; for (const [px, py] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) x.fillRect(fx + px - 1, fy - 4 + bob + py - 1, 2, 2); x.fillStyle = "#ffb12e"; x.fillRect(fx - 0.5, fy - 4.5 + bob, 1.5, 1.5); }
+    }
+    if (k === "squirrel") {   // sitting on a big pile of golden nuts
+      sp(11, (i, a, b) => { const nx = cx + (a - 0.5) * s2 * 0.9, ny = by - 3 - b * 6 + Math.abs(a - 0.5) * 6; x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(nx, ny, 4, 4.5, 0, 0, Math.PI * 2); x.fill();
+        x.fillStyle = i % 3 ? "#f2b23a" : "#ffd34d"; x.beginPath(); x.ellipse(nx, ny + 0.5, 3, 3.3, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#7a4a24"; x.fillRect(nx - 3, ny - 3, 6, 2); });
+      if (Math.sin(tm * 3) > 0.92) { x.fillStyle = "#fff6c0"; x.fillRect(cx + Math.sin(tm) * 8 - 1, by - 9, 2, 2); }
+      lift = 7;
+    }
+    if (k === "water") {   // a little pond with ripples and a lily pad under the frog
+      x.save(); x.translate(cx, by - 2); x.scale(1, 0.36); x.fillStyle = "rgba(60,150,230,0.55)"; x.beginPath(); x.arc(0, 0, s2 * 0.7, 0, Math.PI * 2); x.fill();
+      for (let i = 0; i < 2; i++) { const ph = (tm * 0.5 + i * 0.5) % 1; x.strokeStyle = `rgba(220,245,255,${0.7 * (1 - ph)})`; x.lineWidth = 2; x.beginPath(); x.arc(0, 0, s2 * (0.3 + ph * 0.45), 0, Math.PI * 2); x.stroke(); }
+      x.fillStyle = "#3aa04a"; x.beginPath(); x.arc(0, 0, s2 * 0.32, 0.35, Math.PI * 2 - 0.1); x.lineTo(0, 0); x.fill(); x.restore();
+      lift = 2;
+    }
+    if (k === "plant") {   // roots spreading out across the ground
+      x.strokeStyle = "#6a4422"; x.lineCap = "round";
+      for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.3, L = s2 * (0.5 + 0.12 * Math.sin(tm * 0.8 + i)); x.lineWidth = 2.2; x.beginPath(); x.moveTo(cx, by - 3);
+        x.quadraticCurveTo(cx + Math.cos(a + 0.4) * L * 0.6, by - 2 + Math.sin(a + 0.4) * L * 0.2, cx + Math.cos(a) * L, by - 2 + Math.sin(a) * L * 0.28); x.stroke(); }
+      x.lineCap = "butt";
+    }
+    if (k === "pegasus") {   // floating on a little cloud, with rainbow light around its wings
+      const ga = x.createRadialGradient(cx, mid - 6, 2, cx, mid - 6, s2 * 0.8), hue = (tm * 60) % 360;
+      ga.addColorStop(0, `hsla(${hue},100%,80%,0.45)`); ga.addColorStop(0.5, `hsla(${(hue + 120) % 360},100%,70%,0.25)`); ga.addColorStop(1, `hsla(${(hue + 240) % 360},100%,70%,0)`);
+      x.fillStyle = ga; x.beginPath(); x.arc(cx, mid - 6, s2 * 0.8, 0, Math.PI * 2); x.fill();
+      lift = 8 + Math.sin(tm * 2) * 2;
+      for (const [ox, rr] of [[-9, 5], [-3, 6.5], [4, 6], [10, 4.5]]) { x.fillStyle = "#c8d8e8"; x.beginPath(); x.arc(cx + ox, by - 3, rr + 1, 0, Math.PI * 2); x.fill(); }
+      for (const [ox, rr] of [[-9, 5], [-3, 6.5], [4, 6], [10, 4.5]]) { x.fillStyle = "#ffffff"; x.beginPath(); x.arc(cx + ox, by - 4, rr, 0, Math.PI * 2); x.fill(); }
+    }
+    if (k === "hacked") {   // green computer code raining down behind it
+      x.save(); x.font = "bold 7px monospace"; x.textAlign = "center";
+      for (let c = 0; c < 6; c++) { const colX = cx - s2 * 0.6 + c * s2 * 0.24, sp2 = 30 + (c * 13) % 20;
+        for (let j = 0; j < 4; j++) { const yy = ((tm * sp2 + c * 37 + j * 9) % (s2 * 1.4)), a = 1 - j * 0.25; x.fillStyle = j ? `rgba(60,255,120,${0.55 * a})` : "rgba(200,255,210,0.9)"; x.fillText(((c * 7 + j * 3 + Math.floor(tm * 6)) % 2) ? "1" : "0", colX, top - s2 * 0.2 + yy - j * 7); } }
+      x.restore();
+    }
+    if (k === "kraken") {   // a swirling whirlpool, with tentacles waving out of the water
+      x.save(); x.translate(cx, by - 2); x.scale(1, 0.36); x.fillStyle = "rgba(30,90,150,0.6)"; x.beginPath(); x.arc(0, 0, s2 * 0.8, 0, Math.PI * 2); x.fill();
+      x.strokeStyle = "rgba(190,235,255,0.7)"; x.lineWidth = 2; for (let i = 0; i < 3; i++) { x.beginPath(); for (let a = 0; a < Math.PI * 3; a += 0.2) { const rr = s2 * 0.75 * (1 - a / (Math.PI * 3.2)), aa = a - tm * 2.5 + i * 2.1; a ? x.lineTo(Math.cos(aa) * rr, Math.sin(aa) * rr) : x.moveTo(Math.cos(aa) * rr, Math.sin(aa) * rr); } x.stroke(); }
+      x.restore();
+      for (const [ox, ph] of [[-s2 * 0.62, 0], [s2 * 0.6, 1.7], [-s2 * 0.35, 3.1], [s2 * 0.4, 4.3]]) { const sway = Math.sin(tm * 2 + ph) * 4, hgt = 10 + Math.sin(tm * 1.3 + ph) * 3;
+        x.strokeStyle = "#16191d"; x.lineWidth = 5; x.lineCap = "round"; x.beginPath(); x.moveTo(cx + ox, by - 1); x.quadraticCurveTo(cx + ox - sway, by - hgt * 0.6, cx + ox + sway, by - hgt); x.stroke();
+        x.strokeStyle = "#8a4ab0"; x.lineWidth = 3; x.beginPath(); x.moveTo(cx + ox, by - 1); x.quadraticCurveTo(cx + ox - sway, by - hgt * 0.6, cx + ox + sway, by - hgt); x.stroke(); x.lineCap = "butt"; }
+    }
+    return lift;
+  }
+  // ---- in front of the tower ----
+  if (k === "wizard") sp(6, (i, a, b) => { const tw = Math.max(0, Math.sin(tm * 3 + i * 1.7)); if (tw < 0.3) return; const px = cx + (a - 0.5) * s2 * 0.7, py = top + s2 * (0.15 + b * 0.75), L = 3 * tw;   // stars twinkling on its robe and hat
+    x.fillStyle = `rgba(255,250,200,${tw})`; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); });
+  if (k === "healer") { const ax = cx + face * s2 * 0.25, ay = by - s2 * 0.95 - rc, p = 0.5 + 0.5 * Math.sin(tm * 2);   // giant glowing golden antlers
+    x.strokeStyle = `rgba(255,220,110,${0.75 + 0.2 * p})`; x.lineWidth = 2; x.lineCap = "round";
+    for (const sx of [-1, 1]) { x.beginPath(); x.moveTo(ax + sx * 2, ay + 4); x.lineTo(ax + sx * 8, ay - 6); x.lineTo(ax + sx * 13, ay - 9); x.moveTo(ax + sx * 6, ay - 3); x.lineTo(ax + sx * 5, ay - 11); x.moveTo(ax + sx * 10, ay - 7); x.lineTo(ax + sx * 11, ay - 14); x.stroke(); }
+    x.lineCap = "butt"; if (!G.paused && Math.random() < 0.05) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * 24, y: ay - 8, vx: (Math.random() - 0.5) * 8, vy: 14, t: 0, life: 0.9, col: Math.random() < 0.5 ? "#ff9ad8" : "#fff2a8" }); }
+  if (k === "squirrel") { const hx = cx + face * s2 * 0.12, hy = top + s2 * 0.12;   // a tiny acorn helmet
+    x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(hx, hy + 1, 7, 4.5, 0, Math.PI, 0); x.fill(); x.fillStyle = "#8a5a2a"; x.beginPath(); x.ellipse(hx, hy + 1, 6, 3.6, 0, Math.PI, 0); x.fill();
+    x.fillStyle = "#6a4020"; for (let i = -4; i <= 4; i += 2) x.fillRect(hx + i, hy - 1, 1, 1); x.fillStyle = "#16191d"; x.fillRect(hx - 1, hy - 6, 2, 3); x.fillStyle = "#4a2a14"; x.fillRect(hx - 0.5, hy - 5.5, 1, 2); }
+  if (k === "water") { const hx = cx + face * s2 * 0.05, hy = top + s2 * 0.05;   // a crown of water drops
+    for (let i = 0; i < 5; i++) { const a = Math.PI + (i + 0.5) / 5 * Math.PI, dx = hx + Math.cos(a) * 9, dy = hy + Math.sin(a) * 5 - 2 + Math.sin(tm * 3 + i) * 0.8;
+      x.fillStyle = "#16191d"; x.beginPath(); x.arc(dx, dy, 2.6, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6ac8ff"; x.beginPath(); x.arc(dx, dy, 1.8, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(dx - 1.5, dy - 0.5); x.lineTo(dx, dy - 4.5); x.lineTo(dx + 1.5, dy - 0.5); x.fill(); x.fillStyle = "#e8fbff"; x.fillRect(dx - 1, dy - 1, 1, 1); } }
+  if (k === "plant") { sp(10, (i, a, b) => { const px = cx + (a - 0.5) * s2 * 0.75, py = top + s2 * (0.05 + b * 0.4); x.fillStyle = i % 3 ? "#ffb0d8" : "#ffffff"; x.fillRect(px - 1.5, py - 1.5, 3, 3); x.fillStyle = "#ff7ab8"; x.fillRect(px - 0.5, py - 0.5, 1, 1); });   // pink blossoms
+    if (!G.paused && Math.random() < 0.06) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 0.7, y: top + s2 * 0.2, vx: 10 + Math.random() * 10, vy: 12, t: 0, life: 1.1, col: "#ffb0d8" }); }   // petals drifting away
+  if (k === "crab") sp(5, (i, a) => { const ph = (tm * 0.4 + a) % 1, bx = cx + (a - 0.5) * s2 * 0.8 + Math.sin(tm * 3 + i) * 2, byy = mid + s2 * 0.2 - ph * s2 * 0.9;   // bubbles floating up
+    x.strokeStyle = `rgba(220,245,255,${0.9 * Math.sin(ph * Math.PI)})`; x.lineWidth = 1; x.beginPath(); x.arc(bx, byy, 1.5 + ph * 1.5, 0, Math.PI * 2); x.stroke(); });
+  if (k === "hacked") { if (Math.sin(tm * 7) > 0.3) { x.strokeStyle = "#b8ffd0"; x.lineWidth = 1.2; x.beginPath(); let px = cx - s2 * 0.3 + Math.sin(tm * 11) * 4, py = top + s2 * 0.3; x.moveTo(px, py);   // electric sparks crackling across it
+      for (let i = 0; i < 4; i++) { px += 4 + Math.random() * 3; py += (Math.random() - 0.5) * 8; x.lineTo(px, py); } x.stroke(); }
+    x.fillStyle = "rgba(60,255,120,0.12)"; x.fillRect(cx - s2 / 2, top, s2, s2); }
+}
 function levelNameOf(L) { return (SETTINGS.levels[L] || {}).name || L; }
 function drawKrakenEyes(x, x0, y0, size, flip, t) {   // it's MAD: puffs of steam blow out of both sides of its head
   for (const side of [-1, 1]) for (let k = 0; k < 3; k++) {
