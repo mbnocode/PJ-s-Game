@@ -421,10 +421,10 @@ const SETTINGS = {
     lava:    { name: "Burn", about: "Hits set robots on fire, burning for 40% more damage over 3 seconds.", burnSeconds: 3, burnPart: 0.4 },
     metal:   { name: "Steel Coat", about: "Can't be zapped, stunned, frozen, slimed, inked, barnacled or trapped by robots, and hits 10% harder.", steel: true, damageTimes: 1.1 },
     gold:    { name: "Lucky", about: "Robots it destroys drop 3 extra Maple Leaves, and Golden Acorns drop 35% more often.", bonusLeaves: 3, acornTimes: 1.35 },
-    toxic:   { name: "Poison", about: "Hits poison robots for 50% more damage over 4 seconds, and slow them 20%.", poisonSeconds: 4, poisonPart: 0.5, slowBy: 0.2, slowSeconds: 2 },
-    crystal: { name: "Crystal Lens", about: "Reaches 1.25 squares farther, can see Hiders, and hits 10% harder.", rangePlus: 1.25, vision: true, damageTimes: 1.1 },
-    shadow:  { name: "Shadow Strike", about: "Sees Hiders and slows robots 35%.", vision: true, slowBy: 0.35, slowSeconds: 2 },
-    galaxy:  { name: "Cosmic Power", about: "Does 60% more damage and sees Hiders.", damageTimes: 1.6, vision: true },
+    toxic:   { name: "Poison", about: "Hits 10% harder, poisons robots for 70% more damage over 4 seconds, and slows them 25%.", damageTimes: 1.1, poisonSeconds: 4, poisonPart: 0.7, slowBy: 0.25, slowSeconds: 2 },
+    crystal: { name: "Crystal Lens", about: "Reaches 1.5 squares farther, can see Hiders, hits 25% harder and attacks 10% faster.", rangePlus: 1.5, vision: true, damageTimes: 1.25, speedTimes: 1.1 },
+    shadow:  { name: "Shadow Strike", about: "Sees Hiders, hits 35% harder, attacks 10% faster, and slows robots 45%.", vision: true, damageTimes: 1.35, speedTimes: 1.1, slowBy: 0.45, slowSeconds: 2 },
+    galaxy:  { name: "Cosmic Power", about: "Does double damage, attacks 15% faster, reaches half a square farther, and sees Hiders.", damageTimes: 2, speedTimes: 1.15, rangePlus: 0.5, vision: true },
   },
 
   // Team skin upgrades: when EVERY tower on the board wears this skin (and there are at least minTowers towers), the whole team gets this.
