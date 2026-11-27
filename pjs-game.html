@@ -9701,13 +9701,10 @@ function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
       if (!G.paused && Math.random() < 0.2) { const px = cx + (Math.random() - 0.5) * s2 * 1.2; G.particles.push({ kind: "spark", x: px, y: by - 2, vx: 0, vy: -30 - Math.random() * 20, t: 0, life: 1, col: Math.random() < 0.5 ? "#9aff9a" : "#fff2a8" }); }   // healing light floating up
       if (Math.sin(tm * 1.7) > 0.6) { const px = cx + Math.sin(tm * 3) * s2 * 0.5, py = by - s2 * 0.5 - ((tm * 20) % (s2 * 0.6)); x.fillStyle = "#9aff9a"; x.fillRect(px - 3, py - 1, 6, 2); x.fillRect(px - 1, py - 3, 2, 6); }   // a little green healing cross
     }
-    if (k === "squirrel") {   // sitting on a huge sparkling pile of golden nuts, with a golden glow
+    if (k === "squirrel") {   // a warm golden glow on the ground under it, with a few sparkles
       const p = 0.5 + 0.5 * Math.sin(tm * 3);
       const ga = x.createRadialGradient(cx, by - 6, 2, cx, by - 6, s2 * 0.9); ga.addColorStop(0, `rgba(255,214,90,${0.35 + 0.2 * p})`); ga.addColorStop(1, "rgba(255,200,60,0)"); x.fillStyle = ga; x.beginPath(); x.arc(cx, by - 6, s2 * 0.9, 0, Math.PI * 2); x.fill();
-      sp(18, (i, a, b) => { const nx = cx + (a - 0.5) * s2 * 1.15, ny = by - 2 - b * 9 + Math.abs(a - 0.5) * 10; x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(nx, ny, 4.2, 4.7, 0, 0, Math.PI * 2); x.fill();
-        x.fillStyle = i % 3 ? "#f2b23a" : "#ffe27a"; x.beginPath(); x.ellipse(nx, ny + 0.5, 3.2, 3.5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#7a4a24"; x.fillRect(nx - 3.2, ny - 3.2, 6.4, 2); x.fillStyle = "#fff6c0"; x.fillRect(nx - 1.5, ny - 0.5, 1, 1); });
-      sp(4, (i, a) => { const tw = Math.sin(tm * 4 + i * 2.3); if (tw > 0.7) { const px = cx + (a - 0.5) * s2, py = by - 6 - ((i * 7) % 8), L = 4 * tw; x.fillStyle = "#ffffff"; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); } });   // twinkles on the pile
-      lift = 10;
+      sp(4, (i, a) => { const tw = Math.sin(tm * 4 + i * 2.3); if (tw > 0.7) { const px = cx + (a - 0.5) * s2, py = by - 4 - ((i * 7) % 8), L = 4 * tw; x.fillStyle = "#ffffff"; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); } });
     }
     if (k === "water") {   // a little pond with ripples and a lily pad under the frog
       x.save(); x.translate(cx, by - 2); x.scale(1, 0.36); x.fillStyle = "rgba(60,150,230,0.55)"; x.beginPath(); x.arc(0, 0, s2 * 0.7, 0, Math.PI * 2); x.fill();
