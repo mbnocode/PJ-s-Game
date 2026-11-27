@@ -5661,7 +5661,7 @@ const GIFT_CODES = {};   /* no codes right now. Add new ones like: "NAME": 1000 
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
-  if (!GIFT_CODES[code]) { msg.textContent = "That code doesn't work. Check the spelling and try again."; return; }
+  if (!GIFT_CODES[code]) { msg.textContent = "Invalid code"; return; }
   if (GIFT_CODES[code].scene) { $("gift-code").value = ""; msg.textContent = ""; rallyScene(() => {}); return; }   // a scene code just plays the scene
   s.gifts = s.gifts || [];
   if (s.gifts.includes(code)) { msg.textContent = "This save slot already used that code."; return; }
