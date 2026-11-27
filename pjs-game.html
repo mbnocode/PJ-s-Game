@@ -9079,7 +9079,7 @@ function draw() {
       if (!G.paused && Math.random() < 0.06) G.particles.push({ kind: "spark", x: ox, y: oy, vx: (Math.random() - 0.5) * 30, vy: -20 - Math.random() * 15, t: 0, life: 0.7, col: Math.random() < 0.5 ? "#c8f4ff" : "#c8a2ff" });
     }
     let img = t.ice ? SPR.fire_ice : towerSprite(t.kind);
-    if (t.kind === "pegasus" && !PREFS.simple) img = SPR.pegasus_flap[Math.floor(G.time * 7 + t.x) % 4];   // the Pegasus flaps its wings
+    if (t.kind === "pegasus" && t.level >= 3 && !PREFS.simple) img = SPR.pegasus_flap[Math.floor(G.time * 7 + t.x) % 4];   // a fully upgraded Pegasus flaps its wings
     if (t.kind === "fire" && t.level >= 3) img = (t.ice ? [SPR.fire_ice, SPR.fire_mid_ice, SPR.fire_down_ice, SPR.fire_mid_ice] : [SPR.fire, SPR.fire_mid, SPR.fire_down, SPR.fire_mid])[Math.floor(G.time * 8 + t.x) % 4];   // flapping wings
     img = towerLook(t.kind, img);   // (a Golden look or a Tower Skin)
     if (towerSkin(t.kind) === "gold" && !PREFS.simple) {   // the Golden look has a warm glowing aura that gently pulses
