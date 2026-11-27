@@ -377,7 +377,7 @@ const SETTINGS = {
                   phoenix:   { chance: 15 },                        // JACKPOT: the Phoenix tower (only once)
                   kraken:    { chance: 15 },                        // JACKPOT #2: the Kraken tower (only once)
                 },
-                goldSkinWeight: 10 },   // how likely a Tower Skin is to be Golden (the other skins: Candy 30, Crystal 24, Metal 21, Lava 20, Toxic 12, Shadow 5)
+                goldSkinWeight: 10 },   // how likely a Tower Skin is to be Golden (the other skins: Candy 30, Lava 24, Metal 21, Crystal 20, Toxic 12, Shadow 5)
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
   // ---------------- MORE SECRET SHOPS ----------------
