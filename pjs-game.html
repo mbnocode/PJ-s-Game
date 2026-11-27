@@ -342,6 +342,21 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .mappv-box .btns { display: flex; gap: 10px; flex-wrap: wrap; }
 .mappv-box .x { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 22px; line-height: 1; z-index: 1; }
 .worldmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: auto; }
+.worldmap canvas[hidden] { display: none; }
+.world-tabs { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; margin: -6px 0 8px; }
+.world-tabs[hidden] { display: none; }
+.world-tabs button.on { background: #ffd34d; color: #2a2000; border-color: #8a6a10; }
+#wt-2.on { background: #4fc3e8; color: #062040; border-color: #1f6f98; }
+.world-tabs .link { font-size: 13px; }
+.seatravel { position: fixed; inset: 0; z-index: 90; background: #000; display: flex; align-items: center; justify-content: center; }
+.seatravel canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
+.sea-title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; animation: seaTitle 1.2s ease-out; }
+.sea-title[hidden] { display: none; }
+.sea-title .w { font-family: var(--display); font-size: clamp(22px, 4vw, 40px); color: #c8fff4; letter-spacing: 6px; text-shadow: 0 3px 0 #062040, 0 0 20px #4fd1b8; }
+.sea-title .n { font-family: var(--display); font-size: clamp(34px, 7vw, 78px); color: #fff6c0; text-shadow: 0 4px 0 #062040, 0 0 30px #8fe8ff; text-align: center; }
+.sea-title button { pointer-events: auto; font-size: 22px; padding: 12px 30px; margin-top: 10px; }
+.sea-skip { position: absolute; top: 14px; right: 14px; opacity: 0.8; }
+@keyframes seaTitle { from { opacity: 0; transform: scale(0.85); } }
 .wm-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; box-shadow: none; padding: 0; cursor: pointer; min-height: 0; }
 .wm-node .dot { --c: #8fd45f; --ring: rgba(255,255,255,0.55); width: clamp(24px, 3.2vw, 56px); height: clamp(24px, 3.2vw, 56px); border-radius: 50%; border: 3px solid #16191d; display: grid; place-items: center; font-family: var(--body); font-weight: 800; font-size: clamp(12px, 1.35vw, 22px); color: #16191d; text-shadow: 0 1px 0 rgba(255,255,255,0.6);
   background: radial-gradient(circle at 34% 28%, rgba(255,255,255,0.75) 0 10%, rgba(255,255,255,0) 38%), radial-gradient(circle at 50% 125%, rgba(0,0,0,0.4), rgba(0,0,0,0) 62%), var(--c);
@@ -724,7 +739,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <button class="resetslot" id="b-resetslot" title="Erase everything in this save slot and start over">↺ Restart save slot</button>
     <h2>Pick a level</h2>
     <p class="muted" id="slot-time" style="margin-top:-14px"></p>
-    <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas>
+    <div class="world-tabs" id="world-tabs" hidden><button id="wt-1" type="button">🌳 Home World</button><button id="wt-2" type="button">🌊 Sunken Kingdom</button><button class="link" id="wt-replay" type="button" title="Watch the journey to the Sunken Kingdom again">▶ Replay the journey</button></div>
+    <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas><canvas id="worldmap-art2" width="2000" height="900" aria-hidden="true" hidden></canvas>
       <button class="wm-moon" id="wm-moon" type="button" aria-label="The Moon"><canvas id="wm-moon-art" width="96" height="96"></canvas><span class="wm-moon-say" id="wm-moon-say"></span></button></div>
     <div class="row" id="levels-buttons"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button class="go" id="b-skins">Skins</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
     <div class="mappv" id="mappv" role="dialog" aria-modal="true" aria-labelledby="mappv-name" hidden>
@@ -987,6 +1003,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 
 const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "skyislands", "thunder", "storm", "infinity"];   // (Infinity sits at the very end of the list)
+const W2_ORDER = ["coralreef", "kelpforest", "sunkencity"];   // World 2: the Sunken Kingdom
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix", "kraken"];
@@ -2252,6 +2269,313 @@ const Sound = {
     return s16;
   },
 };
+/* ---------- WORLD 2: THE SUNKEN KINGDOM ----------
+   Three underwater levels on their own world map, opened by beating the Eye of the Storm on Normal or harder.
+   Themes: "reef" (The Coral Reef), "kelp" (The Kelp Forest) and "sunken" (The Sunken City). */
+const SEA_THEMES = new Set(["reef", "kelp", "sunken"]);
+function seaTile(kind) {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d");
+  const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
+  if (kind === "reef") {   // pale sea-floor sand, rippled, with the odd shell or pink pebble
+    x.fillStyle = "#cdbb8a"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#dccb9c" : "#bba978", rnd() * 16 | 0, rnd() * 16 | 0);
+    const ry = 3 + (rnd() * 10 | 0); for (let i = 0; i < 16; i++) if ((i + ry) % 5 < 3) px("#e4d6ac", i, ry + Math.round(Math.sin(i / 2) * 0.6));   // a sand ripple
+    if (rnd() < 0.22) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px(rnd() < 0.5 ? "#ff9fb8" : "#fff4dc", i, j); px("#c88a9a", i + 1, j); }
+  } else if (kind === "kelp") {   // dark green-brown sea floor with bits of kelp lying around
+    x.fillStyle = "#5e6e4c"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#6c7d58" : "#4f5e40", rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.35) { const i = 1 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; for (let k = 0; k < 4; k++) px(k % 2 ? "#3f7a3a" : "#5a9a3e", i + k, j + (k > 1 ? 1 : 0)); }
+    if (rnd() < 0.2) px("#9aa08a", 2 + rnd() * 12 | 0, 2 + rnd() * 12 | 0);   // a pebble
+  } else {   // "sunken": worn blue-gray stone tiles with mossy seams
+    x.fillStyle = "#64737e"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 26; n++) px(rnd() < 0.5 ? "#71818c" : "#586670", rnd() * 16 | 0, rnd() * 16 | 0);
+    x.fillStyle = "#46535c"; x.fillRect(0, 15, 16, 1); x.fillRect(15, 0, 1, 16); x.fillRect(0, 7, 8, 1); x.fillRect(7, 0, 1, 7);
+    for (let n = 0; n < 5; n++) px(rnd() < 0.5 ? "#4f8a6a" : "#3f7a5a", rnd() * 16 | 0, 15);
+    if (rnd() < 0.18) { const i = 3 + rnd() * 9 | 0, j = 3 + rnd() * 9 | 0; px("#4f8a6a", i, j); px("#5f9a7a", i + 1, j); px("#4f8a6a", i, j + 1); }
+  }
+  return c;
+}
+const SEA_TILES = { reef: Array.from({ length: 8 }, () => seaTile("reef")), kelp: Array.from({ length: 8 }, () => seaTile("kelp")), sunken: Array.from({ length: 8 }, () => seaTile("sunken")) };
+Object.assign(SCENERY_LOOK, {
+  reef: { tree: "coral", mushroom: "anemone", tallgrass: "seagrass" },
+  kelp: { tree: "kelp", mushroom: "urchin", tallgrass: "seagrass" },
+  sunken: { tree: "ruinpillar", mushroom: "treasure", tallgrass: "seagrass" },
+});
+// Sea scenery (16 x 16, drawn by pixSprite with a dark outline)
+SPR.coral = pixSprite(16, 16, ({ P, rect, disc }) => {   // branching pink coral on a little rock
+  disc(8, 14.5, 4, "#6a6a7a"); rect(5, 14, 11, 15, "#7a7a8a");
+  const br = [[8, 14, 8, 6], [8, 10, 4, 5], [8, 9, 12, 4], [5, 7, 3, 2], [11, 6, 13, 2], [8, 6, 7, 1], [6, 12, 2, 9], [10, 12, 14, 9]];
+  for (const [x0, y0, x1, y1] of br) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let k = 0; k <= n; k++) { const i = x0 + (x1 - x0) * k / n, j = y0 + (y1 - y0) * k / n; P(i, j, "#ff6f91"); P(i + 1, j, "#e04a72"); } }
+  for (const [i, j] of [[4, 5], [12, 4], [3, 2], [13, 2], [7, 1], [2, 9], [14, 9]]) { P(i, j, "#ffd0dc"); P(i + 1, j, "#ffb0c4"); }
+});
+SPR.anemone = pixSprite(16, 16, ({ P, rect, disc }) => {   // a sea anemone with waving tentacles, and a little clownfish
+  rect(5, 11, 11, 15, "#8a4ab0"); rect(5, 11, 6, 15, "#a86ad0");
+  for (let k = 0; k < 7; k++) { const bx = 4 + k * 1.3; for (let j = 0; j < 6; j++) P(bx + Math.round(Math.sin(j * 0.9 + k) * 0.8), 10 - j, j > 3 ? "#ffd0f0" : "#ff8ad8"); }
+  rect(11, 4, 13, 6, "#ff8a1a"); P(12, 4, "#ffffff"); P(12, 6, "#ffffff"); P(10, 5, "#ff8a1a"); P(14, 5, "#16191d");   // the clownfish
+});
+SPR.seagrass = pixSprite(16, 16, ({ P }) => {   // sea grass blades swaying
+  for (const [bx, h, col, lean] of [[3, 10, "#3fae6a", -1], [6, 13, "#5fd08a", 1], [8, 9, "#2f8a56", 0], [10, 12, "#4fc07a", -1], [13, 8, "#3fae6a", 1]])
+    for (let j = 0; j < h; j++) P(bx + Math.round(Math.sin(j / 3) * lean), 15 - j, j > h - 3 ? "#9af0b8" : col);
+});
+SPR.kelp = pixSprite(16, 16, ({ P }) => {   // tall kelp: three wavy green stalks with wide leaves and golden air bulbs
+  for (const [bx, ph, h] of [[4, 0, 15], [8, 2, 16], [12, 4, 13]]) for (let j = 0; j < h; j++) {
+    const i = bx + Math.round(Math.sin(j / 2.6 + ph) * 1.2); P(i, 15 - j, "#3f7a2a");
+    if (j % 3 === 1 && j > 1) { P(i + 1, 15 - j, "#6aba3e"); P(i + 2, 15 - j, "#8ad44e"); P(i + 2, 14 - j, "#6aba3e"); }
+    if (j % 3 === 2 && j > 2) { P(i - 1, 15 - j, "#6aba3e"); P(i - 2, 14 - j, "#8ad44e"); }
+    if (j === h - 1) { P(i, 15 - j, "#e8c84a"); P(i + 1, 15 - j, "#c8a83a"); }
+  }
+});
+SPR.urchin = pixSprite(16, 16, ({ P, disc }) => {   // a spiky purple sea urchin
+  for (let a = 0; a < 16; a++) { const ang = a / 16 * Math.PI * 2; for (let r = 4; r < 7; r++) P(8 + Math.cos(ang) * r, 10 + Math.sin(ang) * r * 0.8, "#3a1a5a"); }
+  disc(8, 10, 4.2, (dx, dy) => dx + dy < -2 ? "#9a5ad0" : "#6a2a9a"); P(6, 8, "#d8a8ff");
+});
+SPR.ruinpillar = pixSprite(16, 16, ({ P, rect }) => {   // a broken marble column covered in moss
+  rect(4, 14, 12, 15, "#8a949c"); rect(5, 13, 11, 13, "#b4bcc2");
+  rect(6, 4, 10, 12, "#c8d0d6"); for (let j = 4; j < 13; j++) { P(7, j, "#e4e8ec"); P(9, j, "#9aa4ac"); }
+  P(6, 3, "#c8d0d6"); P(7, 2, "#c8d0d6"); P(8, 3, "#c8d0d6"); P(10, 3, "#c8d0d6");   // the broken top
+  for (const [i, j] of [[6, 10], [6, 11], [7, 12], [10, 6], [10, 7], [9, 4], [11, 13], [5, 13]]) P(i, j, "#4f9a6a");
+  rect(12, 13, 14, 15, "#a8b0b6"); P(13, 12, "#c8d0d6");   // a fallen chunk
+});
+SPR.treasure = pixSprite(16, 16, ({ P, rect }) => {   // a treasure chest spilling gold coins
+  rect(3, 9, 12, 14, "#8a5a2a"); rect(3, 9, 12, 9, "#a8743e"); rect(3, 6, 12, 8, "#6e4520"); rect(4, 5, 11, 5, "#8a5a2a");
+  rect(3, 11, 12, 11, "#c9a23a"); rect(7, 8, 8, 12, "#ffd34d"); P(7, 10, "#16191d");
+  for (const [i, j] of [[4, 7], [6, 6], [9, 6], [11, 7], [13, 14], [14, 13], [2, 14]]) P(i, j, "#ffd34d");
+  P(5, 7, "#fff1a0"); P(10, 7, "#fff1a0");
+});
+// Sea robots (facing right, the way they swim)
+for (const [k, draw] of [
+  ["subbot", ({ P, rect, disc }) => {   // a yellow mini-sub with a steel nose cone, a porthole with a red robot eye, and a propeller
+    disc(8, 9, 5.2, (dx, dy) => dy < -2 ? "#ffe066" : dy > 2.5 ? "#c98e12" : "#f2c230"); rect(3, 6, 12, 12, "#f2c230"); rect(3, 6, 12, 6, "#ffe066"); rect(3, 12, 12, 12, "#c98e12");
+    rect(13, 7, 14, 11, "#9aa4ac"); P(15, 8, "#c8d0d6"); P(15, 9, "#c8d0d6"); P(15, 10, "#9aa4ac"); P(13, 7, "#c8d0d6");   // the nose cone
+    disc(8.5, 9, 2.2, "#3d8fe0"); P(8, 9, "#e0443a"); P(9, 9, "#ff7a6a"); P(7, 8, "#8fd3ff");   // the porthole
+    rect(7, 2, 7, 5, "#7a8089"); rect(7, 2, 9, 2, "#7a8089");   // the periscope
+    rect(1, 7, 2, 11, "#4a5059"); P(0, 6, "#c8d0d6"); P(0, 12, "#c8d0d6"); P(0, 9, "#7a8089");   // the propeller
+    for (const i of [4, 11]) P(i, 9, "#c98e12");
+  }],
+  ["jellybot", ({ P, rect, disc }) => {   // a glowing robot jellyfish: a see-through dome, one eye, and dangling wire tentacles
+    disc(8, 6, 5.5, (dx, dy) => dy > 1.5 ? null : dx * dx + dy * dy > 18 ? "#4fd1b8" : dy < -2 ? "#c8fff4" : "#8fe8e0");
+    rect(3, 7, 13, 7, "#2f9a8a"); disc(8, 5, 1.8, "#16191d"); P(8, 5, "#ff4a8a"); P(7, 4, "#ffffff");
+    for (const [bx, ph] of [[4, 0], [7, 1], [10, 2], [12, 0.5]]) for (let j = 0; j < 7; j++) P(bx + Math.round(Math.sin(j * 1.1 + ph) * 0.8), 8 + j, j % 3 === 2 ? "#fff7a0" : "#7ae0d0");
+  }],
+  ["torpedo", ({ P, rect }) => {   // a gray torpedo with red stripes, fins, a propeller, and an angry face on its nose
+    rect(2, 7, 13, 10, "#8a949c"); rect(2, 7, 13, 7, "#b4bcc2"); rect(2, 10, 13, 10, "#5a646c");
+    P(14, 8, "#8a949c"); P(14, 9, "#8a949c"); P(15, 8, "#5a646c"); P(15, 9, "#5a646c");
+    rect(5, 7, 5, 10, "#e0443a"); rect(8, 7, 8, 10, "#e0443a");
+    P(12, 8, "#ffd34d"); P(13, 8, "#16191d"); P(12, 10, "#16191d"); P(13, 10, "#16191d");   // a glowing eye and a frown
+    P(1, 5, "#5a646c"); P(2, 6, "#5a646c"); P(1, 12, "#5a646c"); P(2, 11, "#5a646c");   // fins
+    P(0, 7, "#c8d0d6"); P(0, 10, "#c8d0d6"); P(1, 8, "#4a5059"); P(1, 9, "#4a5059");   // the propeller
+  }],
+]) { SPR[k] = pixSprite(16, 16, draw); SPRF[k] = flipCanvas(SPR[k]); }
+{ // The Mecha Megalodon: a gigantic armored robot shark with glowing red eyes and jaws full of steel teeth (32 x 32)
+  SPR.megalodon = pixSprite(32, 32, ({ P, rect, disc }) => {
+    const B1 = "#3e4a56", B2 = "#56636f", B3 = "#76838f", BL = "#a8b4be", RD = "#ff3a2a", T = "#f4f4f0";
+    for (let i = 3; i < 28; i++) { const t = (i - 3) / 25, half = Math.sin(Math.PI * Math.min(1, t * 1.15)) * 7.5 + 1; for (let j = Math.round(16 - half); j <= Math.round(16 + half * 0.9); j++) P(i, j, j < 13 ? B3 : j < 17 ? B2 : j > 20 ? "#d8dee2" : B1); }   // the body (pale belly)
+    for (let j = 4; j < 11; j++) for (let i = 12; i < 12 + (11 - j) * 0.9; i++) P(i + (10 - j) * 0.3, j, j < 6 ? BL : B2);   // the dorsal fin
+    for (let k = 0; k < 7; k++) { P(2 - k * 0.2, 15 - k, B2); P(3 - k * 0.2, 15 - k, B1); P(2 - k * 0.2, 17 + k, B2); P(3 - k * 0.2, 17 + k, B1); }   // the tail
+    for (let k = 0; k < 5; k++) { P(13 + k, 22 + k * 0.6, B1); P(14 + k, 22 + k * 0.6, B2); }   // a side fin
+    rect(22, 17, 30, 20, "#1a0a0a"); for (let i = 22; i <= 30; i += 2) { P(i, 17, T); P(i + 1, 20, T); }   // open jaws with steel teeth
+    rect(24, 12, 25, 13, RD); P(24, 12, "#ffd0c0");   // a glowing red eye
+    for (const i of [17, 19, 21]) for (let j = 14; j < 19; j += 2) P(i, j, "#2a323a");   // gill slits
+    for (const [i, j] of [[8, 13], [12, 12], [16, 11], [20, 12], [10, 18], [15, 19], [26, 15]]) P(i, j, BL);   // rivets
+    for (let i = 6; i < 26; i += 5) P(i, 15, "#ff8a3a");   // glowing seams
+  });
+  SPRF.megalodon = flipCanvas(SPR.megalodon);
+}
+function flipCanvas(src) { const c = document.createElement("canvas"); c.width = src.width; c.height = src.height; const x = c.getContext("2d"); x.translate(c.width, 0); x.scale(-1, 1); x.drawImage(src, 0, 0); return c; }
+// Underwater: light rays and caustics drifting over the board, and bubbles rising (drawn over everything)
+function drawUnderwater(x) {
+  const t = G.time, th = G.map.theme, deep = th === "sunken" ? 1 : th === "kelp" ? 0.6 : 0.3;
+  x.save(); x.globalCompositeOperation = "soft-light"; x.fillStyle = `rgba(0,140,255,${0.55 + deep * 0.2})`; x.fillRect(0, 0, 640, 384); x.restore();   // the blue of the deep sea
+  x.fillStyle = `rgba(10,60,130,${0.06 + deep * 0.12})`; x.fillRect(0, 0, 640, 384);
+  x.save(); x.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 6; i++) {   // slanted light rays from the surface, slowly swaying
+    const bx = ((i * 131 + t * 12) % 820) - 120, a = (0.08 + 0.04 * Math.sin(t * 0.7 + i * 1.9)) * (1.2 - deep * 0.5);
+    const g = x.createLinearGradient(0, 0, 0, 384); g.addColorStop(0, `rgba(170,230,255,${a})`); g.addColorStop(1, "rgba(170,230,255,0)");
+    x.fillStyle = g; x.beginPath(); x.moveTo(bx, 0); x.lineTo(bx + 34 + (i % 3) * 14, 0); x.lineTo(bx + 120 + (i % 3) * 14, 384); x.lineTo(bx + 80, 384); x.closePath(); x.fill();
+  }
+  x.strokeStyle = `rgba(190,240,255,${0.07 + (1 - deep) * 0.05})`; x.lineWidth = 1.5;   // wobbly caustic lines on the sea floor
+  for (let n = 0; n < 14; n++) { const cx = (n * 97 + Math.sin(t * 0.4 + n) * 30) % 640, cy = (n * 61) % 384; x.beginPath();
+    for (let k = 0; k <= 6; k++) { const a = k / 6 * Math.PI * 2, r = 14 + 5 * Math.sin(t * 1.3 + n + k * 2); k ? x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.6) : x.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.6); } x.stroke(); }
+  x.restore();
+  for (let i = 0; i < 26; i++) {   // bubbles rising
+    const sp = 0.06 + (i % 5) * 0.012, ph = (t * sp + i * 0.137) % 1, bx = ((i * 89.7) % 640) + Math.sin(t * 2 + i) * 4, by = 400 - ph * 430, r = 1 + (i % 3);
+    x.globalAlpha = 0.85 * Math.sin(ph * Math.PI); x.strokeStyle = "#e8fbff"; x.lineWidth = 1; x.beginPath(); x.arc(bx, by, r + 0.5, 0, Math.PI * 2); x.stroke();
+    x.fillStyle = "#ffffff"; x.fillRect(bx - r * 0.5, by - r * 0.5, 1, 1);
+  }
+  x.globalAlpha = 1;
+}
+// World 2 bookkeeping
+const W2_MAP = { coralreef: [190, 340, "#ff8fb0"], kelpforest: [500, 268, "#5fc08a"], sunkencity: [790, 330, "#8fd8f0"] };
+const W2_SOON = [{ look: "abyss", name: "The Abyss", pos: [930, 120, "#4a5aa0"] }];
+function world2Open(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
+function curWorld() { const s = slot(); return s && s.world === 2 && world2Open(s) ? 2 : 1; }
+function levelOrderOf(L) { return W2_ORDER.includes(L) ? W2_ORDER : LEVEL_ORDER; }
+function unlockText(L) {
+  if (L === W2_ORDER[0]) return "Beat the Eye of the Storm on Normal or harder to unlock this level.";
+  const lv = SETTINGS.levels[L], O = levelOrderOf(L); return "Beat " + SETTINGS.levels[lv.unlockAfter || O[O.indexOf(L) - 1]].name + " to unlock this level.";
+}
+function setWorld(w) { const s = slot(); if (!s) return; s.world = w; saveSlots(slots); renderLevels(); }
+function renderWorldTabs() {
+  const open = world2Open(), w = curWorld(); $("world-tabs").hidden = !open;
+  $("wt-1").classList.toggle("on", w === 1); $("wt-2").classList.toggle("on", w === 2);
+  $("wt-1").setAttribute("aria-pressed", String(w === 1)); $("wt-2").setAttribute("aria-pressed", String(w === 2));
+}
+$("wt-1").onclick = () => { Sound.init(); Sound.play("place"); setWorld(1); };
+$("wt-2").onclick = () => { Sound.init(); const s = slot(); if (s && !s.seaSeen) seaTravel(() => setWorld(2)); else { Sound.play("place"); setWorld(2); } };
+$("wt-replay").onclick = () => { Sound.init(); seaTravel(() => setWorld(2)); };
+// The World 2 map: deep under the sea. The coral reef on the left, the kelp forest in the middle, and the ruins of the
+// sunken city on the right, with light pouring down from the surface and the dark Abyss beyond.
+function drawWorldMap2() {
+  const c = $("worldmap-art2"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
+  const x = c.getContext("2d"), W = 1000, H = 450; x.scale(2, 2);
+  let sd = 11; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const lin = (x0, y0, x1, y1, st) => { const g = x.createLinearGradient(x0, y0, x1, y1); st.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
+  const rad = (cx, cy, r0, r1, st) => { const g = x.createRadialGradient(cx, cy, r0, cx, cy, r1); st.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
+  // the water: bright near the surface, deep blue below, and darker toward the Abyss on the right
+  x.fillStyle = lin(0, 0, 0, H, [[0, "#5fd0f0"], [0.25, "#2a9ad0"], [0.6, "#14609a"], [1, "#0a2f5a"]]); x.fillRect(0, 0, W, H);
+  x.fillStyle = lin(0, 0, W, 0, [[0, "rgba(0,0,0,0)"], [0.7, "rgba(0,0,0,0)"], [1, "rgba(4,10,40,0.55)"]]); x.fillRect(0, 0, W, H);
+  // the surface far above: a shimmering ceiling of light
+  for (let k = 0; k < 40; k++) { const a = R() * W, b = 4 + R() * 26, w = 20 + R() * 50; x.strokeStyle = `rgba(230,250,255,${0.25 + R() * 0.3})`; x.lineWidth = 2; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w / 2, b - 4, a + w, b); x.stroke(); }
+  // sunbeams slanting down through the water
+  x.save(); x.globalCompositeOperation = "lighter";
+  for (let k = 0; k < 9; k++) { const bx = 30 + k * 105 + R() * 30; x.fillStyle = lin(0, 0, 0, H, [[0, "rgba(200,240,255,0.22)"], [0.8, "rgba(200,240,255,0)"]]);
+    x.beginPath(); x.moveTo(bx, 0); x.lineTo(bx + 26, 0); x.lineTo(bx + 120, H); x.lineTo(bx + 70, H); x.closePath(); x.fill(); }
+  x.restore();
+  // far-away rock spires and a whale swimming in the distance
+  x.fillStyle = "rgba(20,70,120,0.55)";
+  for (const [a, w, h] of [[60, 70, 130], [300, 90, 110], [610, 70, 150], [700, 120, 100], [880, 90, 170]]) { x.beginPath(); x.moveTo(a, H); x.lineTo(a + w * 0.3, H - h); x.lineTo(a + w * 0.5, H - h + 20); x.lineTo(a + w * 0.7, H - h - 10); x.lineTo(a + w, H); x.fill(); }
+  x.fillStyle = "rgba(15,50,95,0.6)"; x.beginPath(); x.ellipse(640, 90, 70, 16, -0.05, 0, Math.PI * 2); x.fill();
+  x.beginPath(); x.moveTo(575, 92); x.lineTo(548, 74); x.lineTo(552, 92); x.lineTo(548, 110); x.fill(); x.beginPath(); x.ellipse(650, 104, 16, 5, 0.5, 0, Math.PI * 2); x.fill();
+  // the sea floor: sandy reef on the left, dark kelp beds in the middle, gray stone on the right
+  const floor = (x0, x1, top, fill, amp) => { x.fillStyle = fill; x.beginPath(); x.moveTo(x0, H); for (let px = x0; px <= x1; px += 6) x.lineTo(px, top + Math.sin(px / 41) * amp + Math.sin(px / 17) * amp * 0.4); x.lineTo(x1, H); x.closePath(); x.fill(); };
+  floor(0, 360, 300, lin(0, 300, 0, H, [[0, "#e2cf98"], [1, "#a8935e"]]), 12);
+  floor(330, 670, 320, lin(0, 320, 0, H, [[0, "#6a7c56"], [1, "#3c4a32"]]), 10);
+  floor(640, 1000, 300, lin(0, 300, 0, H, [[0, "#7e8e9a"], [1, "#3e4a56"]]), 12);
+  for (const bx of [345, 655]) { x.fillStyle = lin(bx - 16, 0, bx + 16, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.12)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 16, 290, 32, H - 290); }
+  // ---- the coral reef ----
+  const branchy = (a, b, s, col, tip) => { x.strokeStyle = col; x.lineCap = "round";
+    const grow = (px, py, ang, len, w, d) => { const ex = px + Math.cos(ang) * len, ey = py + Math.sin(ang) * len; x.lineWidth = w; x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke();
+      if (d > 0) { grow(ex, ey, ang - 0.45 - R() * 0.2, len * 0.72, w * 0.7, d - 1); grow(ex, ey, ang + 0.45 + R() * 0.2, len * 0.72, w * 0.7, d - 1); } else { x.fillStyle = tip; x.beginPath(); x.arc(ex, ey, w * 0.9, 0, Math.PI * 2); x.fill(); } };
+    grow(a, b, -Math.PI / 2, 14 * s, 4 * s, 3); };
+  for (const [a, b, s, col, tip] of [[40, 330, 1.2, "#ff6f91", "#ffd0dc"], [110, 360, 1, "#ff9a3c", "#ffe0a0"], [230, 335, 1.3, "#c86ad0", "#f0c8ff"], [300, 380, 0.9, "#ff6f91", "#ffd0dc"], [160, 410, 1.1, "#ffd34d", "#fff6c0"], [60, 425, 0.9, "#4fd1b8", "#c8fff4"]]) branchy(a, b, s, col, tip);
+  for (const [a, b, r, col] of [[85, 340, 14, "#e88a5a"], [270, 360, 16, "#d8a05a"], [200, 395, 12, "#e86a8a"], [330, 420, 13, "#c87ac8"]]) {   // brain corals
+    x.fillStyle = col; x.beginPath(); x.ellipse(a, b, r, r * 0.7, 0, Math.PI, 0); x.fill(); x.strokeStyle = "rgba(0,0,0,0.25)"; x.lineWidth = 1.5;
+    for (let k = 0; k < 4; k++) { x.beginPath(); x.arc(a, b, r * (0.3 + k * 0.17), Math.PI * 1.1, Math.PI * 1.9); x.stroke(); } }
+  for (const [a, b] of [[130, 300], [190, 318]]) { x.strokeStyle = "#a84ad0"; x.lineWidth = 1.2; for (let k = 0; k < 9; k++) { x.beginPath(); x.moveTo(a, b + 20); x.lineTo(a - 18 + k * 4.5, b - 6 + Math.abs(k - 4) * 3); x.stroke(); } }   // sea fans
+  // ---- the kelp forest: tall swaying kelp ----
+  for (let k = 0; k < 16; k++) { const a = 360 + k * 19 + R() * 10, h = 150 + R() * 140, b = 330 + R() * 60, ph = R() * 6;
+    x.strokeStyle = k % 3 ? "#3f7a2e" : "#5a9a3e"; x.lineWidth = 3; x.beginPath(); x.moveTo(a, b);
+    for (let j = 0; j <= h; j += 10) x.lineTo(a + Math.sin(j / 30 + ph) * 8, b - j); x.stroke();
+    x.fillStyle = "#6aaa3e"; for (let j = 20; j < h; j += 22) { const px = a + Math.sin(j / 30 + ph) * 8, py = b - j; x.beginPath(); x.ellipse(px + 6, py, 7, 2.5, 0.5, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(px - 6, py - 10, 7, 2.5, -0.5, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "#c8a83a"; x.beginPath(); x.arc(a + Math.sin(h / 30 + ph) * 8, b - h, 3, 0, Math.PI * 2); x.fill(); }
+  // ---- the sunken city: columns, arches and a great domed temple glowing from inside ----
+  x.fillStyle = rad(800, 240, 10, 170, [[0, "rgba(140,230,255,0.4)"], [1, "rgba(140,230,255,0)"]]); x.fillRect(620, 70, 360, 300);
+  const stone = "#b8c4cc", shade = "#7e8e9a";
+  x.fillStyle = shade; x.fillRect(730, 230, 140, 70); x.fillStyle = stone; x.fillRect(730, 226, 140, 8);   // the temple
+  x.fillStyle = stone; x.beginPath(); x.arc(800, 226, 52, Math.PI, 0); x.fill(); x.fillStyle = "rgba(0,0,0,0.12)"; x.beginPath(); x.arc(800, 226, 52, Math.PI * 1.5, 0); x.lineTo(800, 226); x.fill();   // the dome
+  x.fillStyle = "#e8d070"; x.fillRect(797, 160, 6, 16); x.beginPath(); x.arc(800, 158, 6, 0, Math.PI * 2); x.fill();   // a golden spire
+  for (let k = 0; k < 6; k++) { const a = 738 + k * 24; x.fillStyle = stone; x.fillRect(a, 238, 10, 60); x.fillStyle = shade; x.fillRect(a + 7, 238, 3, 60); }   // the temple's columns
+  for (const [a, b] of [[762, 262], [810, 262], [786, 250]]) { x.fillStyle = "#8fe8ff"; x.beginPath(); x.arc(a + 6, b, 6, Math.PI, 0); x.fillRect(a, b, 12, 14); x.fill(); }   // glowing windows
+  for (const [a, h, broken] of [[660, 90, true], [690, 70, false], [900, 100, false], [935, 60, true], [960, 80, false]]) {   // standing and broken columns
+    x.fillStyle = stone; x.fillRect(a, 330 - h, 14, h); x.fillStyle = shade; x.fillRect(a + 10, 330 - h, 4, h); x.fillStyle = stone; x.fillRect(a - 3, 326, 20, 6);
+    if (!broken) x.fillRect(a - 3, 330 - h - 6, 20, 6); else { x.fillStyle = "#0a2f5a"; x.beginPath(); x.moveTo(a, 330 - h); x.lineTo(a + 6, 330 - h + 8); x.lineTo(a + 14, 330 - h - 2); x.lineTo(a + 14, 330 - h - 10); x.lineTo(a, 330 - h - 10); x.fill(); } }
+  x.strokeStyle = stone; x.lineWidth = 9; x.beginPath(); x.arc(915, 290, 34, Math.PI, 0); x.stroke();   // an old archway
+  for (const [a, b] of [[700, 360], [880, 400], [960, 370]]) { x.fillStyle = "#8a5a2a"; x.fillRect(a, b, 18, 11); x.fillStyle = "#ffd34d"; x.fillRect(a + 2, b - 3, 14, 4); x.fillRect(a + 7, b + 3, 4, 4); }   // treasure!
+  for (let k = 0; k < 24; k++) { x.fillStyle = R() < 0.5 ? "#4f8a6a" : "#3f7a5a"; x.fillRect(640 + R() * 360, 300 + R() * 140, 3, 2); }   // moss
+  // ---- the Abyss: a dark trench far away on the right ----
+  x.fillStyle = rad(930, 130, 4, 90, [[0, "rgba(0,0,10,0.75)"], [1, "rgba(0,0,10,0)"]]); x.beginPath(); x.ellipse(930, 130, 90, 70, 0, 0, Math.PI * 2); x.fill();
+  for (const [a, b] of [[915, 125], [945, 132]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(a, b, 2.2, 0, Math.PI * 2); x.fill(); }   // something glowing in the dark…
+  // fish: schools of little fish, a turtle and a jellyfish
+  const fish = (a, b, s, col, dir) => { x.fillStyle = col; x.beginPath(); x.ellipse(a, b, 6 * s, 3 * s, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(a - dir * 5 * s, b); x.lineTo(a - dir * 10 * s, b - 4 * s); x.lineTo(a - dir * 10 * s, b + 4 * s); x.fill(); x.fillStyle = "#16191d"; x.fillRect(a + dir * 3 * s, b - 1, 1.5, 1.5); };
+  for (let k = 0; k < 9; k++) fish(90 + k * 13 + R() * 6, 200 + Math.sin(k) * 10 + R() * 8, 0.7, "#ffb12e", 1);
+  for (let k = 0; k < 7; k++) fish(420 + k * 12 + R() * 6, 150 + Math.cos(k) * 8 + R() * 6, 0.6, "#8fd3ff", -1);
+  fish(260, 250, 1.2, "#ff6f91", 1); fish(600, 330, 1.1, "#ffd34d", -1); fish(720, 150, 1, "#c86ad0", 1);
+  x.fillStyle = "#3f8a5a"; x.beginPath(); x.ellipse(330, 180, 18, 11, -0.1, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6aba7a"; for (const [a, b] of [[324, 176], [334, 182], [338, 174]]) { x.beginPath(); x.arc(a, b, 3.5, 0, Math.PI * 2); x.fill(); }   // a sea turtle
+  x.fillStyle = "#4f9a6a"; x.beginPath(); x.ellipse(351, 176, 6, 4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(322, 192, 7, 3, 0.6, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(340, 166, 7, 3, -0.6, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "rgba(255,170,230,0.7)"; x.beginPath(); x.arc(560, 120, 10, Math.PI, 0); x.fill(); x.strokeStyle = "rgba(255,190,240,0.7)"; x.lineWidth = 1.5; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(552 + k * 5, 120); x.quadraticCurveTo(549 + k * 5, 132, 553 + k * 5, 142); x.stroke(); }
+  // bubbles
+  for (let n = 0; n < 60; n++) { const a = R() * W, b = 40 + R() * 380, r = 1 + R() * 3; x.strokeStyle = "rgba(230,250,255,0.6)"; x.lineWidth = 1; x.beginPath(); x.arc(a, b, r, 0, Math.PI * 2); x.stroke(); }
+  // the trail between the levels
+  const pts = W2_ORDER.map((L) => W2_MAP[L]).concat([W2_SOON[0].pos]);
+  const trail = () => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); };
+  x.lineWidth = 12; x.strokeStyle = "rgba(10,30,60,0.3)"; trail(); x.stroke();
+  x.setLineDash([2, 9]); x.lineWidth = 6; x.lineCap = "round"; x.strokeStyle = "rgba(230,250,255,0.95)"; trail(); x.stroke(); x.setLineDash([]);
+  x.fillStyle = rad(W / 2, H / 2, H * 0.55, W * 0.62, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,10,30,0.4)"]]); x.fillRect(0, 0, W, H);
+}
+// ---------- The journey to the Sunken Kingdom ----------
+// The eye of the storm opens, the animals fly up through it on the Pegasus, dive into the ocean with a SPLASH,
+// sink down past fish and kelp, and the glowing Sunken Kingdom rises out of the deep.
+function seaTravel(done) {
+  const s = slot(); if (s) { s.seaSeen = true; saveSlots(slots); } earnAch("sunkenkingdom");
+  const wrap = document.createElement("div"); wrap.className = "seatravel"; wrap.id = "seatravel";
+  wrap.innerHTML = `<canvas id="sea-cv" width="960" height="540"></canvas><div class="sea-title" id="sea-title" hidden><div class="w">WORLD 2</div><div class="n">The Sunken Kingdom</div><button class="go" id="sea-go">Dive in! 🌊</button></div><button class="sea-skip" id="sea-skip">Skip ›</button>`;
+  document.body.appendChild(wrap);
+  const cv = $("sea-cv"), x = cv.getContext("2d"), W = 960, H = 540, t0 = performance.now(); let raf = 0, splashed = false, titled = false, ended = false;
+  let sd = 5; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const fishes = Array.from({ length: 22 }, () => ({ x: R() * W, y: R() * H, s: 0.6 + R() * 1.2, v: (R() < 0.5 ? -1 : 1) * (30 + R() * 60), c: ["#ffb12e", "#8fd3ff", "#ff6f91", "#ffd34d", "#c86ad0"][R() * 5 | 0] }));
+  const bubbles = Array.from({ length: 70 }, () => ({ x: R() * W, y: R() * H, r: 1 + R() * 4, v: 40 + R() * 90 }));
+  const kelps = Array.from({ length: 14 }, (_, k) => ({ x: k < 7 ? 20 + k * 22 : W - 20 - (k - 7) * 22, h: 200 + R() * 260, ph: R() * 6 }));
+  const finish = () => { if (ended) return; ended = true; cancelAnimationFrame(raf); wrap.remove(); done && done(); };
+  $("sea-skip").onclick = finish; $("sea-go").onclick = () => { Sound.play("place"); finish(); };
+  Sound.play("horn");
+  const ease = (v) => v < 0 ? 0 : v > 1 ? 1 : v * v * (3 - 2 * v);
+  const riders = ["air", "water", "crab", "fire"].filter((k) => SPR[k]);
+  function frame(now) {
+    const t = (now - t0) / 1000; x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
+    if (t < 3.2) {   // 1: the eye of the storm opens, and the Pegasus flies up through it into the light
+      const k = t / 3.2;
+      x.fillStyle = "#1e2040"; x.fillRect(0, 0, W, H);
+      x.save(); x.translate(W / 2, H / 2); x.rotate(t * 0.6);
+      for (let ring = 9; ring >= 0; ring--) { const r = 60 + ring * 55 + k * 180; x.fillStyle = ring % 2 ? "#3a3c66" : "#4e5296"; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
+        x.strokeStyle = "rgba(200,200,255,0.25)"; x.lineWidth = 6; x.beginPath(); x.arc(0, 0, r - 20, ring * 0.7, ring * 0.7 + 2.2); x.stroke(); }
+      x.restore();
+      const eye = 50 + k * k * 500; x.fillStyle = `rgba(255,246,200,${0.6 + 0.4 * k})`; x.beginPath(); x.arc(W / 2, H / 2, eye, 0, Math.PI * 2); x.fill();
+      const g = x.createRadialGradient(W / 2, H / 2, eye * 0.2, W / 2, H / 2, eye); g.addColorStop(0, "#ffffff"); g.addColorStop(1, "rgba(255,240,180,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      if (Math.sin(t * 9) > 0.92) { x.fillStyle = "rgba(255,255,220,0.5)"; x.fillRect(0, 0, W, H); }   // lightning flickers
+      const py = H + 60 - ease(k / 0.9) * (H / 2 + 120), ps = 90 + k * 40; drawRiders(W / 2 - ps / 2, py - ps / 2, ps, t);
+    } else if (t < 6.4) {   // 2: out over the open ocean at sunrise, the Pegasus dives toward the water
+      const k = (t - 3.2) / 3.2;
+      const sky = x.createLinearGradient(0, 0, 0, H * 0.55); sky.addColorStop(0, "#7ac8ff"); sky.addColorStop(1, "#ffd8a8"); x.fillStyle = sky; x.fillRect(0, 0, W, H * 0.55);
+      x.fillStyle = "#fff6c0"; x.beginPath(); x.arc(W * 0.75, H * 0.5, 50, 0, Math.PI * 2); x.fill();
+      const sea = x.createLinearGradient(0, H * 0.55, 0, H); sea.addColorStop(0, "#2a9ad0"); sea.addColorStop(1, "#0a4a80"); x.fillStyle = sea; x.fillRect(0, H * 0.55, W, H * 0.45);
+      x.strokeStyle = "rgba(255,255,255,0.6)"; x.lineWidth = 2; for (let n = 0; n < 30; n++) { const a = (n * 97 + t * 40) % W, b = H * 0.58 + (n * 37) % (H * 0.4); x.beginPath(); x.arc(a, b, 6, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); }
+      x.fillStyle = "rgba(255,255,255,0.85)"; for (const [a, b, w] of [[120, 80, 90], [380, 130, 70], [620, 60, 110]]) { x.beginPath(); x.ellipse(a + t * 12, b, w, 18, 0, 0, Math.PI * 2); x.fill(); }
+      const px = W * 0.15 + ease(k) * W * 0.4, py = -60 + ease(k) * (H * 0.6 + 60), ps = 120; drawRiders(px - ps / 2, py - ps / 2, ps, t, k > 0.4 ? 0.6 : 0.2);
+      if (k > 0.94 && !splashed) { splashed = true; Sound.play("smash"); Sound.play("upgrade"); }
+      if (k > 0.9) { const sk = (k - 0.9) / 0.1; x.fillStyle = "#ffffff"; for (let n = 0; n < 24; n++) { const a = n / 24 * Math.PI; x.beginPath(); x.arc(px + Math.cos(a) * 80 * sk * (n % 2 ? 1 : 0.7), H * 0.58 - Math.sin(a) * 120 * sk, 8, 0, Math.PI * 2); x.fill(); } }
+    } else {   // 3: sinking down through the sea, past fish and kelp, until the Sunken Kingdom glows below
+      const k = Math.min(1, (t - 6.4) / 5), depth = ease(k);
+      const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, `rgb(${60 - 50 * depth | 0},${180 - 120 * depth | 0},${230 - 120 * depth | 0})`); g.addColorStop(1, `rgb(${10},${60 - 40 * depth | 0},${120 - 60 * depth | 0})`); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      if (t - 6.4 < 0.4) { x.fillStyle = `rgba(255,255,255,${1 - (t - 6.4) / 0.4})`; x.fillRect(0, 0, W, H); }   // the splash flash
+      x.save(); x.globalCompositeOperation = "lighter";
+      for (let n = 0; n < 7; n++) { const bx = n * 150 - 40 + Math.sin(t * 0.5 + n) * 20; const rg = x.createLinearGradient(0, 0, 0, H); rg.addColorStop(0, `rgba(200,240,255,${0.18 * (1 - depth * 0.7)})`); rg.addColorStop(1, "rgba(200,240,255,0)"); x.fillStyle = rg; x.beginPath(); x.moveTo(bx, 0); x.lineTo(bx + 40, 0); x.lineTo(bx + 140, H); x.lineTo(bx + 90, H); x.fill(); }
+      x.restore();
+      for (const kp of kelps) { const baseY = H + 120 - depth * 160; x.strokeStyle = "#2f6a2e"; x.lineWidth = 5; x.beginPath(); x.moveTo(kp.x, baseY); for (let j = 0; j <= kp.h; j += 12) x.lineTo(kp.x + Math.sin(j / 30 + kp.ph + t) * 10, baseY - j); x.stroke(); }
+      for (const f of fishes) { f.x += f.v / 60; if (f.x < -30) f.x = W + 30; if (f.x > W + 30) f.x = -30; const fy = f.y - depth * 80; const d = f.v > 0 ? 1 : -1;
+        x.fillStyle = f.c; x.beginPath(); x.ellipse(f.x, fy, 9 * f.s, 4.5 * f.s, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(f.x - d * 8 * f.s, fy); x.lineTo(f.x - d * 15 * f.s, fy - 6 * f.s); x.lineTo(f.x - d * 15 * f.s, fy + 6 * f.s); x.fill(); }
+      // the Sunken Kingdom rising from the deep: a glowing domed city
+      const cy = H + 220 - depth * 300;
+      const glow = x.createRadialGradient(W / 2, cy, 20, W / 2, cy, 360); glow.addColorStop(0, `rgba(140,240,255,${0.55 * depth})`); glow.addColorStop(1, "rgba(140,240,255,0)"); x.fillStyle = glow; x.fillRect(0, 0, W, H);
+      x.fillStyle = "#3e5a6e"; x.fillRect(0, cy + 40, W, H); x.fillStyle = "#b8c4cc"; x.beginPath(); x.arc(W / 2, cy, 110, Math.PI, 0); x.fill(); x.fillRect(W / 2 - 150, cy, 300, 60);
+      x.fillStyle = "#8fe8ff"; for (let n = 0; n < 5; n++) { x.beginPath(); x.arc(W / 2 - 100 + n * 50, cy + 30, 10, Math.PI, 0); x.fillRect(W / 2 - 110 + n * 50, cy + 30, 20, 20); x.fill(); }
+      x.fillStyle = "#e8d070"; x.fillRect(W / 2 - 5, cy - 150, 10, 44); x.beginPath(); x.arc(W / 2, cy - 152, 10, 0, Math.PI * 2); x.fill();
+      for (const sx of [-1, 1]) for (let n = 0; n < 3; n++) { const a = W / 2 + sx * (200 + n * 70), h = 120 - n * 25; x.fillStyle = "#b8c4cc"; x.fillRect(a - 12, cy + 50 - h, 24, h); x.fillStyle = "#8fe8ff"; x.fillRect(a - 4, cy + 60 - h, 8, 10); }
+      const ps = 110, py = H * 0.25 + Math.sin(t * 1.4) * 10; drawRiders(W / 2 - ps / 2 - 160, py - ps / 2, ps, t, 0.15);
+      for (const b of bubbles) { b.y -= b.v / 60; if (b.y < -10) { b.y = H + 10; b.x = R() * W; } x.strokeStyle = "rgba(230,250,255,0.7)"; x.lineWidth = 1.5; x.beginPath(); x.arc(b.x + Math.sin(t * 2 + b.r) * 3, b.y, b.r, 0, Math.PI * 2); x.stroke(); }
+      if (k >= 1 && !titled) { titled = true; $("sea-title").hidden = false; $("sea-go").focus(); Sound.play("win"); $("sea-skip").hidden = true; }
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  // the Pegasus carrying a few animals (with a little shimmer of bubbles once underwater)
+  function drawRiders(px, py, ps, t, tilt = 0) {
+    x.save(); x.translate(px + ps / 2, py + ps / 2); x.rotate(tilt + Math.sin(t * 3) * 0.05); x.translate(-ps / 2, -ps / 2 + Math.sin(t * 5) * 4);
+    if (SPR.pegasus) x.drawImage(SPR.pegasus, 0, 0, ps, ps);
+    riders.forEach((k, i) => x.drawImage(SPR[k], ps * 0.2 + i * ps * 0.16, -ps * 0.1 + (i % 2) * ps * 0.06, ps * 0.32, ps * 0.32));
+    x.restore();
+  }
+  raf = requestAnimationFrame(frame);
+}
+
 
 // The songs for the first 3 levels. root: the key (a MIDI note). calm / battle: beats per minute.
 // chords: 4 bars, notes counted in half steps from the root. melody: 4 bars of 8 eighth notes each (null = a rest).
@@ -2268,6 +2592,16 @@ const MUSIC_THEMES = {
   swamp: { root: 64, calm: 82, battle: 104, lead: "triangle", bass: "sawtooth", swing: 0.35,
     chords: [[-12, -9, -5], [-12, -9, -5], [-7, -4, 0], [-5, -1, 2]],
     melody: [[0, 3, 5, 6, 7, null, 5, 3], [0, null, 10, null, 7, null, 3, null], [5, 8, 12, null, 10, 8, 5, null], [11, null, 7, null, 6, null, 3, null]] },
+  // The Sunken Kingdom: dreamy, floating tunes (F major, then D minor, then a mysterious A minor)
+  coralreef: { root: 65, calm: 84, battle: 112, lead: "triangle", bass: "triangle", swing: 0.2,
+    chords: [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]],
+    melody: [[12, null, 16, 14, 12, null, 9, null], [12, null, 9, null, 7, 9, 12, null], [5, null, 9, 12, 14, null, 12, 9], [7, null, 11, null, 14, 12, 11, null]] },
+  kelpforest: { root: 62, calm: 78, battle: 106, lead: "triangle", bass: "triangle", swing: 0.25,
+    chords: [[0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -2, 2]],
+    melody: [[7, null, 10, null, 12, 10, 7, null], [5, null, 8, null, 7, 5, 3, null], [2, 5, 7, null, 10, null, 9, 7], [5, null, 2, null, 0, null, null, null]] },
+  sunkencity: { root: 57, calm: 76, battle: 110, lead: "square", bass: "triangle",
+    chords: [[0, 3, 7], [-4, 0, 3], [-7, -4, 0], [-5, -1, 2]],
+    melody: [[12, null, 15, null, 14, 12, 11, null], [8, null, 12, null, 15, null, 12, null], [7, 8, 12, null, 15, 14, 12, 8], [11, null, 14, null, 12, null, null, null]] },
 };
 // The boss theme (any of the 3 levels, in that level's key): dark and minor (vi - IV - V - vi), with a harmonic-minor twist
 const BOSS_SONG = {
@@ -3019,12 +3353,15 @@ function renderSlots() {
 
 function unlocked(L) {
   if (SETTINGS.levels[L] && SETTINGS.levels[L].alwaysOpen) return true;   // (Infinity is always open)
+  const w = W2_ORDER.indexOf(L);   // World 2: the first level opens after the Eye of the Storm (Normal or harder), then one by one
+  if (w >= 0) { if (w === 0) return world2Open(); const p = slot().best[W2_ORDER[w - 1]]; return !!(p && Object.keys(p).length); }
   const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
   const prev = slot().best[(SETTINGS.levels[L] || {}).unlockAfter || LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);   // unlockAfter: beat that level to open this one
 }
 /* ---------- the world map ---------- */
 // Where each level sits on the map (out of 1000 across, 450 down), and its color.
 const WORLD_MAP_ICON = { meadow: "🌼", forest: "🌲", swamp: "🐸", beach: "🐚", desert: "🌵", pyramid: "🔺", basalt: "🪨", magma: "🔥", volcano: "🌋", tundra: "❄️", glacier: "🧊", blizzard: "🌨️", skyislands: "☁️", thunder: "⚡", storm: "🌀", infinity: "✨" };
+Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", sunkencity: "🏛️" });
 const WORLD_MAP = {
   meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
   beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
@@ -3466,14 +3803,18 @@ function drawWorldMap() {
   x.fillStyle = rad(W / 2, H / 2, H * 0.55, W * 0.62, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,20,0.35)"]]); x.fillRect(0, 0, W, H);
 }
 function renderWorldMap() {
-  const box = $("worldmap"); if (!box) return; drawWorldMap(); startWmMoon();
+  const box = $("worldmap"); if (!box) return;
+  renderWorldTabs(); const w2 = curWorld() === 2;   // World 2 (the Sunken Kingdom) has its own map
+  $("worldmap-art").hidden = w2; $("worldmap-art2").hidden = !w2; $("wm-moon").hidden = w2;
+  if (w2) drawWorldMap2(); else { drawWorldMap(); startWmMoon(); }
   box.querySelectorAll(".wm-node").forEach((n) => n.remove());
   const s = slot(); let here = null;
-  LEVEL_ORDER.forEach((L) => { if (unlocked(L) && L !== "infinity" && !(s.best[L] && Object.keys(s.best[L]).length)) here = here || L; });
-  const numbered = LEVEL_ORDER.filter((L) => L !== "infinity");   // (Infinity shows ∞, so it doesn't use up a number)
-  const nodes = LEVEL_ORDER.map((L) => [L, SETTINGS.levels[L].name, false, numbered.indexOf(L) + 1]).concat((SETTINGS.comingSoon || []).filter((c) => WORLD_MAP[c.look]).map((c) => [c.look, c.name, true, "?"]));
+  const ORDER = w2 ? W2_ORDER : LEVEL_ORDER, POS = w2 ? { ...W2_MAP, ...Object.fromEntries(W2_SOON.map((c) => [c.look, c.pos])) } : WORLD_MAP;
+  ORDER.forEach((L) => { if (unlocked(L) && L !== "infinity" && !(s.best[L] && Object.keys(s.best[L]).length)) here = here || L; });
+  const numbered = ORDER.filter((L) => L !== "infinity");   // (Infinity shows ∞, so it doesn't use up a number)
+  const nodes = ORDER.map((L) => [L, SETTINGS.levels[L].name, false, numbered.indexOf(L) + 1]).concat((w2 ? W2_SOON : (SETTINGS.comingSoon || [])).filter((c) => POS[c.look]).map((c) => [c.look, c.name, true, "?"]));
   for (const [L, name, soon, num] of nodes) {
-    const pos = WORLD_MAP[L]; if (!pos) continue;
+    const pos = POS[L]; if (!pos) continue;
     const open = !soon && unlocked(L), best = (!soon && s.best[L]) || {}, stars = Math.max(0, ...DIFF_ORDER.map((d) => (best[d] && best[d].stars) || 0));
     const b = document.createElement("button"); b.className = "wm-node" + (soon ? " soon" : open ? "" : " locked") + (L === here ? " here" : "") + (Object.keys(best).length ? " done" : ""); b.id = "map-" + L;
     b.style.left = pos[0] / 10 + "%"; b.style.top = pos[1] / 4.5 + "%";
@@ -3491,7 +3832,7 @@ function openMapPreview(L) {
   if (!mapPreviewArt[L]) { const cv = document.createElement("canvas"); cv.width = 640; cv.height = 384; paintGround(cv.getContext("2d"), buildMap(L), 0); mapPreviewArt[L] = cv; }
   x.drawImage(mapPreviewArt[L], 0, 0);
   $("mappv-name").textContent = lv.name;
-  $("mappv-about").textContent = open ? lv.about : "🔒 Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock this level.";
+  $("mappv-about").textContent = open ? lv.about : "🔒 " + unlockText(L);
   const stars = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
   $("mappv-stars").textContent = stars; $("mappv-stars").hidden = !stars;
   const play = $("mappv-play"); play.hidden = !open; play.textContent = savedGame(L) ? "Play (saved game)" : "Play";
@@ -3525,11 +3866,12 @@ function renderLevels() {
     drawMini(mini, L);
     const starsLine = DIFF_ORDER.filter((d) => best[d]).map((d) => `${SETTINGS.difficulties[d].name} ${starText(best[d].stars)}`).join(" · ");
     b.appendChild(mini);
-    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : "Beat " + SETTINGS.levels[lv.unlockAfter || LEVEL_ORDER[LEVEL_ORDER.indexOf(L) - 1]].name + " to unlock."}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
+    b.insertAdjacentHTML("beforeend", `<span class="k">${lv.name}</span><span class="s">${open ? lv.about : unlockText(L)}</span>${starsLine ? `<span class="stars">${starsLine}</span>` : ""}`);
     b.disabled = !open;
     b.onclick = () => openSetup(L);
     box.appendChild(b);
   };
+  if (curWorld() === 2) { W2_ORDER.forEach(levelCard); return; }   // the Sunken Kingdom's levels
   LEVEL_ORDER.filter((L) => L !== "infinity").forEach(levelCard);
   (SETTINGS.comingSoon || []).forEach((c, n) => {
     const b = document.createElement("button"); b.className = "card soon"; b.id = "soon-" + n; b.disabled = true;
@@ -4095,10 +4437,11 @@ const BOARD_TAB_COLORS = {
   tundra: ["#eef4fb", "#8aa0bc", "#1e2c40"], glacier: ["#8fd3ff", "#2f78b8", "#0c2a48"], blizzard: ["#c4cee0", "#5a6a84", "#1e2636"],
   infinity: ["#7a4ac0", "#2e1856", "#f6efff"], skyislands: ["#8ec8f4", "#3a6a9e", "#0c2a48"], thunder: ["#6a80b8", "#2e3c6c", "#f4f7ff"],
   storm: ["#4e5296", "#1e2050", "#eef0ff"],   // the 3 sky levels: one family of sky blues, getting stormier
+  coralreef: ["#ff8fb0", "#2a9ad0", "#2a0a14"], kelpforest: ["#5a9a3e", "#1f5a5a", "#f0fff0"], sunkencity: ["#8fd8f0", "#2a5a7a", "#062040"],   // the Sunken Kingdom
 };
 async function renderBoards(code) {
   const tabs = $("board-tabs"); tabs.innerHTML = "";
-  LEVEL_ORDER.forEach((L) => {
+  [...LEVEL_ORDER, ...W2_ORDER].forEach((L) => {
     const b = document.createElement("button"); b.id = "board-" + L; b.textContent = SETTINGS.levels[L].name;
     const c = BOARD_TAB_COLORS[L]; if (c) { b.className = "lvtab"; b.style.cssText = `--tab:${c[0]};--tab2:${c[1]};--tab-ink:${c[2]}`; }   // each level's button is the color of its terrain
     b.setAttribute("aria-pressed", String(!code && boardLevel === L));
@@ -4195,7 +4538,7 @@ function posAt(map, d) {
 }
 function lv_theme(L) { return SETTINGS.levels[L].theme || "meadow"; }
 function paintGround(x, map, factoryCount) {
-  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : map.theme === "infinity" ? SPACE : map.theme === "thunder" ? THUNDER_ROCK : map.theme === "storm" ? STORM_ROCK : GRASS, look = SCENERY_LOOK[map.theme] || {};
+  const tiles = map.theme === "swamp" ? SWAMP_GRASS : map.theme === "beach" ? SAND : map.theme === "forest" ? FOREST_FLOOR : map.theme === "desert" ? DESERT : map.theme === "pyramid" ? SANDSTONE : map.theme === "basalt" ? BASALT : map.theme === "magma" ? MAGMA : map.theme === "volcano" ? VOLCANO_ROCK : map.theme === "tundra" ? SNOW : map.theme === "glacier" ? GLACIER_FLOOR : map.theme === "blizzard" ? BLIZZ_SNOW : map.theme === "infinity" ? SPACE : map.theme === "thunder" ? THUNDER_ROCK : map.theme === "storm" ? STORM_ROCK : SEA_TILES[map.theme] || GRASS, look = SCENERY_LOOK[map.theme] || {};
   x.imageSmoothingEnabled = false;
   const fset = new Set(map.grassOrder.slice(0, factoryCount).map((c) => c.x + "," + c.y));
   let gx = x, layer = null;
@@ -4598,8 +4941,17 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder", "storm"].includes(map.theme);
-  const C = map.theme === "basalt"
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder", "storm", "sunken"].includes(map.theme);
+  const C = map.theme === "reef"
+    // a path of soft white sea sand, edged with sea grass
+    ? { rim: hex("#a8955e"), dirt: hex("#efe2bc"), dark: hex("#e2d3a8"), light: hex("#f8efd2"), edge: hex("#d4c290"), stone: hex("#c9b48a"), rut: hex("#e6d6aa"), tuft: hex("#3fae6a"), tuft2: hex("#5fd08a") }
+    : map.theme === "kelp"
+    // a pebbly trail through the kelp beds
+    ? { rim: hex("#2f3a28"), dirt: hex("#9a8e6a"), dark: hex("#857a5a"), light: hex("#ada17c"), edge: hex("#7a6e50"), stone: hex("#6a6a72"), rut: hex("#8a7e5e"), tuft: hex("#3f7a3a"), tuft2: hex("#5a9a3e") }
+    : map.theme === "sunken"
+    // the sunken city's ancient road of pale marble flagstones
+    ? { rim: hex("#1e2a34"), dirt: hex("#a9b4bc"), dark: hex("#949fa8"), light: hex("#c4ccd2"), edge: hex("#7e8a94"), stone: hex("#d8dee2"), rut: hex("#9aa6ae"), tuft: hex("#3f7a6a"), tuft2: hex("#2f6a5a"), mortar: hex("#56626c") }
+    : map.theme === "basalt"
     // an old crumbling stone road (the lava levels)
     ? { rim: hex("#16141a"), dirt: hex("#6a6874"), dark: hex("#56535f"), light: hex("#7e7b88"), edge: hex("#46444e"), stone: hex("#9a97a4"), rut: hex("#5a5764"), tuft: hex("#3c3944"), tuft2: hex("#2f2c34"), mortar: hex("#25232b") }
     : map.theme === "magma"
@@ -4676,9 +5028,9 @@ function makePathLayer(map) {
 }
 // The players' home: a grand old tree, 2 x 2 squares (drawn 40 x 44 pixels, so the leaves spill over the top).
 function makeGrandTree(theme) {
-  const beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || ["basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
+  const sea = SEA_THEMES.has(theme), beach = theme === "beach" || theme === "desert" || theme === "pyramid", swamp = theme === "swamp" || beach || sea || ["basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "infinity"].includes(theme);   // the desert has a beach-style oasis treehouse   // the beach treehouse is built like the swamp one, in sandy colors
   const forest = theme === "forest";
-  const leafCols = forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
+  const leafCols = sea ? ["#9af0d0", "#4fc0a8", "#2a8a86", "#1a5a62"] : forest ? ["#6fbf4a", "#3f8f3a", "#2b6e2e", "#1a4a22"] : beach ? ["#a6ea6a", "#5cc04a", "#2f9a3f", "#1f6a2f"] : swamp ? ["#8aa64a", "#5a7a35", "#46642b", "#2f461f"] : ["#8fd45f", "#5fb046", "#3c8a33", "#24602a"];
   const W = 40, H = 44, c = document.createElement("canvas"); c.width = W; c.height = H;
   const x = c.getContext("2d");
   const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
@@ -5135,10 +5487,15 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
-const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES];
+const SEA_FOES = ["torpedo", "subbot", "jellybot", "megalodon"];   // the Sunken Kingdom (World 2)
+const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES, ...SEA_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan"]);
+const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon"]);
 const FOE_ABOUT = {
+  torpedo: "A gray torpedo with an angry face and a whirring propeller. Every few seconds it shoots forward really fast. From the Sunken Kingdom.",
+  subbot: "A little yellow submarine with a red robot eye in its porthole and a steel nose cone. From the Sunken Kingdom.",
+  jellybot: "A glowing robot jellyfish that floats over everything, trailing sparking wire tentacles. From the Sunken Kingdom.",
+  megalodon: "A gigantic armored robot shark with glowing red eyes and jaws full of steel teeth. The final boss of The Sunken City.",
   clanker: "A rusty old farm bot. Slow and weak, it shows up in the first waves.",
   scout: "Tiny and quick. It zooms down the path, so hit it fast.",
   walker: "The everyday robot. Sturdier than a Clanker and marches at a steady pace.",
@@ -5323,6 +5680,10 @@ function renderEnemies() {
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
       : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
       : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Its storm armor makes land towers do only ${r.landTowerTimes}x damage, but flying towers (Owls, Night Owls, Dragons, the Pegasus and the Phoenix) do ${r.flyingTowerTimes}x damage! Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
+      : k === "torpedo" ? `Special: every ${r.dashEvery} seconds its propeller kicks in and it shoots forward ${r.dashSpeed} times faster. Shows up in the Sunken Kingdom.`
+      : k === "subbot" ? `Special: its steel nose cone blocks ${Math.round((1 - r.frontArmor) * 100)}% of the damage from towers in front of it. Hit it from behind or the side! Shows up in the Sunken Kingdom.`
+      : k === "jellybot" ? `Special: floats over everything (only towers that hit flying robots can reach it), and every ${r.zapEvery} seconds it zaps a tower near it, stunning it for ${r.zapSeconds} seconds. Shows up in the Sunken Kingdom.`
+      : k === "megalodon" ? `Special: the final boss of The Sunken City (wave 30), with ${r.health.toLocaleString()} health. Every ${r.dashEvery} seconds it charges forward, and every ${r.troopEvery} seconds it fires ${r.troopCount} Torpedo Bots out of its mouth!`
       : k === "scout" ? "Special: the fastest robot." : k === "tank" ? "Special: the toughest regular robot." : "";
     d.innerHTML = `<div class="top"><span class="pic"></span><div>${NEW_FOES.has(k) ? '<span class="new">Coming soon</span>' : ""}<div class="k">${r.name}</div><div class="s">${FOE_ABOUT[k]}</div></div></div>
       ${stats.map(([label, f, col, grows]) => { const v = f(k);
@@ -5442,6 +5803,7 @@ const ACHIEVEMENTS = [
   { id: "shellshocked", name: "Shell Shocked", about: "Beat the Beach using only Crabs.", pic: "crab" },
   { id: "fixitfail", name: "Fix-It Fail", about: "Destroy a Repair Bot before it heals anything.", pic: "repair" },
   { id: "secretshopper", name: "Secret Shopper", about: "Find the shopkeeper under the sand.", pic: "hermitcrab" },
+  { id: "sunkenkingdom", name: "Under the Sea", about: "Travel to the Sunken Kingdom (beat the Eye of the Storm on Normal or harder).", pic: "kraken" },
   { id: "overthemoon", name: "Over the Moon", about: "Wake up the Moon Cat sleeping on the Moon above the world map.", pic: "mooncat" },
   { id: "twofront", name: "Two-Front War", about: "Beat the Desert while robots from one of its two factories never reach your treehouse.", pic: "gate" },
   { id: "golemcrusher", name: "Golem Crusher", about: "Defeat a Sand Golem before its sandstorm stops any of your towers.", pic: "sandboss" },
@@ -6374,6 +6736,10 @@ function startWave() {
     sludgeleviathan: "The Sludge Leviathan rises from the swamp! It dives under the sludge where nothing can hit it, and splashes sludge that slows your towers. Water Frogs do double damage to it!",
     pharaohmachine: "The Pharaoh Machine awakens! It raises Mummy Bots, hides behind a golden shield, and at half health it wraps up nearby towers. Break the shield fast!",
     thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
+    torpedo: "Torpedo Bots are here! Every few seconds their propeller kicks in and they shoot forward super fast.",
+    subbot: "Sub Bots are here! Their steel nose cone blocks half the damage from towers in front of them, so hit them from behind or the side.",
+    jellybot: "Jelly Drones float over everything (only towers that hit flying robots can reach them), and they zap towers near them so they can't attack for a moment.",
+    megalodon: "The Mecha Megalodon is here!! It charges forward every few seconds and fires Torpedo Bots out of its mouth. Throw everything you've got at it!",
     volcanoheart: "The Volcano Heart is coming! It heals while it's on the glowing lava squares. Freeze it there to stop the healing!",
   };
   G.seenLava = G.seenLava || {};
@@ -7472,9 +7838,13 @@ function stormPowers(dt) {
       r.troopT = (r.troopT ?? S.troopEvery * 0.6) - dt;
       if (r.troopT <= 0) {
         r.troopT = S.troopEvery;
+        if (S.troopNear) {   // the Mecha Megalodon: Torpedo Bots shoot out of its mouth, just ahead of it
+          for (let k = 0; k < S.troopCount; k++) spawn({ type: S.troopType, d: Math.min(r.path ? r.path.total : G.map.total, r.d + 20 + k * 14), path: r.path || G.map.paths[0] });
+          floatText(q.x, q.y - 60, "Torpedoes!", "#ffb12e"); burst(q.x, q.y, "#dff8ff", 14); Sound.play("smash");
+        } else {
         for (let k = 0; k < S.troopCount; k++) { const pm = G.map.paths[Math.random() * G.map.paths.length | 0], d = pm.total * (0.15 + Math.random() * 0.65);
           spawn({ type: S.troopType, d, path: pm }); const tr = G.robots[G.robots.length - 1]; tr.chute = 1.1; }
-        floatText(q.x, q.y - 50, "Paratroopers!", "#e8f0c0"); Sound.play("place");
+        floatText(q.x, q.y - 50, "Paratroopers!", "#e8f0c0"); Sound.play("place"); }
       }
     }
     if (S.bridgeReach && !r.built && !(r.chute > 0)) {   // Plank Layer: looks for a spot where the road loops back close by, and builds a shortcut
@@ -8115,7 +8485,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "megalodon" ? 104 : r.type === "subbot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -8378,6 +8748,7 @@ function draw() {
     }
   }
   if (G.map.theme === "blizzard" && !PREFS.simple) drawBlizzardWind(x, true);
+  if (SEA_THEMES.has(G.map.theme) && !PREFS.simple) drawUnderwater(x);
   if ((G.map.theme === "thunder" || G.map.theme === "storm") && !PREFS.simple) drawStormRain(x);
   drawBonusLeaf(x);
   drawPet(x);
@@ -8479,7 +8850,8 @@ function finish(won) {
     if (G !== g) return;
     if (won) Sound.play("win");
     const lvName = SETTINGS.levels[G.level].name;
-    const nextL = LEVEL_ORDER[LEVEL_ORDER.indexOf(G.level) + 1];
+    const ORD = levelOrderOf(G.level), toSea = G.level === "storm" && world2Open();
+    const nextL = toSea ? W2_ORDER[0] : ORD[ORD.indexOf(G.level) + 1];   // after the Eye of the Storm: on to the Sunken Kingdom
     overlay(won
       ? `<h2>${lvName} is saved!</h2>
          <div class="bigstars">${"<b>★</b>".repeat(stars)}${"★".repeat(3 - stars)}</div>
@@ -8487,7 +8859,7 @@ function finish(won) {
          <p class="muted scoremath">${scoreMath()}</p>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left · Time ${fmtTime(G.realTime || 0)}</p>
-         <div class="row"><button id="o-menu">← Back to levels</button>${nextL && !(on && on.code) ? `<button class="go" id="o-next">Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}</div>
+         <div class="row"><button id="o-menu">← Back to levels</button>${nextL && !(on && on.code) ? `<button class="go" id="o-next">${toSea ? "🌊 " : ""}Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}</div>
          ${boardBits(on, true)}`
       : `<h2>The Factory took over</h2>
          <p class="muted">The robots got through on Wave ${G.wave} of ${levelWaves(G.level).length}. Time ${fmtTime(G.realTime || 0)}</p>
@@ -8499,10 +8871,10 @@ function finish(won) {
     $("o-again").onclick = () => startGame(G.level, G.diffKey, false, on ? { code: on.code, nick: on.nick } : null);
     if ($("o-boards")) $("o-boards").onclick = () => { const c = on && on.code; G = null; renderBoards(c || undefined); show("s-boards"); };
     $("o-menu").onclick = () => { G = null; renderLevels(); show("s-levels"); };
-    if ($("o-next")) $("o-next").onclick = () => { G = null; openSetup(nextL); };
+    if ($("o-next")) $("o-next").onclick = () => { G = null; if (W2_ORDER.includes(nextL)) { const s2 = slot(); s2.world = 2; saveSlots(slots); } openSetup(nextL); };
     if ($("o-ask")) askForBoard(g, won, score, stars);
   };
-  if (won) setTimeout(showResult, 700);
+  if (won) setTimeout(() => { const s = slot(); if (G === g && g.level === "storm" && world2Open(s) && !s.seaSeen) seaTravel(() => { s.world = 2; saveSlots(slots); showResult(); }); else showResult(); }, 700);   // the first time: the journey to the Sunken Kingdom
   else setTimeout(() => {
     if (G !== g) return;
     // A big GAME OVER for about 4 seconds, then the results.

@@ -323,6 +323,18 @@ const SETTINGS = {
     paratrooper: { name: "Paratrooper", health: 60, speed: 2.0, leaves: 2, points: 10 },
     // Plank Layer: carries a stack of planks. Where the road loops back close to itself (within bridgeReach squares), it builds a
     // shortcut bridge that skips bridgeMinSkip to bridgeMaxSkip squares of road. Every robot behind it uses the shortcut for bridgeSeconds.
+    // ---- Sunken Kingdom robots (World 2) ----
+    // Sub Bot: a little armored submarine. Its steel nose cone blocks frontArmor of the damage from towers in front of it.
+    subbot:    { name: "Sub Bot", health: 260, speed: 1.3, leaves: 16, points: 45, frontArmor: 0.5 },
+    // Jelly Drone: a glowing robot jellyfish that floats over everything (only towers that hit flying robots can reach it).
+    // Every zapEvery seconds it zaps the closest tower within zapRadius squares, stunning it for zapSeconds.
+    jellybot:  { name: "Jelly Drone", health: 60, speed: 2.2, leaves: 10, points: 30, flying: true, baseHit: 6, zapEvery: 5, zapRadius: 1.5, zapSeconds: 1.2 },
+    // Torpedo Bot: every dashEvery seconds its propeller kicks in and it shoots forward dashSpeed times faster for dashSeconds.
+    torpedo:   { name: "Torpedo Bot", health: 80, speed: 2.6, leaves: 9, points: 30, dashEvery: 3, dashSeconds: 0.6, dashSpeed: 3 },
+    // The Mecha Megalodon: the final boss of The Sunken City (wave 30). Every dashEvery seconds it charges forward, and every
+    // troopEvery seconds it fires troopCount Torpedo Bots out of its mouth. fixedHealth: exactly this much health on Normal.
+    megalodon: { name: "Mecha Megalodon", health: 80000, speed: 0.85, leaves: 400, points: 6000, baseHit: 120, isBoss: true, fixedHealth: true,
+                 dashEvery: 6, dashSeconds: 1, dashSpeed: 2.5, troopEvery: 7, troopCount: 2, troopType: "torpedo", troopNear: true },
     planklayer:  { name: "Plank Layer", health: 180, speed: 1.5, leaves: 14, points: 40, bridgeReach: 3.3, bridgeMinSkip: 4, bridgeMaxSkip: 9, bridgeSeconds: 10 },
     starchunk:     { name: "Star Chunk", health: 110, speed: 1.8, leaves: 0, points: 20 },
     icechunk:     { name: "Ice Chunk", health: 90, speed: 1.6, leaves: 6, points: 15 },
@@ -1061,6 +1073,116 @@ const SETTINGS = {
                 [["boss", 1, 0, 9000], ["universegolem", 2, 9], [["tank", "snowplow", "planklayer", "staticbot", "balloonbot"], 36, 0.32]],   // 28
                 [[["thunderbird", "emberbat", "drone", "snowdrone", "gustrunner", "hider", "scout"], 56, 0.2]],   // 29: the whole storm at once
                 [["thundertitan", 1, 0]],                                               // 30: the Thunder Titan
+              ] },
+
+    // ===== WORLD 2: THE SUNKEN KINGDOM (opens after you beat the Eye of the Storm on Normal or harder) =====
+    coralreef: { name: "The Coral Reef", world: 2, acornDropChance: 0.08, theme: "reef",
+              about: "A bright reef full of coral, deep under the sea. Sub Bots and Torpedo Bots swim in from the deep! Crabs hit 50% harder here. Scores are worth 5x.",
+              robotHealth: 1.5, scoreTimes: 5, lateToughness: { fromWave: 8, perWave: 0.06 },
+              towerBoosts: { crab: { damageTimes: 1.5 } },
+              path: [[0, 2], [6, 2], [6, 9], [11, 9], [11, 4], [16, 4], [16, 8], [19, 8]],
+              // On the Coral Reef, trees are coral, mushrooms are sea anemones, and tall grass is sea grass.
+              trees:     [[2, 0], [3, 5], [9, 1], [8, 6], [14, 1], [13, 7], [18, 2], [2, 10], [17, 11]],
+              mushrooms: [[1, 6], [9, 11], [14, 10], [19, 5], [4, 8]],
+              tallGrass: [[0, 9], [7, 0], [12, 6], [18, 10], [10, 2], [5, 11]],
+              waves: [
+                [["clanker", 10, 0.9]],                                                 // 1
+                [["walker", 6, 1.0], ["torpedo", 3, 1.2]],                              // 2: the first Torpedo Bots
+                [[["scout", "torpedo"], 12, 0.7]],                                      // 3
+                [["subbot", 3, 2.0], ["walker", 6, 0.8]],                               // 4: the first Sub Bots
+                [["boss", 1, 0, 2500], [["torpedo", "walker"], 8, 0.7]],                // 5
+                [["jellybot", 4, 0.5], ["tank", 3, 1.6]],                               // 6: the first Jelly Drones
+                [[["subbot", "repair"], 8, 1.2]],                                       // 7
+                [["hider", 8, 0.8], ["jellybot", 5, 0.45]],                             // 8
+                [[["torpedo", "torpedo", "subbot"], 15, 0.6]],                          // 9
+                [["sludgeleviathan", 1, 0], [["walker", "torpedo"], 10, 0.7]],          // 10
+                [[["jellybot", "drone"], 10, 0.45], ["subbot", 4, 1.4]],                // 11
+                [[["tank", "subbot", "repair"], 12, 1.0]],                              // 12
+                [["torpedo", 14, 0.4], ["splitter", 4, 1.5]],                           // 13
+                [[["hider", "subbot", "jellybot"], 15, 0.7]],                           // 14
+                [["boss", 2, 4, 5000], [["torpedo", "tank"], 12, 0.8]],                 // 15
+                [[["subbot", "tesla"], 10, 1.1], ["jellybot", 6, 0.4]],                 // 16
+                [[["torpedo", "scout", "hider"], 24, 0.35]],                            // 17
+                [["cyclonegolem", 1, 0], [["subbot", "repair", "subbot"], 12, 0.9]],    // 18
+                [[["jellybot", "thunderbird"], 14, 0.35], [["tank", "subbot"], 10, 1.0]],   // 19
+                [["sludgeleviathan", 1, 0], ["boss", 2, 4, 6000], [["subbot", "torpedo", "jellybot", "repair"], 20, 0.6]],   // 20: the big finish
+              ] },
+    kelpforest: { name: "The Kelp Forest", world: 2, acornDropChance: 0.09, theme: "kelp",
+              about: "Giant kelp sways in the dark water, and Hiders love to sneak through it. Water Frogs hit 50% harder here. Scores are worth 5.5x.",
+              robotHealth: 1.6, scoreTimes: 5.5, lateToughness: { fromWave: 8, perWave: 0.06 },
+              towerBoosts: { water: { damageTimes: 1.5 } },
+              path: [[0, 9], [3, 9], [3, 2], [8, 2], [8, 10], [13, 10], [13, 1], [17, 1], [17, 6], [19, 6]],
+              // In the Kelp Forest, trees are tall kelp, mushrooms are sea urchins, and tall grass is sea grass.
+              trees:     [[1, 1], [1, 5], [5, 5], [6, 8], [10, 4], [11, 7], [15, 3], [15, 8], [19, 10], [10, 0]],
+              mushrooms: [[0, 11], [5, 0], [11, 11], [18, 3], [16, 11]],
+              tallGrass: [[2, 7], [6, 5], [10, 8], [15, 5], [19, 1], [4, 11], [12, 3]],
+              waves: [
+                [[["walker", "torpedo"], 12, 0.8]],                                     // 1
+                [["hider", 6, 1.0], ["subbot", 2, 2]],                                  // 2
+                [["jellybot", 6, 0.4], ["walker", 8, 0.7]],                             // 3
+                [[["hider", "hider", "repair"], 12, 0.8]],                              // 4
+                [["boss", 1, 0, 3500], ["torpedo", 10, 0.5]],                           // 5
+                [[["subbot", "tank"], 10, 1.2]],                                        // 6
+                [["jellybot", 8, 0.35], ["drone", 4, 0.6]],                             // 7
+                [[["torpedo", "hider", "scout"], 18, 0.45]],                            // 8
+                [["staticbot", 3, 2], [["subbot", "repair"], 10, 1.0]],                 // 9
+                [["yetimech", 1, 0], [["walker", "hider"], 12, 0.6]],                   // 10
+                [[["jellybot", "balloonbot"], 10, 0.6], ["tank", 4, 1.4]],              // 11
+                [[["subbot", "subbot", "tesla"], 12, 1.0]],                             // 12
+                [["torpedo", 20, 0.3]],                                                 // 13
+                [[["hider", "mummy", "subbot"], 15, 0.8]],                              // 14
+                [["sludgeleviathan", 1, 0], [["jellybot", "thunderbird"], 12, 0.4]],    // 15
+                [[["obsidian", "subbot"], 12, 1.0]],                                    // 16
+                [[["gustrunner", "torpedo"], 20, 0.4]],                                 // 17
+                [[["tank", "subbot", "repair", "staticbot"], 16, 0.9]],                 // 18
+                [["jellybot", 16, 0.3], ["hider", 10, 0.6]],                            // 19
+                [["boss", 2, 4, 7000], ["cyclonegolem", 1, 0]],                         // 20
+                [[["subbot", "torpedo", "jellybot"], 24, 0.5]],                         // 21
+                [[["snowplow", "subbot"], 14, 1.0], ["repair", 4, 1.5]],                // 22
+                [["pharaohmachine", 1, 0], [["torpedo", "hider"], 14, 0.5]],            // 23
+                [["skyblimp", 1, 0], [["subbot", "tank"], 14, 0.9]],                    // 24
+                [["sludgeleviathan", 2, 6], ["boss", 2, 4, 8000], [["subbot", "torpedo", "jellybot", "hider", "repair"], 25, 0.5]],   // 25: the big finish
+              ] },
+    sunkencity: { name: "The Sunken City", world: 2, acornDropChance: 0.1, theme: "sunken",
+              about: "The ruins of an ancient city at the bottom of the sea. The road zigzags past fallen pillars and treasure, and the Mecha Megalodon is waiting! The Kraken hits 50% harder here. Scores are worth 6x.",
+              robotHealth: 1.7, scoreTimes: 6, lateToughness: { fromWave: 8, perWave: 0.065 },
+              towerBoosts: { kraken: { damageTimes: 1.5 } },
+              path: [[0, 1], [17, 1], [17, 4], [2, 4], [2, 7], [17, 7], [17, 10], [9, 10]],
+              // In the Sunken City, trees are broken pillars, mushrooms are treasure chests, and tall grass is sea grass.
+              trees:     [[0, 3], [5, 3], [11, 3], [19, 3], [0, 6], [8, 6], [14, 6], [19, 8], [4, 9], [13, 11]],
+              mushrooms: [[19, 0], [10, 2], [3, 9], [15, 9], [19, 11]],
+              tallGrass: [[7, 0], [13, 0], [6, 5], [12, 5], [1, 10], [5, 11], [18, 5]],
+              waves: [
+                [[["subbot", "walker"], 12, 0.9]],                                      // 1
+                [["torpedo", 12, 0.5]],                                                 // 2
+                [["jellybot", 8, 0.35], ["hider", 6, 0.8]],                             // 3
+                [[["tank", "subbot", "repair"], 10, 1.1]],                              // 4
+                [["boss", 1, 0, 4500], [["torpedo", "jellybot"], 10, 0.5]],             // 5
+                [[["mummy", "subbot"], 10, 1.0]],                                       // 6
+                [["staticbot", 4, 1.6], ["torpedo", 10, 0.45]],                         // 7
+                [[["hider", "jellybot", "scout"], 18, 0.45]],                           // 8
+                [[["subbot", "subbot", "tesla"], 14, 0.9]],                             // 9
+                [["pharaohmachine", 1, 0], [["walker", "torpedo"], 12, 0.6]],           // 10
+                [[["jellybot", "thunderbird"], 16, 0.3]],                               // 11
+                [[["obsidian", "subbot", "repair"], 14, 1.0]],                          // 12
+                [["gustrunner", 12, 0.5], ["torpedo", 12, 0.4]],                        // 13
+                [[["tank", "snowplow", "subbot"], 14, 1.0]],                            // 14
+                [["sludgeleviathan", 1, 0], ["cyclonegolem", 1, 0]],                    // 15
+                [[["jellybot", "balloonbot", "drone"], 18, 0.35]],                      // 16
+                [[["subbot", "torpedo", "hider", "repair"], 24, 0.5]],                  // 17
+                [["planklayer", 4, 2], [["subbot", "tank"], 12, 0.9]],                  // 18
+                [[["staticbot", "subbot"], 14, 0.9], ["jellybot", 10, 0.3]],            // 19
+                [["boss", 3, 4, 9000], ["yetimech", 1, 0]],                             // 20
+                [[["torpedo", "gustrunner", "scout"], 30, 0.25]],                       // 21
+                [[["subbot", "subbot", "repair", "tesla"], 20, 0.8]],                   // 22
+                [["skyblimp", 1, 0], [["jellybot", "thunderbird"], 14, 0.35]],          // 23
+                [[["obsidian", "snowplow", "subbot"], 18, 0.9]],                        // 24
+                [["glaciergolem", 1, 0], ["sludgeleviathan", 1, 0], [["torpedo", "jellybot"], 16, 0.4]],   // 25
+                [[["subbot", "hider", "mummy", "repair"], 24, 0.6]],                    // 26
+                [["cyclonegolem", 2, 8], [["torpedo", "subbot"], 16, 0.5]],             // 27
+                [[["jellybot", "thunderbird", "drone", "balloonbot"], 28, 0.25]],       // 28
+                [["pharaohmachine", 1, 0], ["boss", 2, 4, 10000], [["subbot", "tank", "repair"], 18, 0.8]],   // 29
+                [["megalodon", 1, 0], [["subbot", "torpedo", "jellybot"], 20, 0.6]],    // 30: the Mecha Megalodon!
               ] },
   },
 };
