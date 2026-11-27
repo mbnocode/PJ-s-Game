@@ -419,7 +419,7 @@ const SETTINGS = {
   skinBuffs: {
     candy:   { name: "Sugar Rush", about: "Attacks 15% faster.", speedTimes: 1.15 },
     lava:    { name: "Burn", about: "Hits set robots on fire, burning for 40% more damage over 3 seconds.", burnSeconds: 3, burnPart: 0.4 },
-    metal:   { name: "Steel Coat", about: "Can't be zapped, stunned, frozen, slimed, inked, barnacled or trapped by robots, and hits 10% harder.", steel: true, damageTimes: 1.1 },
+    metal:   { name: "Steel Coat", about: "Can't be zapped, stunned, frozen, slimed, inked, barnacled or trapped by robots, and hits 15% harder.", steel: true, damageTimes: 1.15 },
     gold:    { name: "Lucky", about: "Robots it destroys drop 3 extra Maple Leaves, and Golden Acorns drop 35% more often.", bonusLeaves: 3, acornTimes: 1.35 },
     toxic:   { name: "Poison", about: "Hits 10% harder, poisons robots for 70% more damage over 4 seconds, and slows them 25%.", damageTimes: 1.1, poisonSeconds: 4, poisonPart: 0.7, slowBy: 0.25, slowSeconds: 2 },
     crystal: { name: "Crystal Lens", about: "Reaches 1.5 squares farther, can see Hiders, hits 25% harder and attacks 10% faster.", rangePlus: 1.5, vision: true, damageTimes: 1.25, speedTimes: 1.1 },
