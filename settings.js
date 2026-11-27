@@ -331,6 +331,14 @@ const SETTINGS = {
     jellybot:  { name: "Jelly Drone", health: 60, speed: 2.2, leaves: 10, points: 30, flying: true, baseHit: 6, zapEvery: 5, zapRadius: 1.5, zapSeconds: 1.2 },
     // Torpedo Bot: every dashEvery seconds its propeller kicks in and it shoots forward dashSpeed times faster for dashSeconds.
     torpedo:   { name: "Torpedo Bot", health: 80, speed: 2.6, leaves: 9, points: 30, dashEvery: 3, dashSeconds: 0.6, dashSpeed: 3 },
+    // Puffer Bot (Coral Reef miniboss): every time it loses puffEveryPart of its health, it puffs up for puffSeconds: it takes puffDamageTimes
+    // damage and shoots spikes that stop towers within spikeRadius squares from attacking for spikeStun seconds.
+    pufferbot: { name: "Puffer Bot", health: 2800, speed: 1.0, leaves: 160, points: 650, baseHit: 50, isBoss: true,
+                 puffEveryPart: 0.15, puffSeconds: 3, puffDamageTimes: 0.5, spikeRadius: 2, spikeStun: 1.2 },
+    // Sea Turtle Fortress (Kelp Forest miniboss): slow and huge. Every troopEvery seconds troopCount Clankers pop out of the factory on its shell.
+    // Every time it loses shellEveryPart of its health, it hides in its shell for shellSeconds (it stops, and nothing can hurt it).
+    seaturtle: { name: "Sea Turtle Fortress", health: 4200, speed: 0.55, leaves: 220, points: 900, baseHit: 70, isBoss: true,
+                 shellEveryPart: 0.2, shellSeconds: 3, troopEvery: 6, troopCount: 2, troopType: "clanker", troopNear: true, troopText: "Clankers!" },
     // Diver Bot (Shipwreck Cove): an old brass diving suit. Really tough and slow. Every anchorEvery seconds it throws its anchor onto the
     // closest tower within anchorRadius squares, pinning it so it can't attack for anchorSeconds.
     divebot:   { name: "Diver Bot", health: 520, speed: 0.95, leaves: 24, points: 70, anchorEvery: 7, anchorRadius: 1.6, anchorSeconds: 2.5 },
@@ -1116,7 +1124,7 @@ const SETTINGS = {
                 [["torpedo", 18, 0.35]],                                                // 12: a torpedo storm
                 [[["subbot", "subbot", "jellybot"], 12, 0.9]],                          // 13
                 [["hider", 8, 0.8], ["splitter", 4, 1.4]],                              // 14
-                [["sludgeleviathan", 1, 0], ["torpedo", 8, 0.6]],                       // 15
+                [["pufferbot", 1, 0], ["torpedo", 8, 0.6]],                             // 15: the Puffer Bot (miniboss)
                 [[["jellybot", "drone"], 12, 0.45]],                                    // 16
                 [[["tank", "subbot", "repair"], 14, 1.0]],                              // 17
                 [[["scout", "torpedo", "hider"], 22, 0.4]],                             // 18
@@ -1126,7 +1134,7 @@ const SETTINGS = {
                 [[["splitter", "subbot"], 14, 1.0], ["jellybot", 8, 0.4]],              // 22
                 [["cyclonegolem", 1, 0], [["walker", "torpedo"], 16, 0.5]],             // 23
                 [[["hider", "jellybot", "subbot", "scout"], 24, 0.5]],                  // 24
-                [["sludgeleviathan", 1, 0], ["boss", 1, 0, 6500]],                      // 25
+                [["pufferbot", 2, 6], ["boss", 1, 0, 6500]],                            // 25: two Puffer Bots!
                 [[["tank", "tesla", "subbot"], 18, 0.9]],                               // 26
                 [["torpedo", 30, 0.25]],                                                // 27
                 [[["jellybot", "thunderbird", "drone"], 21, 0.35], ["subbot", 6, 1.2]], // 28
@@ -1157,7 +1165,7 @@ const SETTINGS = {
                 [["drone", 6, 0.6], ["jellybot", 6, 0.5], ["hider", 6, 0.7]],           // 12
                 [[["gustrunner", "torpedo"], 16, 0.45]],                                // 13
                 [["staticbot", 4, 1.8], [["hider", "subbot"], 10, 0.9]],                // 14
-                [["pharaohmachine", 1, 0], ["jellybot", 8, 0.4]],                       // 15
+                [["seaturtle", 1, 0], ["jellybot", 8, 0.4]],                            // 15: the Sea Turtle Fortress (miniboss)
                 [[["obsidian", "hider"], 12, 1.0]],                                     // 16
                 [["torpedo", 24, 0.3]],                                                 // 17
                 [[["balloonbot", "jellybot"], 12, 0.6], ["tank", 5, 1.3]],              // 18
@@ -1167,7 +1175,7 @@ const SETTINGS = {
                 [[["snowplow", "subbot", "tesla"], 15, 1.0]],                           // 22
                 [["skyblimp", 1, 0], ["hider", 12, 0.6]],                               // 23
                 [[["jellybot", "thunderbird", "balloonbot"], 20, 0.4]],                 // 24
-                [["sludgeleviathan", 1, 0], ["yetimech", 1, 0], [["subbot", "hider"], 14, 0.7]],   // 25
+                [["seaturtle", 1, 0], ["yetimech", 1, 0], [["subbot", "hider"], 14, 0.7]],   // 25: the Sea Turtle Fortress again
                 [[["mummy", "obsidian", "repair"], 18, 0.9]],                           // 26
                 [["cyclonegolem", 2, 7], [["torpedo", "jellybot"], 16, 0.45]],          // 27
                 [[["hider", "subbot", "staticbot", "tank"], 24, 0.6]],                  // 28

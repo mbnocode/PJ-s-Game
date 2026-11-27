@@ -2474,6 +2474,34 @@ for (const [k, draw] of [
     P(0, 7, "#c8d0d6"); P(0, 10, "#c8d0d6"); P(1, 8, "#4a5059"); P(1, 9, "#4a5059");   // the propeller
   }],
 ]) { SPR[k] = pixSprite(16, 16, draw); SPRF[k] = flipCanvas(SPR[k]); }
+{ // Minibosses of the Sunken Kingdom (32 x 32, facing right)
+  const puffer = (big) => pixSprite(32, 32, ({ P, rect, disc }) => {   // the Puffer Bot: a round robot pufferfish (puffed up: twice as round, with spikes sticking out)
+    const R = big ? 12.5 : 8.5, cx = 15, cy = 16;
+    if (big) for (let a = 0; a < 20; a++) { const ang = a / 20 * Math.PI * 2; for (let d = R; d < R + 3.5; d++) P(cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, d > R + 2 ? "#f4f4f0" : "#9aa4ac"); }   // steel spikes
+    else for (let a = 0; a < 12; a++) { const ang = a / 12 * Math.PI * 2; P(cx + Math.cos(ang) * (R + 1), cy + Math.sin(ang) * (R + 1), "#9aa4ac"); }   // little spikes, folded down
+    disc(cx, cy, R, (dx, dy) => dy > R * 0.35 ? "#f2e6c0" : dy < -R * 0.5 ? "#ffd04a" : (Math.round(dx + dy * 3) % 5 === 0 ? "#c98e12" : "#f2b82a"));   // yellow body, pale belly, spots
+    for (let k = -2; k <= 2; k++) P(cx + k * R * 0.3, cy - R * 0.1, "#8a6a18");   // a seam of rivets
+    const ex = cx + R * 0.45, ey = cy - R * 0.3; disc(ex, ey, big ? 2.6 : 2, "#ffffff"); P(ex + 0.6, ey, "#e0443a"); P(ex + 0.6, ey - 0.6, "#ff9a8a");   // a big robot eye, glowing red
+    rect(cx + R - 1, cy + 1, cx + R + 1, cy + 2, "#e07a5a"); P(cx + R, cy + 3, "#16191d");   // a little pouty mouth
+    for (const k of [-1, 1]) for (let j = 0; j < 4; j++) P(cx - R - 1 - j, cy + k * j * 0.8, "#c98e12");   // tail fin
+    rect(cx - 2, cy - R - 2, cx + 1, cy - R - 1, "#c98e12");   // a little top fin
+  });
+  SPR.pufferbot = puffer(false); SPR.pufferbot_big = puffer(true);
+  const turtle = (shell) => pixSprite(32, 32, ({ P, rect, disc }) => {   // the Sea Turtle Fortress: a huge robot turtle carrying a tiny factory on its armored shell
+    const S1 = "#3a6a52", S2 = "#4f8a6a", S3 = "#6aaa82", M = "#8a949c";
+    if (!shell) { disc(26, 20, 3.4, (dx, dy) => dy < -1 ? "#9ac8a8" : "#6aa882"); P(27, 19, "#e0443a"); P(28, 19, "#ffd0c0"); P(29, 21, "#16191d");   // its head (with a glowing red eye)
+      for (const [fx, fy] of [[7, 25], [21, 25]]) { rect(fx, fy, fx + 3, fy + 3, "#6aa882"); P(fx + 3, fy + 3, "#4f8a6a"); }   // flippers
+      rect(3, 21, 5, 22, "#6aa882"); }
+    for (let i = 4; i <= 25; i++) for (let j = 12; j <= 26; j++) { const dx = (i - 14.5) / 11, dy = (j - 21) / 8.5; if (dx * dx + dy * dy <= 1 && j <= 25) P(i, j, j > 23 ? M : (Math.abs((i * 2 + j) % 7) < 1 ? S1 : dy < -0.5 ? S3 : S2)); }   // the armored shell, with plate seams
+    for (const [i, j] of [[9, 17], [14, 15], [20, 17], [11, 21], [18, 21]]) { P(i, j, "#c9d4dc"); }   // rivets
+    rect(10, 6, 19, 12, "#5a6068"); rect(10, 6, 19, 6, "#7a8089"); rect(12, 8, 13, 9, "#ffb12e"); rect(16, 8, 17, 9, "#ffb12e");   // the tiny factory on its back, windows glowing
+    rect(14, 1, 15, 5, "#4a4e56"); P(14, 0, "#9aa4ac"); P(15, 0, "#c8d0d6"); rect(17, 3, 18, 5, "#4a4e56");   // smokestacks
+    rect(13, 10, 15, 12, "#2a2e36");   // its door, where robots pop out
+    if (shell) { for (let i = 8; i <= 22; i += 3) P(i, 13, "#ffd34d"); }   // (hiding: the shell's edge glows)
+  });
+  SPR.seaturtle = turtle(false); SPR.seaturtle_shell = turtle(true);
+  for (const k of ["pufferbot", "pufferbot_big", "seaturtle", "seaturtle_shell"]) SPRF[k] = flipCanvas(SPR[k]);
+}
 { // The Mecha Megalodon: a gigantic armored robot shark with glowing red eyes and jaws full of steel teeth (32 x 32)
   SPR.megalodon = pixSprite(32, 32, ({ P, rect, disc }) => {
     const B1 = "#3e4a56", B2 = "#56636f", B3 = "#76838f", BL = "#a8b4be", RD = "#ff3a2a", T = "#f4f4f0";
@@ -5708,11 +5736,13 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
-const SEA_FOES = ["torpedo", "subbot", "jellybot", "divebot", "megalodon"];   // the Sunken Kingdom (World 2)
+const SEA_FOES = ["torpedo", "subbot", "jellybot", "divebot", "pufferbot", "seaturtle", "megalodon"];   // the Sunken Kingdom (World 2)
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES, ...SEA_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon"]);
+const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon", "pufferbot", "seaturtle"]);
 const FOE_ABOUT = {
+  pufferbot: "A round yellow robot pufferfish with a big red robot eye. When it gets hurt it puffs up into a spiky ball! A miniboss of the Coral Reef.",
+  seaturtle: "A huge robot sea turtle with a tiny smoking factory on its armored shell. A miniboss of the Kelp Forest.",
   divebot: "An old brass diving suit with a big round helmet, a glowing robot eye in its window, lead boots and an anchor. From Shipwreck Cove.",
   torpedo: "A gray torpedo with an angry face and a whirring propeller. Every few seconds it shoots forward really fast. From the Sunken Kingdom.",
   subbot: "A little yellow submarine with a red robot eye in its porthole and a steel nose cone. From the Sunken Kingdom.",
@@ -5902,6 +5932,8 @@ function renderEnemies() {
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
       : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
       : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Its storm armor makes land towers do only ${r.landTowerTimes}x damage, but flying towers (Owls, Night Owls, Dragons, the Pegasus and the Phoenix) do ${r.flyingTowerTimes}x damage! Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
+      : k === "pufferbot" ? `Miniboss. Every time it loses ${Math.round(r.puffEveryPart * 100)}% of its health, it puffs up for ${r.puffSeconds} seconds: it takes half damage and shoots spikes that stop towers within ${r.spikeRadius} squares from attacking for ${r.spikeStun} seconds.`
+      : k === "seaturtle" ? `Miniboss. Every ${r.troopEvery} seconds ${r.troopCount} Clankers pop out of the factory on its shell. Every time it loses ${Math.round(r.shellEveryPart * 100)}% of its health, it hides in its shell for ${r.shellSeconds} seconds, and nothing can hurt it.`
       : k === "divebot" ? `Special: really tough and slow. Every ${r.anchorEvery} seconds it throws its anchor onto the closest tower (within ${r.anchorRadius} squares), pinning it so it can't attack for ${r.anchorSeconds} seconds. Shows up in Shipwreck Cove.`
       : k === "torpedo" ? `Special: every ${r.dashEvery} seconds its propeller kicks in and it shoots forward ${r.dashSpeed} times faster. Shows up in the Sunken Kingdom.`
       : k === "subbot" ? `Special: its steel nose cone blocks ${Math.round((1 - r.frontArmor) * 100)}% of the damage from towers in front of it. Hit it from behind or the side! Shows up in the Sunken Kingdom.`
@@ -6976,6 +7008,8 @@ function startWave() {
     sludgeleviathan: "The Sludge Leviathan rises from the swamp! It dives under the sludge where nothing can hit it, and splashes sludge that slows your towers. Water Frogs do double damage to it!",
     pharaohmachine: "The Pharaoh Machine awakens! It raises Mummy Bots, hides behind a golden shield, and at half health it wraps up nearby towers. Break the shield fast!",
     thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
+    pufferbot: "The Puffer Bot is coming! When it gets hurt it puffs up into a spiky ball: it takes half damage and its spikes stop nearby towers for a moment. Keep hitting it!",
+    seaturtle: "The Sea Turtle Fortress is coming! Clankers keep popping out of the factory on its shell, and when it's hurt it hides in its shell where nothing can hurt it. Wait for it to come back out!",
     divebot: "Diver Bots are here! They're slow but really tough, and they throw their anchors onto towers to pin them down for a few seconds.",
     torpedo: "Torpedo Bots are here! Every few seconds their propeller kicks in and they shoot forward super fast.",
     subbot: "Sub Bots are here! Their steel nose cone blocks half the damage from towers in front of them, so hit them from behind or the side.",
@@ -7116,6 +7150,7 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (r.dead) return;
   if (r.hideT > 0 && !vision) return;
   if (r.under || r.spinning) return;   // a Lava Diver under the lava (or a spinning Cyclone Golem) can't be hit
+  if (r.shellT > 0) { if (!isBurn && Math.random() < 0.08) { const q = rpos(r); floatText(q.x, q.y - 30, "Clang!", "#c9d4dc", 0.5); } return; }   // the Sea Turtle hiding in its shell: nothing gets through
   if (kind) r.lastKind = kind;   // which tower hit it last (for the Hot Water achievement)
   const sk = !isBurn && kind ? skinBuff(kind) : null;   // skin buffs
   if (sk && sk.critChance && Math.random() < sk.critChance) { amt *= sk.critTimes || 3; const q = rpos(r); floatText(q.x, q.y - 28, "CRIT!", "#c77dff", 0.6); burst(q.x, q.y, "#6a3aa0", 8); }
@@ -7144,8 +7179,17 @@ function hurt(r, amt, vision, isBurn, kind) {
     if (r.shield > 0) return;
     amt = -r.shield; r.shield = 0; r.shieldT = RB.shieldEvery; const q = rpos(r); floatText(q.x, q.y - 44, "Shield broken!", "#ffd34d"); burst(q.x, q.y - 10, "#ffd34d", 16); Sound.play("smash");
   }
+  if (r.puffT > 0 && RB.puffDamageTimes) amt *= RB.puffDamageTimes;   // the Puffer Bot puffed up: its spikes block half the damage
   r.hp -= amt; r.hitT = 0.12;
   if (r.hp <= 0) { kill(r); return; }
+  if (RB.puffEveryPart && !(r.puffT > 0) && (r.puffDmg = (r.puffDmg || 0) + amt) >= r.maxHp * RB.puffEveryPart) {   // the Puffer Bot puffs up and shoots its spikes at nearby towers
+    r.puffDmg = 0; r.puffT = RB.puffSeconds; const q = rpos(r); floatText(q.x, q.y - 40, "Puffed up!", "#ffd04a"); Sound.play("smash");
+    for (let a = 0; a < 16; a++) { const ang = a / 16 * Math.PI * 2; G.particles.push({ kind: "spark", x: q.x, y: q.y - 10, vx: Math.cos(ang) * 160, vy: Math.sin(ang) * 160, t: 0, life: 0.4, col: a % 2 ? "#f4f4f0" : "#9aa4ac" }); }
+    for (const t of G.towers) if (Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= RB.spikeRadius * T) { if (t.kind === "phoenix") continue; t.stunT = Math.max(t.stunT || 0, RB.spikeStun); floatText(t.x * T + 16, t.y * T - 4, "Spiked!", "#f4f4f0", 0.6); }
+  }
+  if (RB.shellEveryPart && !(r.shellT > 0) && (r.shellDmg = (r.shellDmg || 0) + amt) >= r.maxHp * RB.shellEveryPart) {   // the Sea Turtle pulls into its shell
+    r.shellDmg = 0; r.shellT = RB.shellSeconds; const q = rpos(r); floatText(q.x, q.y - 44, "Into its shell!", "#9ac8a8"); burst(q.x, q.y, "#6aa882", 10); Sound.play("smash");
+  }
   if (sk) {   // skin buffs that stick to the robot after the hit
     if (sk.burnSeconds && !RB.waterTimes) { r.burnT = Math.max(r.burnT || 0, sk.burnSeconds); r.burnDps = Math.max(r.burnDps || 0, amt * sk.burnPart / sk.burnSeconds); }
     if (sk.poisonSeconds) { r.poisonT = sk.poisonSeconds; r.poisonDps = Math.max(r.poisonT > 0 ? r.poisonDps || 0 : 0, amt * sk.poisonPart / sk.poisonSeconds); }
@@ -8114,7 +8158,7 @@ function stormPowers(dt) {
         r.troopT = S.troopEvery;
         if (S.troopNear) {   // the Mecha Megalodon: Torpedo Bots shoot out of its mouth, just ahead of it
           for (let k = 0; k < S.troopCount; k++) spawn({ type: S.troopType, d: Math.min(r.path ? r.path.total : G.map.total, r.d + 20 + k * 14), path: r.path || G.map.paths[0] });
-          floatText(q.x, q.y - 60, "Torpedoes!", "#ffb12e"); burst(q.x, q.y, "#dff8ff", 14); Sound.play("smash");
+          floatText(q.x, q.y - 60, S.troopText || "Torpedoes!", "#ffb12e"); burst(q.x, q.y, "#dff8ff", 14); Sound.play("smash");
         } else {
         for (let k = 0; k < S.troopCount; k++) { const pm = G.map.paths[Math.random() * G.map.paths.length | 0], d = pm.total * (0.15 + Math.random() * 0.65);
           spawn({ type: S.troopType, d, path: pm }); const tr = G.robots[G.robots.length - 1]; tr.chute = 1.1; }
@@ -8310,6 +8354,8 @@ function update(dt) {
     if (noSlow) { r.slowT = 0; r.warped = false; }
     else { const q = rpos(r); let slow = 0; for (const w of warps) if (Math.hypot(q.x - w.x, q.y - w.y) <= w.R) slow = Math.max(slow, w.slow); r.warped = slow > 0; if (slow) sp *= 1 - slow; }
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
+    if (r.puffT > 0) r.puffT -= dt;
+    if (r.shellT > 0) { r.shellT -= dt; sp = 0; }   // (the Sea Turtle stays put while it hides)
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
     if (r.under) sp *= (SETTINGS.robots[r.type] || {}).diveSpeed || 1.5;   // Lava Divers swim fast under the lava (and the Sludge Leviathan under the sludge)
@@ -8781,7 +8827,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "megalodon" ? 104 : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "megalodon" ? 104 : r.type === "seaturtle" ? 80 : r.type === "pufferbot" ? (r.puffT > 0 ? 74 : 56) : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -8825,6 +8871,8 @@ function draw() {
         x.beginPath(); x.ellipse(0, yy, w, w * 0.28, 0, a % (Math.PI * 2), (a % (Math.PI * 2)) + 4.2); x.stroke(); }
       x.restore();
     }
+    if (r.type === "pufferbot" && r.puffT > 0) frame = "pufferbot_big";   // puffed up!
+    if (r.type === "seaturtle" && r.shellT > 0) frame = "seaturtle_shell";   // hiding in its shell
     const img = (p.dx < 0 ? SPRF : SPR)[frame];
     const drop = r.chute > 0 ? -r.chute * (r.crash ? 40 : 60) : 0;   // a Paratrooper floating down (or a Balloon Pilot crashing down) onto the road
     x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0) + drop - (r.type === "skyblimp" ? 22 : 0));   // robots sink a little in quicksand (and the Blimp flies high)
