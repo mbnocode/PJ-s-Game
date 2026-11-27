@@ -1074,7 +1074,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 
 const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "skyislands", "thunder", "storm", "infinity"];   // (Infinity sits at the very end of the list)
-const W2_ORDER = ["coralreef", "kelpforest", "shipwreck", "sunkencity"];   // World 2: the Sunken Kingdom
+const W2_ORDER = ["coralreef", "kelpforest", "clambay", "shipwreck", "sunkencity"];   // World 2: the Sunken Kingdom
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix", "kraken"];
@@ -2412,7 +2412,7 @@ const Sound = {
 /* ---------- WORLD 2: THE SUNKEN KINGDOM ----------
    Three underwater levels on their own world map, opened by beating the Eye of the Storm on Normal or harder.
    Themes: "reef" (The Coral Reef), "kelp" (The Kelp Forest) and "sunken" (The Sunken City). */
-const SEA_THEMES = new Set(["reef", "kelp", "wreck", "sunken"]);
+const SEA_THEMES = new Set(["reef", "kelp", "bay", "wreck", "sunken"]);
 function seaTile(kind) {
   const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d");
   const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
@@ -2421,6 +2421,12 @@ function seaTile(kind) {
     for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#dccb9c" : "#bba978", rnd() * 16 | 0, rnd() * 16 | 0);
     const ry = 3 + (rnd() * 10 | 0); for (let i = 0; i < 16; i++) if ((i + ry) % 5 < 3) px("#e4d6ac", i, ry + Math.round(Math.sin(i / 2) * 0.6));   // a sand ripple
     if (rnd() < 0.22) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px(rnd() < 0.5 ? "#ff9fb8" : "#fff4dc", i, j); px("#c88a9a", i + 1, j); }
+  } else if (kind === "bay") {   // bright, sunny bay sand with a turquoise shimmer, scattered with seashells and the odd pearl
+    x.fillStyle = "#f2e2b0"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#fbefc8" : "#e0d098", rnd() * 16 | 0, rnd() * 16 | 0);
+    for (let n = 0; n < 6; n++) px("#bfe0d0", rnd() * 16 | 0, rnd() * 16 | 0);   // turquoise glints
+    if (rnd() < 0.4) { const i = 2 + rnd() * 11 | 0, j = 2 + rnd() * 11 | 0; px("#f8e0ec", i, j); px("#f0c0d8", i + 1, j); px("#e8a8c8", i, j + 1); px("#f8e0ec", i + 1, j + 1); }   // a little pink shell
+    if (rnd() < 0.08) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ffffff", i, j); px("#e0e4f0", i + 1, j); }   // a pearl!
   } else if (kind === "kelp") {   // dark green-brown sea floor with bits of kelp lying around
     x.fillStyle = "#5e6e4c"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#6c7d58" : "#4f5e40", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -2441,10 +2447,11 @@ function seaTile(kind) {
   }
   return c;
 }
-const SEA_TILES = { wreck: Array.from({ length: 8 }, () => seaTile("wreck")), reef: Array.from({ length: 8 }, () => seaTile("reef")), kelp: Array.from({ length: 8 }, () => seaTile("kelp")), sunken: Array.from({ length: 8 }, () => seaTile("sunken")) };
+const SEA_TILES = { bay: Array.from({ length: 8 }, () => seaTile("bay")), wreck: Array.from({ length: 8 }, () => seaTile("wreck")), reef: Array.from({ length: 8 }, () => seaTile("reef")), kelp: Array.from({ length: 8 }, () => seaTile("kelp")), sunken: Array.from({ length: 8 }, () => seaTile("sunken")) };
 Object.assign(SCENERY_LOOK, {
   wreck: { tree: "mast", mushroom: "barrel", tallgrass: "seagrass" },
   reef: { tree: "coral", mushroom: "anemone", tallgrass: "seagrass" },
+  bay: { tree: "giantclam", mushroom: "anemone", tallgrass: "seagrass" },
   kelp: { tree: "kelp", mushroom: "urchin", tallgrass: "seagrass" },
   sunken: { tree: "ruinpillar", mushroom: "treasure", tallgrass: "seagrass" },
 });
@@ -2454,6 +2461,11 @@ SPR.coral = pixSprite(16, 16, ({ P, rect, disc }) => {   // branching pink coral
   const br = [[8, 14, 8, 6], [8, 10, 4, 5], [8, 9, 12, 4], [5, 7, 3, 2], [11, 6, 13, 2], [8, 6, 7, 1], [6, 12, 2, 9], [10, 12, 14, 9]];
   for (const [x0, y0, x1, y1] of br) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let k = 0; k <= n; k++) { const i = x0 + (x1 - x0) * k / n, j = y0 + (y1 - y0) * k / n; P(i, j, "#ff6f91"); P(i + 1, j, "#e04a72"); } }
   for (const [i, j] of [[4, 5], [12, 4], [3, 2], [13, 2], [7, 1], [2, 9], [14, 9]]) { P(i, j, "#ffd0dc"); P(i + 1, j, "#ffb0c4"); }
+});
+SPR.giantclam = pixSprite(16, 16, ({ P, rect, disc }) => {   // a big open clam with a shiny pearl inside
+  for (let i = 1; i <= 14; i++) for (let j = 2; j <= 8; j++) if (Math.hypot((i - 7.5) / 6.8, (j - 8.5) / 6) <= 1) P(i, j, i % 3 === 0 ? "#c8a0c8" : j < 5 ? "#f4d8f0" : "#e0b8e0");   // top shell, with ridges
+  rect(2, 9, 13, 10, "#e86a9a"); disc(7.5, 9.5, 2, "#ffffff"); P(7, 8, "#ffffff"); P(8, 10, "#d8dce8");   // pink inside and the pearl
+  for (let i = 1; i <= 14; i++) for (let j = 11; j <= 15; j++) if (Math.hypot((i - 7.5) / 6.8, (j - 10.5) / 4.6) <= 1) P(i, j, i % 3 === 0 ? "#b890b8" : j > 13 ? "#c8a0c8" : "#e0b8e0");   // bottom shell
 });
 SPR.anemone = pixSprite(16, 16, ({ P, rect, disc }) => {   // a sea anemone with waving tentacles, and a little clownfish
   rect(5, 11, 11, 15, "#8a4ab0"); rect(5, 11, 6, 15, "#a86ad0");
@@ -2628,7 +2640,25 @@ for (const [k, draw] of [
     if (shell) { for (let i = 8; i <= 22; i += 3) P(i, 13, "#ffd34d"); }   // (hiding: the shell's edge glows)
   });
   SPR.seaturtle = turtle(false); SPR.seaturtle_shell = turtle(true);
-  for (const k of ["pufferbot", "pufferbot_big", "seaturtle", "seaturtle_shell"]) SPRF[k] = flipCanvas(SPR[k]);
+  const titan = (shut) => pixSprite(32, 32, ({ P, rect, disc }) => {   // the Titan Clam: a gigantic armored robot clam, its lid open to show a huge glowing pearl and two angry red eyes
+    const S1 = "#7a5a8a", S2 = "#b890c8", S3 = "#e8c8f0", M = "#5a646c";
+    for (let i = 0; i <= 31; i++) for (let j = 18; j <= 30; j++) if (Math.hypot((i - 15.5) / 15.5, (j - 19) / 11) <= 1) P(i, j, j > 27 ? M : (i % 4 === 0 ? S1 : j < 22 ? S3 : S2));   // the bottom shell, with ridges
+    for (const i of [4, 10, 16, 22, 27]) P(i, 28, "#c9d4dc");   // rivets on the steel rim
+    if (shut) {
+      for (let i = 0; i <= 31; i++) for (let j = 8; j <= 18; j++) if (Math.hypot((i - 15.5) / 15.5, (j - 19) / 11) <= 1) P(i, j, i % 4 === 0 ? S1 : j < 12 ? S3 : S2);   // the lid, shut tight
+      rect(1, 18, 30, 18, "#16191d"); for (let i = 3; i < 30; i += 3) P(i, 18, "#ff6a8a");   // a glowing seam
+      P(12, 17, "#ff2a2a"); P(19, 17, "#ff2a2a");   // eyes peeking out
+    } else {
+      for (let i = 0; i <= 31; i++) for (let j = 0; j <= 11; j++) if (Math.hypot((i - 15.5) / 15.5, (j - 11) / 11) <= 1 && j <= 10) P(i, j, i % 4 === 0 ? S1 : j < 4 ? S3 : S2);   // the lid, lifted high
+      for (const i of [5, 11, 17, 23]) { P(i, 2, "#c9d4dc"); P(i + 1, 1, "#eef2f5"); }   // spikes on the lid
+      rect(2, 11, 29, 18, "#c83a6a"); rect(2, 11, 29, 12, "#16191d");   // the pink-red inside
+      disc(15.5, 14.5, 4.2, (dx, dy) => dx * dx + dy * dy < 3 ? "#ffffff" : dy < 0 ? "#f4f4ff" : "#d8dcf0"); P(14, 13, "#ffffff");   // the giant pearl
+      rect(5, 13, 8, 15, "#16191d"); P(6, 14, "#ff2a2a"); P(7, 14, "#ffd0c0"); rect(23, 13, 26, 15, "#16191d"); P(24, 14, "#ff2a2a"); P(25, 14, "#ffd0c0");   // angry robot eyes
+      for (let i = 4; i <= 27; i += 3) { P(i, 17, "#f4f4f0"); }   // a row of teeth
+    }
+  });
+  SPR.clamtitan = titan(false); SPR.clamtitan_shut = titan(true);
+  for (const k of ["pufferbot", "pufferbot_big", "seaturtle", "seaturtle_shell", "clamtitan", "clamtitan_shut"]) SPRF[k] = flipCanvas(SPR[k]);
 }
 { // The Mecha Megalodon: a gigantic armored robot shark with glowing red eyes and jaws full of steel teeth (32 x 32)
   SPR.megalodon = pixSprite(32, 32, ({ P, rect, disc }) => {
@@ -2669,7 +2699,7 @@ function drawUnderwater(x) {
   x.globalAlpha = 1;
 }
 // World 2 bookkeeping
-const W2_MAP = { coralreef: [170, 340, "#ff8fb0"], kelpforest: [420, 262, "#5fc08a"], shipwreck: [610, 372, "#c9a23a"], sunkencity: [800, 300, "#8fd8f0"] };
+const W2_MAP = { coralreef: [150, 340, "#ff8fb0"], kelpforest: [340, 262, "#5fc08a"], clambay: [490, 372, "#f0c8e8"], shipwreck: [650, 372, "#c9a23a"], sunkencity: [820, 300, "#8fd8f0"] };
 const W2_SOON = [{ look: "abyss", name: "The Abyss", pos: [930, 120, "#4a5aa0"] }];
 // The Sunken Kingdom opens after you beat the Eye of the Storm (Normal or harder) AND collect enough stars in World 1.
 function stormBeaten(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
@@ -2752,8 +2782,16 @@ function drawWorldMap2() {
   x.strokeStyle = stone; x.lineWidth = 9; x.beginPath(); x.arc(915, 290, 34, Math.PI, 0); x.stroke();   // an old archway
   for (const [a, b] of [[700, 360], [880, 400], [960, 370]]) { x.fillStyle = "#8a5a2a"; x.fillRect(a, b, 18, 11); x.fillStyle = "#ffd34d"; x.fillRect(a + 2, b - 3, 14, 4); x.fillRect(a + 7, b + 3, 4, 4); }   // treasure!
   for (let k = 0; k < 24; k++) { x.fillStyle = R() < 0.5 ? "#4f8a6a" : "#3f7a5a"; x.fillRect(640 + R() * 360, 300 + R() * 140, 3, 2); }   // moss
+  // ---- The Giant Clam Bay: a huge open clam with a glowing pearl ----
+  { const a = 490, b = 405; x.fillStyle = "rgba(255,255,255,0.15)"; x.beginPath(); x.ellipse(a, b + 10, 70, 14, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#c8a0c8"; x.beginPath(); x.ellipse(a, b, 50, 20, 0, 0, Math.PI); x.fill();   // the bottom shell
+    x.save(); x.translate(a, b); x.rotate(-0.35); x.fillStyle = "#e8c4e4"; x.beginPath(); x.ellipse(0, 0, 50, 32, 0, Math.PI, Math.PI * 2); x.fill();
+    x.strokeStyle = "#b890b8"; x.lineWidth = 2.5; for (let k = -4; k <= 4; k++) { x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.sin(k * 0.33) * 48, -Math.cos(k * 0.33) * 30); x.stroke(); } x.restore();   // the lid, lifted, with ridges
+    x.fillStyle = rad(a, b - 6, 2, 30, [[0, "rgba(255,255,255,0.95)"], [0.4, "rgba(255,230,250,0.6)"], [1, "rgba(255,200,240,0)"]]); x.beginPath(); x.arc(a, b - 6, 30, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#ffffff"; x.beginPath(); x.arc(a, b - 6, 9, 0, Math.PI * 2); x.fill(); }
+  for (const [a, b] of [[420, 420], [560, 428], [530, 392]]) { x.fillStyle = "#f0c8dc"; x.beginPath(); x.arc(a, b, 5, Math.PI, 0); x.fill(); }   // little shells
   // ---- Shipwreck Cove: an old pirate ship lying on its side in the sand ----
-  x.save(); x.translate(615, 330); x.rotate(-0.12);
+  x.save(); x.translate(660, 330); x.rotate(-0.12);
   x.fillStyle = "#4a3018"; x.beginPath(); x.moveTo(-80, -6); x.quadraticCurveTo(-60, 40, 0, 44); x.quadraticCurveTo(60, 40, 84, -14); x.lineTo(70, -18); x.lineTo(-70, -10); x.closePath(); x.fill();   // the hull
   x.strokeStyle = "#6a4a2a"; x.lineWidth = 3; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(-74 + k * 4, 2 + k * 9); x.quadraticCurveTo(0, 14 + k * 10, 78 - k * 4, -8 + k * 9); x.stroke(); }   // planks
   x.fillStyle = "#0a2f5a"; x.beginPath(); x.ellipse(-10, 20, 14, 10, 0.3, 0, Math.PI * 2); x.fill();   // a big hole in the side
@@ -2966,6 +3004,9 @@ const MUSIC_THEMES = {
   kelpforest: { root: 67, calm: 98, battle: 126, lead: "triangle", bass: "triangle", swing: 0.25,
     chords: [[0, 4, 7], [-7, -3, 0], [-5, -1, 2], [0, 4, 7]],
     melody: [[7, 9, 12, null, 11, 9, 7, null], [5, null, 9, null, 12, 9, 5, null], [2, 7, 11, null, 14, 11, 7, null], [12, 11, 12, 16, 14, null, 12, null]] },
+  clambay: { root: 64, calm: 100, battle: 128, lead: "triangle", bass: "triangle", swing: 0.3,   // a sunny, bouncy beach tune in E major
+    chords: [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]],
+    melody: [[12, 16, 19, null, 16, 12, 14, null], [9, 12, 16, null, 14, 12, 9, null], [5, 9, 12, null, 14, 16, 17, null], [19, null, 16, null, 14, 11, 12, null]] },
   shipwreck: { root: 62, calm: 104, battle: 132, lead: "square", bass: "triangle", swing: 0.35,   // a jolly pirate jig in D major (D - G - A - D)
     chords: [[0, 4, 7], [-7, -3, 0], [-5, -1, 2], [0, 4, 7]],
     melody: [[12, 14, 16, 12, 14, null, 9, null], [12, 11, 12, 16, 14, 12, 11, null], [9, 11, 12, 14, 16, 14, 12, 11], [12, null, 16, null, 12, null, null, null]] },
@@ -3727,7 +3768,8 @@ function renderSlots() {
 function unlocked(L) {
   if (SETTINGS.levels[L] && SETTINGS.levels[L].alwaysOpen) return true;   // (Infinity is always open)
   const w = W2_ORDER.indexOf(L);   // World 2: the first level opens after the Eye of the Storm (Normal or harder), then one by one
-  if (w >= 0) { if (w === 0) return world2Open(); const p = slot().best[W2_ORDER[w - 1]]; return !!(p && Object.keys(p).length); }
+  if (w >= 0) { if (w === 0) return world2Open(); const beat = (k) => { const p = slot().best[k]; return !!(p && Object.keys(p).length); };
+    return beat(W2_ORDER[w - 1]) || beat(L) || !!(SETTINGS.levels[L].alsoOpenAfter && beat(SETTINGS.levels[L].alsoOpenAfter)); }   // (alsoOpenAfter: so a new level in the middle doesn't lock levels a player already reached)
   const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
   if (slot().allWorld1) return true;   // (a special player who took the "unlock all World 1 levels" gift)
   const prev = slot().best[(SETTINGS.levels[L] || {}).unlockAfter || LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);   // unlockAfter: beat that level to open this one
@@ -3735,7 +3777,7 @@ function unlocked(L) {
 /* ---------- the world map ---------- */
 // Where each level sits on the map (out of 1000 across, 450 down), and its color.
 const WORLD_MAP_ICON = { meadow: "🌼", forest: "🌲", swamp: "🐸", beach: "🐚", desert: "🌵", pyramid: "🔺", basalt: "🪨", magma: "🔥", volcano: "🌋", tundra: "❄️", glacier: "🧊", blizzard: "🌨️", skyislands: "☁️", thunder: "⚡", storm: "🌀", infinity: "✨" };
-Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", shipwreck: "⚓", sunkencity: "🏛️" });
+Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", clambay: "🦪", shipwreck: "⚓", sunkencity: "🏛️" });
 const WORLD_MAP = {
   meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
   beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
@@ -4811,7 +4853,7 @@ const BOARD_TAB_COLORS = {
   tundra: ["#eef4fb", "#8aa0bc", "#1e2c40"], glacier: ["#8fd3ff", "#2f78b8", "#0c2a48"], blizzard: ["#c4cee0", "#5a6a84", "#1e2636"],
   infinity: ["#7a4ac0", "#2e1856", "#f6efff"], skyislands: ["#8ec8f4", "#3a6a9e", "#0c2a48"], thunder: ["#6a80b8", "#2e3c6c", "#f4f7ff"],
   storm: ["#4e5296", "#1e2050", "#eef0ff"],   // the 3 sky levels: one family of sky blues, getting stormier
-  shipwreck: ["#c9a23a", "#4a3018", "#1a0e04"], coralreef: ["#ff8fb0", "#2a9ad0", "#2a0a14"], kelpforest: ["#5a9a3e", "#1f5a5a", "#f0fff0"], sunkencity: ["#8fd8f0", "#2a5a7a", "#062040"],   // the Sunken Kingdom
+  clambay: ["#f0c8e8", "#4a8ab0", "#2a0a24"], shipwreck: ["#c9a23a", "#4a3018", "#1a0e04"], coralreef: ["#ff8fb0", "#2a9ad0", "#2a0a14"], kelpforest: ["#5a9a3e", "#1f5a5a", "#f0fff0"], sunkencity: ["#8fd8f0", "#2a5a7a", "#062040"],   // the Sunken Kingdom
 };
 async function renderBoards(code) {
   const tabs = $("board-tabs"); tabs.innerHTML = "";
@@ -5323,6 +5365,9 @@ function makePathLayer(map) {
   const C = map.theme === "reef"
     // a path of soft white sea sand, edged with sea grass
     ? { rim: hex("#a8955e"), dirt: hex("#efe2bc"), dark: hex("#e2d3a8"), light: hex("#f8efd2"), edge: hex("#d4c290"), stone: hex("#c9b48a"), rut: hex("#e6d6aa"), tuft: hex("#3fae6a"), tuft2: hex("#5fd08a") }
+    : map.theme === "bay"
+    // a path of crushed white seashells
+    ? { rim: hex("#b08aa8"), dirt: hex("#f4ecdc"), dark: hex("#e8dcc8"), light: hex("#fffaf0"), edge: hex("#dcc8c0"), stone: hex("#f0c8dc"), rut: hex("#ecdfcc"), tuft: hex("#3fae8a"), tuft2: hex("#5fd0a8") }
     : map.theme === "kelp"
     // a pebbly trail through the kelp beds
     ? { rim: hex("#2f3a28"), dirt: hex("#9a8e6a"), dark: hex("#857a5a"), light: hex("#ada17c"), edge: hex("#7a6e50"), stone: hex("#6a6a72"), rut: hex("#8a7e5e"), tuft: hex("#3f7a3a"), tuft2: hex("#5a9a3e") }
@@ -5869,11 +5914,12 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
-const SEA_FOES = ["torpedo", "subbot", "jellybot", "crabclaw", "clambot", "starfish", "octobot", "eelbot", "hermitbot", "divebot", "anglerbot", "barnaclebot", "mantabot", "pufferbot", "seaturtle", "megalodon"];   // the Sunken Kingdom (World 2)
+const SEA_FOES = ["torpedo", "subbot", "jellybot", "crabclaw", "clambot", "starfish", "octobot", "eelbot", "hermitbot", "divebot", "anglerbot", "barnaclebot", "mantabot", "pufferbot", "seaturtle", "clamtitan", "megalodon"];   // the Sunken Kingdom (World 2)
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES, ...SEA_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
-const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon", "pufferbot", "seaturtle"]);
+const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon", "pufferbot", "seaturtle", "clamtitan"]);
 const FOE_ABOUT = {
+  clamtitan: "A gigantic armored robot clam with spikes on its lid, angry red eyes and a huge glowing pearl inside. The boss of the Giant Clam Bay.",
   crabclaw: "A rusty robot crab with two big steel claws and red eyes on stalks. From the Coral Reef.",
   clambot: "A robot clam with a shiny pearl inside. From the Coral Reef.",
   starfish: "A spinning orange robot starfish with a glowing core. From the Coral Reef.",
@@ -6074,6 +6120,7 @@ function renderEnemies() {
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
       : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
       : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Its storm armor makes land towers do only ${r.landTowerTimes}x damage, but flying towers (Owls, Night Owls, Dragons, the Pegasus and the Phoenix) do ${r.flyingTowerTimes}x damage! Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
+      : k === "clamtitan" ? `Boss of the Giant Clam Bay (wave 30), with ${r.health.toLocaleString()} health. Every ${r.shutEvery} seconds it slams its shell shut for ${r.shutSeconds} seconds, and nothing can hurt it. Every ${r.pearlEvery} seconds it fires giant pearls at ${r.pearlCount} towers near it (within ${r.pearlRadius} squares), knocking them out for ${r.pearlSeconds} seconds. Every ${r.troopEvery} seconds ${r.troopCount} Clam Bots pop out of its shell.`
       : k === "crabclaw" ? `Special: its claws snap shut and block a whole hit, then get ready again ${r.clawBlockEvery} seconds later. Fast-attacking towers get through.`
       : k === "clambot" ? `Special: every ${r.shutEvery} seconds it shuts its shell for ${r.shutSeconds} seconds, and nothing can hurt it. Destroy it and you get its pearl: +${r.pearlLeaves} Maple Leaves!`
       : k === "starfish" ? `Special: when destroyed it splits into ${r.splitInto} small pieces. If any are still around after ${r.reformSeconds} seconds, they come back together into a new Starfish Bot!`
@@ -7176,6 +7223,7 @@ function startWave() {
     sludgeleviathan: "The Sludge Leviathan rises from the swamp! It dives under the sludge where nothing can hit it, and splashes sludge that slows your towers. Water Frogs do double damage to it!",
     pharaohmachine: "The Pharaoh Machine awakens! It raises Mummy Bots, hides behind a golden shield, and at half health it wraps up nearby towers. Break the shield fast!",
     thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
+    clamtitan: "The TITAN CLAM rises from the bay!! It slams its shell shut so nothing can hurt it, fires giant pearls that knock out your towers, and spits out Clam Bots. Hit it hard while its shell is open!",
     crabclaw: "Crab Claw Bots are here! Their claws block a whole hit every few seconds. Fast-attacking towers are great against them.",
     clambot: "Clam Bots are here! They shut their shells every few seconds, and nothing can hurt them then. Destroy one to get its pearl: bonus Maple Leaves!",
     starfish: "Starfish Bots are here! When you break one it splits into 5 pieces, and if you don't destroy them fast, they come back together!",
@@ -8321,7 +8369,7 @@ function stormPowers(dt) {
   if (G.planks) G.planks = G.planks.filter((b) => (b.t -= dt) > 0);   // shortcut bridges only last a while
   for (const r of G.robots) {
     if (r.dead) continue;
-    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.inkEvery && !S.barnacleEvery && !S.shutEvery && !S.anchorEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
+    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.pearlEvery && !S.inkEvery && !S.barnacleEvery && !S.shutEvery && !S.anchorEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
     const q = rpos(r);
     if (S.dashEvery) {   // Gust Runner: a gust of wind pushes it forward
       r.dashT = (r.dashT ?? S.dashEvery * (0.4 + Math.random() * 0.6)) - dt;
@@ -8335,6 +8383,17 @@ function stormPowers(dt) {
         else { r.anchorT = S.anchorEvery; const tx = t.x * T + 16, ty = t.y * T + 12;
           if (t.kind === "phoenix") phoenixRebirth(t);
           else { t.stunT = Math.max(t.stunT || 0, S.anchorSeconds); t.anchorT = S.anchorSeconds; floatText(tx, ty - 16, "Anchored!", "#c9d4dc", 0.8); burst(tx, ty + 6, "#9aa4ac", 10); Sound.play("smash"); } }
+      }
+    }
+    if (S.pearlEvery && !(r.shut > 0)) {   // Titan Clam: fires giant pearls at the towers near it, knocking them out for a moment
+      r.pearlT = (r.pearlT ?? S.pearlEvery * 0.6) - dt;
+      if (r.pearlT <= 0) {
+        const hit = G.towers.filter((t) => t.kind !== "phoenix" && !(t.stunT > 0) && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.pearlRadius * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - q.y) - Math.hypot(b.x * T - q.x, b.y * T - q.y)).slice(0, S.pearlCount);
+        if (!hit.length) r.pearlT = 0.5;
+        else { r.pearlT = S.pearlEvery; Sound.play("smash"); floatText(q.x, q.y - 54, "Pearl blast!", "#f4f4ff");
+          for (const t of hit) { const tx = t.x * T + 16, ty = t.y * T + 10;
+            for (let k = 0; k < 10; k++) G.particles.push({ kind: "spark", x: q.x + (tx - q.x) * k / 10, y: q.y - 14 + (ty - q.y + 14) * k / 10 - Math.sin(k / 10 * Math.PI) * 30, vx: 0, vy: 0, t: 0, life: 0.35, col: k % 2 ? "#ffffff" : "#f0c8e8" });
+            t.stunT = Math.max(t.stunT || 0, S.pearlSeconds); t.pearlT = S.pearlSeconds; floatText(tx, ty - 14, "Bonk!", "#f4f4ff", 0.7); burst(tx, ty, "#ffffff", 10); } }
       }
     }
     if (S.inkEvery) {   // Octo-Bot: squirts an ink cloud that blinds every tower near it
@@ -8659,7 +8718,7 @@ function update(dt) {
       }
     }
     const tsk = skinBuff(t.kind);
-    if (tsk && tsk.steel && (t.stunT > 0 || t.iceT > 0 || t.slimeT > 0 || t.pillar || t.barn)) { t.stunT = 0; t.zapT = 0; t.wrapT = 0; t.anchorT = 0; t.inkT = 0; t.barn = null; t.iceT = 0; t.slimeT = 0; if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#c8d0d6", 10); }
+    if (tsk && tsk.steel && (t.stunT > 0 || t.iceT > 0 || t.slimeT > 0 || t.pillar || t.barn)) { t.stunT = 0; t.zapT = 0; t.wrapT = 0; t.anchorT = 0; t.inkT = 0; t.pearlT = 0; t.barn = null; t.iceT = 0; t.slimeT = 0; if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#c8d0d6", 10); }
       if (!t.steelMsgT || G.time - t.steelMsgT > 3) { t.steelMsgT = G.time; floatText(t.x * T + 16, t.y * T - 6, "Steel Coat!", "#dfe6ee", 0.7); } }   // the Metal skin: nothing can stop it
     if (t.barn) {   // a Barnacle Bot's barnacle: the towers around it knock it off (or it falls off by itself after a while)
       t.barn.t -= dt; const bx = t.x * T + 16, by = t.y * T + 16;
@@ -8668,7 +8727,7 @@ function update(dt) {
     }
     if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech
     if (t.slimeT > 0) t.slimeT -= dt;   // covered in sludge by the Sludge Leviathan: attacks slower
-    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; if (t.anchorT > 0) t.anchorT -= dt; if (t.inkT > 0) t.inkT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
+    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; if (t.anchorT > 0) t.anchorT -= dt; if (t.inkT > 0) t.inkT -= dt; if (t.pearlT > 0) t.pearlT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
     if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
@@ -9177,6 +9236,8 @@ function draw() {
     if (t.stunT > 0 && t.wrapT > 0) {   // wrapped up in mummy bandages
       x.fillStyle = "#e8dcc0"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12, by - 22 + i * 6 + Math.sin(G.time * 3 + i) * 1.5, 24, 3);
       x.fillStyle = "#b8a682"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12 + (i * 7) % 20, by - 21 + i * 6, 5, 1);
+    } else if (t.stunT > 0 && t.pearlT > 0) {   // bonked by a Titan Clam's giant pearl: dizzy stars circle it
+      for (let i = 0; i < 3; i++) { const a = G.time * 5 + i * 2.1; x.fillStyle = "#ffffff"; x.beginPath(); x.arc(cx + Math.cos(a) * 10, by - 24 + Math.sin(a) * 3, 2.2, 0, Math.PI * 2); x.fill(); x.fillStyle = "#f0c8e8"; x.fillRect(cx + Math.cos(a) * 10 - 0.5, by - 25 + Math.sin(a) * 3, 1, 1); }
     } else if (t.stunT > 0 && t.inkT > 0) {   // blinded by an Octo-Bot's ink cloud
       for (let i = 0; i < 6; i++) { const a = i * 1.05 + G.time * 0.8; x.fillStyle = i % 2 ? "rgba(30,16,46,0.85)" : "rgba(70,40,110,0.75)"; x.beginPath(); x.arc(cx + Math.cos(a) * 7, by - 12 + Math.sin(a) * 5, 7, 0, Math.PI * 2); x.fill(); }
       x.fillStyle = "#b48cf0"; x.fillRect(cx - 1, by - 14, 2, 2);
@@ -9249,7 +9310,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "megalodon" ? 104 : r.type === "mantabot" ? 38 : r.type === "eelbot" ? 32 : r.type === "starfish" ? 30 : r.type === "starlet" ? 18 : r.type === "hermitkid" ? 20 : r.type === "octobot" || r.type === "anglerbot" || r.type === "crabclaw" || r.type === "clambot" || r.type === "hermitbot" || r.type === "barnaclebot" ? 30 : r.type === "seaturtle" ? 80 : r.type === "pufferbot" ? (r.puffT > 0 ? 74 : 56) : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "megalodon" ? 104 : r.type === "clamtitan" ? 100 : r.type === "mantabot" ? 38 : r.type === "eelbot" ? 32 : r.type === "starfish" ? 30 : r.type === "starlet" ? 18 : r.type === "hermitkid" ? 20 : r.type === "octobot" || r.type === "anglerbot" || r.type === "crabclaw" || r.type === "clambot" || r.type === "hermitbot" || r.type === "barnaclebot" ? 30 : r.type === "seaturtle" ? 80 : r.type === "pufferbot" ? (r.puffT > 0 ? 74 : 56) : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -9295,7 +9356,7 @@ function draw() {
     }
     if (r.type === "pufferbot" && r.puffT > 0) frame = "pufferbot_big";   // puffed up!
     if (r.type === "seaturtle" && r.shellT > 0) frame = "seaturtle_shell";   // hiding in its shell
-    if (r.type === "clambot" && r.shut > 0) frame = "clambot_shut";   // shut tight
+    if (r.shut > 0 && SPR[r.type + "_shut"]) frame = r.type + "_shut";   // a Clam Bot (or the Titan Clam) shut tight
     const img = (p.dx < 0 ? SPRF : SPR)[frame];
     const drop = r.chute > 0 ? -r.chute * (r.crash ? 40 : 60) : 0;   // a Paratrooper floating down (or a Balloon Pilot crashing down) onto the road
     x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0) + drop - (r.type === "skyblimp" ? 22 : 0));   // robots sink a little in quicksand (and the Blimp flies high)

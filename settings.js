@@ -339,6 +339,10 @@ const SETTINGS = {
     // Every time it loses shellEveryPart of its health, it hides in its shell for shellSeconds (it stops, and nothing can hurt it).
     seaturtle: { name: "Sea Turtle Fortress", health: 4200, speed: 0.55, leaves: 220, points: 900, baseHit: 70, isBoss: true,
                  shellEveryPart: 0.2, shellSeconds: 3, troopEvery: 6, troopCount: 2, troopType: "clanker", troopNear: true, troopText: "Clankers!" },
+    // Titan Clam (the boss of the Giant Clam Bay): shuts its shell (can't be hurt), fires pearls that knock out towers, and spits out Clam Bots.
+    clamtitan:   { name: "Titan Clam", health: 30000, speed: 0.5, leaves: 400, points: 5000, baseHit: 110, isBoss: true, fixedHealth: true,
+                   shutEvery: 8, shutSeconds: 3, pearlEvery: 6, pearlRadius: 3, pearlCount: 2, pearlSeconds: 2.5,
+                   troopEvery: 7, troopCount: 2, troopType: "clambot", troopNear: true, troopText: "Clam Bots!" },
     // ---- More Sunken Kingdom robots ----
     crabclaw:    { name: "Crab Claw Bot", health: 300, speed: 1.1, leaves: 18, points: 50, clawBlockEvery: 2.5 },   // its claws block one whole hit every clawBlockEvery seconds
     clambot:     { name: "Clam Bot", health: 380, speed: 1.0, leaves: 16, points: 50, shutEvery: 4, shutSeconds: 1.8, pearlLeaves: 20 },   // shuts tight (can't be hurt); its pearl gives bonus leaves
@@ -1208,7 +1212,48 @@ const SETTINGS = {
                 [["pharaohmachine", 1, 0], ["boss", 2, 4, 8000], ["jellybot", 12, 0.35]],   // 29
                 [["glaciergolem", 2, 8], ["pharaohmachine", 1, 0], [["hider", "subbot", "torpedo", "jellybot", "repair"], 28, 0.45]],   // 30: the big finish
               ] },
-    shipwreck: { name: "Shipwreck Cove", world: 2, acornDropChance: 0.095, theme: "wreck",
+    clambay: { name: "The Giant Clam Bay", world: 2, acornDropChance: 0.09, theme: "bay",
+              about: "A sunny bay full of giant clams and seashells. The robots come from the right, and the road spirals into the middle of the bay, where your treehouse sits. Crabs feel right at home here!",
+              robotHealth: 1.9, scoreTimes: 5.6, lateToughness: { fromWave: 8, perWave: 0.06 },
+              towerBoosts: { crab: { damageTimes: 1.5 } },
+              path: [[19, 8], [16, 8], [16, 11], [1, 11], [1, 6], [6, 6], [6, 1], [13, 1], [13, 7], [10, 7]],
+              // The road spirals in from the RIGHT to the treehouse in the middle of the bay. Trees are giant clams, mushrooms are sea anemones.
+              trees:     [[3, 3], [16, 4], [9, 9], [2, 8], [18, 1], [11, 4], [4, 9], [8, 3]],
+              mushrooms: [[14, 10], [0, 2], [8, 9], [15, 2], [3, 7]],
+              tallGrass: [[11, 9], [0, 9], [18, 5], [9, 4], [5, 3], [17, 10], [12, 0]],
+              waves: [
+                [["clambot", 4, 1.5], ["walker", 6, 0.9]],                              // 1: Clam Bots!
+                [["crabclaw", 5, 1.1]],                                                 // 2
+                [[["starfish", "scout"], 10, 0.8]],                                     // 3
+                [["clambot", 6, 1], ["torpedo", 6, 0.6]],                               // 4
+                [["boss", 1, 0, 2800], [["clambot", "crabclaw"], 8, 0.9]],              // 5
+                [[["jellybot", "starfish"], 10, 0.7]],                                  // 6
+                [["hermitbot", 6, 1.1], ["subbot", 3, 1.6]],                            // 7
+                [[["clambot", "clambot", "repair"], 12, 0.9]],                          // 8
+                [["octobot", 3, 2], [["crabclaw", "scout"], 10, 0.6]],                  // 9
+                [["seaturtle", 1, 0], [["clambot", "starfish"], 10, 0.7]],              // 10: the Sea Turtle Fortress visits
+                [[["crabclaw", "tank"], 12, 1]],                                        // 11
+                [["mantabot", 6, 0.7], ["clambot", 6, 0.8]],                            // 12
+                [[["starfish", "starfish", "hermitbot"], 15, 0.7]],                     // 13
+                [["eelbot", 4, 1.6], [["clambot", "subbot"], 10, 0.8]],                 // 14
+                [["pufferbot", 2, 5], [["crabclaw", "clambot"], 10, 0.7]],              // 15: two Puffer Bots
+                [[["anglerbot", "clambot", "repair"], 15, 0.8]],                        // 16
+                [["torpedo", 20, 0.3], ["clambot", 6, 0.8]],                            // 17
+                [[["barnaclebot", "crabclaw", "starfish"], 18, 0.7]],                   // 18
+                [["boss", 2, 5, 6000], [["clambot", "hermitbot"], 12, 0.7]],            // 19
+                [["seaturtle", 1, 0], ["pufferbot", 1, 0], [["clambot", "octobot"], 12, 0.8]],   // 20
+                [[["mantabot", "jellybot", "thunderbird"], 20, 0.4]],                   // 21
+                [[["clambot", "crabclaw", "tesla", "repair"], 20, 0.7]],                // 22
+                [["sludgeleviathan", 1, 0], [["starfish", "eelbot"], 14, 0.6]],         // 23
+                [[["clambot", "clambot", "anglerbot", "barnaclebot"], 22, 0.6]],        // 24
+                [["seaturtle", 2, 8], [["crabclaw", "subbot"], 16, 0.6]],               // 25
+                [[["hermitbot", "starfish", "octobot", "clambot"], 26, 0.5]],           // 26
+                [["cyclonegolem", 1, 0], ["pufferbot", 2, 6], [["clambot", "torpedo"], 16, 0.5]],   // 27
+                [[["tank", "clambot", "eelbot", "repair"], 26, 0.55]],                  // 28
+                [["boss", 3, 4, 9000], ["seaturtle", 1, 0], [["clambot", "crabclaw", "starfish"], 20, 0.5]],   // 29
+                [["clamtitan", 1, 0], [["clambot", "crabclaw", "hermitbot", "starfish"], 24, 0.6]],   // 30: the TITAN CLAM
+              ] },
+    shipwreck: { name: "Shipwreck Cove", world: 2, alsoOpenAfter: "kelpforest", acornDropChance: 0.095, theme: "wreck",
               about: "An old pirate ship lies broken on the sea floor, and this time the robots come from the right! The road twists back and forth like a tangled rope. Treasure chests wash up next to the road: tap them for double leaves before a robot grabs them! Diver Bots pin your towers with their anchors. Owls hit 50% harder here. Scores are worth 5.75x.",
               robotHealth: 3.3, scoreTimes: 5.75, lateToughness: { fromWave: 8, perWave: 0.06 },   // robots here are twice as tough (was 1.65)
               towerBoosts: { air: { damageTimes: 1.5 } },
