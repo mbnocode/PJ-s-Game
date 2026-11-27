@@ -390,6 +390,17 @@ const SETTINGS = {
                   kraken:    { chance: 15 },                        // JACKPOT #2: the Kraken tower (only once)
                 },
                 goldSkinWeight: 20 },   // how likely a Tower Skin is to be Golden (Rare) (the other skins: Candy 30, Lava 24, Metal 21, Crystal 10 (Epic), Toxic 12, Shadow 5, Galaxy 1.5 (Mythic))
+  // Skin buffs: the skin a tower is wearing makes it stronger. (Rarer skins get bigger buffs.)
+  skinBuffs: {
+    candy:   { name: "Sugar Rush", about: "Attacks 10% faster.", speedTimes: 1.1 },
+    lava:    { name: "Burn", about: "Hits set robots on fire, burning for 30% more damage over 3 seconds.", burnSeconds: 3, burnPart: 0.3 },
+    metal:   { name: "Steel Coat", about: "Can't be zapped, stunned, frozen, slimed or trapped by robots.", steel: true },
+    gold:    { name: "Lucky", about: "Robots it destroys drop 2 extra Maple Leaves, and Golden Acorns drop 25% more often.", bonusLeaves: 2, acornTimes: 1.25 },
+    toxic:   { name: "Poison", about: "Hits poison robots for 40% more damage over 4 seconds, and slow them 15%.", poisonSeconds: 4, poisonPart: 0.4, slowBy: 0.15, slowSeconds: 2 },
+    crystal: { name: "Crystal Lens", about: "Reaches 1 square farther and can see Hiders.", rangePlus: 1, vision: true },
+    shadow:  { name: "Shadow Strike", about: "Sees Hiders, slows robots 30%, and 1 in 5 hits is a critical hit for triple damage.", vision: true, slowBy: 0.3, slowSeconds: 2, critChance: 0.2, critTimes: 3 },
+    galaxy:  { name: "Cosmic Power", about: "Does 50% more damage, and every 8 seconds a shooting star smashes a random robot for triple damage.", damageTimes: 1.5, starEvery: 8, starTimes: 3 },
+  },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
   // ---------------- MORE SECRET SHOPS ----------------
