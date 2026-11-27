@@ -1175,14 +1175,14 @@ const SETTINGS = {
                 [["glaciergolem", 2, 8], ["pharaohmachine", 1, 0], [["hider", "subbot", "torpedo", "jellybot", "repair"], 28, 0.45]],   // 30: the big finish
               ] },
     shipwreck: { name: "Shipwreck Cove", world: 2, acornDropChance: 0.095, theme: "wreck",
-              about: "An old pirate ship lies broken on the sea floor. Treasure chests wash up next to the road: tap them for double leaves before a robot grabs them! Diver Bots pin your towers with their anchors. Owls hit 50% harder here. Scores are worth 5.75x.",
+              about: "An old pirate ship lies broken on the sea floor, and this time the robots come from the right! The road twists back and forth like a tangled rope. Treasure chests wash up next to the road: tap them for double leaves before a robot grabs them! Diver Bots pin your towers with their anchors. Owls hit 50% harder here. Scores are worth 5.75x.",
               robotHealth: 1.65, scoreTimes: 5.75, lateToughness: { fromWave: 8, perWave: 0.06 },
               towerBoosts: { air: { damageTimes: 1.5 } },
-              path: [[0,  1],  [4,  1],  [4,  9],  [8,  9],  [8,  4],  [12,  4],  [12,  9],  [16,  9],  [16,  5],  [19,  5]],
-              // The road dips down and up through the broken ship like a W. Trees are broken masts, mushrooms are old barrels, tall grass is sea grass.
-              trees:     [[15,  2],  [2,  7],  [11,  11],  [19,  2],  [6,  7],  [15,  11],  [1,  3],  [10,  7],  [19,  11]],
-              mushrooms: [[5,  3],  [14,  7],  [9,  3],  [18,  7],  [13,  3]],
-              tallGrass: [[0,  8],  [17,  3],  [3,  4],  [7,  4],  [2,  0],  [6,  0],  [10,  0]],
+              path: [[19, 9], [14, 9], [14, 6], [17, 6], [17, 2], [10, 2], [10, 10], [5, 10], [5, 4], [2, 4], [2, 7], [0, 7]],
+              // The robots come in from the RIGHT and the treehouse is on the LEFT: the road twists back and forth like a tangled ship's rope. Trees are broken masts, mushrooms are old barrels, tall grass is sea grass.
+              trees:     [[4, 2], [13, 6], [0, 11], [8, 2], [4, 11], [8, 11], [3, 7], [12, 11], [7, 7]],
+              mushrooms: [[16, 11], [2, 3], [11, 7], [6, 3], [15, 7]],
+              tallGrass: [[19, 7], [14, 3], [1, 8], [18, 3], [0, 4], [9, 8], [17, 8]],
               waves: [
                 [[["walker", "clanker"], 12, 0.8]],                                     // 1
                 [["divebot", 1, 0], ["scout", 8, 0.6]],                                 // 2: the first Diver Bot
