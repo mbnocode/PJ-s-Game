@@ -8227,7 +8227,7 @@ function update(dt) {
         if (pool.length) { const o = pool.reduce((a, b) => (b.maxHp || b.hp) > (a.maxHp || a.hp) ? b : a), q = rpos(o);   // it always picks the strongest robot
           for (let k = 0; k < 12; k++) { const f = k / 12; G.particles.push({ kind: "spark", x: q.x + 120 * (1 - f), y: q.y - 160 * (1 - f), vx: 0, vy: 0, t: 0, life: 0.15 + f * 0.25, col: k % 3 ? "#ffffff" : "#c8a0ff" }); }
           burst(q.x, q.y, "#ffffff", 14); burst(q.x, q.y, "#c8a0ff", 10); floatText(q.x, q.y - 30, "Shooting star!", "#e8d8ff", 0.8); Sound.play("pegasus");
-          hurt(o, (o.maxHp || o.hp) * (tsk.starPart || 0.05), true, false, t.kind); }   // 5% of its max health
+          hurt(o, Math.min(tsk.starMax || 1000, (o.maxHp || o.hp) * (tsk.starPart || 0.05)), true, false, t.kind); }   // 5% of its max health (but never more than starMax)
       }
     }
     if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech

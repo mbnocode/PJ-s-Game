@@ -399,7 +399,7 @@ const SETTINGS = {
     toxic:   { name: "Poison", about: "Hits poison robots for 40% more damage over 4 seconds, and slow them 15%.", poisonSeconds: 4, poisonPart: 0.4, slowBy: 0.15, slowSeconds: 2 },
     crystal: { name: "Crystal Lens", about: "Reaches 1 square farther and can see Hiders.", rangePlus: 1, vision: true },
     shadow:  { name: "Shadow Strike", about: "Sees Hiders and slows robots 30%.", vision: true, slowBy: 0.3, slowSeconds: 2 },
-    galaxy:  { name: "Cosmic Power", about: "Does 50% more damage and sees Hiders. Every 8 seconds a shooting star hits the strongest robot for 5% of its max health.", damageTimes: 1.5, vision: true, starEvery: 8, starPart: 0.05 },
+    galaxy:  { name: "Cosmic Power", about: "Does 50% more damage and sees Hiders. Every 8 seconds a shooting star hits the strongest robot for 5% of its max health (up to 1,000 damage).", damageTimes: 1.5, vision: true, starEvery: 8, starPart: 0.05, starMax: 1000 },
   },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
