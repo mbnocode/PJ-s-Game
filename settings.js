@@ -1218,7 +1218,7 @@ const SETTINGS = {
               mushrooms: [[16, 11], [2, 3], [11, 7], [6, 3], [15, 7]],
               tallGrass: [[19, 7], [14, 3], [1, 8], [18, 3], [0, 4], [9, 8], [17, 8]],
               waves: [
-                [["pufferbot", 1, 0], [["walker", "clanker"], 12, 0.8]],                // 1: it starts with a Puffer Bot!
+                [["pufferbot", 1, 0, 1400], [["walker", "clanker"], 12, 0.8]],          // 1: it starts with a Puffer Bot! (with half its health: 1400 instead of 2800)
                 [["divebot", 1, 0], ["scout", 8, 0.6]],                                 // 2: the first Diver Bot
                 [[["torpedo", "anglerbot"], 12, 0.7]],                                     // 3: the first Anglerfish Bots
                 [["divebot", 2, 3], ["jellybot", 4, 0.5]],                              // 4
