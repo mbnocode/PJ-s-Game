@@ -565,6 +565,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .rar-banner { display: inline-block; font-weight: 800; font-size: 18px; letter-spacing: 1.5px; border: 2px solid; border-radius: 999px; padding: 3px 14px; margin-bottom: 6px; background: rgba(0,0,0,0.35); }
 .rar-banner.r-legendary { animation: rarPulse 0.8s ease-in-out infinite alternate; box-shadow: 0 0 18px rgba(255,166,58,0.6); }
 .rar-banner.r-epic { box-shadow: 0 0 14px rgba(199,125,255,0.5); }
+.rar-banner.r-mythic .rb, .look .rar.rainbow, .skin-odds .r-mythic small { background-image: linear-gradient(90deg, #ff5a5a, #ffd34d, #5af08a, #4ac8ff, #c77dff, #ff7ae0); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.rar-banner.r-mythic { border-color: #ff7ae0 !important; box-shadow: 0 0 22px rgba(255,122,224,0.7), 0 0 40px rgba(74,200,255,0.4); animation: rarPulse 0.6s ease-in-out infinite alternate; font-size: 22px; }
+.skin-odds .r-mythic { border-image: linear-gradient(90deg, #ff5a5a, #ffd34d, #5af08a, #4ac8ff, #c77dff) 1; box-shadow: 0 0 10px rgba(255,122,224,0.6); }
+.boxopen.mythic { animation: mythShake 0.5s ease-in-out 2; }
+@keyframes mythShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-6px, 3px); } 50% { transform: translate(5px, -4px); } 75% { transform: translate(-3px, 5px); } }
+@media (prefers-reduced-motion: reduce) { .boxopen.mythic, .rar-banner.r-mythic { animation: none; } }
 @keyframes rarPulse { from { transform: scale(1); } to { transform: scale(1.08); } }
 @media (prefers-reduced-motion: reduce) { .rar-banner.r-legendary { animation: none; } }
 .ga { display: inline-block; width: 1em; height: 1.12em; vertical-align: -0.2em; background: var(--acorn) center / contain no-repeat; filter: drop-shadow(0 0 3px rgba(255, 210, 80, 0.45)); }   /* the Golden Acorn picture, inline in text */
@@ -1596,6 +1602,7 @@ const TOWER_SKINS = {
   candy:   { name: "Candy", weight: 30, rarity: "Common",   ramp: [[80, 20, 50], [160, 50, 110], [230, 100, 170], [250, 150, 200], [255, 200, 225], [255, 240, 248]] },
   lava:    { name: "Lava", weight: 24, rarity: "Common",    ramp: [[40, 6, 2], [110, 20, 6], [190, 50, 10], [240, 110, 20], [255, 180, 60], [255, 235, 160]] },
   metal:   { name: "Metal", weight: 21, rarity: "Uncommon", ramp: [[30, 34, 42], [70, 78, 92], [120, 130, 146], [170, 180, 194], [215, 222, 232], [248, 250, 255]] },
+  galaxy:  { name: "Galaxy", weight: 1.5, rarity: "Mythic", ramp: [[20, 30, 110], [110, 50, 200], [240, 90, 200], [40, 210, 220], [255, 255, 255], [255, 255, 255]] },   // ultra rare: about 1 in 385 Mystery Boxes
   toxic:   { name: "Toxic", weight: 12, rarity: "Rare",   ramp: [[10, 30, 8], [30, 80, 20], [60, 150, 30], [120, 210, 60], [190, 245, 120], [240, 255, 210]] },
 };
 // The looks you own for each tower: "gold" (a Golden look) and any Tower Skins. (An old save kept one skin per tower in box.skins.)
@@ -1619,9 +1626,10 @@ function towerSkin(kind) {
 //  shadow: almost black, with a purple glow around its edges, glowing violet eyes and a dark mist around it
 //  toxic: every shade of green in patches (forest, emerald, lime, mint, olive, neon), glowing bubbles, a green glow and acid dripping off the bottom
 //  candy: bubblegum pink with candy-cane stripes, sprinkles and a glossy shine
+//  galaxy (Mythic): a cosmic aurora: flowing bands of blue, purple, pink and teal, twinkling stars, a tiny ringed planet and a cyan glow
 //  metal: shiny chrome panels with seams and rivets, a polished rim, a silver glow, twinkling stars and a bright glint sweeping across it
-const SKIN_FRAMES = { gold: 16, lava: 8, toxic: 4, metal: 16, crystal: 12 };
-function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" || style === "metal" ? 9 : style === "lava" || style === "crystal" ? 7 : 5)) % n; }
+const SKIN_FRAMES = { gold: 16, lava: 8, toxic: 4, metal: 16, crystal: 12, galaxy: 24 };
+function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" || style === "metal" ? 9 : style === "lava" || style === "crystal" ? 7 : style === "galaxy" ? 6 : 5)) % n; }
 function towerLook(kind, img) { const sk = towerSkin(kind); return sk ? skinOf(img, sk, skinFrame(sk)) : img; }
 const SKIN_CACHE = new Map();
 function skinOf(img, style, frame = 0) {
@@ -1638,6 +1646,10 @@ function skinOf(img, style, frame = 0) {
       if (dd < d1) { d2 = d1; d1 = dd; id = hash(gx, gy, 2); ox = sx; oy = sy; } else if (dd < d2) d2 = dd; }
     return { d1, d2, id, ox, oy }; };
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const vn = (x2, y2, e) => { const xi = Math.floor(x2), yi = Math.floor(y2), xf = x2 - xi, yf = y2 - yi, sm = (t) => t * t * (3 - 2 * t), a = hash(xi, yi, e), b = hash(xi + 1, yi, e), c2 = hash(xi, yi + 1, e), d2 = hash(xi + 1, yi + 1, e);
+    return a + (b - a) * sm(xf) + (c2 - a) * sm(yf) + (a - b - c2 + d2) * sm(xf) * sm(yf); };
+  const fbm = (x2, y2) => vn(x2, y2, 6) * 0.55 + vn(x2 * 2.1, y2 * 2.1, 9) * 0.3 + vn(x2 * 4.3, y2 * 4.3, 13) * 0.15;
+  let gal = null;
   const ramp = (stops, t) => { t = Math.max(0, Math.min(0.999, t)) * (stops.length - 1); const k = Math.floor(t); return mix(stops[k], stops[k + 1], t - k); };
   const out = new Uint8ClampedArray(p);   // what we write (the extra glow and drips go around the picture)
   const keep = img.keepColors || null;   // colors a skin never changes (like the Hydra's red eyes)
@@ -1658,7 +1670,8 @@ function skinOf(img, style, frame = 0) {
     if (!A(i, j)) {   // empty pixels next to the picture: glows, mist, drips, crystal shards and embers
       const near = A(i - 1, j) || A(i + 1, j) || A(i, j - 1) || A(i, j + 1);
       const near2 = !near && (A(i - 2, j) || A(i + 2, j) || A(i, j - 2) || A(i, j + 2) || A(i - 1, j - 1) || A(i + 1, j - 1) || A(i - 1, j + 1) || A(i + 1, j + 1));
-      const GLOW = { gold: [255, 214, 90], crystal: [120, 230, 255], lava: [255, 120, 30], toxic: [120, 255, 40], metal: [225, 235, 255] }[style];
+      const GLOW = { gold: [255, 214, 90], crystal: [120, 230, 255], lava: [255, 120, 30], toxic: [120, 255, 40], metal: [225, 235, 255], galaxy: [90, 240, 255] }[style];
+      if (style === "galaxy" && !near && hash(i, j, 9 + (frame >> 2)) > 0.99) { put(i, j, [255, 255, 255], 220); continue; }   // stars floating around it
       if (style === "shadow" && near) put(i, j, [120, 60, 200], 110);
       if (style === "toxic") {   // toxic goo oozing off the bottom: long drips that stretch and drop
         let up = 0; while (up < 8 && !A(i, j - up - 1) && j - up - 1 >= 0) up++;
@@ -1709,6 +1722,17 @@ function skinOf(img, style, frame = 0) {
       if (l > 0.86) col = mix([255, 230, 120], [255, 255, 220], pulse);   // the eyes glow white-hot
       else if (seam < 0.8) col = mix([255, 220, 90], [255, 250, 190], pulse);   // the cracks glow bright yellow
       else col = ramp([[120, 30, 10], [185, 58, 14], [232, 102, 24], [255, 150, 44], [255, 196, 90]], l * 0.85 + 0.1 + (lit ? 0.18 : 0) - (shade ? 0.12 : 0));   // glowing molten red and orange
+    } else if (style === "galaxy") {   // MYTHIC: cosmic aurora: wavy bands of blue, purple, pink and teal flowing across, twinkling stars and a little ringed planet
+      if (!gal) { let cx = 0, cy = 0, n = 0; for (let jj = 0; jj < H; jj++) for (let ii = 0; ii < W; ii++) if (A(ii, jj)) { cx += ii; cy += jj; n++; } gal = { cx: cx / n, cy: cy / n }; }
+      const u = i / sc, w = j / sc, flow = frame / SKIN_FRAMES.galaxy * 4;   // the bands drift along
+      const band = ((w * 0.35 + Math.sin(u * 0.4 + frame / SKIN_FRAMES.galaxy * Math.PI * 2) * 1.2 + fbm(u * 0.2, w * 0.2) * 2 + flow) % 4 + 4) % 4;
+      col = ramp([[20, 30, 110], [110, 50, 200], [240, 90, 200], [40, 210, 220], [20, 30, 110]], band / 4);
+      col = mix(col, [10, 10, 40], 0.35 - l * 0.25);
+      if (lit) col = mix(col, [255, 255, 255], 0.35);
+      const st = hash(i, j, 8); if (st > 0.965 && ((frame + Math.floor(st * 1000)) % 8) < 5) col = st > 0.99 ? [255, 255, 255] : [210, 230, 255];   // stars that twinkle
+      const px = gal.cx + 5 * sc, py = gal.cy - 6 * sc, pr = Math.hypot((i - px) / sc, (j - py) / sc);   // a little ringed planet
+      if (pr < 1.7) col = pr < 1.0 ? [255, 210, 120] : [200, 140, 70];
+      if (Math.abs((j - py) / sc - (i - px) / sc * 0.25) < 0.45 && pr > 1.4 && pr < 3.2) col = [255, 240, 200];
     } else if (style === "metal") {   // brushed steel: fine horizontal brush lines, bolted panels with rivets, and a glint sweeping across
       const yy = j / H;
       let t = 0.12 + l * 0.78 + 0.22 * Math.sin(yy * 10 + 0.6) + (lit ? 0.28 : 0) - (shade ? 0.25 : 0) + (hash(1, j, 13) - 0.5) * 0.12;   // chrome: bands of reflection, and brush lines along each row
@@ -4998,7 +5022,7 @@ const PETS = { bunny: "Bunny", chick: "Chick", firefly: "Firefly" }, PET_NAMES_N
 // The chance of each Mystery Box prize right now (a jackpot you already found can't come again, so the others go up a little)
 function boxDropRates(s) {
   const P = SETTINGS.mysteryBox.prizes, f = (s.box && s.box.found) || {};
-  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin (Candy, Crystal, Metal, Lava, Toxic, Golden or Shadow)", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
+  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin (Candy, Lava, Metal, Crystal, Toxic, Golden, Shadow, or the Mythic Galaxy!)", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
   const live = Object.entries(P).filter(([k, p]) => NAMES[k] && p.chance > 0 && !((k === "phoenix" || k === "kraken") && f[k])), tot = live.reduce((a, [, p]) => a + p.chance, 0);
   return `<table>${Object.entries(P).filter(([k, p]) => NAMES[k] && p.chance > 0).map(([k, p]) => { const got = (k === "phoenix" || k === "kraken") && f[k];
     return `<tr><td>${NAMES[k]}</td><td>${got ? "found ✓" : (100 * p.chance / tot).toFixed(1).replace(/\.0$/, "") + "%"}</td></tr>`; }).join("")}</table>
@@ -5094,8 +5118,8 @@ function playBoxOpening(prize, done) {
     cx.drawImage(prize.gold ? skinOf(SPR[prize.pic], "gold", 12) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
     if (prize.mimic) { setTimeout(() => mimicFight(prize, c), 650); return; }
     const rar = prize.gold ? "Epic" : prize.skin ? lookRarity(prize.skin) : "";   // skins show how rare they are
-    setTimeout(() => { tx.innerHTML = `${rar ? `<div class="rar-banner r-${rar.toLowerCase()}" style="color:${RARITY_COLORS[rar]};border-color:${RARITY_COLORS[rar]}">${rar === "Legendary" ? "🌟 LEGENDARY! 🌟" : rar === "Epic" ? "✨ EPIC! ✨" : rar.toUpperCase()}</div>` : ""}<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus();
-      if (rar === "Legendary" || rar === "Epic") Sound.play("upgrade"); }, 650);
+    setTimeout(() => { tx.innerHTML = `${rar ? `<div class="rar-banner r-${rar.toLowerCase()}" style="color:${RARITY_COLORS[rar]};border-color:${RARITY_COLORS[rar]}">${rar === "Mythic" ? `🌌 <span class="rb">MYTHIC!!</span> 🌌` : rar === "Legendary" ? "🌟 LEGENDARY! 🌟" : rar === "Epic" ? "✨ EPIC! ✨" : rar.toUpperCase()}</div>` : ""}<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus();
+      if (rar === "Legendary" || rar === "Epic" || rar === "Mythic") Sound.play("upgrade"); if (rar === "Mythic") { Sound.play("horn"); ov.classList.add("mythic"); } }, 650);
   }, 1500);
   ok.onclick = () => { ov.hidden = true; ov.className = "boxopen"; done && done(); };
 }
@@ -5543,15 +5567,15 @@ function renderAchievements() {
 }
 $("b-achievements").onclick = () => { renderAchievements(); show("s-achievements"); };
 /* ---------- the Skins page: pick the look each tower wears ---------- */
-const RARITY_COLORS = { Common: "#a8b8a8", Uncommon: "#4ad8b0", Rare: "#5aa8ff", Epic: "#c77dff", Legendary: "#ffa63a" };
+const RARITY_COLORS = { Common: "#a8b8a8", Uncommon: "#4ad8b0", Rare: "#5aa8ff", Epic: "#c77dff", Legendary: "#ffa63a", Mythic: "#ff7ae0" };
 const lookRarity = (st) => st === "gold" ? "Epic" : st === "normal" ? "" : ((TOWER_SKINS[st] || {}).rarity || "");
-const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
+const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
 // the looks in order on the Skins page: Normal first, then from Common to Legendary (most common first within each rarity)
 const LOOKS = [["normal", "Normal"], ...[["gold", "Golden", SETTINGS.mysteryBox.goldSkinWeight ?? 10], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name, v.weight || 1])]
   .sort((a, b) => RARITY_ORDER.indexOf(lookRarity(a[0])) - RARITY_ORDER.indexOf(lookRarity(b[0])) || b[2] - a[2]).map(([k, n]) => [k, n])];
 let skinAnim = null;
 const SKIN_SELL = 50;   // Golden Acorns for selling a duplicate Common skin (rarer skins sell for more: SKIN_SELL_BY)
-const SKIN_SELL_BY = { Common: 50, Uncommon: 100, Rare: 150, Epic: 250, Legendary: 500 };
+const SKIN_SELL_BY = { Common: 50, Uncommon: 100, Rare: 150, Epic: 250, Legendary: 500, Mythic: 1000 };
 const skinPrice = (st) => SKIN_SELL_BY[lookRarity(st)] || SKIN_SELL;
 function sellSkin(k, st) {
   const s = slot(), key = k + ":" + st, ex = (s.box.skinExtra || {})[key] || 0; if (!ex) return;
@@ -5571,7 +5595,7 @@ function skinOdds() {
   const P = SETTINGS.mysteryBox.prizes, s = slot(), found = (s && s.box && s.box.found) || {}, gw = SETTINGS.mysteryBox.goldSkinWeight ?? 10;
   const tot = Object.entries(P).filter(([k, p]) => p && p.chance && !((k === "phoenix" || k === "kraken") && found[k])).reduce((a, [, p]) => a + p.chance, 0);
   const skinBox = P.skin.chance / tot, wTot = Object.values(TOWER_SKINS).reduce((a, v) => a + (v.weight || 1), 0) + gw;
-  const pct = (v) => (v * 100 >= 10 ? (v * 100).toFixed(0) : (v * 100).toFixed(1)) + "%";
+  const pct = (v) => (v * 100 >= 10 ? (v * 100).toFixed(0) : v * 100 < 1 ? (v * 100).toFixed(2) : (v * 100).toFixed(1)) + "%";
   const skins = Object.values(TOWER_SKINS).map((v) => [v.name, v.rarity || "", skinBox * (v.weight || 1) / wTot]).sort((a, b) => b[2] - a[2]);   // most common first
   return [...skins, ["Golden", "Epic", skinBox * gw / wTot]].sort((a, b) => b[2] - a[2]).map(([n, rar, v]) => ({ n, rar, p: pct(v) }));
 }
@@ -5593,7 +5617,8 @@ function renderSkins() {
       const extra = (s.box.skinExtra || {})[k + ":" + st] || 0;
       const rar = lookRarity(st);
       b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>${rar ? `<small class="rar" style="color:${RARITY_COLORS[rar]}">${rar}</small>` : ""}${extra ? `<span class="dup">×${extra + 1}</span>` : ""}`);
-      if (has && (rar === "Legendary" || rar === "Epic")) b.style.boxShadow = `0 0 10px ${RARITY_COLORS[rar]}88`;
+      if (has && (rar === "Legendary" || rar === "Epic" || rar === "Mythic")) b.style.boxShadow = `0 0 10px ${RARITY_COLORS[rar]}88`;
+      if (rar === "Mythic") b.querySelector(".rar").classList.add("rainbow");
       b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
       const cell = document.createElement("div"); cell.className = "look-cell"; cell.appendChild(b);
       if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.innerHTML = `Sell 1 for ${skinPrice(st)} <span class="ga" aria-label="Golden Acorns"></span>`; sb.title = `You have ${extra} extra. Sell one for ${skinPrice(st)} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
@@ -6860,6 +6885,19 @@ function drawShadowOrbs(x, cx, by, s2, t, front) {
     x.fillStyle = "rgba(230,200,255,0.9)"; x.fillRect(Math.round(px - 1.5 * k), Math.round(py - 1.8 * k), 1, 1);   // a tiny glint
   }
 }
+// A tower in the Galaxy skin: little stars twinkle as they orbit it, and now and then a shooting star streaks past
+function drawGalaxyFx(x, cx, by, s2, t) {
+  const cols = ["#ffffff", "#4ac8ff", "#ff7ae0", "#c77dff", "#5af0e0"];
+  for (let i = 0; i < 5; i++) {
+    const a = t * 0.9 + i * Math.PI * 2 / 5, px = cx + Math.cos(a) * s2 * 0.65, py = by - s2 * 0.5 + Math.sin(a) * s2 * 0.22, tw = 0.5 + 0.5 * Math.sin(t * 5 + i * 2), L = 1.5 + 2 * tw;
+    x.fillStyle = cols[i]; x.globalAlpha = 0.5 + 0.5 * tw; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); x.globalAlpha = 1;
+  }
+  const ph = (t * 0.35) % 1; if (ph < 0.2) {   // a shooting star
+    const k = ph / 0.2, sx = cx - s2 * 0.9 + k * s2 * 1.8, sy = by - s2 * 1.15 + k * s2 * 0.5;
+    const g = x.createLinearGradient(sx - 14, sy - 4, sx, sy); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, `rgba(255,255,255,${1 - k * 0.6})`);
+    x.strokeStyle = g; x.lineWidth = 2; x.beginPath(); x.moveTo(sx - 14, sy - 4); x.lineTo(sx, sy); x.stroke();
+  }
+}
 // A star of light that glints off a shiny tower now and then
 function drawShineStar(x, cx, cy, s2, t) {
   const ph = (t * 0.6) % 1; if (ph > 0.25) return;
@@ -7823,6 +7861,7 @@ function draw() {
     if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, true);   // and embers and smoke rising off it
     if (lookNow === "crystal") drawCrystalShards(x, cx, by, s2, G.time + t.x * 1.3 + t.y, true);   // ...and in front of it
     if (lookNow === "shadow") drawShadowOrbs(x, cx, by, s2, G.time + t.x * 1.1 + t.y * 0.7, true);
+    if (lookNow === "galaxy") drawGalaxyFx(x, cx, by, s2, G.time + t.x * 1.9 + t.y * 1.3);   // stars orbiting it, and shooting stars
     if (lookNow === "metal") drawShineStar(x, cx, by - s2 * 0.5, s2, G.time + t.x * 2.1 + t.y);   // a star of light glinting off the metal
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower

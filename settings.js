@@ -371,13 +371,13 @@ const SETTINGS = {
                 // What can come out of the box. chance = how likely each one is (they don't have to add up to 100).
                 prizes: {
                   acorns:    { chance: 0, min: 200, max: 600 },    // Acorn Pouch: not in the box anymore (chance 0). Only given if nothing else is left to win
-                  skin:      { chance: 16.5 },                      // Tower Skin: a new look for one of your towers (Candy, Crystal, Metal, Lava, Toxic, Golden or Shadow: see goldSkinWeight and the skin weights)
+                  skin:      { chance: 16.5 },                      // Tower Skin: a new look for one of your towers (Candy, Lava, Metal, Crystal, Toxic, Golden, Shadow or the Mythic Galaxy: see goldSkinWeight and the skin weights)
                   pet:       { chance: 12 },                        // Pet: a little critter that follows you around the board and picks up maple leaves
                   mimic:     { chance: 8, taps: 12, seconds: 6, consolation: 50 },   // Box Mimic! Tap it taps times in seconds seconds to win 2 prizes (or it runs off and drops consolation Golden Acorns)
                   phoenix:   { chance: 15 },                        // JACKPOT: the Phoenix tower (only once)
                   kraken:    { chance: 15 },                        // JACKPOT #2: the Kraken tower (only once)
                 },
-                goldSkinWeight: 10 },   // how likely a Tower Skin is to be Golden (the other skins: Candy 30, Lava 24, Metal 21, Crystal 20, Toxic 12, Shadow 5)
+                goldSkinWeight: 10 },   // how likely a Tower Skin is to be Golden (the other skins: Candy 30, Lava 24, Metal 21, Crystal 20, Toxic 12, Shadow 5, Galaxy 1.5 (Mythic))
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
   // ---------------- MORE SECRET SHOPS ----------------
