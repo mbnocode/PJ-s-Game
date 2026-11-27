@@ -2700,7 +2700,9 @@ function drawUnderwater(x) {
 }
 // World 2 bookkeeping
 const W2_MAP = { coralreef: [150, 340, "#ff8fb0"], kelpforest: [340, 262, "#5fc08a"], clambay: [490, 372, "#f0c8e8"], shipwreck: [650, 372, "#c9a23a"], sunkencity: [820, 300, "#8fd8f0"] };
-const W2_SOON = [{ look: "abyss", name: "The Abyss", pos: [930, 120, "#4a5aa0"] }];
+// Coming soon, in order: the trail climbs up from the Sunken City and runs right-to-left across the top of the map
+const W2_SOON = [{ look: "piratewaters", name: "Pirate Waters", pos: [910, 165, "#c9a23a"] }, { look: "volcanicvents", name: "Volcanic Vents", pos: [705, 125, "#ff7a3a"] },
+  { look: "krakensdomain", name: "Kraken's Domain", pos: [490, 135, "#a06ad0"] }, { look: "abyss", name: "The Abyss", pos: [270, 115, "#4a5aa0"] }];
 // The Sunken Kingdom opens after you beat the Eye of the Storm (Normal or harder) AND collect enough stars in World 1.
 function stormBeaten(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
 function worldOneStars(s = slot()) { let n = 0; for (const L of LEVEL_ORDER) for (const d in ((s && s.best && s.best[L]) || {})) n += s.best[L][d].stars || 0; return n; }
@@ -2744,8 +2746,8 @@ function drawWorldMap2() {
   // far-away rock spires and a whale swimming in the distance
   x.fillStyle = "rgba(20,70,120,0.55)";
   for (const [a, w, h] of [[60, 70, 130], [300, 90, 110], [610, 70, 150], [700, 120, 100], [880, 90, 170]]) { x.beginPath(); x.moveTo(a, H); x.lineTo(a + w * 0.3, H - h); x.lineTo(a + w * 0.5, H - h + 20); x.lineTo(a + w * 0.7, H - h - 10); x.lineTo(a + w, H); x.fill(); }
-  x.fillStyle = "rgba(15,50,95,0.6)"; x.beginPath(); x.ellipse(640, 90, 70, 16, -0.05, 0, Math.PI * 2); x.fill();
-  x.beginPath(); x.moveTo(575, 92); x.lineTo(548, 74); x.lineTo(552, 92); x.lineTo(548, 110); x.fill(); x.beginPath(); x.ellipse(650, 104, 16, 5, 0.5, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "rgba(15,50,95,0.6)"; x.beginPath(); x.ellipse(640, 225, 70, 16, -0.05, 0, Math.PI * 2); x.fill();
+  x.beginPath(); x.moveTo(575, 227); x.lineTo(548, 209); x.lineTo(552, 227); x.lineTo(548, 245); x.fill(); x.beginPath(); x.ellipse(650, 239, 16, 5, 0.5, 0, Math.PI * 2); x.fill();
   // Two regions: the SUNNY SHALLOWS on the left (the Coral Reef, the Kelp Forest and the Giant Clam Bay all on one sandy, sunlit sea floor),
   // and THE DEEP on the right (Shipwreck Cove and the Sunken City on dark gray stone, in darker water)
   x.fillStyle = lin(560, 0, 760, 0, [[0, "rgba(4,14,40,0)"], [1, "rgba(4,14,40,0.38)"]]); x.fillRect(560, 0, 440, H);   // the water gets deeper and darker on the right
@@ -2806,9 +2808,21 @@ function drawWorldMap2() {
   x.fillStyle = "#16191d"; x.fillRect(38, -118, 18, 11); x.fillStyle = "#e8e8e8"; x.fillRect(44, -115, 5, 5);   // the pirate flag
   x.restore();
   for (const [a, b] of [[560, 392], [680, 400]]) { x.fillStyle = "#8a5a2a"; x.fillRect(a, b, 16, 10); x.fillStyle = "#ffd34d"; x.fillRect(a + 2, b - 3, 12, 4); }   // treasure in the sand
-  // ---- the Abyss: a dark trench far away on the right ----
-  x.fillStyle = rad(930, 130, 4, 90, [[0, "rgba(0,0,10,0.75)"], [1, "rgba(0,0,10,0)"]]); x.beginPath(); x.ellipse(930, 130, 90, 70, 0, 0, Math.PI * 2); x.fill();
-  for (const [a, b] of [[915, 125], [945, 132]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(a, b, 2.2, 0, Math.PI * 2); x.fill(); }   // something glowing in the dark…
+  // ---- coming soon (across the top) ----
+  { const [a, b] = W2_SOON[0].pos;   // Pirate Waters: a pirate ship sailing on the surface above, dropping cannonballs
+    x.fillStyle = "#3a2410"; x.beginPath(); x.moveTo(a - 44, 18); x.quadraticCurveTo(a, 44, a + 44, 18); x.closePath(); x.fill(); x.fillStyle = "#5a3a1c"; x.fillRect(a - 40, 14, 80, 5);
+    x.strokeStyle = "#3a2410"; x.lineWidth = 3; x.beginPath(); x.moveTo(a, 16); x.lineTo(a, -20); x.stroke(); x.fillStyle = "#16191d"; x.fillRect(a + 2, -20, 16, 10); x.fillStyle = "#e8e8e8"; x.fillRect(a + 8, -17, 4, 4);
+    for (const [c2, d] of [[a - 18, 70], [a + 8, 105]]) { x.fillStyle = "#16191d"; x.beginPath(); x.arc(c2, d, 5, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(230,250,255,0.6)"; x.beginPath(); x.arc(c2 + 3, d - 9, 2, 0, Math.PI * 2); x.fill(); } }
+  { const [a, b] = W2_SOON[1].pos;   // Volcanic Vents: a hot orange glow with plumes of black smoke and bubbles
+    x.fillStyle = rad(a, b, 4, 70, [[0, "rgba(255,120,40,0.55)"], [1, "rgba(255,80,20,0)"]]); x.beginPath(); x.arc(a, b, 70, 0, Math.PI * 2); x.fill();
+    for (let k = 0; k < 7; k++) { x.fillStyle = `rgba(30,24,30,${0.5 - k * 0.06})`; x.beginPath(); x.arc(a - 30 + Math.sin(k) * 6, b - 20 - k * 12, 8 + k * 2, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(a + 30 + Math.cos(k) * 6, b - 14 - k * 11, 7 + k * 2, 0, Math.PI * 2); x.fill(); } }
+  { const [a, b] = W2_SOON[2].pos;   // Kraken's Domain: a purple swirl with giant tentacles curling up around it
+    x.fillStyle = rad(a, b, 4, 70, [[0, "rgba(160,100,220,0.5)"], [1, "rgba(120,60,200,0)"]]); x.beginPath(); x.arc(a, b, 70, 0, Math.PI * 2); x.fill();
+    x.lineCap = "round"; for (const [dx, flip] of [[-44, -1], [44, 1], [-24, -1], [26, 1]]) { x.strokeStyle = "#5a2a80"; x.lineWidth = 9; x.beginPath(); x.moveTo(a + dx, b + 45); x.quadraticCurveTo(a + dx + flip * 22, b, a + dx + flip * 4, b - 30); x.quadraticCurveTo(a + dx - flip * 10, b - 44, a + dx - flip * 2, b - 36); x.stroke();
+      x.strokeStyle = "#8a5ac0"; x.lineWidth = 4; x.stroke(); } x.lineCap = "butt"; }
+  { const [a, b] = W2_SOON[3].pos;   // The Abyss: a pit of darkness with something glowing inside
+    x.fillStyle = rad(a, b, 4, 80, [[0, "rgba(0,0,10,0.85)"], [0.6, "rgba(0,0,20,0.5)"], [1, "rgba(0,0,20,0)"]]); x.beginPath(); x.ellipse(a, b, 85, 62, 0, 0, Math.PI * 2); x.fill();
+    for (const [c2, d] of [[a - 16, b + 26], [a + 14, b + 30]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(c2, d, 2.4, 0, Math.PI * 2); x.fill(); } }   // something glowing in the dark…
   // fish: schools of little fish, a turtle and a jellyfish
   const fish = (a, b, s, col, dir) => { x.fillStyle = col; x.beginPath(); x.ellipse(a, b, 6 * s, 3 * s, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(a - dir * 5 * s, b); x.lineTo(a - dir * 10 * s, b - 4 * s); x.lineTo(a - dir * 10 * s, b + 4 * s); x.fill(); x.fillStyle = "#16191d"; x.fillRect(a + dir * 3 * s, b - 1, 1.5, 1.5); };
   for (let k = 0; k < 9; k++) fish(90 + k * 13 + R() * 6, 200 + Math.sin(k) * 10 + R() * 8, 0.7, "#ffb12e", 1);
@@ -2820,7 +2834,7 @@ function drawWorldMap2() {
   // bubbles
   for (let n = 0; n < 60; n++) { const a = R() * W, b = 40 + R() * 380, r = 1 + R() * 3; x.strokeStyle = "rgba(230,250,255,0.6)"; x.lineWidth = 1; x.beginPath(); x.arc(a, b, r, 0, Math.PI * 2); x.stroke(); }
   // the trail between the levels
-  const pts = W2_ORDER.map((L) => W2_MAP[L]).concat([W2_SOON[0].pos]);
+  const pts = W2_ORDER.map((L) => W2_MAP[L]).concat(W2_SOON.map((c) => c.pos));
   const trail = () => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); };
   x.lineWidth = 12; x.strokeStyle = "rgba(10,30,60,0.3)"; trail(); x.stroke();
   x.setLineDash([2, 9]); x.lineWidth = 6; x.lineCap = "round"; x.strokeStyle = "rgba(230,250,255,0.95)"; trail(); x.stroke(); x.setLineDash([]);
@@ -3782,7 +3796,7 @@ function unlocked(L) {
 /* ---------- the world map ---------- */
 // Where each level sits on the map (out of 1000 across, 450 down), and its color.
 const WORLD_MAP_ICON = { meadow: "🌼", forest: "🌲", swamp: "🐸", beach: "🐚", desert: "🌵", pyramid: "🔺", basalt: "🪨", magma: "🔥", volcano: "🌋", tundra: "❄️", glacier: "🧊", blizzard: "🌨️", skyislands: "☁️", thunder: "⚡", storm: "🌀", infinity: "✨" };
-Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", clambay: "🦪", shipwreck: "⚓", sunkencity: "🏛️" });
+Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", clambay: "🦪", shipwreck: "⚓", sunkencity: "🏛️", piratewaters: "🏴‍☠️", volcanicvents: "🌋", krakensdomain: "🐙", abyss: "🌑" });
 const WORLD_MAP = {
   meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
   beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
