@@ -1698,9 +1698,9 @@ function skinOf(img, style, frame = 0) {
       if (v.id > 0.8 && ((frame + Math.floor(v.id * 97)) % 12) < 3 && ((Math.abs(i + 0.5 - v.ox) < 0.6 && v.d1 < 2.4 * sc) || (Math.abs(j + 0.5 - v.oy) < 0.6 && v.d1 < 2.4 * sc))) col = mix(col, [255, 255, 255], 0.8);   // ...that flash into little stars
     } else if (style === "lava") {   // simple: dark volcanic rock with a few big glowing cracks
       const g = 10 * sc + 3, v = vor(i, j, g), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / SKIN_FRAMES.lava * Math.PI * 2);
-      if (l > 0.86) col = mix([255, 190, 60], [255, 240, 170], pulse);   // the eyes glow like hot magma
-      else if (seam < 0.8) col = mix([255, 130, 20], [255, 200, 80], pulse);   // the glowing cracks
-      else col = ramp([[30, 14, 12], [64, 30, 24], [104, 50, 34], [150, 76, 44]], l * 0.9 + (lit ? 0.15 : 0) - (shade ? 0.12 : 0));   // the rock
+      if (l > 0.86) col = mix([255, 230, 120], [255, 255, 220], pulse);   // the eyes glow white-hot
+      else if (seam < 0.8) col = mix([255, 220, 90], [255, 250, 190], pulse);   // the cracks glow bright yellow
+      else col = ramp([[120, 30, 10], [185, 58, 14], [232, 102, 24], [255, 150, 44], [255, 196, 90]], l * 0.85 + 0.1 + (lit ? 0.18 : 0) - (shade ? 0.12 : 0));   // glowing molten red and orange
     } else if (style === "metal") {   // brushed steel: fine horizontal brush lines, bolted panels with rivets, and a glint sweeping across
       const yy = j / H;
       let t = 0.12 + l * 0.78 + 0.22 * Math.sin(yy * 10 + 0.6) + (lit ? 0.28 : 0) - (shade ? 0.25 : 0) + (hash(1, j, 13) - 0.5) * 0.12;   // chrome: bands of reflection, and brush lines along each row
