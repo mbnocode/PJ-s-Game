@@ -392,6 +392,13 @@ const SETTINGS = {
     wolfhowl: { name: "Wolf Howl", cost: 1000, unlock: true, shelf: 3, picture: "wolf", about: "A howl under the full moon! Every Wolf's first upgrade is free, in every level, forever." },
   },
   // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
+  // The Moon Cat: a sleepy cat hiding behind the Moon on Infinity. Tap the Moon 3 times to wake it up and open its shop.
+  moonCat: { taps: 3, shelves: 3, keyBundle: 5, luckyCharmTimes: 1.25 },
+  moonCatShop: {
+    galaxywish: { name: "Galaxy Wish", cost: 3000, shelf: 1, picture: "moonwish", about: "Make a wish on a shooting star: one of your towers (that doesn't have it yet) gets the Mythic Galaxy skin! Buy it again for another tower." },
+    keybundle: { name: "Moonlit Keys", cost: 1000, shelf: 2, picture: "mysterykey", about: "5 Mystery Keys for the price of 4 (you can carry up to 30)." },
+    luckycharm: { name: "Lucky Cat Charm", cost: 1500, unlock: true, shelf: 3, picture: "catcharm", about: "A waving lucky cat: Golden Acorns drop 25% more often on every level, forever." },
+  },
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 4 },   // chance = how often the bump shows up in each break between waves
   hermitCrabShop: {
     // Treasures from the bottom of the sea. "unlock" items are bought once; bottles can be bought again and again.
@@ -842,7 +849,7 @@ const SETTINGS = {
                 [["glaciergolem", 3, 9], [["penguin", "snowdrone", "snowplow"], 24, 0.42]],   // 24
                 [["blizzardking", 1, 0]],                                               // 25: the Blizzard King, all alone (15000 health)
               ] },
-    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, about: "The road loops forever through space. Can you survive all 100 waves?", theme: "infinity",
+    infinity: { name: "Infinity", alwaysOpen: true, acornDropChance: 0.05, moon: { x: 18, y: 0, w: 2, h: 2 }, /* moon: where the Moon sits (the Moon Cat's secret shop) */ about: "The road loops forever through space. Can you survive all 100 waves?", theme: "infinity",
               robotHealth: 1.6,   // tuned to be about as hard as The Basalt Delta (its road is longer)
               scoreTimes: 2.25,
               lateToughness: { fromWave: 25, perWave: 0.08, untilWave: 35 },   // robots get 8% tougher every wave from wave 26 to 35 (1.8x), then stay that tough
