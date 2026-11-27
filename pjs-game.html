@@ -1610,7 +1610,7 @@ function towerSkin(kind) {
 //  crystal: blue crystal facets fitted together that shimmer, a few split into rainbow light, glowing seams and twinkling star sparkles
 //  lava: dark volcanic rock with a few big glowing cracks (they throb), lava drips and embers
 //  shadow: almost black, with a purple glow around its edges, glowing violet eyes and a dark mist around it
-//  toxic: an X-ray: the tower's bones glowing inside a body of dark acid, with a neon green edge, glow and acid dripping off the bottom
+//  toxic: every shade of green in patches (forest, emerald, lime, mint, olive, neon), glowing bubbles, a green glow and acid dripping off the bottom
 //  candy: bubblegum pink with candy-cane stripes, sprinkles and a glossy shine
 //  metal: shiny chrome panels with seams and rivets, a polished rim, a silver glow, twinkling stars and a bright glint sweeping across it
 const SKIN_FRAMES = { gold: 16, lava: 8, toxic: 4, metal: 16, crystal: 12 };
@@ -1635,14 +1635,8 @@ function skinOf(img, style, frame = 0) {
   const out = new Uint8ClampedArray(p);   // what we write (the extra glow and drips go around the picture)
   const keep = img.keepColors || null;   // colors a skin never changes (like the Hydra's red eyes)
   let D = null, Dmax = null, brightFew = true;
-  if (style === "toxic") {   // how far each pixel is from the edge of the picture (for drawing bones down the middle)
-    D = new Float32Array(W * H); for (let k = 0; k < W * H; k++) D[k] = p[k * 4 + 3] > 0 ? 1e4 : 0;
-    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const k = j * W + i; if (!D[k]) continue; D[k] = Math.min(D[k], 1 + Math.min(i ? D[k - 1] : 0, j ? D[k - W] : 0, i && j ? D[k - W - 1] + 0.41 : 0, j && i < W - 1 ? D[k - W + 1] + 0.41 : 0)); }
-    for (let j = H - 1; j >= 0; j--) for (let i = W - 1; i >= 0; i--) { const k = j * W + i; if (!D[k]) continue; D[k] = Math.min(D[k], 1 + Math.min(i < W - 1 ? D[k + 1] : 0, j < H - 1 ? D[k + W] : 0, i < W - 1 && j < H - 1 ? D[k + W + 1] + 0.41 : 0, j < H - 1 && i ? D[k + W - 1] + 0.41 : 0)); }
-    let nb = 0, na = 0; for (let k = 0; k < W * H; k++) if (p[k * 4 + 3]) { na++; if (L[k] > 0.88) nb++; } brightFew = nb < na * 0.05;   // only a few very bright pixels: those are eyes
-        Dmax = new Float32Array(W * H); const R = Math.max(1, Math.round(sc));
-    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { let m = 0; for (let b = -R; b <= R; b++) for (let a = -R; a <= R; a++) { const x2 = i + a, y2 = j + b; if (x2 >= 0 && y2 >= 0 && x2 < W && y2 < H) m = Math.max(m, D[y2 * W + x2]); } Dmax[j * W + i] = m; }
-  }
+  if (style === "toxic") { let nb = 0, na = 0; for (let k = 0; k < W * H; k++) if (p[k * 4 + 3]) { na++; if (L[k] > 0.88) nb++; } brightFew = nb < na * 0.05; }   // only a few very bright pixels: those are eyes
+
   const put = (i, j, col, a = 255) => { const o = (j * W + i) * 4; out[o] = col[0]; out[o + 1] = col[1]; out[o + 2] = col[2]; out[o + 3] = a; };
   const edgeOut = (i, j) => !A(i - 1, j) || !A(i + 1, j) || !A(i, j - 1) || !A(i, j + 1);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
@@ -1716,15 +1710,18 @@ function skinOf(img, style, frame = 0) {
       else { col = ramp([[8, 4, 16], [22, 12, 38], [40, 24, 66], [62, 38, 98]], l * 0.85);
         if (edgeOut(i, j)) col = mix(col, [160, 100, 240], 0.55);   // a purple glow around its edges
         if (hash(i, j, 5) > 0.94) col = mix(col, [90, 50, 140], 0.6); }   // swirling dark mist
-    } else if (style === "toxic") {   // an X-ray: the tower's bones glowing inside a body of dark acid, with a neon glow and acid dripping off
-      const Dat = (x2, y2) => (x2 < 0 || y2 < 0 || x2 >= W || y2 >= H) ? 0 : D[y2 * W + x2];
-      const dd = D[k], bone = dd >= 1.5 * sc && [[1, 0], [0, 1], [1, 1], [1, -1]].some(([a, b]) => Dat(i + a, j + b) < dd && Dat(i - a, j - b) <= dd);   // a thin line down the middle of each body part
-      const joint = dd >= 3.2 * sc && dd >= Dmax[k] - 0.2;   // the thickest spots: a round knobbly joint
-      const bub = 0.5 + 0.5 * Math.sin(frame * 1.6 + i * 0.7 + j * 0.4);
-      if (l > 0.88 && brightFew) col = [200, 255, 80];   // eyes: glowing green (not for a white tower like the Pegasus)
-      else if (bone || joint) col = shade ? [190, 186, 160] : lit ? [255, 252, 235] : [232, 228, 200];   // bone
-      else if (dd <= 1.01) col = mix([120, 255, 60], [200, 255, 120], bub * 0.5);   // a bright neon edge of acid
-      else col = mix([18, 52, 14], [40, 96, 20], (hash(i, j, 3 + (frame >> 1)) > 0.93 ? 0.9 : 0.25) + l * 0.2);   // dark see-through acid, with a few bubbles
+    } else if (style === "toxic") {   // every shade of green: patches of forest, emerald, lime, mint, olive and neon, with glowing bubbles
+      const v = vor(i, j, 5 * sc + 2), sp = Math.sin(frame * 1.6 + v.id * 9);
+      const greens = [[[6, 40, 14], [20, 100, 40], [60, 170, 70], [150, 230, 140]], [[10, 50, 30], [20, 120, 80], [40, 190, 120], [140, 245, 190]],   // forest, emerald
+        [[30, 60, 0], [90, 150, 0], [160, 220, 20], [220, 255, 120]], [[30, 70, 40], [80, 160, 110], [150, 230, 170], [215, 255, 225]],          // lime, mint
+        [[40, 50, 10], [90, 110, 30], [150, 170, 60], [205, 220, 130]], [[10, 60, 0], [60, 200, 0], [130, 255, 30], [220, 255, 160]]];         // olive, neon
+      const pal = greens[Math.floor(v.id * greens.length)];
+      col = ramp(pal, l * 0.9 + 0.05 + (lit ? 0.2 : 0) - (shade ? 0.18 : 0));
+      if (v.d2 - v.d1 < 0.6) col = mix(col, [20, 60, 20], 0.35);   // soft darker lines where the patches meet
+      const r = (1.3 + 0.4 * sp) * sc + 0.6;
+      if (v.id > 0.7 && v.d1 < r) col = v.d1 < r - 0.9 ? [190, 255, 90] : [235, 255, 180];   // glowing bubbles
+      if (v.id > 0.7 && v.d1 < r * 0.45) col = [250, 255, 225];
+      if (l > 0.88 && brightFew) col = [220, 255, 120];   // glowing green eyes
     } else if (style === "candy") {
       col = ramp([[120, 26, 80], [220, 80, 150], [250, 140, 195], [255, 200, 228], [255, 245, 250]], l * 1.05 + (lit ? 0.12 : 0) - (shade ? 0.1 : 0));
       if (l > 0.3 && l < 0.85 && ((i + j) % Math.round(6 * sc + 2)) < Math.max(1, Math.round(2 * sc))) col = mix(col, [255, 250, 252], 0.75);   // candy-cane stripes
