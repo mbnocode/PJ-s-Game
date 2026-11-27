@@ -339,6 +339,18 @@ const SETTINGS = {
     // Every time it loses shellEveryPart of its health, it hides in its shell for shellSeconds (it stops, and nothing can hurt it).
     seaturtle: { name: "Sea Turtle Fortress", health: 4200, speed: 0.55, leaves: 220, points: 900, baseHit: 70, isBoss: true,
                  shellEveryPart: 0.2, shellSeconds: 3, troopEvery: 6, troopCount: 2, troopType: "clanker", troopNear: true, troopText: "Clankers!" },
+    // ---- More Sunken Kingdom robots ----
+    crabclaw:    { name: "Crab Claw Bot", health: 300, speed: 1.1, leaves: 18, points: 50, clawBlockEvery: 2.5 },   // its claws block one whole hit every clawBlockEvery seconds
+    clambot:     { name: "Clam Bot", health: 380, speed: 1.0, leaves: 16, points: 50, shutEvery: 4, shutSeconds: 1.8, pearlLeaves: 20 },   // shuts tight (can't be hurt); its pearl gives bonus leaves
+    starfish:    { name: "Starfish Bot", health: 300, speed: 1.1, leaves: 16, points: 45, splitInto: 5, splitType: "starlet", reformSeconds: 5 },   // splits; pieces left after reformSeconds come back together
+    starlet:     { name: "Starfish Piece", health: 45, speed: 1.5, leaves: 3, points: 8 },
+    octobot:     { name: "Octo-Bot", health: 340, speed: 1.15, leaves: 20, points: 55, inkEvery: 6, inkRadius: 1.8, inkSeconds: 3 },   // ink blinds towers near it
+    eelbot:      { name: "Electric Eel Bot", health: 260, speed: 1.6, leaves: 18, points: 50, zapEvery: 7, zapRadius: 2, zapSeconds: 1.5, zapChain: 4, chainReach: 1.6 },   // the zap jumps between towers that are close together
+    hermitbot:   { name: "Hermit Bot", health: 240, speed: 1.0, leaves: 14, points: 40, splitInto: 1, splitType: "hermitkid" },
+    hermitkid:   { name: "Hermit (no shell)", health: 90, speed: 2.0, leaves: 8, points: 20 },   // twice as fast as the Hermit Bot
+    anglerbot:   { name: "Anglerfish Bot", health: 420, speed: 1.0, leaves: 22, points: 60, lure: true },   // towers that can reach it attack it first
+    barnaclebot: { name: "Barnacle Bot", health: 280, speed: 1.0, leaves: 18, points: 50, barnacleEvery: 8, barnacleRadius: 1.5, barnacleHealth: 150, barnacleSlow: 0.5, barnacleSeconds: 12 },   // barnacles make towers attack slower
+    mantabot:    { name: "Manta Ray Bot", health: 320, speed: 1.6, leaves: 18, points: 50, flying: true, baseHit: 10 },
     // Diver Bot (Shipwreck Cove): an old brass diving suit. Really tough and slow. Every anchorEvery seconds it throws its anchor onto the
     // closest tower within anchorRadius squares, pinning it so it can't attack for anchorSeconds.
     divebot:   { name: "Diver Bot", health: 520, speed: 0.95, leaves: 24, points: 70, anchorEvery: 7, anchorRadius: 1.6, anchorSeconds: 2.5 },
@@ -1124,30 +1136,30 @@ const SETTINGS = {
               waves: [
                 [["clanker", 10, 1.0]],                                                 // 1
                 [["torpedo", 5, 1.1]],                                                  // 2: the first Torpedo Bots
-                [["walker", 6, 1.0], ["scout", 6, 0.7]],                                // 3
+                [["crabclaw", 4, 1.4], ["scout", 6, 0.7]],                                 // 3: the first Crab Claw Bots
                 [["subbot", 2, 2.5], ["clanker", 8, 0.6]],                              // 4: the first Sub Bots
                 [["boss", 1, 0, 1800], ["torpedo", 6, 0.8]],                            // 5
-                [[["walker", "subbot"], 8, 1.1]],                                       // 6
+                [[["clambot", "walker"], 8, 1.1]],                                         // 6: the first Clam Bots
                 [["jellybot", 3, 0.7], ["walker", 6, 0.8]],                             // 7: the first Jelly Drones
                 [[["torpedo", "scout"], 14, 0.55]],                                     // 8
-                [["splitter", 4, 1.6], ["subbot", 3, 1.8]],                             // 9
+                [["starfish", 3, 2.2], ["subbot", 3, 1.8]],                                // 9: the first Starfish Bots
                 [["boss", 1, 0, 3200], [["jellybot", "torpedo"], 8, 0.6]],              // 10
-                [[["tank", "repair"], 8, 1.3]],                                         // 11
+                [[["crabclaw", "repair"], 8, 1.3]],                                        // 11
                 [["torpedo", 18, 0.35]],                                                // 12: a torpedo storm
                 [[["subbot", "subbot", "jellybot"], 12, 0.9]],                          // 13
-                [["hider", 8, 0.8], ["splitter", 4, 1.4]],                              // 14
+                [["hider", 8, 0.8], ["starfish", 4, 1.6]],                                 // 14
                 [["pufferbot", 1, 0], ["torpedo", 8, 0.6]],                             // 15: the Puffer Bot (miniboss)
                 [[["jellybot", "drone"], 12, 0.45]],                                    // 16
-                [[["tank", "subbot", "repair"], 14, 1.0]],                              // 17
+                [[["crabclaw", "clambot", "subbot"], 14, 1]],                              // 17
                 [[["scout", "torpedo", "hider"], 22, 0.4]],                             // 18
-                [["tesla", 3, 2], [["subbot", "walker"], 14, 0.8]],                     // 19
+                [["tesla", 3, 2], [["starfish", "clambot"], 14, 0.8]],                     // 19
                 [["boss", 2, 5, 5000], [["jellybot", "subbot"], 12, 0.7]],              // 20
                 [[["torpedo", "torpedo", "repair"], 21, 0.45]],                         // 21
-                [[["splitter", "subbot"], 14, 1.0], ["jellybot", 8, 0.4]],              // 22
+                [[["starfish", "subbot"], 14, 1], ["jellybot", 8, 0.4]],                   // 22
                 [["cyclonegolem", 1, 0], [["walker", "torpedo"], 16, 0.5]],             // 23
                 [[["hider", "jellybot", "subbot", "scout"], 24, 0.5]],                  // 24
                 [["pufferbot", 2, 6], ["boss", 1, 0, 6500]],                            // 25: two Puffer Bots!
-                [[["tank", "tesla", "subbot"], 18, 0.9]],                               // 26
+                [[["crabclaw", "tesla", "clambot"], 18, 0.9]],                             // 26
                 [["torpedo", 30, 0.25]],                                                // 27
                 [[["jellybot", "thunderbird", "drone"], 21, 0.35], ["subbot", 6, 1.2]], // 28
                 [["boss", 3, 4, 7000], [["subbot", "repair", "torpedo"], 18, 0.7]],     // 29
@@ -1165,38 +1177,38 @@ const SETTINGS = {
               waves: [
                 [[["walker", "hider"], 8, 1.0]],                                        // 1
                 [["torpedo", 6, 0.9], ["clanker", 6, 0.7]],                             // 2
-                [["hider", 8, 0.9]],                                                    // 3: Hiders sneaking through the kelp
+                [["hider", 6, 0.9], ["hermitbot", 4, 1.5]],                                // 3: the first Hermit Bots
                 [["jellybot", 5, 0.6], ["subbot", 2, 2]],                               // 4
                 [["boss", 1, 0, 2600], ["hider", 6, 0.8]],                              // 5
                 [[["torpedo", "walker", "hider"], 15, 0.6]],                            // 6
-                [["repair", 3, 2], ["subbot", 5, 1.3]],                                 // 7
+                [["octobot", 3, 2], ["subbot", 5, 1.3]],                                   // 7: the first Octo-Bots
                 [["jellybot", 10, 0.35]],                                               // 8: a swarm of Jelly Drones
-                [[["hider", "hider", "tesla"], 12, 0.9]],                               // 9
+                [[["hider", "eelbot", "tesla"], 12, 0.9]],                                 // 9: the first Electric Eel Bots
                 [["yetimech", 1, 0], ["torpedo", 10, 0.5]],                             // 10
-                [[["subbot", "mummy"], 10, 1.1]],                                       // 11
+                [[["subbot", "hermitbot"], 10, 1.1]],                                      // 11
                 [["drone", 6, 0.6], ["jellybot", 6, 0.5], ["hider", 6, 0.7]],           // 12
                 [[["gustrunner", "torpedo"], 16, 0.45]],                                // 13
-                [["staticbot", 4, 1.8], [["hider", "subbot"], 10, 0.9]],                // 14
+                [["eelbot", 4, 1.8], [["hider", "subbot"], 10, 0.9]],                      // 14
                 [["seaturtle", 1, 0], ["jellybot", 8, 0.4]],                            // 15: the Sea Turtle Fortress (miniboss)
-                [[["obsidian", "hider"], 12, 1.0]],                                     // 16
+                [[["octobot", "hider"], 12, 1]],                                           // 16
                 [["torpedo", 24, 0.3]],                                                 // 17
                 [[["balloonbot", "jellybot"], 12, 0.6], ["tank", 5, 1.3]],              // 18
-                [[["subbot", "repair", "hider"], 18, 0.8]],                             // 19
+                [[["hermitbot", "repair", "octobot"], 18, 0.8]],                           // 19
                 [["boss", 2, 4, 6000], ["glaciergolem", 1, 0]],                         // 20
                 [[["hider", "scout", "torpedo", "gustrunner"], 28, 0.35]],              // 21
-                [[["snowplow", "subbot", "tesla"], 15, 1.0]],                           // 22
+                [[["eelbot", "subbot", "tesla"], 15, 1]],                                  // 22
                 [["skyblimp", 1, 0], ["hider", 12, 0.6]],                               // 23
                 [[["jellybot", "thunderbird", "balloonbot"], 20, 0.4]],                 // 24
                 [["seaturtle", 1, 0], ["yetimech", 1, 0], [["subbot", "hider"], 14, 0.7]],   // 25: the Sea Turtle Fortress again
-                [[["mummy", "obsidian", "repair"], 18, 0.9]],                           // 26
+                [[["octobot", "hermitbot", "repair"], 18, 0.9]],                           // 26
                 [["cyclonegolem", 2, 7], [["torpedo", "jellybot"], 16, 0.45]],          // 27
-                [[["hider", "subbot", "staticbot", "tank"], 24, 0.6]],                  // 28
+                [[["hider", "subbot", "eelbot", "octobot"], 24, 0.6]],                     // 28
                 [["pharaohmachine", 1, 0], ["boss", 2, 4, 8000], ["jellybot", 12, 0.35]],   // 29
                 [["glaciergolem", 2, 8], ["pharaohmachine", 1, 0], [["hider", "subbot", "torpedo", "jellybot", "repair"], 28, 0.45]],   // 30: the big finish
               ] },
     shipwreck: { name: "Shipwreck Cove", world: 2, acornDropChance: 0.095, theme: "wreck",
               about: "An old pirate ship lies broken on the sea floor, and this time the robots come from the right! The road twists back and forth like a tangled rope. Treasure chests wash up next to the road: tap them for double leaves before a robot grabs them! Diver Bots pin your towers with their anchors. Owls hit 50% harder here. Scores are worth 5.75x.",
-              robotHealth: 1.65, scoreTimes: 5.75, lateToughness: { fromWave: 8, perWave: 0.06 },
+              robotHealth: 3.3, scoreTimes: 5.75, lateToughness: { fromWave: 8, perWave: 0.06 },   // robots here are twice as tough (was 1.65)
               towerBoosts: { air: { damageTimes: 1.5 } },
               path: [[19, 9], [14, 9], [14, 6], [17, 6], [17, 2], [10, 2], [10, 10], [5, 10], [5, 4], [2, 4], [2, 7], [0, 7]],
               // The robots come in from the RIGHT and the treehouse is on the LEFT: the road twists back and forth like a tangled ship's rope. Trees are broken masts, mushrooms are old barrels, tall grass is sea grass.
@@ -1206,30 +1218,30 @@ const SETTINGS = {
               waves: [
                 [["pufferbot", 1, 0], [["walker", "clanker"], 12, 0.8]],                // 1: it starts with a Puffer Bot!
                 [["divebot", 1, 0], ["scout", 8, 0.6]],                                 // 2: the first Diver Bot
-                [[["torpedo", "walker"], 12, 0.7]],                                     // 3
+                [[["torpedo", "anglerbot"], 12, 0.7]],                                     // 3: the first Anglerfish Bots
                 [["divebot", 2, 3], ["jellybot", 4, 0.5]],                              // 4
                 [["boss", 1, 0, 3000], [["subbot", "walker"], 8, 0.9]],                 // 5
-                [[["hider", "torpedo", "clanker"], 15, 0.55]],                          // 6
+                [[["hider", "barnaclebot", "clanker"], 15, 0.55]],                         // 6: the first Barnacle Bots
                 [[["divebot", "repair"], 6, 1.6]],                                      // 7
-                [["subbot", 6, 1.1], ["jellybot", 6, 0.4]],                             // 8
+                [["subbot", 6, 1.1], ["mantabot", 5, 0.6]],                                // 8: the first Manta Ray Bots
                 [[["splitter", "divebot"], 8, 1.4]],                                    // 9
                 [["sludgeleviathan", 1, 0], [["divebot", "torpedo"], 10, 0.7]],         // 10
-                [[["torpedo", "scout", "walker"], 21, 0.4]],                            // 11
+                [[["anglerbot", "scout", "walker"], 21, 0.4]],                             // 11
                 [[["mummy", "divebot"], 10, 1.2]],                                      // 12
                 [["staticbot", 3, 1.8], [["subbot", "hider"], 12, 0.7]],                // 13
-                [[["jellybot", "drone", "balloonbot"], 15, 0.45]],                      // 14
+                [[["mantabot", "jellybot", "balloonbot"], 15, 0.45]],                      // 14
                 [["yetimech", 1, 0], ["divebot", 4, 1.5]],                              // 15
-                [[["tank", "divebot", "repair"], 15, 1.0]],                             // 16
+                [[["tank", "barnaclebot", "repair"], 15, 1]],                              // 16
                 [["torpedo", 26, 0.28]],                                                // 17
-                [[["obsidian", "subbot", "divebot"], 15, 1.0]],                         // 18
+                [[["anglerbot", "subbot", "divebot"], 15, 1]],                             // 18
                 [[["hider", "jellybot"], 20, 0.4], ["divebot", 3, 2]],                  // 19
                 [["boss", 2, 5, 6500], ["sludgeleviathan", 1, 0]],                      // 20
-                [[["gustrunner", "torpedo", "scout"], 27, 0.3]],                        // 21
+                [[["mantabot", "torpedo", "scout"], 27, 0.3]],                             // 21
                 [[["divebot", "divebot", "tesla"], 15, 1.0]],                           // 22
                 [["skyblimp", 1, 0], [["subbot", "jellybot"], 16, 0.5]],                // 23
-                [[["snowplow", "divebot", "repair"], 18, 0.9]],                         // 24
+                [[["barnaclebot", "divebot", "repair"], 18, 0.9]],                         // 24
                 [["pharaohmachine", 1, 0], [["torpedo", "hider", "divebot"], 18, 0.6]], // 25
-                [[["jellybot", "thunderbird", "balloonbot", "drone"], 24, 0.3]],        // 26
+                [[["jellybot", "mantabot", "anglerbot", "drone"], 24, 0.3]],               // 26
                 [["cyclonegolem", 1, 0], ["yetimech", 1, 0], [["divebot", "subbot"], 12, 0.9]],   // 27
                 [[["mummy", "obsidian", "divebot", "staticbot"], 24, 0.7]],             // 28
                 [["glaciergolem", 1, 0], ["boss", 2, 4, 8500], ["torpedo", 15, 0.35]],  // 29
@@ -1248,31 +1260,31 @@ const SETTINGS = {
                 [[["subbot", "walker"], 12, 0.9]],                                      // 1
                 [["torpedo", 12, 0.5]],                                                 // 2
                 [["jellybot", 8, 0.35], ["hider", 6, 0.8]],                             // 3
-                [[["tank", "subbot", "repair"], 10, 1.1]],                              // 4
+                [[["crabclaw", "subbot", "repair"], 10, 1.1]],                             // 4
                 [["boss", 1, 0, 4500], [["torpedo", "jellybot"], 10, 0.5]],             // 5
-                [[["mummy", "subbot"], 10, 1.0]],                                       // 6
+                [[["hermitbot", "subbot"], 10, 1]],                                        // 6
                 [["staticbot", 4, 1.6], ["torpedo", 10, 0.45]],                         // 7
-                [[["hider", "jellybot", "scout"], 18, 0.45]],                           // 8
+                [[["hider", "octobot", "mantabot"], 18, 0.45]],                            // 8
                 [[["subbot", "subbot", "tesla"], 14, 0.9]],                             // 9
                 [["pharaohmachine", 1, 0], [["walker", "torpedo"], 12, 0.6]],           // 10
                 [[["jellybot", "thunderbird"], 16, 0.3]],                               // 11
-                [[["obsidian", "subbot", "repair"], 14, 1.0]],                          // 12
+                [[["clambot", "subbot", "anglerbot"], 14, 1]],                             // 12
                 [["gustrunner", 12, 0.5], ["torpedo", 12, 0.4]],                        // 13
-                [[["tank", "snowplow", "subbot"], 14, 1.0]],                            // 14
+                [[["barnaclebot", "starfish", "subbot"], 14, 1]],                          // 14
                 [["sludgeleviathan", 1, 0], ["cyclonegolem", 1, 0]],                    // 15
-                [[["jellybot", "balloonbot", "drone"], 18, 0.35]],                      // 16
+                [[["jellybot", "mantabot", "drone"], 18, 0.35]],                           // 16
                 [[["subbot", "torpedo", "hider", "repair"], 24, 0.5]],                  // 17
                 [["planklayer", 4, 2], [["subbot", "tank"], 12, 0.9]],                  // 18
-                [[["staticbot", "subbot"], 14, 0.9], ["jellybot", 10, 0.3]],            // 19
+                [[["eelbot", "subbot"], 14, 0.9], ["jellybot", 10, 0.3]],                  // 19
                 [["boss", 3, 4, 9000], ["yetimech", 1, 0]],                             // 20
                 [[["torpedo", "gustrunner", "scout"], 30, 0.25]],                       // 21
-                [[["subbot", "subbot", "repair", "tesla"], 20, 0.8]],                   // 22
+                [[["octobot", "crabclaw", "repair", "eelbot"], 20, 0.8]],                  // 22
                 [["skyblimp", 1, 0], [["jellybot", "thunderbird"], 14, 0.35]],          // 23
-                [[["obsidian", "snowplow", "subbot"], 18, 0.9]],                        // 24
+                [[["anglerbot", "barnaclebot", "subbot"], 18, 0.9]],                       // 24
                 [["glaciergolem", 1, 0], ["sludgeleviathan", 1, 0], [["torpedo", "jellybot"], 16, 0.4]],   // 25
-                [[["subbot", "hider", "mummy", "repair"], 24, 0.6]],                    // 26
+                [[["starfish", "hermitbot", "clambot", "repair"], 24, 0.6]],               // 26
                 [["cyclonegolem", 2, 8], [["torpedo", "subbot"], 16, 0.5]],             // 27
-                [[["jellybot", "thunderbird", "drone", "balloonbot"], 28, 0.25]],       // 28
+                [[["jellybot", "mantabot", "thunderbird", "balloonbot"], 28, 0.25]],       // 28
                 [["pharaohmachine", 1, 0], ["boss", 2, 4, 10000], [["subbot", "tank", "repair"], 18, 0.8]],   // 29
                 [["megalodon", 1, 0], [["subbot", "torpedo", "jellybot"], 20, 0.6]],    // 30: the Mecha Megalodon!
               ] },

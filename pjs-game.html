@@ -2515,6 +2515,71 @@ for (const [k, draw] of [
     P(3, 6, "#3a3a3a"); P(2, 7, "#3a3a3a"); P(2, 8, "#3a3a3a");   // the air hose
     P(15, 11, "#9aa4ac"); P(15, 12, "#9aa4ac"); P(14, 14, "#9aa4ac"); P(15, 14, "#9aa4ac"); P(15, 13, "#9aa4ac");   // a little anchor in its hand
   }],
+  ["crabclaw", ({ P, rect, disc }) => {   // the Crab Claw Bot: a rusty robot crab with two big steel claws and eyes on stalks
+    disc(8, 10, 4.6, (dx, dy) => dy < -2 ? "#e07a4a" : dy > 2 ? "#8a3a22" : (dx * 3 + dy) % 4 === 0 ? "#a85a32" : "#c8623a");   // its rusty shell
+    for (const i of [5, 8, 11]) P(i, 9, "#5a2a18");   // rivets
+    rect(6, 4, 6, 6, "#8a949c"); rect(10, 4, 10, 6, "#8a949c"); P(6, 3, "#ff2a2a"); P(10, 3, "#ff2a2a");   // eyes on stalks
+    for (const sx of [-1, 1]) { const cx = sx < 0 ? 2 : 14; disc(cx, 7, 2, "#c9d4dc"); P(cx + sx, 5, "#eef2f5"); P(cx, 9, "#5a646c"); P(cx + sx * 2, 7, "#16191d"); }   // big steel claws
+    for (const i of [4, 6, 10, 12]) { P(i, 14, "#5a2a18"); P(i + (i < 8 ? -1 : 1), 15, "#5a2a18"); }   // legs
+  }],
+  ["octobot", ({ P, rect, disc }) => {   // the Octo-Bot: a purple robot octopus with a big head, a visor eye and wiggly metal arms
+    disc(8, 6, 5, (dx, dy) => dy < -2.5 ? "#b48cf0" : dx > 2.5 ? "#5a3a90" : "#8a5ad0");
+    rect(5, 5, 11, 7, "#16191d"); P(7, 6, "#7cff6a"); P(8, 6, "#d8ffc8"); P(10, 6, "#7cff6a");   // a visor with green eyes
+    for (const [i, j] of [[5, 2], [11, 3], [8, 1]]) P(i, j, "#d8c4ff");   // shiny spots
+    for (const [bx, ph] of [[3, 0], [5, 1], [7, 2], [9, 0.5], [11, 1.5], [13, 2.5]]) for (let j = 0; j < 5; j++) P(bx + Math.round(Math.sin(j * 1.3 + ph)), 11 + j, j % 2 ? "#5a3a90" : "#8a5ad0");   // 6 wiggly arms
+    P(14, 3, "#2a2a2e"); P(15, 2, "#2a2a2e");   // a little ink nozzle
+  }],
+  ["anglerbot", ({ P, rect, disc }) => {   // the Anglerfish Bot: a dark round robot fish with a huge toothy mouth and a glowing lure on a stick
+    disc(7, 10, 5, (dx, dy) => dy < -2.5 ? "#3a4a5a" : dy > 3 ? "#1a222a" : "#2a3440");
+    rect(9, 10, 13, 12, "#0a0e12"); for (const i of [9, 11, 13]) { P(i, 10, "#f4f4f0"); P(i + 1, 12, "#f4f4f0"); }   // a huge mouth of fangs
+    P(8, 7, "#ffd04a"); P(9, 7, "#fff6c0");   // a glowing eye
+    rect(6, 2, 6, 5, "#4a5059"); rect(7, 1, 10, 1, "#4a5059"); P(11, 2, "#4a5059");   // the fishing-rod antenna
+    disc(12, 3.5, 1.6, "#fff7a0"); P(12, 3, "#ffffff");   // the glowing lure
+    P(1, 8, "#2a3440"); P(0, 7, "#2a3440"); P(1, 12, "#2a3440"); P(0, 13, "#2a3440");   // tail
+  }],
+  ["eelbot", ({ P, rect }) => {   // the Electric Eel Bot: a long wiggly robot eel with lightning stripes
+    for (let i = 0; i < 15; i++) { const y = 9 + Math.round(Math.sin(i * 0.7) * 2); P(i, y, "#2a5a6a"); P(i, y + 1, i % 4 === 1 ? "#ffe84a" : "#3a8a9a"); P(i, y - 1, "#4ab0c0"); }
+    const hy = 9 + Math.round(Math.sin(14 * 0.7) * 2); rect(13, hy - 2, 15, hy + 1, "#3a8a9a"); P(14, hy - 1, "#ffe84a"); P(15, hy, "#16191d");   // its head, with a glowing eye
+    P(4, 4, "#fff7a0"); P(5, 5, "#fff7a0"); P(4, 6, "#fff7a0"); P(11, 13, "#fff7a0"); P(12, 14, "#fff7a0");   // sparks crackling around it
+  }],
+  ["clambot", ({ P, rect, disc }) => {   // the Clam Bot, open: a robot clam with a shiny pearl and a red eye inside
+    for (let i = 2; i <= 13; i++) for (let j = 3; j <= 7; j++) if (Math.hypot((i - 7.5) / 6, (j - 7.5) / 4.5) <= 1) P(i, j, j < 5 ? "#c9d4dc" : (i % 3 ? "#9aa4ac" : "#7a848c"));   // top shell (lifted)
+    rect(3, 8, 12, 9, "#d86a8a"); disc(7.5, 9, 1.8, "#f4f4ff"); P(7, 8, "#ffffff"); P(11, 9, "#e0443a");   // pink inside, the pearl, an eye
+    for (let i = 2; i <= 13; i++) for (let j = 10; j <= 14; j++) if (Math.hypot((i - 7.5) / 6, (j - 9.5) / 4.5) <= 1) P(i, j, j > 12 ? "#5a646c" : (i % 3 ? "#9aa4ac" : "#7a848c"));   // bottom shell
+  }],
+  ["clambot_shut", ({ P, rect }) => {   // the Clam Bot, shut tight
+    for (let i = 2; i <= 13; i++) for (let j = 5; j <= 14; j++) if (Math.hypot((i - 7.5) / 6, (j - 9.5) / 4.8) <= 1) P(i, j, j < 8 ? "#c9d4dc" : j > 12 ? "#5a646c" : (i % 3 ? "#9aa4ac" : "#7a848c"));
+    rect(2, 10, 13, 10, "#2a2e34"); for (const i of [4, 8, 12]) P(i, 6, "#eef2f5");
+  }],
+  ["hermitbot", ({ P, rect, disc }) => {   // the Hermit Bot: a little robot hiding in a big spiral shell
+    disc(7, 8, 5.4, (dx, dy) => (Math.round(Math.atan2(dy, dx) * 2 + Math.hypot(dx, dy)) % 3 === 0) ? "#a8743e" : dy < -2 ? "#f2c48a" : "#d9a05a");   // the spiral shell
+    P(7, 8, "#7a4a24"); P(8, 7, "#7a4a24"); P(6, 9, "#7a4a24");
+    rect(12, 9, 14, 13, "#8a949c"); P(13, 9, "#ff2a2a"); P(14, 10, "#16191d");   // the little robot peeking out
+    for (const i of [11, 13, 15]) P(i, 14, "#5a646c");   // little legs
+  }],
+  ["hermitkid", ({ P, rect }) => {   // the little robot from inside the Hermit Bot's shell, running for it!
+    rect(5, 7, 11, 12, "#8a949c"); rect(5, 7, 11, 7, "#c9d4dc"); P(9, 9, "#ff2a2a"); P(10, 9, "#ffd0c0"); rect(9, 11, 11, 11, "#16191d");
+    for (const [i, j] of [[5, 13], [7, 14], [9, 13], [11, 14]]) P(i, j, "#5a646c"); P(4, 6, "#9aa4ac"); P(3, 5, "#ff2a2a");
+  }],
+  ["starfish", ({ P, disc }) => {   // the Starfish Bot: a spinning orange robot starfish with a glowing core
+    for (let a = 0; a < 5; a++) { const ang = -Math.PI / 2 + a / 5 * Math.PI * 2; for (let d = 0; d < 7; d += 0.5) { const w = (7 - d) / 3.5; for (let w0 = -w; w0 <= w; w0 += 0.5) P(8 + Math.cos(ang) * d - Math.sin(ang) * w0, 8 + Math.sin(ang) * d + Math.cos(ang) * w0, d > 5.5 ? "#ffd04a" : (Math.round(d) % 2 ? "#e0662a" : "#ff8a3a")); } }
+    disc(8, 8, 2, "#5a646c"); P(8, 8, "#7cd4ff"); P(7, 7, "#e8fbff");   // the robot core
+  }],
+  ["starlet", ({ P }) => {   // one small piece of a broken Starfish Bot
+    for (let a = 0; a < 5; a++) { const ang = -Math.PI / 2 + a / 5 * Math.PI * 2; for (let d = 0; d < 4; d += 0.5) P(8 + Math.cos(ang) * d, 9 + Math.sin(ang) * d, d > 3 ? "#ffd04a" : "#ff8a3a"); }
+    P(8, 9, "#7cd4ff");
+  }],
+  ["mantabot", ({ P, rect }) => {   // the Manta Ray Bot: a big flat dark-blue robot glider with wide wings
+    for (let i = 0; i < 16; i++) { const w = Math.max(0, 6 - Math.abs(i - 9) * 0.7); for (let j = Math.round(8 - w); j <= Math.round(8 + w * 0.6); j++) P(i, j, j < 7 ? "#4a6aa0" : j > 9 ? "#1a2a4a" : "#2a4070"); }
+    P(12, 7, "#7cd4ff"); P(12, 9, "#7cd4ff"); rect(13, 7, 14, 9, "#2a4070");   // glowing eyes on its head
+    for (let i = 0; i < 4; i++) P(i - 1 + 1, 8 + (i % 2), "#4a5059");   // a long thin tail
+    for (const i of [6, 9]) P(i, 6, "#9ad8ff");   // lights along its wings
+  }],
+  ["barnaclebot", ({ P, rect, disc }) => {   // the Barnacle Bot: a cluster of little robot barnacles with tiny claws poking out
+    for (const [cx, cy, r] of [[5, 10, 3.2], [10, 9, 3.6], [8, 13, 2.8], [12, 13, 2.4]]) { disc(cx, cy, r, (dx, dy) => dy < -1 ? "#e8e4d8" : "#b8b0a0"); P(cx, cy - 1, "#3a3430"); P(cx, cy - 2, "#ff8a4a"); }
+    for (const [i, j] of [[4, 5], [10, 4], [13, 8]]) { P(i, j, "#8a949c"); P(i + 1, j - 1, "#c9d4dc"); }   // tiny grabby claws
+    rect(2, 15, 14, 15, "#6a6458");
+  }],
   ["torpedo", ({ P, rect }) => {   // a gray torpedo with red stripes, fins, a propeller, and an angry face on its nose
     rect(2, 7, 13, 10, "#8a949c"); rect(2, 7, 13, 7, "#b4bcc2"); rect(2, 10, 13, 10, "#5a646c");
     P(14, 8, "#8a949c"); P(14, 9, "#8a949c"); P(15, 8, "#5a646c"); P(15, 9, "#5a646c");
@@ -4824,6 +4889,7 @@ function buildMap(L) {
 // Where a robot is right now (robots on a two-factory level each follow their own path).
 function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
 // Bosses (and boss robots like the Sand Golem) are heavy: Owls can't push them, vines hold them only briefly.
+function RB0(r) { return SETTINGS.robots[r.type] || {}; }
 function isHeavy(r) { return r.type === "boss" || !!(SETTINGS.robots[r.type] || {}).isBoss; }
 // Only these towers can hit flying robots like the Sky Drone: the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra (and the Wizard's Elemental Sphere).
 const AIR_HUNTERS = new Set(["air", "fire", "pegasus", "wizard", "phoenix", "hydra", "hacked", "nightowl"]);   // the Hydra only does half damage to flying robots
@@ -5789,11 +5855,20 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
-const SEA_FOES = ["torpedo", "subbot", "jellybot", "divebot", "pufferbot", "seaturtle", "megalodon"];   // the Sunken Kingdom (World 2)
+const SEA_FOES = ["torpedo", "subbot", "jellybot", "crabclaw", "clambot", "starfish", "octobot", "eelbot", "hermitbot", "divebot", "anglerbot", "barnaclebot", "mantabot", "pufferbot", "seaturtle", "megalodon"];   // the Sunken Kingdom (World 2)
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES, ...SEA_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
 const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon", "pufferbot", "seaturtle"]);
 const FOE_ABOUT = {
+  crabclaw: "A rusty robot crab with two big steel claws and red eyes on stalks. From the Coral Reef.",
+  clambot: "A robot clam with a shiny pearl inside. From the Coral Reef.",
+  starfish: "A spinning orange robot starfish with a glowing core. From the Coral Reef.",
+  octobot: "A purple robot octopus with green eyes behind a visor and six wiggly metal arms. From the Kelp Forest.",
+  eelbot: "A long wiggly robot eel with lightning stripes, crackling with electricity. From the Kelp Forest.",
+  hermitbot: "A little robot hiding inside a big spiral shell. From the Kelp Forest.",
+  anglerbot: "A dark robot fish with a huge mouth full of fangs and a glowing lure on a stick. From Shipwreck Cove.",
+  barnaclebot: "A cluster of little robot barnacles with tiny grabby claws. From Shipwreck Cove.",
+  mantabot: "A big flat robot manta ray that glides through the water. From Shipwreck Cove.",
   pufferbot: "A round steel robot pufferfish with two angry red eyes and a huge jaw full of fangs. When it gets hurt it puffs up into a spiky ball! A miniboss of the Coral Reef.",
   seaturtle: "A huge robot sea turtle with a tiny smoking factory on its armored shell. A miniboss of the Kelp Forest.",
   divebot: "An old brass diving suit with a big round helmet, a glowing robot eye in its window, lead boots and an anchor. From Shipwreck Cove.",
@@ -5985,6 +6060,15 @@ function renderEnemies() {
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
       : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
       : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Its storm armor makes land towers do only ${r.landTowerTimes}x damage, but flying towers (Owls, Night Owls, Dragons, the Pegasus and the Phoenix) do ${r.flyingTowerTimes}x damage! Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
+      : k === "crabclaw" ? `Special: its claws snap shut and block a whole hit, then get ready again ${r.clawBlockEvery} seconds later. Fast-attacking towers get through.`
+      : k === "clambot" ? `Special: every ${r.shutEvery} seconds it shuts its shell for ${r.shutSeconds} seconds, and nothing can hurt it. Destroy it and you get its pearl: +${r.pearlLeaves} Maple Leaves!`
+      : k === "starfish" ? `Special: when destroyed it splits into ${r.splitInto} small pieces. If any are still around after ${r.reformSeconds} seconds, they come back together into a new Starfish Bot!`
+      : k === "octobot" ? `Special: every ${r.inkEvery} seconds it squirts ink that blinds every tower within ${r.inkRadius} squares for ${r.inkSeconds} seconds.`
+      : k === "eelbot" ? `Special: every ${r.zapEvery} seconds it zaps the closest tower, and the zap jumps to up to ${r.zapChain - 1} more towers that are close together. Spread your towers out!`
+      : k === "hermitbot" ? `Special: when its shell breaks, the little robot inside runs out twice as fast.`
+      : k === "anglerbot" ? `Special: its glowing lure makes every tower that can reach it attack it first, so the robots behind it can sneak past.`
+      : k === "barnaclebot" ? `Special: every ${r.barnacleEvery} seconds it sticks a barnacle onto a tower near the road, which makes it attack ${Math.round(r.barnacleSlow * 100)}% slower. Towers next to it knock the barnacle off.`
+      : k === "mantabot" ? `Special: flies over everything, so only towers that hit flying robots can reach it.`
       : k === "pufferbot" ? `Miniboss. Every time it loses ${Math.round(r.puffEveryPart * 100)}% of its health, it puffs up for ${r.puffSeconds} seconds: it takes half damage and shoots spikes that stop towers within ${r.spikeRadius} squares from attacking for ${r.spikeStun} seconds.`
       : k === "seaturtle" ? `Miniboss. Every ${r.troopEvery} seconds ${r.troopCount} Clankers pop out of the factory on its shell. Every time it loses ${Math.round(r.shellEveryPart * 100)}% of its health, it hides in its shell for ${r.shellSeconds} seconds, and nothing can hurt it.`
       : k === "divebot" ? `Special: really tough and slow. Every ${r.anchorEvery} seconds it throws its anchor onto the closest tower (within ${r.anchorRadius} squares), pinning it so it can't attack for ${r.anchorSeconds} seconds. Shows up in Shipwreck Cove.`
@@ -6473,6 +6557,7 @@ function towerStats(t) {
     if (sk.vision) out.vision = true;
     out.skinBuff = sk;
   }
+  if (t.barn && out.attacksPerSecond) out.attacksPerSecond *= 1 - ((SETTINGS.robots.barnaclebot || {}).barnacleSlow || 0.5);   // a barnacle stuck on it
   if (G.eclipseT > 0 && out.damage) out.damage *= (SETTINGS.skinSets.shadow || {}).damageTimes || 1.5;   // Team Shadow: towers hit harder in the dark
   if (G.damageBonus && out.damage) { out.damage *= 1 + G.damageBonus; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= 1 + G.damageBonus; }
   if (out.waveGrowth && out.damage && G) out.damage *= 1 + out.waveGrowth * Math.max(0, G.wave - 1);   // Night Owl: stronger every wave
@@ -7068,6 +7153,15 @@ function startWave() {
     sludgeleviathan: "The Sludge Leviathan rises from the swamp! It dives under the sludge where nothing can hit it, and splashes sludge that slows your towers. Water Frogs do double damage to it!",
     pharaohmachine: "The Pharaoh Machine awakens! It raises Mummy Bots, hides behind a golden shield, and at half health it wraps up nearby towers. Break the shield fast!",
     thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
+    crabclaw: "Crab Claw Bots are here! Their claws block a whole hit every few seconds. Fast-attacking towers are great against them.",
+    clambot: "Clam Bots are here! They shut their shells every few seconds, and nothing can hurt them then. Destroy one to get its pearl: bonus Maple Leaves!",
+    starfish: "Starfish Bots are here! When you break one it splits into 5 pieces, and if you don't destroy them fast, they come back together!",
+    octobot: "Octo-Bots are here! They squirt ink that blinds the towers near them for a few seconds.",
+    eelbot: "Electric Eel Bots are here! Their zap jumps from tower to tower when your towers are close together. Spread them out!",
+    hermitbot: "Hermit Bots are here! When you break the shell, the little robot inside runs out super fast.",
+    anglerbot: "Anglerfish Bots are here! Their glowing lure makes your towers attack them first, so other robots can sneak past.",
+    barnaclebot: "Barnacle Bots are here! They stick barnacles onto your towers to slow them down. Towers right next to it knock the barnacle off.",
+    mantabot: "Manta Ray Bots glide over everything! Only towers that hit flying robots can reach them.",
     pufferbot: "The Puffer Bot is coming! When it gets hurt it puffs up into a spiky ball: it takes half damage and its spikes stop nearby towers for a moment. Keep hitting it!",
     seaturtle: "The Sea Turtle Fortress is coming! Clankers keep popping out of the factory on its shell, and when it's hurt it hides in its shell where nothing can hurt it. Wait for it to come back out!",
     divebot: "Diver Bots are here! They're slow but really tough, and they throw their anchors onto towers to pin them down for a few seconds.",
@@ -7210,6 +7304,8 @@ function hurt(r, amt, vision, isBurn, kind) {
   if (r.dead) return;
   if (r.hideT > 0 && !vision) return;
   if (r.under || r.spinning) return;   // a Lava Diver under the lava (or a spinning Cyclone Golem) can't be hit
+  if (r.shut > 0) { if (!isBurn && Math.random() < 0.1) { const q = rpos(r); floatText(q.x, q.y - 26, "Clang!", "#c9d4dc", 0.5); } return; }   // a Clam Bot shut tight
+  if (!isBurn && RB0(r).clawBlockEvery && !(r.clawCd > 0)) { r.clawCd = RB0(r).clawBlockEvery; const q = rpos(r); floatText(q.x, q.y - 26, "Blocked!", "#c9d4dc", 0.6); burst(q.x, q.y - 6, "#c9d4dc", 5); return; }   // Crab Claw Bot: its claws snap shut and block the hit
   if (r.shellT > 0) { if (!isBurn && Math.random() < 0.08) { const q = rpos(r); floatText(q.x, q.y - 30, "Clang!", "#c9d4dc", 0.5); } return; }   // the Sea Turtle hiding in its shell: nothing gets through
   if (kind) r.lastKind = kind;   // which tower hit it last (for the Hot Water achievement)
   const sk = !isBurn && kind ? skinBuff(kind) : null;   // skin buffs
@@ -7271,10 +7367,13 @@ function kill(r) {
     if (best) { spawn({ type: sb.dropType, d: best.d, path: best.pm }); const pl = G.robots[G.robots.length - 1]; pl.chute = 0.6; pl.crash = true; }
     burst(q.x, q.y - 6, "#e0443a", 12); burst(q.x, q.y - 6, "#ffd34d", 8); floatText(q.x, q.y - 22, "Pop!", "#ffd34d");
   }
-  if (sb && sb.splitInto) {
-    for (let i = 0; i < sb.splitInto; i++) spawn({ type: sb.splitType || "mini", d: Math.max(0, r.d - i * 9), path: r.path, fromMummy: r.type === "mummy" });
-    const q = rpos(r); burst(q.x, q.y, r.type === "mummy" ? "#f4e2c0" : "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6); floatText(q.x, q.y - 18, r.type === "mummy" ? "Unraveled!" : "Split!", "#c9ced6");
+  if (sb && sb.splitInto && !r.reformed) {
+    const grp = { id: Math.random() };
+    for (let i = 0; i < sb.splitInto; i++) { spawn({ type: sb.splitType || "mini", d: Math.max(0, r.d - i * 9), path: r.path, fromMummy: r.type === "mummy" }); if (sb.reformSeconds) { const k = G.robots[G.robots.length - 1]; k.group = grp; k.reformT = sb.reformSeconds; } }
+    const q = rpos(r); burst(q.x, q.y, r.type === "mummy" ? "#f4e2c0" : r.type === "starfish" ? "#ff8a3a" : "#8b929c", 16); burst(q.x, q.y, "#f2c230", 6);
+    floatText(q.x, q.y - 18, r.type === "mummy" ? "Unraveled!" : r.type === "hermitbot" ? "Shell broke! Run!" : r.type === "starfish" ? "Split! Get them all fast!" : "Split!", "#c9ced6");
   }
+  if (sb && sb.pearlLeaves) { const q = rpos(r); G.leaves += sb.pearlLeaves; floatText(q.x, q.y - 32, `Pearl! +${sb.pearlLeaves} leaves`, "#f4f4ff", 1.1); burst(q.x, q.y, "#f4f4ff", 8); }   // Clam Bot: a pearl for you!
   G.leaves += r.leaves; G.killPoints += r.points;
   const luck = r.lastKind ? skinBuff(r.lastKind) : null;   // the Golden skin: lucky!
   if (luck && luck.bonusLeaves) G.leaves += luck.bonusLeaves;
@@ -7335,6 +7434,15 @@ function kill(r) {
   for (let i = 0; i < n; i++) G.particles.push({ kind: "leaf", x: p.x + (Math.random() - 0.5) * 16, y: p.y, t: 0, life: 0.55 + Math.random() * 0.2, sx: p.x, sy: p.y });
   updateHud();
 }
+// Starfish pieces that are still around when their timer runs out swim back together into one Starfish Bot (it can't split again)
+function reformStarfish(r) {
+  const g = r.group, left = G.robots.filter((o) => !o.dead && o.group === g);
+  if (left.length < 2) { for (const o of left) o.reformT = 0; return; }
+  const lead = left.reduce((a, b) => b.d > a.d ? b : a), q = rpos(lead);
+  for (const o of left) { o.dead = true; const p = rpos(o); for (let k = 0; k < 5; k++) G.particles.push({ kind: "spark", x: p.x + (q.x - p.x) * k / 5, y: p.y + (q.y - p.y) * k / 5, vx: 0, vy: 0, t: 0, life: 0.35, col: "#ff8a3a" }); }
+  spawn({ type: "starfish", d: lead.d, path: lead.path }); const s2 = G.robots[G.robots.length - 1]; s2.reformed = true; s2.hp = s2.maxHp * 0.6 * (left.length / 5) + s2.maxHp * 0.2;
+  floatText(q.x, q.y - 26, "It came back together!", "#ffb347", 1); burst(q.x, q.y, "#ff8a3a", 14); Sound.play("upgrade");
+}
 function reachBase(r) {
   r.dead = true; G.hurtBase = true;   // (for the Untouchable achievement)
   (G.hurtFrom = G.hurtFrom || new Set()).add(G.map.paths.indexOf(r.path) >= 0 ? G.map.paths.indexOf(r.path) : (G.map.flights || []).indexOf(r.path));   // which factory's robots got through (Two-Front War)
@@ -7356,13 +7464,13 @@ function targetRank(t) {   // a score for each robot: the tower attacks the high
 }
 function findTarget(t, s) {
   const cx = t.x * T + 16, cy = t.y * T + 16, R = s.range * T, rank = targetRank(t);
-  let best = null, bestV = -Infinity;
+  let best = null, bestV = -Infinity, lure = null;
   for (const r of G.robots) {
     if (r.dead || (r.hideT > 0 && !s.vision) || !canHit(t.kind, r)) continue;
     const p = rpos(r);
-    if (Math.hypot(p.x - cx, p.y - cy) <= R) { const v = rank(r); if (v > bestV) { best = r; bestV = v; } }
+    if (Math.hypot(p.x - cx, p.y - cy) <= R) { const v = rank(r); if (v > bestV) { best = r; bestV = v; } if (!lure && RB0(r).lure) lure = r; }
   }
-  return best;
+  return lure || best;   // an Anglerfish Bot's glowing lure: towers can't help aiming at it first
 }
 function fire(t, s, target) {
   const sx = t.x * T + 16, sy = t.y * T + 10;
@@ -8190,7 +8298,7 @@ function stormPowers(dt) {
   if (G.planks) G.planks = G.planks.filter((b) => (b.t -= dt) > 0);   // shortcut bridges only last a while
   for (const r of G.robots) {
     if (r.dead) continue;
-    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.anchorEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
+    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.inkEvery && !S.barnacleEvery && !S.shutEvery && !S.anchorEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
     const q = rpos(r);
     if (S.dashEvery) {   // Gust Runner: a gust of wind pushes it forward
       r.dashT = (r.dashT ?? S.dashEvery * (0.4 + Math.random() * 0.6)) - dt;
@@ -8206,6 +8314,30 @@ function stormPowers(dt) {
           else { t.stunT = Math.max(t.stunT || 0, S.anchorSeconds); t.anchorT = S.anchorSeconds; floatText(tx, ty - 16, "Anchored!", "#c9d4dc", 0.8); burst(tx, ty + 6, "#9aa4ac", 10); Sound.play("smash"); } }
       }
     }
+    if (S.inkEvery) {   // Octo-Bot: squirts an ink cloud that blinds every tower near it
+      r.inkT = (r.inkT ?? S.inkEvery * 0.5) - dt;
+      if (r.inkT <= 0) {
+        const hit = G.towers.filter((t) => t.kind !== "phoenix" && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.inkRadius * T);
+        if (!hit.length) r.inkT = 0.5;
+        else { r.inkT = S.inkEvery; Sound.play("swish");
+          for (let k = 0; k < 18; k++) { const a = Math.random() * Math.PI * 2, v = 30 + Math.random() * 60; G.particles.push({ kind: "spark", x: q.x, y: q.y - 6, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: 0.6, col: k % 3 ? "#2a1a3a" : "#5a3a90" }); }
+          for (const t of hit) { t.stunT = Math.max(t.stunT || 0, S.inkSeconds); t.inkT = S.inkSeconds; floatText(t.x * T + 16, t.y * T - 4, "Inked!", "#b48cf0", 0.7); } }
+      }
+    }
+    if (S.barnacleEvery) {   // Barnacle Bot: sticks a barnacle onto a tower, which makes it attack slower
+      r.barnT = (r.barnT ?? S.barnacleEvery * 0.4) - dt;
+      if (r.barnT <= 0) {
+        const t = G.towers.filter((t) => t.kind !== "phoenix" && !t.barn && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.barnacleRadius * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - q.y) - Math.hypot(b.x * T - q.x, b.y * T - q.y))[0];
+        if (!t) r.barnT = 0.5;
+        else { r.barnT = S.barnacleEvery; t.barn = { hp: S.barnacleHealth, max: S.barnacleHealth, t: S.barnacleSeconds }; const tx = t.x * T + 16, ty = t.y * T + 12;
+          for (let k = 0; k < 8; k++) G.particles.push({ kind: "spark", x: q.x + (tx - q.x) * k / 8, y: q.y + (ty - q.y) * k / 8 - Math.sin(k / 8 * Math.PI) * 16, vx: 0, vy: 0, t: 0, life: 0.4, col: "#e8e4d8" });
+          floatText(tx, ty - 16, "Barnacled!", "#e8e4d8", 0.8); Sound.play("pop"); }
+      }
+    }
+    if (S.shutEvery) {   // Clam Bot: snaps its shell shut every few seconds (nothing can hurt it then)
+      if (r.shut > 0) { r.shut -= dt; if (r.shut <= 0) r.shutCd = S.shutEvery; }
+      else { r.shutCd = (r.shutCd ?? S.shutEvery * 0.7) - dt; if (r.shutCd <= 0) { r.shut = S.shutSeconds; floatText(q.x, q.y - 22, "Snap!", "#c9d4dc", 0.5); } }
+    }
     if (S.zapEvery) {   // Static Bot: zaps the closest tower
       r.zapT = (r.zapT ?? S.zapEvery * 0.5) - dt;
       if (r.zapT <= 0) {
@@ -8216,6 +8348,16 @@ function stormPowers(dt) {
           G.fx.push({ kind: "arc", x1: q.x, y1: q.y - 10, x2: tx, y2: ty, t: 0.35, life: 0.35, seed: Math.random() * 100 }); Sound.play("hit");
           if (t.kind === "phoenix") phoenixRebirth(t);
           else { r.zappedAny = true; t.stunT = Math.max(t.stunT || 0, S.zapSeconds); t.zapT = S.zapSeconds; floatText(tx, ty - 16, "Zapped!", "#fff7a0", 0.7); burst(tx, ty, "#fff7a0", 8); }
+          if (S.zapChain) {   // Electric Eel Bot: the zap jumps from tower to tower when they're close together
+            let last = t; const done = new Set([t]);
+            for (let n = 1; n < S.zapChain; n++) {
+              const nx = G.towers.filter((o) => !done.has(o) && Math.hypot((o.x - last.x) * T, (o.y - last.y) * T) <= S.chainReach * T).sort((a, b) => Math.hypot(a.x - last.x, a.y - last.y) - Math.hypot(b.x - last.x, b.y - last.y))[0];
+              if (!nx) break; done.add(nx);
+              G.fx.push({ kind: "arc", x1: last.x * T + 16, y1: last.y * T + 12, x2: nx.x * T + 16, y2: nx.y * T + 12, t: 0.35, life: 0.35, seed: Math.random() * 100 });
+              if (nx.kind === "phoenix") phoenixRebirth(nx); else { nx.stunT = Math.max(nx.stunT || 0, S.zapSeconds); nx.zapT = S.zapSeconds; floatText(nx.x * T + 16, nx.y * T - 4, "Zapped!", "#fff7a0", 0.7); burst(nx.x * T + 16, nx.y * T + 12, "#fff7a0", 6); }
+              last = nx;
+            }
+          }
         }
       }
     }
@@ -8429,6 +8571,8 @@ function update(dt) {
     else { const q = rpos(r); let slow = 0; for (const w of warps) if (Math.hypot(q.x - w.x, q.y - w.y) <= w.R) slow = Math.max(slow, w.slow); r.warped = slow > 0; if (slow) sp *= 1 - slow; }
     if (r.slowT > 0) { r.slowT -= dt; sp *= 1 - r.slowBy; }
     if (r.puffT > 0) r.puffT -= dt;
+    if (r.clawCd > 0) r.clawCd -= dt;   // (the Crab Claw Bot's claws get ready to block again)
+    if (r.reformT > 0) { r.reformT -= dt; if (r.reformT <= 0) reformStarfish(r); if (r.dead) continue; }   // Starfish pieces come back together
     if (r.shellT > 0) { r.shellT -= dt; sp = 0; }   // (the Sea Turtle stays put while it hides)
     if (r.rootT > 0) { r.rootT -= dt; sp = 0; }
     if (r.freezeT > 0) { r.freezeT -= dt; sp = 0; }   // frozen solid by the Freeze ability
@@ -8492,11 +8636,16 @@ function update(dt) {
       }
     }
     const tsk = skinBuff(t.kind);
-    if (tsk && tsk.steel && (t.stunT > 0 || t.iceT > 0 || t.slimeT > 0 || t.pillar)) { t.stunT = 0; t.zapT = 0; t.wrapT = 0; t.anchorT = 0; t.iceT = 0; t.slimeT = 0; if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#c8d0d6", 10); }
+    if (tsk && tsk.steel && (t.stunT > 0 || t.iceT > 0 || t.slimeT > 0 || t.pillar || t.barn)) { t.stunT = 0; t.zapT = 0; t.wrapT = 0; t.anchorT = 0; t.inkT = 0; t.barn = null; t.iceT = 0; t.slimeT = 0; if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#c8d0d6", 10); }
       if (!t.steelMsgT || G.time - t.steelMsgT > 3) { t.steelMsgT = G.time; floatText(t.x * T + 16, t.y * T - 6, "Steel Coat!", "#dfe6ee", 0.7); } }   // the Metal skin: nothing can stop it
+    if (t.barn) {   // a Barnacle Bot's barnacle: the towers around it knock it off (or it falls off by itself after a while)
+      t.barn.t -= dt; const bx = t.x * T + 16, by = t.y * T + 16;
+      for (const o of G.towers) { if (o === t || o.stunT > 0) continue; const os = towerStats(o); if (os.damage && Math.hypot(o.x * T + 16 - bx, o.y * T + 16 - by) <= (os.range || 0) * T) t.barn.hp -= os.damage * (os.attacksPerSecond || 1) * 0.5 * dt; }
+      if (t.barn.hp <= 0 || t.barn.t <= 0) { burst(bx, by, "#e8e4d8", 10); floatText(bx, by - 20, t.barn.hp <= 0 ? "Knocked off!" : "Fell off!", "#e8e4d8", 0.7); t.barn = null; }
+    }
     if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech
     if (t.slimeT > 0) t.slimeT -= dt;   // covered in sludge by the Sludge Leviathan: attacks slower
-    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; if (t.anchorT > 0) t.anchorT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
+    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; if (t.anchorT > 0) t.anchorT -= dt; if (t.inkT > 0) t.inkT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
     if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
@@ -8990,10 +9139,15 @@ function draw() {
     }
     x.imageSmoothingEnabled = false;
 
+    if (t.barn) { for (const [ox, oy, rr] of [[-9, -4, 4], [-4, -1, 3.5], [8, -3, 3.5]]) { x.fillStyle = "#16191d"; x.beginPath(); x.arc(cx + ox, by + oy, rr + 1, 0, Math.PI * 2); x.fill(); x.fillStyle = "#d8d0c0"; x.beginPath(); x.arc(cx + ox, by + oy, rr, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ff8a4a"; x.fillRect(cx + ox - 1, by + oy - 1, 2, 2); }
+      const f = Math.max(0, t.barn.hp / t.barn.max); x.fillStyle = "#16191d"; x.fillRect(cx - 10, by + 6, 20, 4); x.fillStyle = "#e8e4d8"; x.fillRect(cx - 9, by + 7, 18 * f, 2); }   // barnacles stuck on it
     if (t.slimeT > 0) { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? "#6e7228" : "#b4ff3c"; x.fillRect(cx - 9 + i * 5, by - 18 + ((G.time * 14 + i * 5) % 14), 2, 3); } }   // dripping sludge
     if (t.stunT > 0 && t.wrapT > 0) {   // wrapped up in mummy bandages
       x.fillStyle = "#e8dcc0"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12, by - 22 + i * 6 + Math.sin(G.time * 3 + i) * 1.5, 24, 3);
       x.fillStyle = "#b8a682"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12 + (i * 7) % 20, by - 21 + i * 6, 5, 1);
+    } else if (t.stunT > 0 && t.inkT > 0) {   // blinded by an Octo-Bot's ink cloud
+      for (let i = 0; i < 6; i++) { const a = i * 1.05 + G.time * 0.8; x.fillStyle = i % 2 ? "rgba(30,16,46,0.85)" : "rgba(70,40,110,0.75)"; x.beginPath(); x.arc(cx + Math.cos(a) * 7, by - 12 + Math.sin(a) * 5, 7, 0, Math.PI * 2); x.fill(); }
+      x.fillStyle = "#b48cf0"; x.fillRect(cx - 1, by - 14, 2, 2);
     } else if (t.stunT > 0 && t.anchorT > 0) {   // pinned by a Diver Bot's anchor: an iron anchor and chain on top of it
       const ax = cx + 8, ay = by - 6; x.strokeStyle = "#5a646c"; x.lineWidth = 2; x.beginPath(); x.moveTo(ax, ay - 14); x.lineTo(ax, ay); x.stroke();
       x.beginPath(); x.arc(ax, ay - 2, 5, 0.2, Math.PI - 0.2); x.stroke(); x.fillStyle = "#9aa4ac"; x.fillRect(ax - 4, ay - 12, 8, 2); x.beginPath(); x.arc(ax, ay - 16, 2, 0, Math.PI * 2); x.stroke();
@@ -9063,7 +9217,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "megalodon" ? 104 : r.type === "seaturtle" ? 80 : r.type === "pufferbot" ? (r.puffT > 0 ? 74 : 56) : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "megalodon" ? 104 : r.type === "mantabot" ? 38 : r.type === "eelbot" ? 32 : r.type === "starfish" ? 30 : r.type === "starlet" ? 18 : r.type === "hermitkid" ? 20 : r.type === "octobot" || r.type === "anglerbot" || r.type === "crabclaw" || r.type === "clambot" || r.type === "hermitbot" || r.type === "barnaclebot" ? 30 : r.type === "seaturtle" ? 80 : r.type === "pufferbot" ? (r.puffT > 0 ? 74 : 56) : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
@@ -9109,6 +9263,7 @@ function draw() {
     }
     if (r.type === "pufferbot" && r.puffT > 0) frame = "pufferbot_big";   // puffed up!
     if (r.type === "seaturtle" && r.shellT > 0) frame = "seaturtle_shell";   // hiding in its shell
+    if (r.type === "clambot" && r.shut > 0) frame = "clambot_shut";   // shut tight
     const img = (p.dx < 0 ? SPRF : SPR)[frame];
     const drop = r.chute > 0 ? -r.chute * (r.crash ? 40 : 60) : 0;   // a Paratrooper floating down (or a Balloon Pilot crashing down) onto the road
     x.save(); x.translate(p.x, p.y + wob - (big ? 12 : 4) + (r.flying ? Math.sin(G.time * 4 + r.wob) * 2 : 0) + (r.sinking ? 4 : 0) + drop - (r.type === "skyblimp" ? 22 : 0));   // robots sink a little in quicksand (and the Blimp flies high)
