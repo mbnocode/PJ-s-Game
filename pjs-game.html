@@ -2599,15 +2599,18 @@ function renderShopShelves(shop, items, shelfCount, s, prefix, soonText, rerende
     d.innerHTML = `${it.picture && SPR[it.picture] ? '<span class="pic"></span>' : ""}<span class="k">${it.name}</span><span class="s">${it.about || ""}</span>
       ${done ? '<span class="owned">Unlocked!</span>' : holding ? `<span class="owned">${it.holdingText || "You have one!"}</span>` : `${own ? `<span class="owned">You have ${own}</span>` : ""}
       ${locked ? `<span class="needs">🔒 ${it.needs.text}</span>` : ""}
-      <button class="go" id="${prefix}-buy-${key}" ${!s || locked || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>`}`;
+      <button class="go" id="${prefix}-buy-${key}" ${!s || locked || (s.acorns || 0) < it.cost ? "disabled" : ""}>${it.unlock ? "Unlock" : "Buy"} <span class="cost">${it.cost}</span></button>
+      ${it.bulk ? `<button class="go" id="${prefix}-buy10-${key}" ${!s || locked || (s.acorns || 0) < it.cost * it.bulk || (it.maxHeld && own + it.bulk > it.maxHeld) ? "disabled" : ""}>Buy ${it.bulk} <span class="cost">${it.cost * it.bulk}</span></button>` : ""}`}`;   // (bulk: buy that many at once)
     if (it.picture && SPR[it.picture]) { const pc = spriteCanvas(it.picture, 64); pc.style.cssText = "width:64px;height:64px;image-rendering:pixelated"; d.querySelector(".pic").replaceWith(pc); }
     if (done || holding) { shop.appendChild(d); return; }
-    d.querySelector("button").onclick = () => {
-      if (!s || locked || (s.acorns || 0) < it.cost) return;
-      s.acorns -= it.cost; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + 1;
+    const buy = (n) => {
+      if (!s || locked || (s.acorns || 0) < it.cost * n || (it.maxHeld && own + n > it.maxHeld)) return;
+      s.acorns -= it.cost * n; s.materials = s.materials || {}; s.materials[key] = (s.materials[key] || 0) + n;
       if (prefix === "serp") s.serpBought = true;   // this slot has shopped with the serpent (so the Upgrades page shows its shortcut)
       saveSlots(slots); Sound.play("upgrade"); rerender();
     };
+    d.querySelector(`#${prefix}-buy-${key}`).onclick = () => buy(1);
+    if (it.bulk) d.querySelector(`#${prefix}-buy10-${key}`).onclick = () => buy(it.bulk);
     shop.appendChild(d);
   });
 }

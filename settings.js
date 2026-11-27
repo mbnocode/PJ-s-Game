@@ -361,7 +361,7 @@ const SETTINGS = {
     // acornTimes: once you own it, every Golden Acorn that drops counts this many times.
     acorndoubler: { name: "Golden Acorn Doubler", cost: 150, unlock: true, shelf: 1, picture: "acorndoubler", acornTimes: 2, about: "Every Golden Acorn that drops counts twice: you get 2 instead of 1! Works on every level, for this save slot." },
     // maxHeld: you can carry up to this many at a time. Opening the Mystery Box uses one up, then you can buy another.
-    mysterykey: { name: "Mystery Key", cost: 250, maxHeld: 3, holdingText: "You have 3 keys: that's the most you can carry!", shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…",
+    mysterykey: { name: "Mystery Key", cost: 250, maxHeld: 30, bulk: 10, holdingText: "You have 30 keys: that's the most you can carry!", shelf: 2, picture: "mysterykey", about: "A glowing golden key. It opens the Mystery Box on the Upgrades page…",
                   holdingText: "You have one! Use it on the Mystery Box (Upgrades page)." },
     hydra: { name: "Hydra", cost: 300, unlock: true, shelf: 3, picture: "hydra", about: "A three-headed serpent tower! Unlock it and it joins your towers in every level. Each head fires a venom laser at a different robot." },
   },
