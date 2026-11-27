@@ -1050,9 +1050,9 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
           <span class="ab-icon ecl-ico" aria-hidden="true"></span>
           <span class="ab-name">Eclipse</span><span class="ab-free">1 per wave</span>
         </button>
-        <button class="ability cosmic" id="b-cosmic" title="Cosmic Force (Team Galaxy): push every robot back to the start and hurt them all" hidden>
+        <button class="ability cosmic" id="b-cosmic" title="Cosmic Force (Team Galaxy): once per wave, push every robot back to the start and hurt them all" hidden>
           <span class="ab-icon cos-ico" aria-hidden="true"></span>
-          <span class="ab-name">Cosmic</span><span class="ab-free" id="cosmic-state">Ready</span>
+          <span class="ab-name">Cosmic</span><span class="ab-free" id="cosmic-state">1 per wave</span>
         </button>
         <button class="ability ice" id="b-freeze" title="Freeze: tap it, then tap where to freeze the robots">
           <canvas class="ab-icon" id="fz-icon" width="40" height="40"></canvas>
@@ -8750,7 +8750,7 @@ function tickTeamSkin(dt) {
     $("b-eclipse").hidden = !teamHas("shadow"); $("b-cosmic").hidden = !teamHas("galaxy"); refitIfAbilitiesChanged(); }
   const on = teamHas("galaxy") ? "galaxy" : null, ts = teamSkin("galaxy");
   if (G.cosmicCool > 0) G.cosmicCool -= dt;
-  if (on === "galaxy") { const b = $("b-cosmic"), c = Math.ceil(G.cosmicCool || 0), dis = c > 0 || !G.waveActive, txt = c > 0 ? c + "s" : "Ready";
+  if (on === "galaxy") { const b = $("b-cosmic"), used = G.cosmicWave === G.wave, dis = used || !G.waveActive, txt = used ? "Used" : "1 per wave";   // once per wave
     if (b.disabled !== dis) b.disabled = dis; if ($("cosmic-state").textContent !== txt) $("cosmic-state").textContent = txt; }
   if (G.cosmicFx) { G.cosmicFx.t += dt; if (G.cosmicFx.t > 1.2) G.cosmicFx = null; }
   { const b = $("b-eclipse"), dis = !G.waveActive || G.eclipseWave === G.wave || G.eclipseT > 0; if (b.disabled !== dis) b.disabled = dis; }
@@ -8782,8 +8782,8 @@ function startEclipse() {
 $("b-eclipse").onclick = () => { Sound.init(); startEclipse(); };
 // ---- Team Galaxy: Cosmic Force ----
 function cosmicForce() {
-  const ts = teamSkin("galaxy"); if (!G || !ts || ts.st !== "galaxy" || !G.waveActive || G.cosmicCool > 0) { Sound.play("nope"); return; }
-  const set = ts.set; G.cosmicCool = set.forceEvery || 30; G.cosmicFx = { t: 0, from: G.robots.filter((o) => !o.dead).map((o) => rpos(o)) };
+  const ts = teamSkin("galaxy"); if (!G || !ts || ts.st !== "galaxy" || !G.waveActive || G.cosmicWave === G.wave) { Sound.play("nope"); return; }
+  const set = ts.set; G.cosmicWave = G.wave;   // once per wave G.cosmicFx = { t: 0, from: G.robots.filter((o) => !o.dead).map((o) => rpos(o)) };
   for (const o of [...G.robots]) { if (o.dead) continue;
     const q = rpos(o); for (let k = 0; k < 4; k++) G.particles.push({ kind: "spark", x: q.x, y: q.y, vx: (Math.random() - 0.5) * 120, vy: (Math.random() - 0.5) * 120, t: 0, life: 0.5, col: k % 2 ? "#c8a0ff" : "#7cd4ff" });
     o.d = 0; o.knock = 0; o.dashLeft = 0;   // blasted all the way back to its factory
