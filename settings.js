@@ -331,6 +331,9 @@ const SETTINGS = {
     jellybot:  { name: "Jelly Drone", health: 60, speed: 2.2, leaves: 10, points: 30, flying: true, baseHit: 6, zapEvery: 5, zapRadius: 1.5, zapSeconds: 1.2 },
     // Torpedo Bot: every dashEvery seconds its propeller kicks in and it shoots forward dashSpeed times faster for dashSeconds.
     torpedo:   { name: "Torpedo Bot", health: 80, speed: 2.6, leaves: 9, points: 30, dashEvery: 3, dashSeconds: 0.6, dashSpeed: 3 },
+    // Diver Bot (Shipwreck Cove): an old brass diving suit. Really tough and slow. Every anchorEvery seconds it throws its anchor onto the
+    // closest tower within anchorRadius squares, pinning it so it can't attack for anchorSeconds.
+    divebot:   { name: "Diver Bot", health: 520, speed: 0.95, leaves: 24, points: 70, anchorEvery: 7, anchorRadius: 1.6, anchorSeconds: 2.5 },
     // The Mecha Megalodon: the final boss of The Sunken City (wave 30). Every dashEvery seconds it charges forward, and every
     // troopEvery seconds it fires troopCount Torpedo Bots out of its mouth. fixedHealth: exactly this much health on Normal.
     megalodon: { name: "Mecha Megalodon", health: 80000, speed: 0.85, leaves: 400, points: 6000, baseHit: 120, isBoss: true, fixedHealth: true,
@@ -1170,6 +1173,47 @@ const SETTINGS = {
                 [[["hider", "subbot", "staticbot", "tank"], 24, 0.6]],                  // 28
                 [["pharaohmachine", 1, 0], ["boss", 2, 4, 8000], ["jellybot", 12, 0.35]],   // 29
                 [["glaciergolem", 2, 8], ["pharaohmachine", 1, 0], [["hider", "subbot", "torpedo", "jellybot", "repair"], 28, 0.45]],   // 30: the big finish
+              ] },
+    shipwreck: { name: "Shipwreck Cove", world: 2, acornDropChance: 0.095, theme: "wreck",
+              about: "An old pirate ship lies broken on the sea floor. Treasure chests wash up next to the road: tap them for double leaves before a robot grabs them! Diver Bots pin your towers with their anchors. Owls hit 50% harder here. Scores are worth 5.75x.",
+              robotHealth: 1.65, scoreTimes: 5.75, lateToughness: { fromWave: 8, perWave: 0.06 },
+              towerBoosts: { air: { damageTimes: 1.5 } },
+              path: [[0,  1],  [4,  1],  [4,  9],  [8,  9],  [8,  4],  [12,  4],  [12,  9],  [16,  9],  [16,  5],  [19,  5]],
+              // The road dips down and up through the broken ship like a W. Trees are broken masts, mushrooms are old barrels, tall grass is sea grass.
+              trees:     [[15,  2],  [2,  7],  [11,  11],  [19,  2],  [6,  7],  [15,  11],  [1,  3],  [10,  7],  [19,  11]],
+              mushrooms: [[5,  3],  [14,  7],  [9,  3],  [18,  7],  [13,  3]],
+              tallGrass: [[0,  8],  [17,  3],  [3,  4],  [7,  4],  [2,  0],  [6,  0],  [10,  0]],
+              waves: [
+                [[["walker", "clanker"], 12, 0.8]],                                     // 1
+                [["divebot", 1, 0], ["scout", 8, 0.6]],                                 // 2: the first Diver Bot
+                [[["torpedo", "walker"], 12, 0.7]],                                     // 3
+                [["divebot", 2, 3], ["jellybot", 4, 0.5]],                              // 4
+                [["boss", 1, 0, 3000], [["subbot", "walker"], 8, 0.9]],                 // 5
+                [[["hider", "torpedo", "clanker"], 15, 0.55]],                          // 6
+                [[["divebot", "repair"], 6, 1.6]],                                      // 7
+                [["subbot", 6, 1.1], ["jellybot", 6, 0.4]],                             // 8
+                [[["splitter", "divebot"], 8, 1.4]],                                    // 9
+                [["sludgeleviathan", 1, 0], [["divebot", "torpedo"], 10, 0.7]],         // 10
+                [[["torpedo", "scout", "walker"], 21, 0.4]],                            // 11
+                [[["mummy", "divebot"], 10, 1.2]],                                      // 12
+                [["staticbot", 3, 1.8], [["subbot", "hider"], 12, 0.7]],                // 13
+                [[["jellybot", "drone", "balloonbot"], 15, 0.45]],                      // 14
+                [["yetimech", 1, 0], ["divebot", 4, 1.5]],                              // 15
+                [[["tank", "divebot", "repair"], 15, 1.0]],                             // 16
+                [["torpedo", 26, 0.28]],                                                // 17
+                [[["obsidian", "subbot", "divebot"], 15, 1.0]],                         // 18
+                [[["hider", "jellybot"], 20, 0.4], ["divebot", 3, 2]],                  // 19
+                [["boss", 2, 5, 6500], ["sludgeleviathan", 1, 0]],                      // 20
+                [[["gustrunner", "torpedo", "scout"], 27, 0.3]],                        // 21
+                [[["divebot", "divebot", "tesla"], 15, 1.0]],                           // 22
+                [["skyblimp", 1, 0], [["subbot", "jellybot"], 16, 0.5]],                // 23
+                [[["snowplow", "divebot", "repair"], 18, 0.9]],                         // 24
+                [["pharaohmachine", 1, 0], [["torpedo", "hider", "divebot"], 18, 0.6]], // 25
+                [[["jellybot", "thunderbird", "balloonbot", "drone"], 24, 0.3]],        // 26
+                [["cyclonegolem", 1, 0], ["yetimech", 1, 0], [["divebot", "subbot"], 12, 0.9]],   // 27
+                [[["mummy", "obsidian", "divebot", "staticbot"], 24, 0.7]],             // 28
+                [["glaciergolem", 1, 0], ["boss", 2, 4, 8500], ["torpedo", 15, 0.35]],  // 29
+                [["sludgeleviathan", 2, 7], ["boss", 2, 5, 9000], [["divebot", "subbot", "torpedo", "jellybot", "repair"], 28, 0.5]],   // 30: the big finish
               ] },
     sunkencity: { name: "The Sunken City", world: 2, acornDropChance: 0.1, theme: "sunken",
               about: "The ruins of an ancient city at the bottom of the sea. The road loops back and crosses over itself at an old plaza, and the Mecha Megalodon is waiting! The Kraken hits 50% harder here. Scores are worth 6x.",

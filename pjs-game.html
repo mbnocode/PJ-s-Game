@@ -1011,7 +1011,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 
 const COLS = 20, ROWS = 12, T = 32;
 const LEVEL_ORDER = ["meadow", "forest", "swamp", "beach", "desert", "pyramid", "basalt", "magma", "volcano", "tundra", "glacier", "blizzard", "skyislands", "thunder", "storm", "infinity"];   // (Infinity sits at the very end of the list)
-const W2_ORDER = ["coralreef", "kelpforest", "sunkencity"];   // World 2: the Sunken Kingdom
+const W2_ORDER = ["coralreef", "kelpforest", "shipwreck", "sunkencity"];   // World 2: the Sunken Kingdom
 const DIFF_ORDER = ["easy", "normal", "hard", "nightmare"];
 // The tower shop is 3 across: Owl, Wizard and Healer Deer on top; Dragon, Frog and Tree Giant underneath.
 const TOWER_ORDER = ["air", "wizard", "healer", "squirrel", "fire", "water", "plant", "crab", "pegasus", "hydra", "wolf", "nightowl", "hacked", "phoenix", "kraken"];
@@ -2348,7 +2348,7 @@ const Sound = {
 /* ---------- WORLD 2: THE SUNKEN KINGDOM ----------
    Three underwater levels on their own world map, opened by beating the Eye of the Storm on Normal or harder.
    Themes: "reef" (The Coral Reef), "kelp" (The Kelp Forest) and "sunken" (The Sunken City). */
-const SEA_THEMES = new Set(["reef", "kelp", "sunken"]);
+const SEA_THEMES = new Set(["reef", "kelp", "wreck", "sunken"]);
 function seaTile(kind) {
   const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d");
   const px = (col, i, j) => { x.fillStyle = col; x.fillRect(i, j, 1, 1); };
@@ -2362,6 +2362,12 @@ function seaTile(kind) {
     for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#6c7d58" : "#4f5e40", rnd() * 16 | 0, rnd() * 16 | 0);
     if (rnd() < 0.35) { const i = 1 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; for (let k = 0; k < 4; k++) px(k % 2 ? "#3f7a3a" : "#5a9a3e", i + k, j + (k > 1 ? 1 : 0)); }
     if (rnd() < 0.2) px("#9aa08a", 2 + rnd() * 12 | 0, 2 + rnd() * 12 | 0);   // a pebble
+  } else if (kind === "wreck") {   // dark sea sand scattered with broken planks, rope and old coins
+    x.fillStyle = "#948c6e"; x.fillRect(0, 0, 16, 16);
+    for (let n = 0; n < 30; n++) px(rnd() < 0.5 ? "#a49c7c" : "#847c60", rnd() * 16 | 0, rnd() * 16 | 0);
+    if (rnd() < 0.3) { const j = 2 + rnd() * 12 | 0, i0 = rnd() * 6 | 0; for (let i = i0; i < i0 + 7 + (rnd() * 4 | 0); i++) { px("#6a4a2a", i, j); px("#8a6238", i, j - 1); } }   // a broken plank
+    if (rnd() < 0.15) { const i = 2 + rnd() * 12 | 0, j = 2 + rnd() * 12 | 0; px("#ffd34d", i, j); px("#c9a23a", i + 1, j); }   // a gold coin
+    if (rnd() < 0.12) { const i = 1 + rnd() * 10 | 0, j = 3 + rnd() * 10 | 0; for (let k = 0; k < 5; k++) px("#b8a070", i + k, j + (k % 2)); }   // a bit of rope
   } else {   // "sunken": worn blue-gray stone tiles with mossy seams
     x.fillStyle = "#64737e"; x.fillRect(0, 0, 16, 16);
     for (let n = 0; n < 26; n++) px(rnd() < 0.5 ? "#71818c" : "#586670", rnd() * 16 | 0, rnd() * 16 | 0);
@@ -2371,8 +2377,9 @@ function seaTile(kind) {
   }
   return c;
 }
-const SEA_TILES = { reef: Array.from({ length: 8 }, () => seaTile("reef")), kelp: Array.from({ length: 8 }, () => seaTile("kelp")), sunken: Array.from({ length: 8 }, () => seaTile("sunken")) };
+const SEA_TILES = { wreck: Array.from({ length: 8 }, () => seaTile("wreck")), reef: Array.from({ length: 8 }, () => seaTile("reef")), kelp: Array.from({ length: 8 }, () => seaTile("kelp")), sunken: Array.from({ length: 8 }, () => seaTile("sunken")) };
 Object.assign(SCENERY_LOOK, {
+  wreck: { tree: "mast", mushroom: "barrel", tallgrass: "seagrass" },
   reef: { tree: "coral", mushroom: "anemone", tallgrass: "seagrass" },
   kelp: { tree: "kelp", mushroom: "urchin", tallgrass: "seagrass" },
   sunken: { tree: "ruinpillar", mushroom: "treasure", tallgrass: "seagrass" },
@@ -2418,6 +2425,21 @@ SPR.treasure = pixSprite(16, 16, ({ P, rect }) => {   // a treasure chest spilli
   for (const [i, j] of [[4, 7], [6, 6], [9, 6], [11, 7], [13, 14], [14, 13], [2, 14]]) P(i, j, "#ffd34d");
   P(5, 7, "#fff1a0"); P(10, 7, "#fff1a0");
 });
+SPR.mast = pixSprite(16, 16, ({ P, rect }) => {   // a broken ship's mast sticking up out of the sand, with a torn striped sail and a pirate flag
+  rect(7, 1, 8, 15, "#7a5432"); for (let j = 1; j < 16; j++) P(7, j, "#9a6e42");   // the mast
+  rect(2, 3, 13, 3, "#5a3a1c");   // the yard
+  for (let j = 4; j < 11; j++) for (let i = 3; i <= 12; i++) { if (i === 7 || i === 8) continue; const torn = (j > 8 && (i + j) % 3 === 0) || (j === 10 && i % 2);
+    if (!torn) P(i, j, j % 3 === 1 ? "#c84a3a" : "#efe6d0"); }   // a big striped sail with a ragged bottom
+  rect(5, 0, 10, 0, "#5a3a1c"); P(5, 1, "#5a3a1c"); P(10, 1, "#5a3a1c");   // the crow's nest
+  rect(9, 0, 12, 1, "#16191d"); P(10, 0, "#e8e8e8");   // a little pirate flag
+  rect(4, 14, 11, 15, "#8c8670"); P(5, 13, "#4f8a6a"); P(10, 12, "#4f8a6a"); P(9, 13, "#4f8a6a");   // sand piled at its foot, with seaweed
+});
+SPR.barrel = pixSprite(16, 16, ({ P, rect }) => {   // an old barrel lying in the sand, spilling gold coins
+  rect(3, 7, 12, 14, "#8a5a2a"); rect(4, 6, 11, 6, "#a8743e"); rect(4, 15, 11, 15, "#6e4520");
+  for (const j of [8, 12]) rect(3, j, 12, j, "#4a5059"); for (let j = 7; j < 15; j++) { P(5, j, "#a8743e"); P(10, j, "#6e4520"); }
+  for (const [i, j] of [[13, 14], [14, 13], [12, 15], [2, 15]]) P(i, j, "#ffd34d"); P(13, 13, "#fff1a0");
+  for (const [i, j] of [[4, 9], [11, 11]]) P(i, j, "#4f8a6a");
+});
 // Sea robots (facing right, the way they swim)
 for (const [k, draw] of [
   ["subbot", ({ P, rect, disc }) => {   // a yellow mini-sub with a steel nose cone, a porthole with a red robot eye, and a propeller
@@ -2432,6 +2454,16 @@ for (const [k, draw] of [
     disc(8, 6, 5.5, (dx, dy) => dy > 1.5 ? null : dx * dx + dy * dy > 18 ? "#4fd1b8" : dy < -2 ? "#c8fff4" : "#8fe8e0");
     rect(3, 7, 13, 7, "#2f9a8a"); disc(8, 5, 1.8, "#16191d"); P(8, 5, "#ff4a8a"); P(7, 4, "#ffffff");
     for (const [bx, ph] of [[4, 0], [7, 1], [10, 2], [12, 0.5]]) for (let j = 0; j < 7; j++) P(bx + Math.round(Math.sin(j * 1.1 + ph) * 0.8), 8 + j, j % 3 === 2 ? "#fff7a0" : "#7ae0d0");
+  }],
+  ["divebot", ({ P, rect, disc }) => {   // the Diver Bot: an old brass diving suit with a big round helmet, a glowing robot eye in the window, an air hose and lead boots
+    disc(8, 5.5, 4.6, (dx, dy) => dy < -2.5 ? "#ffd98a" : dx > 2.5 ? "#a8742a" : "#d9a441");   // the brass helmet
+    disc(9, 5.5, 2.4, "#2a4a6a"); P(9, 5, "#ff6a2a"); P(10, 5, "#ffd0a0"); P(8, 4, "#8fd3ff");   // the window, and its glowing eye
+    for (const [i, j] of [[5, 3], [5, 8], [12, 3], [12, 8]]) P(i, j, "#7a5418");   // bolts
+    rect(4, 10, 12, 14, "#5a6a7a"); rect(4, 10, 12, 10, "#7a8a9a"); rect(6, 11, 10, 12, "#c9a23a");   // the heavy suit and its brass chest plate
+    rect(2, 10, 3, 13, "#5a6a7a"); rect(13, 10, 14, 13, "#5a6a7a");   // arms
+    rect(4, 15, 7, 15, "#2a2a2e"); rect(9, 15, 12, 15, "#2a2a2e");   // lead boots
+    P(3, 6, "#3a3a3a"); P(2, 7, "#3a3a3a"); P(2, 8, "#3a3a3a");   // the air hose
+    P(15, 11, "#9aa4ac"); P(15, 12, "#9aa4ac"); P(14, 14, "#9aa4ac"); P(15, 14, "#9aa4ac"); P(15, 13, "#9aa4ac");   // a little anchor in its hand
   }],
   ["torpedo", ({ P, rect }) => {   // a gray torpedo with red stripes, fins, a propeller, and an angry face on its nose
     rect(2, 7, 13, 10, "#8a949c"); rect(2, 7, 13, 7, "#b4bcc2"); rect(2, 10, 13, 10, "#5a646c");
@@ -2481,7 +2513,7 @@ function drawUnderwater(x) {
   x.globalAlpha = 1;
 }
 // World 2 bookkeeping
-const W2_MAP = { coralreef: [190, 340, "#ff8fb0"], kelpforest: [500, 268, "#5fc08a"], sunkencity: [790, 330, "#8fd8f0"] };
+const W2_MAP = { coralreef: [170, 340, "#ff8fb0"], kelpforest: [420, 262, "#5fc08a"], shipwreck: [610, 372, "#c9a23a"], sunkencity: [800, 300, "#8fd8f0"] };
 const W2_SOON = [{ look: "abyss", name: "The Abyss", pos: [930, 120, "#4a5aa0"] }];
 // The Sunken Kingdom opens after you beat the Eye of the Storm (Normal or harder) AND collect enough stars in World 1.
 function stormBeaten(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
@@ -2564,6 +2596,17 @@ function drawWorldMap2() {
   x.strokeStyle = stone; x.lineWidth = 9; x.beginPath(); x.arc(915, 290, 34, Math.PI, 0); x.stroke();   // an old archway
   for (const [a, b] of [[700, 360], [880, 400], [960, 370]]) { x.fillStyle = "#8a5a2a"; x.fillRect(a, b, 18, 11); x.fillStyle = "#ffd34d"; x.fillRect(a + 2, b - 3, 14, 4); x.fillRect(a + 7, b + 3, 4, 4); }   // treasure!
   for (let k = 0; k < 24; k++) { x.fillStyle = R() < 0.5 ? "#4f8a6a" : "#3f7a5a"; x.fillRect(640 + R() * 360, 300 + R() * 140, 3, 2); }   // moss
+  // ---- Shipwreck Cove: an old pirate ship lying on its side in the sand ----
+  x.save(); x.translate(615, 330); x.rotate(-0.12);
+  x.fillStyle = "#4a3018"; x.beginPath(); x.moveTo(-80, -6); x.quadraticCurveTo(-60, 40, 0, 44); x.quadraticCurveTo(60, 40, 84, -14); x.lineTo(70, -18); x.lineTo(-70, -10); x.closePath(); x.fill();   // the hull
+  x.strokeStyle = "#6a4a2a"; x.lineWidth = 3; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(-74 + k * 4, 2 + k * 9); x.quadraticCurveTo(0, 14 + k * 10, 78 - k * 4, -8 + k * 9); x.stroke(); }   // planks
+  x.fillStyle = "#0a2f5a"; x.beginPath(); x.ellipse(-10, 20, 14, 10, 0.3, 0, Math.PI * 2); x.fill();   // a big hole in the side
+  x.fillStyle = "#c9a23a"; for (const [a, b] of [[-40, 6], [30, 2]]) { x.beginPath(); x.arc(a, b, 4, 0, Math.PI * 2); x.fill(); }   // portholes
+  x.strokeStyle = "#5a3a1c"; x.lineWidth = 5; x.beginPath(); x.moveTo(10, -12); x.lineTo(40, -110); x.stroke(); x.lineWidth = 3; x.beginPath(); x.moveTo(18, -60); x.lineTo(70, -66); x.stroke();   // the broken mast
+  x.fillStyle = "rgba(232,220,192,0.8)"; x.beginPath(); x.moveTo(22, -58); x.lineTo(66, -64); x.lineTo(58, -30); x.lineTo(36, -36); x.closePath(); x.fill();   // a torn sail
+  x.fillStyle = "#16191d"; x.fillRect(38, -118, 18, 11); x.fillStyle = "#e8e8e8"; x.fillRect(44, -115, 5, 5);   // the pirate flag
+  x.restore();
+  for (const [a, b] of [[560, 392], [680, 400]]) { x.fillStyle = "#8a5a2a"; x.fillRect(a, b, 16, 10); x.fillStyle = "#ffd34d"; x.fillRect(a + 2, b - 3, 12, 4); }   // treasure in the sand
   // ---- the Abyss: a dark trench far away on the right ----
   x.fillStyle = rad(930, 130, 4, 90, [[0, "rgba(0,0,10,0.75)"], [1, "rgba(0,0,10,0)"]]); x.beginPath(); x.ellipse(930, 130, 90, 70, 0, 0, Math.PI * 2); x.fill();
   for (const [a, b] of [[915, 125], [945, 132]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(a, b, 2.2, 0, Math.PI * 2); x.fill(); }   // something glowing in the dark…
@@ -2767,6 +2810,9 @@ const MUSIC_THEMES = {
   kelpforest: { root: 67, calm: 98, battle: 126, lead: "triangle", bass: "triangle", swing: 0.25,
     chords: [[0, 4, 7], [-7, -3, 0], [-5, -1, 2], [0, 4, 7]],
     melody: [[7, 9, 12, null, 11, 9, 7, null], [5, null, 9, null, 12, 9, 5, null], [2, 7, 11, null, 14, 11, 7, null], [12, 11, 12, 16, 14, null, 12, null]] },
+  shipwreck: { root: 62, calm: 104, battle: 132, lead: "square", bass: "triangle", swing: 0.35,   // a jolly pirate jig in D major (D - G - A - D)
+    chords: [[0, 4, 7], [-7, -3, 0], [-5, -1, 2], [0, 4, 7]],
+    melody: [[12, 14, 16, 12, 14, null, 9, null], [12, 11, 12, 16, 14, 12, 11, null], [9, 11, 12, 14, 16, 14, 12, 11], [12, null, 16, null, 12, null, null, null]] },
   sunkencity: { root: 57, calm: 100, battle: 130, lead: "square", bass: "triangle",
     chords: [[0, 4, 7], [-5, -1, 2], [-3, 0, 4], [-7, -3, 0]],
     melody: [[12, null, 16, null, 19, 16, 12, null], [14, null, 11, null, 14, 19, 17, null], [12, 16, 21, null, 19, 16, 12, null], [17, 16, 14, 12, 14, null, 12, null]] },
@@ -3532,7 +3578,7 @@ function unlocked(L) {
 /* ---------- the world map ---------- */
 // Where each level sits on the map (out of 1000 across, 450 down), and its color.
 const WORLD_MAP_ICON = { meadow: "🌼", forest: "🌲", swamp: "🐸", beach: "🐚", desert: "🌵", pyramid: "🔺", basalt: "🪨", magma: "🔥", volcano: "🌋", tundra: "❄️", glacier: "🧊", blizzard: "🌨️", skyislands: "☁️", thunder: "⚡", storm: "🌀", infinity: "✨" };
-Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", sunkencity: "🏛️" });
+Object.assign(WORLD_MAP_ICON, { coralreef: "🐠", kelpforest: "🌿", shipwreck: "⚓", sunkencity: "🏛️" });
 const WORLD_MAP = {
   meadow: [70, 350, "#8fd45f"], forest: [135, 260, "#5fbf4a"], swamp: [205, 345, "#8aa64a"],
   beach: [275, 385, "#ffe08a"], desert: [335, 300, "#f2c27a"], pyramid: [400, 220, "#e0b06a"],
@@ -4608,7 +4654,7 @@ const BOARD_TAB_COLORS = {
   tundra: ["#eef4fb", "#8aa0bc", "#1e2c40"], glacier: ["#8fd3ff", "#2f78b8", "#0c2a48"], blizzard: ["#c4cee0", "#5a6a84", "#1e2636"],
   infinity: ["#7a4ac0", "#2e1856", "#f6efff"], skyislands: ["#8ec8f4", "#3a6a9e", "#0c2a48"], thunder: ["#6a80b8", "#2e3c6c", "#f4f7ff"],
   storm: ["#4e5296", "#1e2050", "#eef0ff"],   // the 3 sky levels: one family of sky blues, getting stormier
-  coralreef: ["#ff8fb0", "#2a9ad0", "#2a0a14"], kelpforest: ["#5a9a3e", "#1f5a5a", "#f0fff0"], sunkencity: ["#8fd8f0", "#2a5a7a", "#062040"],   // the Sunken Kingdom
+  shipwreck: ["#c9a23a", "#4a3018", "#1a0e04"], coralreef: ["#ff8fb0", "#2a9ad0", "#2a0a14"], kelpforest: ["#5a9a3e", "#1f5a5a", "#f0fff0"], sunkencity: ["#8fd8f0", "#2a5a7a", "#062040"],   // the Sunken Kingdom
 };
 async function renderBoards(code) {
   const tabs = $("board-tabs"); tabs.innerHTML = "";
@@ -5113,13 +5159,16 @@ function makePathLayer(map) {
   const x = cv.getContext("2d"), img = x.createImageData(W, H), D = img.data;
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const swamp = map.theme === "swamp", beach = map.theme === "beach", forest = map.theme === "forest", desert = map.theme === "desert";
-  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder", "storm", "sunken"].includes(map.theme);
+  const pyramid = map.theme === "pyramid", lavaLand = ["basalt", "magma", "volcano", "tundra", "blizzard", "infinity", "thunder", "storm", "sunken", "wreck"].includes(map.theme);
   const C = map.theme === "reef"
     // a path of soft white sea sand, edged with sea grass
     ? { rim: hex("#a8955e"), dirt: hex("#efe2bc"), dark: hex("#e2d3a8"), light: hex("#f8efd2"), edge: hex("#d4c290"), stone: hex("#c9b48a"), rut: hex("#e6d6aa"), tuft: hex("#3fae6a"), tuft2: hex("#5fd08a") }
     : map.theme === "kelp"
     // a pebbly trail through the kelp beds
     ? { rim: hex("#2f3a28"), dirt: hex("#9a8e6a"), dark: hex("#857a5a"), light: hex("#ada17c"), edge: hex("#7a6e50"), stone: hex("#6a6a72"), rut: hex("#8a7e5e"), tuft: hex("#3f7a3a"), tuft2: hex("#5a9a3e") }
+    : map.theme === "wreck"
+    // the old ship's deck: weathered wooden boards
+    ? { rim: hex("#2a1a0c"), dirt: hex("#c48a4a"), dark: hex("#a86e36"), light: hex("#dca868"), edge: hex("#8a5a2a"), stone: hex("#e0b070"), rut: hex("#b07a40"), tuft: hex("#3f7a5a"), tuft2: hex("#4f8a6a"), mortar: hex("#5a3818") }
     : map.theme === "sunken"
     // the sunken city's ancient road of pale marble flagstones
     ? { rim: hex("#1e2a34"), dirt: hex("#a9b4bc"), dark: hex("#949fa8"), light: hex("#c4ccd2"), edge: hex("#7e8a94"), stone: hex("#d8dee2"), rut: hex("#9aa6ae"), tuft: hex("#3f7a6a"), tuft2: hex("#2f6a5a"), mortar: hex("#56626c") }
@@ -5659,11 +5708,12 @@ function playBoxOpening(prize, done) {
 const LAVA_FOES = ["crawler", "obsidian", "emberbat", "fireproof", "diver", "pillartitan", "magmaking", "volcanoheart"];
 const SNOW_FOES = ["snowplow", "snowball", "penguin", "snowdrone", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan"];
 const STORM_FOES = ["gustrunner", "staticbot", "thunderbird", "balloonbot", "balloonpilot", "planklayer", "paratrooper", "cyclonegolem", "skyblimp", "thundertitan"];
-const SEA_FOES = ["torpedo", "subbot", "jellybot", "megalodon"];   // the Sunken Kingdom (World 2)
+const SEA_FOES = ["torpedo", "subbot", "jellybot", "divebot", "megalodon"];   // the Sunken Kingdom (World 2)
 const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss", "sludgeleviathan", "sandboss", "splitter", "repair", "drone", "mummy", "pharaohmachine", ...LAVA_FOES, ...SNOW_FOES, ...STORM_FOES, ...SEA_FOES];
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
 const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon"]);
 const FOE_ABOUT = {
+  divebot: "An old brass diving suit with a big round helmet, a glowing robot eye in its window, lead boots and an anchor. From Shipwreck Cove.",
   torpedo: "A gray torpedo with an angry face and a whirring propeller. Every few seconds it shoots forward really fast. From the Sunken Kingdom.",
   subbot: "A little yellow submarine with a red robot eye in its porthole and a steel nose cone. From the Sunken Kingdom.",
   jellybot: "A glowing robot jellyfish that floats over everything, trailing sparking wire tentacles. From the Sunken Kingdom.",
@@ -5852,6 +5902,7 @@ function renderEnemies() {
       : k === "thunderbird" ? `Special: flies in flocks straight at your treehouse, faster than Sky Drones. Only the Owl, the Dragon, the Pegasus, the Phoenix, the Hydra, the Night Owl and the Wizard's Elemental Sphere can hit it. Shows up on the Eye of the Storm.`
       : k === "cyclonegolem" ? `Special: every ${r.spinEvery} seconds it spins into a tornado for ${r.spinSeconds} seconds. Nothing can hurt it while it spins, and it moves faster. Too heavy for Owls to push back. Always drops a Golden Acorn! Shows up on the Eye of the Storm.`
       : k === "thundertitan" ? `Special: the final boss of the Eye of the Storm (wave 30), with ${r.health.toLocaleString()} health. Its storm armor makes land towers do only ${r.landTowerTimes}x damage, but flying towers (Owls, Night Owls, Dragons, the Pegasus and the Phoenix) do ${r.flyingTowerTimes}x damage! Every ${r.strikeEvery} seconds it calls lightning down on ${r.strikeTowers} towers within ${r.strikeRadius} squares, stunning them for ${r.strikeSeconds} seconds. Too heavy for Owls to push back. Always drops a Golden Acorn!`
+      : k === "divebot" ? `Special: really tough and slow. Every ${r.anchorEvery} seconds it throws its anchor onto the closest tower (within ${r.anchorRadius} squares), pinning it so it can't attack for ${r.anchorSeconds} seconds. Shows up in Shipwreck Cove.`
       : k === "torpedo" ? `Special: every ${r.dashEvery} seconds its propeller kicks in and it shoots forward ${r.dashSpeed} times faster. Shows up in the Sunken Kingdom.`
       : k === "subbot" ? `Special: its steel nose cone blocks ${Math.round((1 - r.frontArmor) * 100)}% of the damage from towers in front of it. Hit it from behind or the side! Shows up in the Sunken Kingdom.`
       : k === "jellybot" ? `Special: floats over everything (only towers that hit flying robots can reach it), and every ${r.zapEvery} seconds it zaps a tower near it, stunning it for ${r.zapSeconds} seconds. Shows up in the Sunken Kingdom.`
@@ -6925,6 +6976,7 @@ function startWave() {
     sludgeleviathan: "The Sludge Leviathan rises from the swamp! It dives under the sludge where nothing can hit it, and splashes sludge that slows your towers. Water Frogs do double damage to it!",
     pharaohmachine: "The Pharaoh Machine awakens! It raises Mummy Bots, hides behind a golden shield, and at half health it wraps up nearby towers. Break the shield fast!",
     thundertitan: "The Thunder Titan is here! Every few seconds it calls lightning down on the towers around it. Land towers only do half damage to it, but flying towers (Owls, Dragons, the Pegasus, the Phoenix) do double!",
+    divebot: "Diver Bots are here! They're slow but really tough, and they throw their anchors onto towers to pin them down for a few seconds.",
     torpedo: "Torpedo Bots are here! Every few seconds their propeller kicks in and they shoot forward super fast.",
     subbot: "Sub Bots are here! Their steel nose cone blocks half the damage from towers in front of them, so hit them from behind or the side.",
     jellybot: "Jelly Drones float over everything (only towers that hit flying robots can reach them), and they zap towers near them so they can't attack for a moment.",
@@ -7332,6 +7384,10 @@ const nextBonusIn = () => { const b = SETTINGS.bonusLeaf; return (b.everySeconds
 function tickBonusLeaf(dt) {
   if (!SETTINGS.bonusLeaf) return;
   if (G.bonus) { G.bonus.t += dt; if (G.bonus.t >= G.bonus.stay) G.bonus = null; }
+  if (G.bonus && G.bonus.chest) {   // a robot walking past a treasure chest grabs it first!
+    const bx = G.bonus.x * T + 16, by2 = G.bonus.y * T + 16, thief = G.robots.find((o) => !o.dead && !o.flying && !o.under && Math.hypot(rpos(o).x - bx, rpos(o).y - by2) < T * 1.15);
+    if (thief) { floatText(bx, by2 - 14, "Stolen!", "#ff8a6a", 0.9); burst(bx, by2, "#ffd34d", 10); Sound.play("nope"); G.bonus = null; }
+  }
   const vac = slot() && !slot().vacuumOff ? vacuumLevel(slot()) : 0, V = SETTINGS.leafVacuum;   // (it can be turned off with the Vacuum button)   // the Leaf Vacuum (Defector's shop) sucks up leaves nobody tapped
   if (vac && G.bonus && G.bonus.t >= (V.waitSeconds || 1)) collectBonusLeaf(V.collect[vac - 1]);
   if (!G.waveActive) return;   // new leaves only appear during a Wave
@@ -7342,7 +7398,8 @@ function tickBonusLeaf(dt) {
   const free = [];
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++)
     if (G.map.cells[y][x] === "grass" && !towerAt(x, y) && !G.map.scenery[x + "," + y] && !isFactory(x, y)) free.push({ x, y });
-  if (free.length) { const c = free[Math.random() * free.length | 0]; const pk = squirrelLeafPerks(); G.bonus = { x: c.x, y: c.y, t: 0, stay: SETTINGS.bonusLeaf.staySeconds + pk.stay, amt: SETTINGS.bonusLeaf.leaves + pk.value, gold: pk.value > 0 }; Sound.play("place"); }
+  const wreck = G.map.theme === "wreck", byRoad = wreck ? free.filter((c) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => (G.map.cells[c.y + b] || [])[c.x + a] === "path")) : free;   // Shipwreck Cove: treasure chests wash up next to the road
+  if (byRoad.length) { const c = byRoad[Math.random() * byRoad.length | 0]; const pk = squirrelLeafPerks(); G.bonus = { x: c.x, y: c.y, t: 0, stay: SETTINGS.bonusLeaf.staySeconds + pk.stay + (wreck ? 2 : 0), amt: (SETTINGS.bonusLeaf.leaves + pk.value) * (wreck ? 2 : 1), gold: pk.value > 0, chest: wreck }; Sound.play("place"); }
 }
 function collectBonusLeaf(vacuum, byPet) {   // vacuum: the Leaf Vacuum collected it, for this much of its value; byPet: your pet picked it up
   const b = G.bonus, amt = Math.max(1, Math.round((b.amt || SETTINGS.bonusLeaf.leaves) * (vacuum || 1))); G.bonus = null;
@@ -7871,6 +7928,13 @@ function drawBonusLeaf(x) {
   const b = G.bonus; if (!b) return;
   const left = (b.stay || SETTINGS.bonusLeaf.staySeconds) - b.t;
   if (left < 1.5 && Math.floor(b.t * 8) % 2) return;   // blink when it's about to vanish
+  if (b.chest) {   // Shipwreck Cove: a treasure chest (tap it before a robot grabs it!)
+    const cx = b.x * T + 16, cy = b.y * T + 16 + Math.sin(b.t * 3) * 1.5, pop = Math.min(1, b.t * 5), gl = x.createRadialGradient(cx, cy, 2, cx, cy, 24);
+    gl.addColorStop(0, "rgba(255,220,110,0.6)"); gl.addColorStop(1, "rgba(255,200,60,0)"); x.fillStyle = gl; x.beginPath(); x.arc(cx, cy, 24, 0, Math.PI * 2); x.fill();
+    x.save(); x.imageSmoothingEnabled = false; x.translate(cx, cy); x.scale(pop, pop); x.drawImage(SPR.treasure, -15, -15, 30, 30); x.restore();
+    if (Math.floor(b.t * 3) % 2 === 0) { x.fillStyle = "#fff6c0"; x.fillRect(cx + 7, cy - 12, 2, 6); x.fillRect(cx + 5, cy - 10, 6, 2); }   // a twinkle
+    return;
+  }
   const cx = b.x * T + 16, cy = b.y * T + 14 + Math.sin(b.t * 4) * 2.5, pop = Math.min(1, b.t * 5);
   const g = x.createRadialGradient(cx, cy, 2, cx, cy, 20);
   g.addColorStop(0, "rgba(255,210,120,0.55)"); g.addColorStop(1, "rgba(255,160,60,0)");
@@ -8010,11 +8074,21 @@ function stormPowers(dt) {
   if (G.planks) G.planks = G.planks.filter((b) => (b.t -= dt) > 0);   // shortcut bridges only last a while
   for (const r of G.robots) {
     if (r.dead) continue;
-    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
+    const S = RS[r.type] || {}; if (!S.dashEvery && !S.zapEvery && !S.anchorEvery && !S.spinEvery && !S.strikeEvery && !S.troopEvery && !S.bridgeReach) continue;
     const q = rpos(r);
     if (S.dashEvery) {   // Gust Runner: a gust of wind pushes it forward
       r.dashT = (r.dashT ?? S.dashEvery * (0.4 + Math.random() * 0.6)) - dt;
       if (r.dashT <= 0) { r.dashT = S.dashEvery; r.dashLeft = S.dashSeconds; if (!PREFS.simple) for (let i = 0; i < 6; i++) G.particles.push({ kind: "spark", x: q.x, y: q.y, vx: (q.dx < 0 ? 1 : -1) * (40 + Math.random() * 40), vy: (Math.random() - 0.5) * 20, t: 0, life: 0.35, col: "#e6f4ff" }); }
+    }
+    if (S.anchorEvery) {   // Diver Bot: throws its anchor onto the closest tower, pinning it so it can't attack
+      r.anchorT = (r.anchorT ?? S.anchorEvery * 0.6) - dt;
+      if (r.anchorT <= 0) {
+        const t = G.towers.filter((t) => !(t.stunT > 0) && Math.hypot(t.x * T + 16 - q.x, t.y * T + 16 - q.y) <= S.anchorRadius * T).sort((a, b) => Math.hypot(a.x * T - q.x, a.y * T - q.y) - Math.hypot(b.x * T - q.x, b.y * T - q.y))[0];
+        if (!t) r.anchorT = 0.5;
+        else { r.anchorT = S.anchorEvery; const tx = t.x * T + 16, ty = t.y * T + 12;
+          if (t.kind === "phoenix") phoenixRebirth(t);
+          else { t.stunT = Math.max(t.stunT || 0, S.anchorSeconds); t.anchorT = S.anchorSeconds; floatText(tx, ty - 16, "Anchored!", "#c9d4dc", 0.8); burst(tx, ty + 6, "#9aa4ac", 10); Sound.play("smash"); } }
+      }
     }
     if (S.zapEvery) {   // Static Bot: zaps the closest tower
       r.zapT = (r.zapT ?? S.zapEvery * 0.5) - dt;
@@ -8296,7 +8370,7 @@ function update(dt) {
       }
     }
     const tsk = skinBuff(t.kind);
-    if (tsk && tsk.steel && (t.stunT > 0 || t.iceT > 0 || t.slimeT > 0 || t.pillar)) { t.stunT = 0; t.zapT = 0; t.wrapT = 0; t.iceT = 0; t.slimeT = 0; if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#c8d0d6", 10); }
+    if (tsk && tsk.steel && (t.stunT > 0 || t.iceT > 0 || t.slimeT > 0 || t.pillar)) { t.stunT = 0; t.zapT = 0; t.wrapT = 0; t.anchorT = 0; t.iceT = 0; t.slimeT = 0; if (t.pillar) { t.pillar = 0; burst(t.x * T + 16, t.y * T + 16, "#c8d0d6", 10); }
       if (!t.steelMsgT || G.time - t.steelMsgT > 3) { t.steelMsgT = G.time; floatText(t.x * T + 16, t.y * T - 6, "Steel Coat!", "#dfe6ee", 0.7); } }   // the Metal skin: nothing can stop it
     if (tsk && tsk.starEvery && G.waveActive && !(t.stunT > 0)) {   // the Galaxy skin: every few seconds, a shooting star smashes a random robot
       t.starT = (t.starT ?? tsk.starEvery) - dt;
@@ -8310,7 +8384,7 @@ function update(dt) {
     }
     if (t.iceT > 0) t.iceT -= dt;   // frozen by a Snow Drone or the Yeti Mech
     if (t.slimeT > 0) t.slimeT -= dt;   // covered in sludge by the Sludge Leviathan: attacks slower
-    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
+    if (t.stunT > 0) { t.stunT -= dt; if (t.zapT > 0) t.zapT -= dt; if (t.wrapT > 0) t.wrapT -= dt; if (t.anchorT > 0) t.anchorT -= dt; continue; }   // caught in a sandstorm (or zapped by lightning): can't attack
     if (t.pillar) continue;   // trapped under a basalt pillar until the wave ends
     // Max-upgrade Wizard: the Elemental Sphere over its staff zaps nearby robots every few seconds.
     const es = SETTINGS.towers[t.kind].elementalSphere;
@@ -8638,6 +8712,10 @@ function draw() {
     if (t.stunT > 0 && t.wrapT > 0) {   // wrapped up in mummy bandages
       x.fillStyle = "#e8dcc0"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12, by - 22 + i * 6 + Math.sin(G.time * 3 + i) * 1.5, 24, 3);
       x.fillStyle = "#b8a682"; for (let i = 0; i < 4; i++) x.fillRect(cx - 12 + (i * 7) % 20, by - 21 + i * 6, 5, 1);
+    } else if (t.stunT > 0 && t.anchorT > 0) {   // pinned by a Diver Bot's anchor: an iron anchor and chain on top of it
+      const ax = cx + 8, ay = by - 6; x.strokeStyle = "#5a646c"; x.lineWidth = 2; x.beginPath(); x.moveTo(ax, ay - 14); x.lineTo(ax, ay); x.stroke();
+      x.beginPath(); x.arc(ax, ay - 2, 5, 0.2, Math.PI - 0.2); x.stroke(); x.fillStyle = "#9aa4ac"; x.fillRect(ax - 4, ay - 12, 8, 2); x.beginPath(); x.arc(ax, ay - 16, 2, 0, Math.PI * 2); x.stroke();
+      for (let k = 0; k < 4; k++) { x.fillStyle = k % 2 ? "#7a848c" : "#5a646c"; x.fillRect(ax - 1 + Math.sin(G.time * 2 + k) * 1, ay - 26 + k * 3, 2, 3); }   // the chain
     } else if (t.stunT > 0 && t.zapT > 0) {   // zapped by lightning: crackling sparks
       for (let i = 0; i < 5; i++) { const a = G.time * 9 + i * 1.3, rr = 9 + (i % 3) * 3; x.fillStyle = i % 2 ? "#fff7a0" : "#9ab0ff"; x.fillRect(cx + Math.cos(a) * rr - 1, by - 14 + Math.sin(a * 1.7) * rr * 0.6 - 1, 2, 3); }
     } else if (t.stunT > 0) {   // swirling sand: this tower can't attack right now
@@ -8703,7 +8781,7 @@ function draw() {
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
     const p = rpos(r), big = isHeavy(r);
-    const sz = r.type === "megalodon" ? 104 : r.type === "subbot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
+    const sz = r.type === "megalodon" ? 104 : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
     const wob = r.type === "clanker" ? Math.sin(r.wob) * 1.6 : Math.abs(Math.sin(r.wob)) * -1.2;
     const hidden = r.hideT > 0 || r.under;
