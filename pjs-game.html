@@ -3600,6 +3600,7 @@ function unlocked(L) {
   const w = W2_ORDER.indexOf(L);   // World 2: the first level opens after the Eye of the Storm (Normal or harder), then one by one
   if (w >= 0) { if (w === 0) return world2Open(); const p = slot().best[W2_ORDER[w - 1]]; return !!(p && Object.keys(p).length); }
   const i = LEVEL_ORDER.indexOf(L); if (i <= 0) return true;
+  if (slot().allWorld1) return true;   // (a special player who took the "unlock all World 1 levels" gift)
   const prev = slot().best[(SETTINGS.levels[L] || {}).unlockAfter || LEVEL_ORDER[i - 1]]; return !!(prev && Object.keys(prev).length);   // unlockAfter: beat that level to open this one
 }
 /* ---------- the world map ---------- */
@@ -9232,8 +9233,21 @@ function finish(won) {
     Sound.play("lose");
     $("overlay-box").innerHTML = ""; $("overlay").classList.add("gameover"); $("overlay").hidden = false;
     $("overlay-box").innerHTML = `<div class="go-text">GAME OVER</div>`;
-    setTimeout(() => { $("overlay").classList.remove("gameover"); showResult(); }, 4000);
+    setTimeout(() => { $("overlay").classList.remove("gameover"); if (unlockAllOffer()) offerUnlockAll(showResult); else showResult(); }, 4000);
   }, (G.takeover.dur + 0.9) * 1000);
+}
+// Special players (SETTINGS.unlockAllPlayers): after they lose a level, they get a screen offering to open every World 1 level.
+function unlockAllOffer() {
+  const s = slot(), who = (SETTINGS.unlockAllPlayers || []).map((n) => n.toLowerCase());
+  return !!(s && ACCT.pass && who.includes((ACCT.user || "").toLowerCase()) && !s.allWorld1 && LEVEL_ORDER.some((L) => !unlocked(L)));
+}
+function offerUnlockAll(next) {
+  overlay(`<h2>🔓 Special gift for ${esc(ACCT.user)}!</h2>
+    <p>That level was tough. Do you want to unlock <b>all of the World 1 levels</b> right now?</p>
+    <p class="muted">You can play any level from the Meadow to the Eye of the Storm. You still earn your stars by winning.</p>
+    <div class="row"><button id="o-nounlock">No thanks</button><button class="go" id="o-unlock">🔓 Unlock them all!</button></div>`);
+  $("o-unlock").onclick = () => { const s = slot(); s.allWorld1 = true; saveSlots(slots); Sound.play("fanfare"); popToast("kraken", "🔓 All World 1 levels unlocked!", "Pick any level on the map."); next(); };
+  $("o-nounlock").onclick = () => next();
 }
 let IX_TIME = 0;   // a clock for effects that run when no game is going
 function levelNameOf(L) { return (SETTINGS.levels[L] || {}).name || L; }
