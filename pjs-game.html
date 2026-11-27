@@ -6605,7 +6605,7 @@ function towerStats(t) {
       if (Math.hypot(h.x - t.x, h.y - t.y) > hs.range) continue;
       dmg = Math.max(dmg, hs.damageAura || 0); if (hs.visionAura) see = true;
     }
-    if (dmg) { out.damage *= 1 + dmg; out.auraDamage = dmg; }
+    if (dmg) { out.damage *= 1 + dmg; out.auraDamage = dmg; out.capTimes = (out.capTimes || 1) * (1 + dmg); }   // (a Wizard's or Deer's boost also raises the Wolf's damage cap)
     if (see && !out.vision) { out.vision = true; out.auraVision = true; }
   }
   const boost = ((SETTINGS.levels[G.level] || {}).towerBoosts || {})[t.kind];
@@ -6622,7 +6622,7 @@ function towerStats(t) {
   const sk = skinBuff(t.kind);   // the tower's skin buff
   if (sk) {
     if (sk.speedTimes && out.attacksPerSecond) out.attacksPerSecond *= sk.speedTimes;
-    if (sk.damageTimes && out.damage) { out.damage *= sk.damageTimes; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= sk.damageTimes; }
+    if (sk.damageTimes && out.damage) { out.damage *= sk.damageTimes; out.capTimes = (out.capTimes || 1) * sk.damageTimes; if (out.burnDamagePerSecond) out.burnDamagePerSecond *= sk.damageTimes; }   // (a skin's boost also raises the Wolf's damage cap)
     if (sk.rangePlus && out.range) out.range += sk.rangePlus;
     if (sk.vision) out.vision = true;
     out.skinBuff = sk;
@@ -6634,7 +6634,7 @@ function towerStats(t) {
   if (t.overWave && t.overWave === G.wave && G.waveActive && out.attacksPerSecond) out.attacksPerSecond *= 2;   // Overcharge Battery: twice as fast this wave
   if (G.kingStorm && out.range) out.range *= 1 - G.kingStorm;   // the Blizzard King's howling blizzard shrinks every tower's range
   if (t.kind === "crab" && out.damage && crabItem("clawsharpener", 1)) out.damage *= SETTINGS.clawSharpenerTimes || 1.25;   // the Crab Claw Sharpener
-  if (out.maxDamage && out.damage > out.maxDamage) out.damage = out.maxDamage;   // (the Wolf can never hit harder than this, even with a big pack)
+  if (out.maxDamage) { out.damageCap = out.maxDamage * (out.capTimes || 1); if (out.damage > out.damageCap) out.damage = out.damageCap; }   // the Wolf's cap (250), raised by its skin and by Wizard/Deer boosts
   return out;
 }
 function towerStatsBase(t) {
