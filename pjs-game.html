@@ -2475,16 +2475,15 @@ for (const [k, draw] of [
   }],
 ]) { SPR[k] = pixSprite(16, 16, draw); SPRF[k] = flipCanvas(SPR[k]); }
 { // Minibosses of the Sunken Kingdom (32 x 32, facing right)
-  const puffer = (big) => pixSprite(32, 32, ({ P, rect, disc }) => {   // the Puffer Bot: a round robot pufferfish (puffed up: twice as round, with spikes sticking out)
-    const R = big ? 12.5 : 8.5, cx = 15, cy = 16;
-    if (big) for (let a = 0; a < 20; a++) { const ang = a / 20 * Math.PI * 2; for (let d = R; d < R + 3.5; d++) P(cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, d > R + 2 ? "#f4f4f0" : "#9aa4ac"); }   // steel spikes
-    else for (let a = 0; a < 12; a++) { const ang = a / 12 * Math.PI * 2; P(cx + Math.cos(ang) * (R + 1), cy + Math.sin(ang) * (R + 1), "#9aa4ac"); }   // little spikes, folded down
-    disc(cx, cy, R, (dx, dy) => dy > R * 0.35 ? "#f2e6c0" : dy < -R * 0.5 ? "#ffd04a" : (Math.round(dx + dy * 3) % 5 === 0 ? "#c98e12" : "#f2b82a"));   // yellow body, pale belly, spots
-    for (let k = -2; k <= 2; k++) P(cx + k * R * 0.3, cy - R * 0.1, "#8a6a18");   // a seam of rivets
-    const ex = cx + R * 0.45, ey = cy - R * 0.3; disc(ex, ey, big ? 2.6 : 2, "#ffffff"); P(ex + 0.6, ey, "#e0443a"); P(ex + 0.6, ey - 0.6, "#ff9a8a");   // a big robot eye, glowing red
-    rect(cx + R - 1, cy + 1, cx + R + 1, cy + 2, "#e07a5a"); P(cx + R, cy + 3, "#16191d");   // a little pouty mouth
-    for (const k of [-1, 1]) for (let j = 0; j < 4; j++) P(cx - R - 1 - j, cy + k * j * 0.8, "#c98e12");   // tail fin
-    rect(cx - 2, cy - R - 2, cx + 1, cy - R - 1, "#c98e12");   // a little top fin
+  const puffer = (big) => pixSprite(32, 32, ({ P, rect, disc }) => {   // the Puffer Bot ("Chomper"): a steel robot pufferfish with two angry red eyes and a huge jaw of fangs (puffed up: twice as round, spikes out)
+    const R = big ? 12 : 8.5, cx = 15, cy = 16, nS = big ? 22 : 12, L = big ? 5 : 2.5;
+    for (let a = 0; a < nS; a++) { const ang = a / nS * Math.PI * 2; for (let d = R - 1; d < R + L; d += 0.5) P(cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, d > R + L - 1.2 ? "#e8eef2" : "#7a848c"); }   /* steel spikes */
+    disc(cx, cy, R, (dx, dy) => dy > R * 0.45 ? "#3a1418" : (Math.round(dx * 1.3 + dy * 2) % 4 === 0 ? "#2a2e34" : dy < -R * 0.4 ? "#8a949c" : "#5a646c"));   /* steel armor plates */
+    const ey = cy - R * 0.35;
+    for (const ex of [cx + R * 0.1, cx + R * 0.55]) { rect(ex - 2, ey - 3, ex + 1, ey - 2, "#16191d"); disc(ex, ey + 0.5, big ? 2 : 1.5, "#ff2a2a"); P(ex, ey + 0.5, "#fff6c0"); }   /* angry brows, glowing red eyes */
+    const my = cy + R * 0.05, h = big ? 7 : 5; rect(cx + R * 0.1, my, cx + R, my + h, "#3a0a10");   /* a huge open jaw */
+    for (let i = 0; i < (big ? 6 : 4); i++) { const fx = cx + R * 0.15 + i * 1.6; P(fx, my, "#f4f4f0"); P(fx, my + 1, "#f4f4f0"); P(fx + 0.8, my + h, "#f4f4f0"); P(fx + 0.8, my + h - 1, "#f4f4f0"); }   /* fangs */
+    for (const k of [-1, 1]) for (let j = 0; j < 4; j++) P(cx - R - 1 - j, cy + k * j, "#7a848c");   /* tail fin */
   });
   SPR.pufferbot = puffer(false); SPR.pufferbot_big = puffer(true);
   const turtle = (shell) => pixSprite(32, 32, ({ P, rect, disc }) => {   // the Sea Turtle Fortress: a huge robot turtle carrying a tiny factory on its armored shell
@@ -5741,7 +5740,7 @@ const MAIN_FOES = ["clanker", "scout", "walker", "tank", "hider", "tesla", "boss
 const NEW_FOES = new Set([]);   // robots on the Enemies page that aren't in any waves yet
 const BOSS_FOES = new Set(["boss", "sludgeleviathan", "pharaohmachine", "sandboss", "pillartitan", "magmaking", "volcanoheart", "yetimech", "glaciergolem", "superglaciergolem", "blizzardking", "universegolem", "universetitan", "superclanker", "cyclonegolem", "skyblimp", "thundertitan", "megalodon", "pufferbot", "seaturtle"]);
 const FOE_ABOUT = {
-  pufferbot: "A round yellow robot pufferfish with a big red robot eye. When it gets hurt it puffs up into a spiky ball! A miniboss of the Coral Reef.",
+  pufferbot: "A round steel robot pufferfish with two angry red eyes and a huge jaw full of fangs. When it gets hurt it puffs up into a spiky ball! A miniboss of the Coral Reef.",
   seaturtle: "A huge robot sea turtle with a tiny smoking factory on its armored shell. A miniboss of the Kelp Forest.",
   divebot: "An old brass diving suit with a big round helmet, a glowing robot eye in its window, lead boots and an anchor. From Shipwreck Cove.",
   torpedo: "A gray torpedo with an angry face and a whirring propeller. Every few seconds it shoots forward really fast. From the Sunken Kingdom.",
