@@ -2746,12 +2746,17 @@ function drawWorldMap2() {
   for (const [a, w, h] of [[60, 70, 130], [300, 90, 110], [610, 70, 150], [700, 120, 100], [880, 90, 170]]) { x.beginPath(); x.moveTo(a, H); x.lineTo(a + w * 0.3, H - h); x.lineTo(a + w * 0.5, H - h + 20); x.lineTo(a + w * 0.7, H - h - 10); x.lineTo(a + w, H); x.fill(); }
   x.fillStyle = "rgba(15,50,95,0.6)"; x.beginPath(); x.ellipse(640, 90, 70, 16, -0.05, 0, Math.PI * 2); x.fill();
   x.beginPath(); x.moveTo(575, 92); x.lineTo(548, 74); x.lineTo(552, 92); x.lineTo(548, 110); x.fill(); x.beginPath(); x.ellipse(650, 104, 16, 5, 0.5, 0, Math.PI * 2); x.fill();
-  // the sea floor: sandy reef on the left, dark kelp beds in the middle, gray stone on the right
+  // Two regions: the SUNNY SHALLOWS on the left (the Coral Reef, the Kelp Forest and the Giant Clam Bay all on one sandy, sunlit sea floor),
+  // and THE DEEP on the right (Shipwreck Cove and the Sunken City on dark gray stone, in darker water)
+  x.fillStyle = lin(560, 0, 760, 0, [[0, "rgba(4,14,40,0)"], [1, "rgba(4,14,40,0.38)"]]); x.fillRect(560, 0, 440, H);   // the water gets deeper and darker on the right
+  x.save(); x.globalCompositeOperation = "lighter"; x.fillStyle = rad(280, 120, 20, 380, [[0, "rgba(255,240,180,0.22)"], [1, "rgba(255,240,180,0)"]]); x.fillRect(0, 0, 640, H); x.restore();   // warm sunlight over the shallows
   const floor = (x0, x1, top, fill, amp) => { x.fillStyle = fill; x.beginPath(); x.moveTo(x0, H); for (let px = x0; px <= x1; px += 6) x.lineTo(px, top + Math.sin(px / 41) * amp + Math.sin(px / 17) * amp * 0.4); x.lineTo(x1, H); x.closePath(); x.fill(); };
-  floor(0, 360, 300, lin(0, 300, 0, H, [[0, "#e2cf98"], [1, "#a8935e"]]), 12);
-  floor(330, 670, 320, lin(0, 320, 0, H, [[0, "#6a7c56"], [1, "#3c4a32"]]), 10);
-  floor(640, 1000, 300, lin(0, 300, 0, H, [[0, "#7e8e9a"], [1, "#3e4a56"]]), 12);
-  for (const bx of [345, 655]) { x.fillStyle = lin(bx - 16, 0, bx + 16, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.12)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 16, 290, 32, H - 290); }
+  floor(0, 590, 300, lin(0, 300, 0, H, [[0, "#eedc9e"], [1, "#b8a068"]]), 12);   // one big sandy floor for all three shallow levels
+  floor(570, 1000, 300, lin(0, 300, 0, H, [[0, "#6e7e8a"], [1, "#323e4a"]]), 12);
+  for (let k = 0; k < 40; k++) { x.fillStyle = R() < 0.5 ? "#f8ecc0" : "#d8c48a"; x.fillRect(R() * 570, 330 + R() * 110, 3, 2); }   // sand sparkles
+  for (let k = 0; k < 14; k++) { const a = 20 + R() * 540, b = 345 + R() * 90; x.strokeStyle = R() < 0.5 ? "#3fae6a" : "#5fd08a"; x.lineWidth = 2; for (let j = -1; j <= 1; j++) { x.beginPath(); x.moveTo(a + j * 3, b); x.quadraticCurveTo(a + j * 5, b - 8, a + j * 6 + 2, b - 14); x.stroke(); } }   // sea grass tufts all across the shallows
+  for (const [a, b] of [[440, 345], [555, 356], [250, 420]]) { x.fillStyle = "#ff8fb0"; x.beginPath(); x.arc(a, b, 6, Math.PI, 0); x.fill(); x.fillStyle = "#ffd0dc"; x.fillRect(a - 1, b - 5, 2, 2); }   // little corals near the clams too
+  for (const bx of [580]) { x.fillStyle = lin(bx - 16, 0, bx + 16, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.12)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 16, 290, 32, H - 290); }
   // ---- the coral reef ----
   const branchy = (a, b, s, col, tip) => { x.strokeStyle = col; x.lineCap = "round";
     const grow = (px, py, ang, len, w, d) => { const ex = px + Math.cos(ang) * len, ey = py + Math.sin(ang) * len; x.lineWidth = w; x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke();
@@ -2763,7 +2768,7 @@ function drawWorldMap2() {
     for (let k = 0; k < 4; k++) { x.beginPath(); x.arc(a, b, r * (0.3 + k * 0.17), Math.PI * 1.1, Math.PI * 1.9); x.stroke(); } }
   for (const [a, b] of [[130, 300], [190, 318]]) { x.strokeStyle = "#a84ad0"; x.lineWidth = 1.2; for (let k = 0; k < 9; k++) { x.beginPath(); x.moveTo(a, b + 20); x.lineTo(a - 18 + k * 4.5, b - 6 + Math.abs(k - 4) * 3); x.stroke(); } }   // sea fans
   // ---- the kelp forest: tall swaying kelp ----
-  for (let k = 0; k < 16; k++) { const a = 360 + k * 19 + R() * 10, h = 150 + R() * 140, b = 330 + R() * 60, ph = R() * 6;
+  for (let k = 0; k < 14; k++) { const a = 258 + k * 13 + R() * 8, h = 130 + R() * 130, b = 330 + R() * 50, ph = R() * 6;
     x.strokeStyle = k % 3 ? "#3f7a2e" : "#5a9a3e"; x.lineWidth = 3; x.beginPath(); x.moveTo(a, b);
     for (let j = 0; j <= h; j += 10) x.lineTo(a + Math.sin(j / 30 + ph) * 8, b - j); x.stroke();
     x.fillStyle = "#6aaa3e"; for (let j = 20; j < h; j += 22) { const px = a + Math.sin(j / 30 + ph) * 8, py = b - j; x.beginPath(); x.ellipse(px + 6, py, 7, 2.5, 0.5, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(px - 6, py - 10, 7, 2.5, -0.5, 0, Math.PI * 2); x.fill(); }
