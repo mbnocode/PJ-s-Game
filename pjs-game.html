@@ -1610,7 +1610,7 @@ function towerFace(t) { if (t.face === undefined) t.face = pathFacing(t.x, t.y);
 function towerSprite(kind) { const img = kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind]; return towerLook(kind, img); }
 // Tower Skins (a Mystery Box prize): a tower's picture recolored in a new style. (A skin shows instead of the gold look.)
 const TOWER_SKINS = {
-  crystal: { name: "Crystal", weight: 20, rarity: "Rare", ramp: [[20, 40, 70], [40, 90, 150], [80, 160, 220], [140, 210, 250], [200, 240, 255], [245, 252, 255]] },
+  crystal: { name: "Crystal", weight: 10, rarity: "Epic", ramp: [[20, 40, 70], [40, 90, 150], [80, 160, 220], [140, 210, 250], [200, 240, 255], [245, 252, 255]] },
   shadow:  { name: "Shadow", weight: 5, rarity: "Legendary",  ramp: [[20, 10, 30], [45, 25, 70], [80, 45, 120], [120, 80, 170], [170, 130, 220], [220, 200, 250]] },
   candy:   { name: "Candy", weight: 30, rarity: "Common",   ramp: [[80, 20, 50], [160, 50, 110], [230, 100, 170], [250, 150, 200], [255, 200, 225], [255, 240, 248]] },
   lava:    { name: "Lava", weight: 24, rarity: "Common",    ramp: [[40, 6, 2], [110, 20, 6], [190, 50, 10], [240, 110, 20], [255, 180, 60], [255, 235, 160]] },
@@ -5065,7 +5065,7 @@ function rollBoxPrize(s, noMimic) {
   if (kind === "mimic") return { kind, pic: "mimic", mimic: true, title: "It's a trap!", text: "" };
   if (kind === "skin") {
     // which skin: rarer skins have a smaller weight. Golden is one of the skins too
-    const wOf = (c) => c === "gold" ? (SETTINGS.mysteryBox.goldSkinWeight ?? 10) : (TOWER_SKINS[c].weight || 1);
+    const wOf = (c) => c === "gold" ? (SETTINGS.mysteryBox.goldSkinWeight ?? 20) : (TOWER_SKINS[c].weight || 1);
     const kinds = [...Object.keys(TOWER_SKINS), "gold"], tot = kinds.reduce((a, c) => a + wOf(c), 0);
     let roll = Math.random() * tot, st = kinds[0]; for (const c of kinds) { roll -= wOf(c); if (roll < 0) { st = c; break; } }
     if (st === "gold") {
@@ -5132,7 +5132,7 @@ function playBoxOpening(prize, done) {
     const c = document.createElement("canvas"); c.width = c.height = 96; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false;
     cx.drawImage(prize.gold ? skinOf(SPR[prize.pic], "gold", 12) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
     if (prize.mimic) { setTimeout(() => mimicFight(prize, c), 650); return; }
-    const rar = prize.gold ? "Epic" : prize.skin ? lookRarity(prize.skin) : "";   // skins show how rare they are
+    const rar = prize.gold ? lookRarity("gold") : prize.skin ? lookRarity(prize.skin) : "";   // skins show how rare they are
     setTimeout(() => { tx.innerHTML = `${rar ? `<div class="rar-banner r-${rar.toLowerCase()}" style="color:${RARITY_COLORS[rar]};border-color:${RARITY_COLORS[rar]}">${rar === "Mythic" ? `🌌 <span class="rb">MYTHIC!!</span> 🌌` : rar === "Legendary" ? "🌟 LEGENDARY! 🌟" : rar === "Epic" ? "✨ EPIC! ✨" : rar.toUpperCase()}</div>` : ""}<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus();
       if (rar === "Legendary" || rar === "Epic" || rar === "Mythic") Sound.play("upgrade"); if (rar === "Mythic") { Sound.play("horn"); ov.classList.add("mythic"); } }, 650);
   }, 1500);
@@ -5584,10 +5584,10 @@ function renderAchievements() {
 $("b-achievements").onclick = () => { renderAchievements(); show("s-achievements"); };
 /* ---------- the Skins page: pick the look each tower wears ---------- */
 const RARITY_COLORS = { Common: "#a8b8a8", Uncommon: "#4ad8b0", Rare: "#5aa8ff", Epic: "#c77dff", Legendary: "#ffa63a", Mythic: "#ff7ae0" };
-const lookRarity = (st) => st === "gold" ? "Epic" : st === "normal" ? "" : ((TOWER_SKINS[st] || {}).rarity || "");
+const lookRarity = (st) => st === "gold" ? "Rare" : st === "normal" ? "" : ((TOWER_SKINS[st] || {}).rarity || "");
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
 // the looks in order on the Skins page: Normal first, then from Common to Legendary (most common first within each rarity)
-const LOOKS = [["normal", "Normal"], ...[["gold", "Golden", SETTINGS.mysteryBox.goldSkinWeight ?? 10], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name, v.weight || 1])]
+const LOOKS = [["normal", "Normal"], ...[["gold", "Golden", SETTINGS.mysteryBox.goldSkinWeight ?? 20], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name, v.weight || 1])]
   .sort((a, b) => RARITY_ORDER.indexOf(lookRarity(a[0])) - RARITY_ORDER.indexOf(lookRarity(b[0])) || b[2] - a[2]).map(([k, n]) => [k, n])];
 let skinAnim = null;
 const SKIN_SELL = 50;   // Golden Acorns for selling a duplicate Common skin (rarer skins sell for more: SKIN_SELL_BY)
@@ -5608,12 +5608,12 @@ function sellAllSkins() {   // sell every extra (duplicate) skin at once
 }
 // each look's chance per Mystery Box (worked out from the box's prize chances and the skin weights)
 function skinOdds() {
-  const P = SETTINGS.mysteryBox.prizes, s = slot(), found = (s && s.box && s.box.found) || {}, gw = SETTINGS.mysteryBox.goldSkinWeight ?? 10;
+  const P = SETTINGS.mysteryBox.prizes, s = slot(), found = (s && s.box && s.box.found) || {}, gw = SETTINGS.mysteryBox.goldSkinWeight ?? 20;
   const tot = Object.entries(P).filter(([k, p]) => p && p.chance && !((k === "phoenix" || k === "kraken") && found[k])).reduce((a, [, p]) => a + p.chance, 0);
   const skinBox = P.skin.chance / tot, wTot = Object.values(TOWER_SKINS).reduce((a, v) => a + (v.weight || 1), 0) + gw;
   const pct = (v) => (v * 100 >= 10 ? (v * 100).toFixed(0) : v * 100 < 1 ? (v * 100).toFixed(2) : (v * 100).toFixed(1)) + "%";
   const skins = Object.values(TOWER_SKINS).map((v) => [v.name, v.rarity || "", skinBox * (v.weight || 1) / wTot]).sort((a, b) => b[2] - a[2]);   // most common first
-  return [...skins, ["Golden", "Epic", skinBox * gw / wTot]].sort((a, b) => b[2] - a[2]).map(([n, rar, v]) => ({ n, rar, p: pct(v) }));
+  return [...skins, ["Golden", lookRarity("gold"), skinBox * gw / wTot]].sort((a, b) => b[2] - a[2]).map(([n, rar, v]) => ({ n, rar, p: pct(v) }));
 }
 function renderSkins() {
   const s = slot(), grid = $("skin-grid"); grid.innerHTML = ""; s.box = s.box || {};
