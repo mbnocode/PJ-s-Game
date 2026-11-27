@@ -1609,7 +1609,7 @@ function towerSkin(kind) {
 }
 // Each look is painted pixel by pixel over the tower's picture (keeping its dark outline and its shape):
 //  gold: shiny gold with bevelled edges, sparkles and a glint that sweeps across it every couple of seconds
-//  crystal: blue crystal facets fitted together that shimmer, a few split into rainbow light, glowing seams and twinkling star sparkles
+//  crystal: blue crystal facets fitted together that gently shimmer, with glowing seams and small twinkles
 //  lava: dark volcanic rock with a few big glowing cracks (they throb), lava drips and embers
 //  shadow: almost black, with a purple glow around its edges, glowing violet eyes and a dark mist around it
 //  toxic: every shade of green in patches (forest, emerald, lime, mint, olive, neon), glowing bubbles, a green glow and acid dripping off the bottom
@@ -1685,13 +1685,11 @@ function skinOf(img, style, frame = 0) {
       const dir = ((i + 0.5 - v.ox) * -0.7 + (j + 0.5 - v.oy) * -0.7) / g;   // which way this part of the facet faces the light
       if (seam < 0.8) col = [150, 230, 255];   // bright glowing seams where the crystals meet
       else if (seam < 1.5) col = [40, 96, 180];   // the dark inner edge of each crystal
-      else { const shim = 0.2 * Math.sin((frame / SKIN_FRAMES.crystal) * Math.PI * 2 + v.id * 12);   // each facet catches the light in turn: it shimmers
+      else { const shim = 0.08 * Math.sin((frame / SKIN_FRAMES.crystal) * Math.PI * 2 + v.id * 12);   // each facet catches the light in turn: a gentle shimmer
         let t = 0.3 + 0.35 * v.id + dir * 0.55 + (l - 0.5) * 0.35 + (lit ? 0.15 : 0) - (shade ? 0.15 : 0) + shim;
         if (l > 0.88) t = 0.97; col = ramp([[20, 46, 120], [40, 100, 200], [80, 170, 245], [170, 230, 255], [250, 254, 255]], t);
-        if (v.id > 0.52 && v.id < 0.68) { const hue = (v.id * 8 + frame / SKIN_FRAMES.crystal) % 1, rb = [[255, 140, 220], [180, 150, 255], [120, 230, 255], [150, 255, 210], [255, 240, 150]][Math.floor(hue * 5)];   // rainbow light split by the crystal
-          col = mix(col, rb, 0.45 + 0.2 * Math.max(0, dir)); } }
-      if (v.id > 0.8 && v.d1 < 0.9 * sc + 0.3 && ((frame + Math.floor(v.id * 97)) % 12) < 5) col = [255, 255, 255];   // twinkling sparkles in some crystals
-      if (v.id > 0.8 && ((frame + Math.floor(v.id * 97)) % 12) < 3 && ((Math.abs(i + 0.5 - v.ox) < 0.6 && v.d1 < 2.4 * sc) || (Math.abs(j + 0.5 - v.oy) < 0.6 && v.d1 < 2.4 * sc))) col = mix(col, [255, 255, 255], 0.8);   // ...that flash into little stars
+      }
+      if (v.id > 0.85 && v.d1 < 0.6 * sc + 0.2 && ((frame + Math.floor(v.id * 97)) % 12) < 4) col = [255, 255, 255];   // a small twinkle in a few crystals
     } else if (style === "lava") {   // simple: dark volcanic rock with a few big glowing cracks
       const g = 10 * sc + 3, v = vor(i, j, g), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / SKIN_FRAMES.lava * Math.PI * 2);
       if (l > 0.86) col = mix([255, 230, 120], [255, 255, 220], pulse);   // the eyes glow white-hot
