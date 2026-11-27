@@ -2614,16 +2614,26 @@ function seaTravel(done) {
         x.fillStyle = f.c; x.beginPath(); x.ellipse(fx, fy, 8 * f.s, 4 * f.s, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(fx - d * 7 * f.s, fy); x.lineTo(fx - d * 13 * f.s, fy - 5 * f.s); x.lineTo(fx - d * 13 * f.s, fy + 5 * f.s); x.fill(); }
       drawRiders(cx, cy, 110, t, 0.12, 0.15);
       // …something huge in the dark: two glowing red eyes, then the Mecha Megalodon's shadow sweeps past
-      const ey = clamp((u - 3.0) / 0.5) * clamp((5.2 - u) / 0.4);
+      const ey = clamp((u - 3.0) / 0.5) * clamp((4.7 - u) / 0.4);
       if (ey > 0) { x.fillStyle = `rgba(0,0,10,${0.45 * ey})`; x.fillRect(-20, -20, W + 40, H + 40);
         for (const ex of [W * 0.74, W * 0.8]) { const eg = x.createRadialGradient(ex, H * 0.52, 1, ex, H * 0.52, 26); eg.addColorStop(0, `rgba(255,60,40,${ey})`); eg.addColorStop(1, "rgba(255,40,20,0)"); x.fillStyle = eg; x.fillRect(ex - 30, H * 0.52 - 30, 60, 60); x.fillStyle = `rgba(255,220,200,${ey})`; x.fillRect(ex - 3, H * 0.52 - 2, 6, 4); } }
       cue("eyes", 12.6, t, () => { Sound.play("growl"); shake = 0.4; });
-      if (u > 4.3 && u < 6.6) { const q = (u - 4.3) / 2.3, sx = W + 300 - q * (W + 800), sy = H * 0.56; x.fillStyle = "rgba(2,6,16,0.93)";
-        x.beginPath(); x.ellipse(sx, sy, 260, 62, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(sx - 30, sy - 50); x.lineTo(sx + 30, sy - 140); x.lineTo(sx + 70, sy - 50); x.fill();
-        x.beginPath(); x.moveTo(sx + 240, sy); x.lineTo(sx + 360, sy - 80); x.lineTo(sx + 330, sy); x.lineTo(sx + 360, sy + 70); x.fill(); x.fillStyle = "#ff3a2a"; x.fillRect(sx - 200, sy - 18, 10, 6); }
-      cue("shadow", 13.9, t, () => { Sound.play("whoosh"); shake = 0.6; });
+      if (u > 4.5 && u < 7.1) {   // the Mecha Megalodon itself sweeps past: steel plates, gills, rivets and jaws full of teeth, lit only by its glowing red eye
+        const q = (u - 4.5) / 2.6, S = 600, sx = W + S / 2 + 40 - q * (W + S + 80), sy = H * 0.55 + Math.sin(u * 2) * 10, mouth = 0.5 + 0.5 * Math.sin(u * 5);
+        if (!SPR.megalodonDark) { const c = document.createElement("canvas"), src = SPRF.megalodon; c.width = src.width; c.height = src.height; const g2 = c.getContext("2d");
+          g2.drawImage(src, 0, 0); g2.globalCompositeOperation = "source-atop"; g2.fillStyle = "rgba(6,16,36,0.5)"; g2.fillRect(0, 0, c.width, c.height); SPR.megalodonDark = c; }
+        x.imageSmoothingEnabled = false;
+        const ex = sx - S / 2 + (7.5 / 32) * S, ey = sy - S / 2 + (12.6 / 32) * S;
+        const halo = x.createRadialGradient(sx, sy, S * 0.1, sx, sy, S * 0.6); halo.addColorStop(0, "rgba(60,140,200,0.25)"); halo.addColorStop(1, "rgba(60,140,200,0)"); x.fillStyle = halo; x.fillRect(sx - S, sy - S, S * 2, S * 2);   // a faint blue glow around it so its shape stands out
+        x.save(); x.translate(sx, sy); x.rotate(Math.sin(u * 2) * 0.04); x.drawImage(SPR.megalodonDark, -S / 2, -S / 2, S, S); x.restore();
+        const eg = x.createRadialGradient(ex, ey, 2, ex, ey, 60); eg.addColorStop(0, "rgba(255,70,40,0.95)"); eg.addColorStop(1, "rgba(255,40,20,0)"); x.fillStyle = eg; x.fillRect(ex - 60, ey - 60, 120, 120);
+        x.fillStyle = "#fff0e0"; x.fillRect(ex - 6, ey - 4, 12, 8);
+        x.globalAlpha = 0.5 + 0.5 * mouth; x.fillStyle = "rgba(255,90,40,0.6)"; x.fillRect(sx - S / 2 + (2 / 32) * S, sy - S / 2 + (17.5 / 32) * S, (8 / 32) * S, (2 / 32) * S); x.globalAlpha = 1;   // a hot glow deep in its throat
+        for (let i = 6; i < 26; i += 5) { x.fillStyle = `rgba(255,138,58,${0.5 + 0.5 * Math.sin(u * 6 + i)})`; x.fillRect(sx - S / 2 + ((31 - i) / 32) * S, sy - S / 2 + (15 / 32) * S, S / 32, S / 32); }   // glowing seams pulse
+      }
+      cue("shadow", 14.1, t, () => { Sound.play("whoosh"); shake = 0.6; });
       // the Sunken Kingdom rises out of the deep, with beams of light shooting up
-      const rise = ease(clamp((u - 5.4) / 1.6)), cyy = H + 260 - rise * 330;
+      const rise = ease(clamp((u - 6.6) / 1.6)), cyy = H + 260 - rise * 330;
       if (rise > 0) {
         x.save(); x.translate(W / 2, cyy - 60); x.globalCompositeOperation = "lighter"; x.rotate(Math.sin(t * 0.3) * 0.1);
         for (let i = -5; i <= 5; i++) { x.save(); x.rotate(i * 0.17); x.fillStyle = `rgba(140,240,255,${0.12 * rise})`; x.beginPath(); x.moveTo(-14, 0); x.lineTo(14, 0); x.lineTo(60, -700); x.lineTo(-60, -700); x.fill(); x.restore(); }
@@ -2637,9 +2647,9 @@ function seaTravel(done) {
         x.fillStyle = "#ffd34d"; x.fillRect(W / 2 - 6, cyy - 170, 12, 54); x.beginPath(); x.arc(W / 2, cyy - 172, 12, 0, Math.PI * 2); x.fill();
         x.fillStyle = `rgba(255,240,170,${0.5 + 0.5 * Math.sin(t * 5)})`; x.beginPath(); x.arc(W / 2, cyy - 172, 20, 0, Math.PI * 2); x.fill();
       }
-      cue("rise", 15.0, t, () => { Sound.play("deep"); shake = 0.5; });
+      cue("rise", 16.2, t, () => { Sound.play("deep"); shake = 0.5; });
       for (const b of bubbles) { b.y -= b.v * dt; if (b.y < -10) { b.y = H + 10; b.x = R() * W; } x.strokeStyle = "rgba(230,250,255,0.75)"; x.lineWidth = 1.5; x.beginPath(); x.arc(b.x + Math.sin(t * 2 + b.r) * 3, b.y, b.r, 0, Math.PI * 2); x.stroke(); }
-      cue("title", 16.6, t, () => { $("sea-title").hidden = false; $("sea-go").focus(); $("sea-skip").hidden = true; shake = 1; flash = 0.8; flashCol = "180,245,255"; Sound.play("fanfare");
+      cue("title", 17.8, t, () => { $("sea-title").hidden = false; $("sea-go").focus(); $("sea-skip").hidden = true; shake = 1; flash = 0.8; flashCol = "180,245,255"; Sound.play("fanfare");
         for (let i = 0; i < 90; i++) { const a = R() * Math.PI * 2, v = 120 + R() * 380; parts.push({ x: W / 2, y: H * 0.42, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 1.6, life: 1.6, c: ["#fff6c0", "#8fe8ff", "#ffd34d", "#ffffff"][i % 4], r: 2 + R() * 3 }); } });
     }
     // particles (spray, sparkles, bubbles)
