@@ -158,7 +158,7 @@ const SETTINGS = {
                 [ { name: "Constellation",  about: "Shoots stars at 2 more robots.", targetsPlus: 2 },
                   { name: "Supernova",      about: "Hits twice as hard.", damageTimes: 2 } ],
               ] },
-    // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads bites a different robot.
+    // The Hydra: unlock it in the Serpent's Shop (on the save slot screen). Each of its 3 heads fires a venom laser at a different robot.
     // The Phoenix: the jackpot prize from the Mystery Box. Its fire feathers burn robots, and nothing can freeze, stun or trap it:
     // it bursts into flames instead ("rebirth") and scorches robots within rebirth.radius squares.
     phoenix:  { name: "Phoenix", cost: 220, range: 2.8, damage: 27, attacksPerSecond: 3, burnDamagePerSecond: 8, burnSeconds: 2.5, boxUnlock: "phoenix",
@@ -222,16 +222,16 @@ const SETTINGS = {
                   { name: "Strength in Numbers", about: "Every other Wolf on the board, anywhere, adds 8 damage to its attacks (on top of the bonus for Wolves next to it).", wolfCount: 8 } ],
               ] },
     hydra:    { name: "Hydra", cost: 160, range: 3.7, damage: 24, attacksPerSecond: 1.67, targets: 3, serpentUnlock: "hydra",
-              flyingDamageTimes: 0.5,   // it can bite flying robots, but only does this much of its damage to them (0.5 = half)
-              about: "Unlocked in the Serpent's Shop. Its three heads bite 3 different robots at once.",
+              flyingDamageTimes: 0.5,   // its lasers can hit flying robots, but only do this much of their damage to them (0.5 = half)
+              about: "Unlocked in the Serpent's Shop. Its three heads fire thick venom lasers at 3 different robots at once.",
               // Pick ONE choice at each upgrade.
               upgradeChoices: [
-                [ { name: "Long Necks",     about: "Reaches 1 more square.", rangePlus: 1 },
-                  { name: "Sharp Fangs",    about: "Bites 50% harder.", damageTimes: 1.5 } ],
-                [ { name: "Hungry Heads",   about: "Bites 50% faster.", speedTimes: 1.5 },
-                  { name: "Serpent Eyes",   about: "Can see Hiders, reaches a bit farther, and bites flying robots for full damage.", vision: true, rangePlus: 0.5, fullFlying: true } ],
-                [ { name: "Hydra's Fury",   about: "Bites twice as hard.", damageTimes: 2 },
-                  { name: "Extra Bite",     about: "Grows a 4th head, so it bites 1 more robot each time (4 at once).", targetsPlus: 1 } ],
+                [ { name: "Long Range Lasers", about: "Lasers reach 1 more square.", rangePlus: 1 },
+                  { name: "Toxic Beams",       about: "Lasers hit 50% harder.", damageTimes: 1.5 } ],
+                [ { name: "Rapid Fire",        about: "Fires lasers 50% faster.", speedTimes: 1.5 },
+                  { name: "Serpent Eyes",      about: "Can see Hiders, reaches a bit farther, and its lasers hit flying robots for full damage.", vision: true, rangePlus: 0.5, fullFlying: true } ],
+                [ { name: "Mega Lasers",       about: "Lasers hit twice as hard.", damageTimes: 2 },
+                  { name: "Fourth Head",       about: "Grows a 4th head, so it fires at 1 more robot each time (4 at once).", targetsPlus: 1 } ],
               ] },
   },
   upgradeCost: [0.7, 1.0, 1.5],   // price of Upgrade 1, 2 and 3, times the Tower's price
