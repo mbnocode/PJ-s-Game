@@ -370,7 +370,7 @@ const SETTINGS = {
                 openedAbout: "The box creaked open and light poured out! Buy another Mystery Key to open it again.",
                 // What can come out of the box. chance = how likely each one is (they don't have to add up to 100).
                 prizes: {
-                  acorns:    { chance: 0, min: 200, max: 600 },    // Acorn Pouch: not in the box anymore (chance 0). Only given if nothing else is left to win
+                  acorns:    { chance: 0, min: 200, max: 600 },    // Acorn Pouch: gone from the box. Once every Pet is found, the Pet chance goes to the tower jackpots (then to Tower Skins)
                   skin:      { chance: 16.5 },                      // Tower Skin: a new look for one of your towers (Candy, Lava, Metal, Crystal, Toxic, Golden, Shadow or the Mythic Galaxy: see goldSkinWeight and the skin weights)
                   pet:       { chance: 12 },                        // Pet: a little critter that follows you around the board and picks up maple leaves
                   mimic:     { chance: 8, taps: 12, seconds: 6, consolation: 50 },   // Box Mimic! Tap it taps times in seconds seconds to win 2 prizes (or it runs off and drops consolation Golden Acorns)

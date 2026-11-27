@@ -208,6 +208,21 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .boxopen.jackpot .bo-text .t { font-size: 44px; color: #ffb12e; }
 .boxopen .bo-text .d { font-family: var(--body); font-size: 18px; color: #f4efe0; margin-top: 6px; max-width: 420px; }
 .boxopen #bo-ok { position: relative; font-size: 18px; }
+.open-all { margin-left: 8px; background: #7a4dd8; border-color: #4a2a90; color: #fff; box-shadow: 0 3px 0 #4a2a90; }
+.open-all:hover { background: #9065ef; }
+.lootall { position: fixed; inset: 0; z-index: 71; background: rgba(6, 4, 14, 0.88); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.loot-card { background: linear-gradient(#2a1f4a, #17122c); border: 3px solid #c9a0ff; border-radius: 16px; padding: 20px 22px; max-width: 760px; width: 100%; max-height: 92vh; overflow: auto; text-align: center; box-shadow: 0 0 40px rgba(170,120,255,0.4); }
+.loot-card h2 { font-family: var(--display); color: var(--gold); margin: 0 0 14px; text-shadow: 0 3px 0 #000; }
+.loot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.loot-tile { position: relative; background: rgba(0,0,0,0.3); border: 2px solid #4a4070; border-radius: 10px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; animation: titlepop .35s cubic-bezier(.2,1.6,.4,1) both; }
+.loot-tile canvas { width: 64px; height: 64px; image-rendering: pixelated; }
+.loot-tile b { font-size: 13px; color: #f4efe0; }
+.loot-tile small { font-size: 11px; color: #cfc6e8; }
+.loot-tile i { font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: 1px; }
+.loot-tile .ln { position: absolute; top: 4px; right: 6px; background: var(--gold); color: #1b1006; font-weight: 800; font-size: 13px; border-radius: 999px; padding: 1px 7px; }
+.loot-tile.jackpot { border-color: #ffb12e; box-shadow: 0 0 16px rgba(255,177,46,0.6); }
+.loot-tile.r-mythic, .loot-tile.r-legendary { box-shadow: 0 0 14px rgba(255,200,120,0.45); }
+#loot-next { font-size: 20px; padding: 12px 34px; }
 .perk.mystery .coll { margin-top: 4px; border-top: 1px dashed var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
 .perk.mystery .coll .ct { font-family: var(--display); font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .05em; }
 .perk.mystery .coll .ci { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
@@ -823,6 +838,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <p class="muted" id="moon-say"></p><div class="acorns"><span id="moon-acorns">0</span> Golden Acorns</div>
     <p class="muted" id="moon-msg" role="status"></p>
     <div class="perks" id="moon-shop"></div><button class="go" id="b-moon-back">Back to space</button></div></div>
+  <div class="lootall" id="lootall" hidden><div class="loot-card"><h2 id="loot-title">Your loot</h2><div class="loot-grid" id="loot-grid"></div><button class="go" id="loot-next">Next →</button></div></div>
   <div class="boxopen" id="boxopen" hidden><div class="bo-rays"></div><div class="bo-stage"><canvas id="bo-box" width="160" height="160"></canvas><div id="bo-prize"></div></div><div class="bo-text" id="bo-text"></div><button class="go" id="bo-ok" hidden>Awesome!</button></div>
 
   <!-- Dadbot's "are you sure?" screen -->
@@ -5016,7 +5032,7 @@ function renderPerks() {
   if (found.leafboost || found.upgrade) coll.push(["old", "Old prizes", [found.leafboost ? `Leaf Boost ${found.leafboost}×` : "", found.upgrade ? `Mystery Upgrade ${found.upgrade}×` : ""].filter(Boolean).join(" · ")]);
   d.innerHTML = `<span class="pic"></span><span class="k">${mb.name}</span>
     <span class="s">${opened ? mb.openedAbout : hasKey ? "Your Mystery Key fits the lock… Open it!" : mb.about}</span>
-    ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? `Open with Mystery Key${s.materials.mysterykey > 1 ? ` (${s.materials.mysterykey} keys)` : ""}` : "🔒 Needs a Mystery Key"}</button>`}
+    ${opened ? "" : `<button class="go" id="perk-mysterybox" ${hasKey ? "" : "disabled"}>${hasKey ? `Open with Mystery Key${s.materials.mysterykey > 1 ? ` (${s.materials.mysterykey} keys)` : ""}` : "🔒 Needs a Mystery Key"}</button>${hasKey && s.materials.mysterykey > 1 ? `<button class="go open-all" id="perk-openall">Open all ${s.materials.mysterykey} 🔑</button>` : ""}`}
     <div class="coll"><div class="ct">Collection${s.boxOpened ? ` · opened ${s.boxOpened}×` : ""}</div>${coll.map(([k, n, v]) => `<div class="ci${v ? " got" : ""}"><span>${v ? (k === "phoenix" || k === "kraken" ? "Jackpot" : n) : "???"}</span><b>${v || "not found yet"}</b></div>`).join("")}</div>
     <details class="droprates"><summary>Drop rates</summary>${boxDropRates(s)}</details>
     ${pets.length ? `<label class="petpick">Your pet: <select id="pet-pick"><option value="">No pet</option>${pets.map((k) => `<option value="${k}" ${s.box.pet === k ? "selected" : ""}>${PETS[k]}</option>`).join("")}</select></label><p class="muted pet-power" id="pet-power">${PET_POWERS[s.box.pet] || "Pick a pet to see its special power."}</p>` : ""}`;
@@ -5037,30 +5053,83 @@ function renderPerks() {
     s.materials.mysterykey -= 1; s.boxOpened = (s.boxOpened || 0) + 1; saveSlots(slots);
     playBoxOpening(prize, () => { renderPerks(); checkAchievements(); });
   };
+  const oa = d.querySelector("#perk-openall"); if (oa) oa.onclick = () => openAllBoxes(s);
+}
+// Open all: every key opens a box. The first box gets the full show, the rest open instantly, then a loot screen shows everything.
+// (A Box Mimic can't jump out of the quick boxes: they always give a real prize.)
+function prizeCanvas(prize, size) {
+  const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+  const img = prize.gold ? skinOf(SPR[prize.pic], "gold", 12) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic]; if (img) x.drawImage(img, 0, 0, size, size); return c;
+}
+function openAllBoxes(s) {
+  const n = s.materials.mysterykey || 0; if (n < 1) return;
+  const loot = [];
+  const take = () => { const p = rollBoxPrize(s, true); s.materials.mysterykey -= 1; s.boxOpened = (s.boxOpened || 0) + 1; loot.push(p); return p; };
+  const first = take(); saveSlots(slots);
+  const ok = $("bo-ok"), label = ok.textContent; ok.textContent = n > 1 ? `Open the other ${n - 1} →` : "Next";
+  playBoxOpening(first, () => {
+    ok.textContent = label;
+    for (let i = 1; i < n; i++) take();
+    saveSlots(slots); showLoot(loot);
+  });
+}
+function showLoot(loot) {
+  const ov = $("lootall"), grid = $("loot-grid"); grid.innerHTML = "";
+  const groups = new Map();   // the same prize twice shows once, with ×2
+  for (const p of loot) { const rar = p.gold ? lookRarity("gold") : p.skin ? lookRarity(p.skin) : "", key = p.kind === "acorns" ? "acorns" : `${p.title}|${p.text}|${p.pic}|${p.skin || ""}|${p.gold ? 1 : 0}`;
+    const amt = p.kind === "acorns" ? (parseInt(String(p.text).replace(/[^0-9]/g, "")) || 0) : 0;
+    const g = groups.get(key) || { p, rar, n: 0, acorns: 0 }; g.n++; g.acorns += amt; groups.set(key, g); }
+  const rank = (g) => g.p.jackpot ? -1 : g.rar ? RARITY_ORDER.length - RARITY_ORDER.indexOf(g.rar) : 99;
+  [...groups.values()].sort((a, b) => rank(a) - rank(b)).forEach((g) => {
+    const t = document.createElement("div"); t.className = "loot-tile" + (g.p.jackpot ? " jackpot" : "") + (g.rar ? " r-" + g.rar.toLowerCase() : "");
+    if (g.rar) t.style.borderColor = RARITY_COLORS[g.rar];
+    t.appendChild(prizeCanvas(g.p, 64));
+    t.insertAdjacentHTML("beforeend", `${g.n > 1 ? `<span class="ln">×${g.n}</span>` : ""}<b>${g.p.kind === "acorns" ? "Golden Acorns" : g.p.title.replace(/!$/, "")}</b>
+      <small>${g.p.kind === "acorns" ? `+${g.acorns}` : g.p.skin ? `${TOWER_SKINS[g.p.skin].name} ${SETTINGS.towers[g.p.pic] ? SETTINGS.towers[g.p.pic].name : ""}` : g.p.gold ? `Golden ${SETTINGS.towers[g.p.pic] ? SETTINGS.towers[g.p.pic].name : ""}` : g.p.jackpot && SETTINGS.towers[g.p.pic] ? `The ${SETTINGS.towers[g.p.pic].name}!` : g.p.kind === "pet" && PETS[String(g.p.pic).replace("pet_", "")] ? `The ${PETS[String(g.p.pic).replace("pet_", "")]}` : g.p.text}</small>
+      ${g.rar ? `<i style="color:${RARITY_COLORS[g.rar]}" class="${g.rar === "Mythic" ? "rainbow" : ""}">${g.rar}</i>` : ""}`);
+    grid.appendChild(t);
+  });
+  $("loot-title").textContent = `You opened ${loot.length} Mystery Box${loot.length === 1 ? "" : "es"}!`;
+  const best = loot.some((p) => p.jackpot || (p.skin && ["Mythic", "Legendary"].includes(lookRarity(p.skin))));
+  Sound.play(best ? "win" : "upgrade");
+  ov.hidden = false; $("loot-next").focus();
+  $("loot-next").onclick = () => { ov.hidden = true; renderPerks(); checkAchievements(); };
 }
 const PETS = { bunny: "Bunny", chick: "Chick", firefly: "Firefly" }, PET_NAMES_N = Object.keys(PETS).length;
 // The chance of each Mystery Box prize right now (a jackpot you already found can't come again, so the others go up a little)
+// What can come out of the box right now, and how likely. No Acorn Pouches: a prize you can't get anymore (every Pet found)
+// gives its chance to the tower jackpots you haven't found yet (or to Tower Skins once you have both towers).
+function boxChoices(s, noMimic) {
+  const P = SETTINGS.mysteryBox.prizes, f = (s.box && s.box.found) || {}, pets = (s.box && s.box.pets) || {};
+  const out = Object.entries(P).filter(([k, p]) => k !== "acorns" && p.chance > 0 && !((k === "phoenix" || k === "kraken") && f[k]) && !(noMimic && k === "mimic")).map(([k, p]) => [k, p.chance]);
+  let spare = 0;
+  const petsLeft = Object.keys(PETS).some((k) => !pets[k]);
+  const keep = out.filter(([k, c]) => { if (k === "pet" && !petsLeft) { spare += c; return false; } return true; });
+  if (spare) { const towers = keep.filter(([k]) => k === "phoenix" || k === "kraken"), to = towers.length ? towers : keep.filter(([k]) => k === "skin");
+    to.forEach((e) => e[1] += spare / to.length); }
+  return keep;
+}
 function boxDropRates(s) {
   const P = SETTINGS.mysteryBox.prizes, f = (s.box && s.box.found) || {};
   const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin (Candy, Lava, Metal, Crystal, Toxic, Golden, Shadow, or the Mythic Galaxy!)", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
-  const live = Object.entries(P).filter(([k, p]) => NAMES[k] && p.chance > 0 && !((k === "phoenix" || k === "kraken") && f[k])), tot = live.reduce((a, [, p]) => a + p.chance, 0);
-  return `<table>${Object.entries(P).filter(([k, p]) => NAMES[k] && p.chance > 0).map(([k, p]) => { const got = (k === "phoenix" || k === "kraken") && f[k];
-    return `<tr><td>${NAMES[k]}</td><td>${got ? "found ✓" : (100 * p.chance / tot).toFixed(1).replace(/\.0$/, "") + "%"}</td></tr>`; }).join("")}</table>
-    <p class="muted">If you already have every Pet, you get some Golden Acorns instead.</p>`;
+  const live = new Map(boxChoices(s)), tot = [...live.values()].reduce((a, c) => a + c, 0);
+  return `<table>${Object.entries(P).filter(([k, p]) => NAMES[k] && k !== "acorns" && p.chance > 0).map(([k]) => { const got = (k === "phoenix" || k === "kraken") && f[k];
+    return `<tr><td>${NAMES[k]}</td><td>${got ? "found ✓" : live.has(k) ? (100 * live.get(k) / tot).toFixed(1).replace(/\.0$/, "") + "%" : "all found ✓"}</td></tr>`; }).join("")}</table>
+    <p class="muted">Once you have every Pet, its chance goes to the tower jackpots instead.</p>`;
 }
 // Picks a random prize, gives it to the save slot, and says what it was. (noMimic: for the 2 prizes you win by beating a Mimic)
 function rollBoxPrize(s, noMimic) {
   const P = SETTINGS.mysteryBox.prizes; s.box = s.box || {}; s.box.found = s.box.found || {}; s.box.golden = s.box.golden || {}; s.box.skins = s.box.skins || {}; s.box.pets = s.box.pets || {};
-  const choices = Object.entries(P).filter(([k, p]) => p.chance > 0 && !((k === "phoenix" || k === "kraken") && s.box.found[k]) && !(noMimic && k === "mimic"));   // each jackpot only once
-  let roll = Math.random() * choices.reduce((a, [, p]) => a + p.chance, 0), kind = choices[0][0];
-  for (const [k, p] of choices) { roll -= p.chance; if (roll <= 0) { kind = k; break; } }
+  const choices = boxChoices(s, noMimic);   // each jackpot only once, and no Acorn Pouches
+  let roll = Math.random() * choices.reduce((a, [, c]) => a + c, 0), kind = choices[0][0];
+  for (const [k, c] of choices) { roll -= c; if (roll <= 0) { kind = k; break; } }
   const gold = TOWER_ORDER.filter((k) => !SETTINGS.towers[k].boxUnlock && towerUnlocked(k) && !s.box.golden[k]);
   const ups = Object.keys(SETTINGS.permanentUpgrades).filter((k) => k !== "superTower" && ((s.perks || {})[k] || 0) < SETTINGS.permanentUpgrades[k].costs.length);
   const skinPairs = TOWER_ORDER.filter((k) => towerUnlocked(k)).flatMap((k) => Object.keys(TOWER_SKINS).filter((st) => !ownedLooks(s, k)[st]).map((st) => [k, st]));
   // Tower Skins can now come out twice (duplicates can be sold on the Skins page for SKIN_SELL Golden Acorns)
   const allSkinPairs = TOWER_ORDER.filter((k) => towerUnlocked(k)).flatMap((k) => Object.keys(TOWER_SKINS).map((st) => [k, st]));
   const skinnable = allSkinPairs, newPets = Object.keys(PETS).filter((k) => !s.box.pets[k]);
-  if ((kind === "golden" && !gold.length) || (kind === "upgrade" && !ups.length) || (kind === "skin" && !skinnable.length) || (kind === "pet" && !newPets.length)) kind = "acorns";   // nothing left of that kind: acorns instead
+  if ((kind === "golden" && !gold.length) || (kind === "upgrade" && !ups.length) || (kind === "skin" && !skinnable.length) || (kind === "pet" && !newPets.length)) kind = "skin";   // nothing left of that kind: a Tower Skin instead
   s.box.found[kind] = (s.box.found[kind] || 0) + 1;
   if (kind === "acorns") {
     const a = P.acorns, n = Math.round((a.min + Math.random() * (a.max - a.min)) / 50) * 50;
