@@ -560,6 +560,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .skin-odds .odd { background: #1c2a20; border: 2px solid #4f7a52; border-radius: 8px; padding: 3px 9px; }
 .skin-odds .odd small { display: block; font-size: 10px; opacity: 0.8; text-align: center; }
 .skin-odds .r-uncommon { border-color: #4ab89a; } .skin-odds .r-rare { border-color: #4a8ad8; } .skin-odds .r-gold { border-color: #ffd34d; } .skin-odds .r-legendary { border-color: #ff9a2a; box-shadow: 0 0 8px rgba(255,154,42,0.6); } .skin-odds .r-epic { border-color: #b05ae0; } .skin-odds .r-common { border-color: #6a8a6a; }
+.sell-all-row { text-align: center; margin: 8px 0; } .sell-all-row span { display: block; margin-top: 6px; color: #9be28a; font-weight: 700; }
 .look .rar { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
 .rar-banner { display: inline-block; font-weight: 800; font-size: 18px; letter-spacing: 1.5px; border: 2px solid; border-radius: 999px; padding: 3px 14px; margin-bottom: 6px; background: rgba(0,0,0,0.35); }
 .rar-banner.r-legendary { animation: rarPulse 0.8s ease-in-out infinite alternate; box-shadow: 0 0 18px rgba(255,166,58,0.6); }
@@ -870,7 +871,8 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Skins</h2>
     <div class="ach-count" id="skins-count"></div>
     <div class="skin-odds" id="skin-odds"></div>
-    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra for 50 Golden Acorns.</p>
+    <div class="sell-all-row"><button class="go" id="b-sell-all" hidden></button><span id="sell-all-msg" role="status"></span></div>
+    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra: Common 50, Uncommon 100, Rare 150, Epic 250, Legendary 500 Golden Acorns.</p>
     <div class="skin-grid" id="skin-grid"></div>
   </section>
   <section class="screen menu" id="s-achievements" hidden>
@@ -5026,7 +5028,7 @@ function rollBoxPrize(s, noMimic) {
     const towersHere = TOWER_ORDER.filter((tk) => towerUnlocked(tk)), k = towersHere[Math.random() * towersHere.length | 0];
     if (ownedLooks(s, k)[st]) {   // a duplicate: keep it as a spare to sell
       s.box.skinExtra = s.box.skinExtra || {}; s.box.skinExtra[k + ":" + st] = (s.box.skinExtra[k + ":" + st] || 0) + 1;
-      return { kind, pic: k, skin: st, title: "Duplicate Skin!", text: `Another ${TOWER_SKINS[st].name} look for your ${SETTINGS.towers[k].name}. Sell the extra on the Skins page for ${SKIN_SELL} Golden Acorns` };
+      return { kind, pic: k, skin: st, title: "Duplicate Skin!", text: `Another ${TOWER_SKINS[st].name} look for your ${SETTINGS.towers[k].name}. Sell the extra on the Skins page for ${skinPrice(st)} Golden Acorns` };
     }
     s.box.skinsOwned = s.box.skinsOwned || {}; s.box.skinsOwned[k] = s.box.skinsOwned[k] || {}; s.box.skinsOwned[k][st] = true;
     s.box.look = s.box.look || {}; s.box.look[k] = st;   // it starts wearing its new skin (change it on the Skins page)
@@ -5536,11 +5538,21 @@ const LOOKS = [["normal", "Normal"], ["gold", "Golden"], ...Object.entries(TOWER
 const RARITY_COLORS = { Common: "#a8b8a8", Uncommon: "#4ad8b0", Rare: "#5aa8ff", Epic: "#c77dff", Legendary: "#ffa63a" };
 const lookRarity = (st) => st === "gold" ? "Epic" : st === "normal" ? "" : ((TOWER_SKINS[st] || {}).rarity || "");
 let skinAnim = null;
-const SKIN_SELL = 50;   // Golden Acorns you get for selling a duplicate Tower Skin
+const SKIN_SELL = 50;   // Golden Acorns for selling a duplicate Common skin (rarer skins sell for more: SKIN_SELL_BY)
+const SKIN_SELL_BY = { Common: 50, Uncommon: 100, Rare: 150, Epic: 250, Legendary: 500 };
+const skinPrice = (st) => SKIN_SELL_BY[lookRarity(st)] || SKIN_SELL;
 function sellSkin(k, st) {
   const s = slot(), key = k + ":" + st, ex = (s.box.skinExtra || {})[key] || 0; if (!ex) return;
   s.box.skinExtra[key] = ex - 1; if (!s.box.skinExtra[key]) delete s.box.skinExtra[key];
-  s.acorns = (s.acorns || 0) + SKIN_SELL; saveSlots(slots); Sound.play("sell"); renderSkins();
+  s.acorns = (s.acorns || 0) + skinPrice(st); saveSlots(slots); Sound.play("sell"); renderSkins();
+}
+function sellAllSkins() {   // sell every extra (duplicate) skin at once
+  const s = slot(), ex = (s.box && s.box.skinExtra) || {}; let n = 0, got = 0;
+  for (const [key, c] of Object.entries(ex)) { const st = key.split(":")[1]; n += c; got += c * skinPrice(st); }
+  if (!n) return;
+  if (!confirm(`Sell all ${n} extra skin${n === 1 ? "" : "s"} for ${got.toLocaleString()} Golden Acorns?\n\n(You keep one of each skin.)`)) return;
+  s.box.skinExtra = {}; s.acorns = (s.acorns || 0) + got; saveSlots(slots); Sound.play("sell"); renderSkins();
+  const m = $("sell-all-msg"); if (m) m.textContent = `Sold ${n} extra skin${n === 1 ? "" : "s"} for ${got.toLocaleString()} Golden Acorns!`;
 }
 // each look's chance per Mystery Box (worked out from the box's prize chances and the skin weights)
 function skinOdds() {
@@ -5572,12 +5584,14 @@ function renderSkins() {
       if (has && (rar === "Legendary" || rar === "Epic")) b.style.boxShadow = `0 0 10px ${RARITY_COLORS[rar]}88`;
       b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
       const cell = document.createElement("div"); cell.className = "look-cell"; cell.appendChild(b);
-      if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.innerHTML = `Sell 1 for ${SKIN_SELL} <span class="ga" aria-label="Golden Acorns"></span>`; sb.title = `You have ${extra} extra. Sell one for ${SKIN_SELL} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
+      if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.innerHTML = `Sell 1 for ${skinPrice(st)} <span class="ga" aria-label="Golden Acorns"></span>`; sb.title = `You have ${extra} extra. Sell one for ${skinPrice(st)} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
       card.querySelector(".looks").appendChild(cell);
     }
     grid.appendChild(card);
   }
   const dups = Object.values(s.box.skinExtra || {}).reduce((a, n) => a + n, 0);
+  { const ex = (s.box && s.box.skinExtra) || {}; let n = 0, got = 0; for (const [key, c] of Object.entries(ex)) { n += c; got += c * skinPrice(key.split(":")[1]); }
+    const b = $("b-sell-all"); b.hidden = !n; b.innerHTML = `Sell all ${n} extra skin${n === 1 ? "" : "s"} for ${got.toLocaleString()} <span class="ga" aria-label="Golden Acorns"></span>`; b.onclick = sellAllSkins; }
   $("skin-odds").innerHTML = `<b>Chance in each Mystery Box:</b> ` + skinOdds().map((o) => `<span class="odd r-${o.rar.toLowerCase()}">${o.n} ${o.p}<small>${o.rar}</small></span>`).join("");
   $("skins-count").innerHTML = `✨ ${got} / ${all} looks found · <span class="ga" aria-label="Golden Acorns"></span> ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
 }
