@@ -9507,11 +9507,21 @@ function deerBlast(B, u, S, hitBase, bx) {
   Sound.play("fire"); Sound.play("smash");
 }
 // damage the robots' base on road `lane`: its own factory in the Smog Factories, the fortress / bridge gate otherwise
+// A wrecked Smog Factory blows up: a wave of explosions runs down its road and destroys every robot on it (bosses too)
+function factoryBlast(lane) {
+  let n = 0;
+  for (const o of M.units) if (o.side && o.hp > 0 && o.lane === lane) { o.hp = 0; n++;
+    for (let i = 0; i < 8; i++) M.fx.push({ spark: true, x: o.x + Math.random() * 30 - 15, y: o.y - Math.random() * 30, t: 0.5 + Math.random() * 0.4, c: i % 2 ? "#ffb12e" : "#ff5a2a" }); }
+  for (let x = 540; x > 80; x -= 22) for (let i = 0; i < 3; i++) M.fx.push({ spark: true, x: x + Math.random() * 16 - 8, y: roadY(lane, x) - Math.random() * 26, t: 0.3 + (540 - x) / 700 + Math.random() * 0.3, c: ["#ffe08a", "#ff8a2a", "#ff4a1a"][i] });
+  if (n) M.fx.push({ text: `KABOOM! ${n} robot${n > 1 ? "s" : ""} destroyed!`, x: 300, y: roadY(lane, 300) - 34, t: 2.2, c: "#ffb12e" });
+  Sound.play("smash"); setTimeout(() => Sound.play("smash"), 180);
+}
 function marchHitFort(lane, d) {
   const u = { lane };
   if (M.fac) {   // the Smog Factories: hit this road's factory
     if (M.fac[u.lane] > 0) { M.fac[u.lane] = Math.max(0, M.fac[u.lane] - d);
       if (M.fac[u.lane] <= 0) { const fy = MARCH.lanes[u.lane];
+        factoryBlast(u.lane);   // the factory blows up and takes every robot on its road with it
         if (M.lane === u.lane) { const open = marchLanesOpen().filter((j) => M.fac[j] > 0); if (open.length) { const to = open.reduce((a, b) => Math.abs(b - u.lane) < Math.abs(a - u.lane) ? b : a); M.lane = to; M.fx.push({ text: `Now sending to the ${LANE_NAMES[to]} road`, x: 160, y: roadY(to, 200) - 26, t: 2.2, c: "#9be28a" }); } } M.fx.push({ text: "FACTORY WRECKED!", x: 470, y: fy - 40, t: 2, c: "#9be28a" }, { kind: "flash", t: 0.18 }, { kind: "shock", x: 550, y: fy, r: 90, t: 0.5, w: 6 }); for (let i = 0; i < 30; i++) M.fx.push({ spark: true, x: 530 + Math.random() * 50, y: fy - 30 + Math.random() * 60, t: 0.8, c: i % 3 ? "#ff8a3a" : "#5a5a5a" }); Sound.play("smash"); Sound.play("upgrade"); } }
     M.fort = M.fac.reduce((a, b) => a + b, 0);
   } else M.fort -= d;
