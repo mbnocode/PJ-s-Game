@@ -9693,12 +9693,8 @@ function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
       if (!G.paused && Math.random() < 0.25) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 0.8, y: by - 4, vx: 0, vy: -50 - Math.random() * 40, t: 0, life: 0.8, col: ["#c8a0ff", "#8fe8ff", "#fff2a8"][Math.floor(Math.random() * 3)] });   // magic rising up the pillar
       for (let i = 0; i < 3; i++) { const a = tm * 2.2 + i / 3 * Math.PI * 2; if (Math.sin(a) < 0) { const ox = cx + Math.cos(a) * s2 * 0.6, oy = mid + Math.sin(a) * s2 * 0.18; x.fillStyle = ["#ff7a5a", "#6ac8ff", "#7cff8a"][i]; x.beginPath(); x.arc(ox, oy, 3, 0, Math.PI * 2); x.fill(); } }   // element orbs (behind)
     }
-    if (k === "healer") {   // a radiant golden sun-halo behind it, a big ring of flowers, and healing light rising
+    if (k === "healer") {   // a big ring of flowers, and healing light rising
       const p = 0.5 + 0.5 * Math.sin(tm * 2), hx = cx + face * s2 * 0.2, hy = by - s2 * 0.85 - rc;
-      x.save(); x.globalCompositeOperation = "lighter"; x.translate(hx, hy); x.rotate(tm * 0.4);
-      for (let i = 0; i < 12; i++) { x.rotate(Math.PI / 6); x.fillStyle = `rgba(255,220,120,${0.22 + 0.12 * p})`; x.beginPath(); x.moveTo(-2, s2 * 0.2); x.lineTo(0, s2 * (0.75 + 0.1 * p)); x.lineTo(2, s2 * 0.2); x.fill(); }
-      x.restore(); x.save(); x.globalCompositeOperation = "lighter";
-      x.strokeStyle = `rgba(255,236,160,${0.6 + 0.3 * p})`; x.lineWidth = 2.5; x.beginPath(); x.arc(hx, hy, s2 * 0.38, 0, Math.PI * 2); x.stroke(); x.restore();
       for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, fx = cx + Math.cos(a) * s2 * 0.7, fy = by - 1 + Math.sin(a) * s2 * 0.24, bob = Math.sin(tm * 2 + i) * 0.8, bloom = 0.7 + 0.3 * Math.sin(tm * 1.5 + i), col = ["#ff9ad8", "#ffffff", "#ffd34d", "#b48cff"][i % 4];
         x.fillStyle = "#3a8a3a"; x.fillRect(fx - 0.5, fy - 3 + bob, 1, 4); x.fillStyle = col; const pr = 2 * bloom; for (const [px, py] of [[-pr, 0], [pr, 0], [0, -pr], [0, pr]]) x.fillRect(fx + px - 1, fy - 4 + bob + py - 1, 2.2, 2.2); x.fillStyle = "#ffb12e"; x.fillRect(fx - 0.7, fy - 4.7 + bob, 1.6, 1.6); }
       if (!G.paused && Math.random() < 0.2) { const px = cx + (Math.random() - 0.5) * s2 * 1.2; G.particles.push({ kind: "spark", x: px, y: by - 2, vx: 0, vy: -30 - Math.random() * 20, t: 0, life: 1, col: Math.random() < 0.5 ? "#9aff9a" : "#fff2a8" }); }   // healing light floating up
