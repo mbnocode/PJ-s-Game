@@ -896,7 +896,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="skin-odds" id="skin-odds"></div>
     <div class="skin-focus-note" id="skin-focus-note" hidden></div>
     <div class="sell-all-row"><button class="go" id="b-sell-all" hidden></button><span id="sell-all-msg" role="status"></span></div>
-    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra: Common 50, Uncommon 100, Rare 150, Epic 250, Legendary 500 Golden Acorns.</p>
+    <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra: Common 50, Uncommon 100, Rare 150, Epic 250, Legendary 350, Mythic 500 Golden Acorns.</p>
     <div class="skin-grid" id="skin-grid"></div>
   </section>
   <section class="screen menu" id="s-achievements" hidden>
@@ -5596,7 +5596,7 @@ const LOOKS = [["normal", "Normal"], ...[["gold", "Golden", SETTINGS.mysteryBox.
   .sort((a, b) => RARITY_ORDER.indexOf(lookRarity(a[0])) - RARITY_ORDER.indexOf(lookRarity(b[0])) || b[2] - a[2]).map(([k, n]) => [k, n])];
 let skinAnim = null;
 const SKIN_SELL = 50;   // Golden Acorns for selling a duplicate Common skin (rarer skins sell for more: SKIN_SELL_BY)
-const SKIN_SELL_BY = { Common: 50, Uncommon: 100, Rare: 150, Epic: 250, Legendary: 500, Mythic: 1000 };
+const SKIN_SELL_BY = { Common: 50, Uncommon: 100, Rare: 150, Epic: 250, Legendary: 350, Mythic: 500 };
 const skinPrice = (st) => SKIN_SELL_BY[lookRarity(st)] || SKIN_SELL;
 function sellSkin(k, st) {
   const s = slot(), key = k + ":" + st, ex = (s.box.skinExtra || {})[key] || 0; if (!ex) return;
@@ -5674,7 +5674,7 @@ $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 // Gift codes add Golden Acorns (or unlock a tower) in the save slot you're in (once per slot).
-const GIFT_CODES = { "GALAXY": { galaxySkin: true } };   /* GALAXY: a random tower you have gets the Mythic Galaxy skin. Add new ones like: "NAME": 1000 (acorns), "NAME": { tower: "wolf" }, "NAME": { achievements: true } */
+const GIFT_CODES = { "GALAXY": { galaxySkin: true }, "ADMIN": { manySkins: { tower: "plant", skin: "galaxy", n: 10 } } };   /* ADMIN: 10 Mythic (Galaxy) Tree Giant skins: 1 to wear and 9 extras to sell */   /* GALAXY: a random tower you have gets the Mythic Galaxy skin. Add new ones like: "NAME": 1000 (acorns), "NAME": { tower: "wolf" }, "NAME": { achievements: true } */
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
@@ -5690,6 +5690,11 @@ $("b-gift").onclick = () => {
         if (!prev || prev.stars < 3) { s.best[L][gift.beatAll] = { stars: 3, score: prev ? prev.score : 0 }; n++; } }
     }
     if (!n) { msg.textContent = gift.beatAll ? "This save slot already has everything that code gives!" : "This save slot already has every achievement!"; return; }
+  } else if (gift.manySkins) {   // a pile of one skin: the first one to wear (if you don't have it yet), the rest as extras to sell
+    const { tower: k, skin: st, n } = gift.manySkins; s.box = s.box || {}; s.box.skinsOwned = s.box.skinsOwned || {}; s.box.skinsOwned[k] = s.box.skinsOwned[k] || {};
+    let extra = n; if (!ownedLooks(s, k)[st]) { s.box.skinsOwned[k][st] = true; s.box.look = s.box.look || {}; s.box.look[k] = st; extra--; }
+    s.box.skinExtra = s.box.skinExtra || {}; s.box.skinExtra[k + ":" + st] = (s.box.skinExtra[k + ":" + st] || 0) + extra;
+    got = `🌌 ${n} Mythic ${TOWER_SKINS[st].name} ${SETTINGS.towers[k].name}s! Sell the extras on the Skins page for ${skinPrice(st)} each.`;
   } else if (gift.galaxySkin) {   // a random tower you have (that isn't Galaxy yet) gets the Galaxy skin
     const ks = TOWER_ORDER.filter((k) => towerUnlocked(k) && !ownedLooks(s, k).galaxy);
     if (!ks.length) { msg.textContent = "Every tower you have already has the Galaxy skin!"; return; }
@@ -5703,7 +5708,7 @@ $("b-gift").onclick = () => {
   } else s.acorns = (s.acorns || 0) + gift;
   s.gifts.push(code); saveSlots(slots);
   Sound.play("upgrade"); $("gift-code").value = "";
-  msg.textContent = gift.galaxySkin ? `🌌 Your ${got} got the Mythic Galaxy skin!` : gift.beatAll ? `🏆 Every achievement, and all 15 levels beaten on Normal!` : gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
+  msg.textContent = gift.manySkins ? got : gift.galaxySkin ? `🌌 Your ${got} got the Mythic Galaxy skin!` : gift.beatAll ? `🏆 Every achievement, and all 15 levels beaten on Normal!` : gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
 };
 $("gift-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-gift").click(); });
 $("b-perks").onclick = () => { Sound.init(); $("gift-msg").hidden = true; renderPerks(); show("s-perks"); };
