@@ -450,11 +450,18 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .ability.ice.on { background: #7cd4ff; color: #062033; border-color: #e8faff; box-shadow: 0 0 18px rgba(160,230,255,0.85); }
 .ability.ice.on .ab-cost { color: #062033; }
 @media (max-width: 760px) and (orientation: portrait) { .abilities { position: absolute; right: 6px; bottom: 6px; margin: 0; } .ability { width: 70px; font-size: 12px; } }
-.abilities.two { display: grid; grid-template-columns: repeat(2, auto); }   /* too many buttons for one column: two columns */
+.abilities.two { display: grid; grid-template-columns: repeat(2, auto); gap: 8px; align-content: start; }
+.abilities.two .nextwave.side { grid-column: 1 / -1; width: auto; padding: 16px 6px 6px; }   /* the "Coming next" card stretches across both columns */
+.abilities.two .nextwave.side .foes { flex-direction: row; justify-content: center; gap: 8px; }   /* too many buttons for one column: two columns */
 .abilities.row { position: absolute; left: 50%; right: auto; bottom: 6px; transform: translateX(-50%); flex-direction: row; gap: 6px; margin: 0; }   /* narrow phones: a row under the board */
 #board.aiming { cursor: crosshair; }
 #board { image-rendering: pixelated; display: block; border: 3px solid #0b130e; border-radius: 4px; touch-action: none; cursor: pointer; }
 .shelf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-bottom: 2px; }
+.shelf.many { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; }   /* lots of towers: 2 rows of small buttons instead of 4 rows of big ones */
+.shelf.many .tbtn { flex-direction: column; gap: 1px; padding: 4px 3px; text-align: center; font-size: 13px; }
+.shelf.many .tbtn canvas { width: 30px; height: 30px; }
+.shelf.many .tbtn > span { width: 100%; } .shelf.many .tbtn .c { display: block; font-size: 12px; } .shelf.many .tbtn .bf { display: block; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) { .shelf.many { grid-template-columns: repeat(5, minmax(0, 1fr)); } .shelf.many .tbtn .lw { display: none; } }
 .tbtn { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px; text-align: left; font-size: 15px; }
 .tbtn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaf-ico { width: 22px; height: 22px; margin-left: -3px; flex: none; }
@@ -6494,6 +6501,7 @@ function renderShelf() {
     b.onclick = () => { G.pick = G.pick === k ? null : k; G.sel = null; $("tpanel").hidden = true; updateShelf(); };
     box.appendChild(b);
   });
+  box.classList.toggle("many", box.children.length > 8);   // lots of towers: smaller buttons, more in each row
   updateShelf();
 }
 function updateShelf() {
@@ -9967,7 +9975,7 @@ function fitAbilities() {
     box.style.zoom = z; return { side: 0, bottom: box.offsetHeight * z + 12 };
   }
   const H = st.clientHeight - 8; let z = Math.min(1, H / box.offsetHeight);
-  if (z < 0.62 && n > 2) { box.classList.add("two"); z = Math.min(1, H / box.offsetHeight); }
+  if (z < 0.92 && n > 3) { box.classList.add("two"); z = Math.min(1, H / box.offsetHeight); }   // lots of buttons: two columns, so nothing gets squished
   box.style.zoom = z; return { side: box.offsetWidth * z + 18, bottom: 0 };
 }
 function fitBoard() {
