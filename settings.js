@@ -416,7 +416,14 @@ const SETTINGS = {
   },
   // Team skin upgrades: when EVERY tower on the board wears this skin (and there are at least minTowers towers), the whole team gets this.
   skinSets: {
-    galaxy: { name: "Shooting Stars", about: "Every 8 seconds during a wave, a shooting star falls on the strongest robot for 5% of its max health (up to 1,000 damage).", minTowers: 4, starEvery: 8, starPart: 0.05, starMax: 1000 },
+    candy:   { name: "Sugar Storm", icon: "🍬", color: "#ff9ad8", about: "Every wave starts with a candy shower that gives you 25 bonus Maple Leaves.", minTowers: 4, leaves: 25 },
+    gold:    { name: "Treasure Rain", icon: "💰", color: "#ffd34d", about: "Robots drop double Golden Acorns.", minTowers: 4, acornTimes: 2 },
+    metal:   { name: "Metal Barrier", icon: "🛡️", color: "#dfe6ee", about: "At the start of every wave, a steel barrier blocks the road near your treehouse. Robots have to stop and break through it.", minTowers: 4, health: 400, healthPerWave: 60 },
+    toxic:   { name: "Toxic Flood", icon: "☣️", color: "#9aff6a", about: "The road turns into toxic sludge: robots on it move 25% slower and are slowly poisoned (1% of their max health every second).", minTowers: 4, slowBy: 0.25, poisonPart: 0.01, poisonMax: 40 },
+    lava:    { name: "Eruption", icon: "🌋", color: "#ffb347", about: "Every 15 seconds a volcano bursts out of the ground and rains lava on 6 robots: 80 damage, and they burn for 3 seconds.", minTowers: 4, every: 15, blobs: 6, damage: 80, burnSeconds: 3, burnDps: 30 },
+    crystal: { name: "Prism Beam", icon: "🌈", color: "#bfefff", about: "Every 12 seconds, rainbow beams link your towers and zap every robot they cross for 100 damage plus 4% of its max health.", minTowers: 4, every: 12, damage: 100, part: 0.04, max: 800, width: 0.6 },
+    shadow:  { name: "Eclipse", icon: "🌑", color: "#d8c4ff", about: "Once per wave, tap the Eclipse button to black out the sky for 5 seconds: every robot freezes in fear and towers hit 50% harder in the dark.", minTowers: 4, seconds: 5, damageTimes: 1.5 },
+    galaxy: { name: "Shooting Stars & Cosmic Force", icon: "🌌", color: "#e8d8ff", about: "Every 8 seconds during a wave, a shooting star falls on the strongest robot for 5% of its max health (up to 1,000 damage). PLUS the Cosmic Force button: every 30 seconds, push every robot on the screen all the way back to the start and hit each one for 150 damage plus 5% of its max health (up to 1,000).", forceEvery: 30, forceDamage: 150, forcePart: 0.05, forceMax: 1000, minTowers: 4, starEvery: 8, starPart: 0.05, starMax: 1000 },
   },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
