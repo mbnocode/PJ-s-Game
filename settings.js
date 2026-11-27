@@ -1077,81 +1077,97 @@ const SETTINGS = {
 
     // ===== WORLD 2: THE SUNKEN KINGDOM (opens after you beat the Eye of the Storm on Normal or harder) =====
     coralreef: { name: "The Coral Reef", world: 2, acornDropChance: 0.08, theme: "reef",
-              about: "A bright reef full of coral, deep under the sea. Sub Bots and Torpedo Bots swim in from the deep! Crabs hit 50% harder here. Scores are worth 5x.",
+              about: "Two factories! The road climbs a staircase of coral ledges up to the treehouse, and a second road joins it from the deep. Sub Bots and Torpedo Bots swim in! Crabs hit 50% harder here. Scores are worth 5x.",
               robotHealth: 1.5, scoreTimes: 5, lateToughness: { fromWave: 8, perWave: 0.06 },
               towerBoosts: { crab: { damageTimes: 1.5 } },
-              path: [[0, 2], [6, 2], [6, 9], [11, 9], [11, 4], [16, 4], [16, 8], [19, 8]],
-              // On the Coral Reef, trees are coral, mushrooms are sea anemones, and tall grass is sea grass.
-              trees:     [[2, 0], [3, 5], [9, 1], [8, 6], [14, 1], [13, 7], [18, 2], [2, 10], [17, 11]],
-              mushrooms: [[1, 6], [9, 11], [14, 10], [19, 5], [4, 8]],
-              tallGrass: [[0, 9], [7, 0], [12, 6], [18, 10], [10, 2], [5, 11]],
+              path: [[0,  10],  [4,  10],  [4,  7],  [8,  7],  [8,  4],  [12,  4],  [12,  1],  [19,  1]],
+              extraPaths: [[[19,  10],  [15,  10],  [15,  4],  [12,  4]]],   // a second factory on the right: its road joins the main road
+              // A staircase of coral ledges up to the treehouse, and a second factory on the right. Trees are coral, mushrooms are sea anemones, tall grass is sea grass.
+              trees:     [[16,  0],  [3,  5],  [12,  9],  [7,  5],  [16,  9],  [2,  1],  [11,  5],  [6,  1],  [10,  1]],
+              mushrooms: [[19,  5],  [6,  10],  [1,  6],  [10,  10],  [5,  6]],
+              tallGrass: [[14,  10],  [0,  2],  [9,  6],  [4,  2],  [13,  6],  [0,  11],  [8,  2]],
               waves: [
-                [["clanker", 10, 0.9]],                                                 // 1
-                [["walker", 6, 1.0], ["torpedo", 3, 1.2]],                              // 2: the first Torpedo Bots
-                [[["scout", "torpedo"], 12, 0.7]],                                      // 3
-                [["subbot", 3, 2.0], ["walker", 6, 0.8]],                               // 4: the first Sub Bots
-                [["boss", 1, 0, 2500], [["torpedo", "walker"], 8, 0.7]],                // 5
-                [["jellybot", 4, 0.5], ["tank", 3, 1.6]],                               // 6: the first Jelly Drones
-                [[["subbot", "repair"], 8, 1.2]],                                       // 7
-                [["hider", 8, 0.8], ["jellybot", 5, 0.45]],                             // 8
-                [[["torpedo", "torpedo", "subbot"], 15, 0.6]],                          // 9
-                [["sludgeleviathan", 1, 0], [["walker", "torpedo"], 10, 0.7]],          // 10
-                [[["jellybot", "drone"], 10, 0.45], ["subbot", 4, 1.4]],                // 11
-                [[["tank", "subbot", "repair"], 12, 1.0]],                              // 12
-                [["torpedo", 14, 0.4], ["splitter", 4, 1.5]],                           // 13
-                [[["hider", "subbot", "jellybot"], 15, 0.7]],                           // 14
-                [["boss", 2, 4, 5000], [["torpedo", "tank"], 12, 0.8]],                 // 15
-                [[["subbot", "tesla"], 10, 1.1], ["jellybot", 6, 0.4]],                 // 16
-                [[["torpedo", "scout", "hider"], 24, 0.35]],                            // 17
-                [["cyclonegolem", 1, 0], [["subbot", "repair", "subbot"], 12, 0.9]],    // 18
-                [[["jellybot", "thunderbird"], 14, 0.35], [["tank", "subbot"], 10, 1.0]],   // 19
-                [["sludgeleviathan", 1, 0], ["boss", 2, 4, 6000], [["subbot", "torpedo", "jellybot", "repair"], 20, 0.6]],   // 20: the big finish
+                [["clanker", 10, 1.0]],                                                 // 1
+                [["torpedo", 5, 1.1]],                                                  // 2: the first Torpedo Bots
+                [["walker", 6, 1.0], ["scout", 6, 0.7]],                                // 3
+                [["subbot", 2, 2.5], ["clanker", 8, 0.6]],                              // 4: the first Sub Bots
+                [["boss", 1, 0, 1800], ["torpedo", 6, 0.8]],                            // 5
+                [[["walker", "subbot"], 8, 1.1]],                                       // 6
+                [["jellybot", 3, 0.7], ["walker", 6, 0.8]],                             // 7: the first Jelly Drones
+                [[["torpedo", "scout"], 14, 0.55]],                                     // 8
+                [["splitter", 4, 1.6], ["subbot", 3, 1.8]],                             // 9
+                [["boss", 1, 0, 3200], [["jellybot", "torpedo"], 8, 0.6]],              // 10
+                [[["tank", "repair"], 8, 1.3]],                                         // 11
+                [["torpedo", 18, 0.35]],                                                // 12: a torpedo storm
+                [[["subbot", "subbot", "jellybot"], 12, 0.9]],                          // 13
+                [["hider", 8, 0.8], ["splitter", 4, 1.4]],                              // 14
+                [["sludgeleviathan", 1, 0], ["torpedo", 8, 0.6]],                       // 15
+                [[["jellybot", "drone"], 12, 0.45]],                                    // 16
+                [[["tank", "subbot", "repair"], 14, 1.0]],                              // 17
+                [[["scout", "torpedo", "hider"], 22, 0.4]],                             // 18
+                [["tesla", 3, 2], [["subbot", "walker"], 14, 0.8]],                     // 19
+                [["boss", 2, 5, 5000], [["jellybot", "subbot"], 12, 0.7]],              // 20
+                [[["torpedo", "torpedo", "repair"], 21, 0.45]],                         // 21
+                [[["splitter", "subbot"], 14, 1.0], ["jellybot", 8, 0.4]],              // 22
+                [["cyclonegolem", 1, 0], [["walker", "torpedo"], 16, 0.5]],             // 23
+                [[["hider", "jellybot", "subbot", "scout"], 24, 0.5]],                  // 24
+                [["sludgeleviathan", 1, 0], ["boss", 1, 0, 6500]],                      // 25
+                [[["tank", "tesla", "subbot"], 18, 0.9]],                               // 26
+                [["torpedo", 30, 0.25]],                                                // 27
+                [[["jellybot", "thunderbird", "drone"], 21, 0.35], ["subbot", 6, 1.2]], // 28
+                [["boss", 3, 4, 7000], [["subbot", "repair", "torpedo"], 18, 0.7]],     // 29
+                [["sludgeleviathan", 2, 8], ["cyclonegolem", 1, 0], [["subbot", "torpedo", "jellybot", "splitter", "repair"], 25, 0.5]],   // 30: the big finish
               ] },
     kelpforest: { name: "The Kelp Forest", world: 2, acornDropChance: 0.09, theme: "kelp",
-              about: "Giant kelp sways in the dark water, and Hiders love to sneak through it. Water Frogs hit 50% harder here. Scores are worth 5.5x.",
+              about: "A long road that snakes up and down through towering kelp, and Hiders love to sneak through it. Water Frogs hit 50% harder here. Scores are worth 5.5x.",
               robotHealth: 1.6, scoreTimes: 5.5, lateToughness: { fromWave: 8, perWave: 0.06 },
               towerBoosts: { water: { damageTimes: 1.5 } },
-              path: [[0, 9], [3, 9], [3, 2], [8, 2], [8, 10], [13, 10], [13, 1], [17, 1], [17, 6], [19, 6]],
-              // In the Kelp Forest, trees are tall kelp, mushrooms are sea urchins, and tall grass is sea grass.
-              trees:     [[1, 1], [1, 5], [5, 5], [6, 8], [10, 4], [11, 7], [15, 3], [15, 8], [19, 10], [10, 0]],
-              mushrooms: [[0, 11], [5, 0], [11, 11], [18, 3], [16, 11]],
-              tallGrass: [[2, 7], [6, 5], [10, 8], [15, 5], [19, 1], [4, 11], [12, 3]],
+              path: [[0,  1],  [2,  1],  [2,  10],  [5,  10],  [5,  1],  [8,  1],  [8,  10],  [11,  10],  [11,  1],  [14,  1],  [14,  10],  [17,  10],  [17,  5],  [19,  5]],
+              // The road snakes up and down between tall walls of kelp. Trees are kelp, mushrooms are sea urchins, tall grass is sea grass.
+              trees:     [[5,  0],  [1,  9],  [9,  0],  [13,  0],  [0,  5],  [9,  9],  [17,  0],  [4,  5],  [13,  9]],
+              mushrooms: [[3,  1],  [12,  5],  [16,  5],  [7,  10],  [15,  1]],
+              tallGrass: [[19,  1],  [6,  6],  [1,  2],  [10,  6],  [19,  10],  [18,  6],  [5,  11]],
               waves: [
-                [[["walker", "torpedo"], 12, 0.8]],                                     // 1
-                [["hider", 6, 1.0], ["subbot", 2, 2]],                                  // 2
-                [["jellybot", 6, 0.4], ["walker", 8, 0.7]],                             // 3
-                [[["hider", "hider", "repair"], 12, 0.8]],                              // 4
-                [["boss", 1, 0, 3500], ["torpedo", 10, 0.5]],                           // 5
-                [[["subbot", "tank"], 10, 1.2]],                                        // 6
-                [["jellybot", 8, 0.35], ["drone", 4, 0.6]],                             // 7
-                [[["torpedo", "hider", "scout"], 18, 0.45]],                            // 8
-                [["staticbot", 3, 2], [["subbot", "repair"], 10, 1.0]],                 // 9
-                [["yetimech", 1, 0], [["walker", "hider"], 12, 0.6]],                   // 10
-                [[["jellybot", "balloonbot"], 10, 0.6], ["tank", 4, 1.4]],              // 11
-                [[["subbot", "subbot", "tesla"], 12, 1.0]],                             // 12
-                [["torpedo", 20, 0.3]],                                                 // 13
-                [[["hider", "mummy", "subbot"], 15, 0.8]],                              // 14
-                [["sludgeleviathan", 1, 0], [["jellybot", "thunderbird"], 12, 0.4]],    // 15
-                [[["obsidian", "subbot"], 12, 1.0]],                                    // 16
-                [[["gustrunner", "torpedo"], 20, 0.4]],                                 // 17
-                [[["tank", "subbot", "repair", "staticbot"], 16, 0.9]],                 // 18
-                [["jellybot", 16, 0.3], ["hider", 10, 0.6]],                            // 19
-                [["boss", 2, 4, 7000], ["cyclonegolem", 1, 0]],                         // 20
-                [[["subbot", "torpedo", "jellybot"], 24, 0.5]],                         // 21
-                [[["snowplow", "subbot"], 14, 1.0], ["repair", 4, 1.5]],                // 22
-                [["pharaohmachine", 1, 0], [["torpedo", "hider"], 14, 0.5]],            // 23
-                [["skyblimp", 1, 0], [["subbot", "tank"], 14, 0.9]],                    // 24
-                [["sludgeleviathan", 2, 6], ["boss", 2, 4, 8000], [["subbot", "torpedo", "jellybot", "hider", "repair"], 25, 0.5]],   // 25: the big finish
+                [[["walker", "hider"], 8, 1.0]],                                        // 1
+                [["torpedo", 6, 0.9], ["clanker", 6, 0.7]],                             // 2
+                [["hider", 8, 0.9]],                                                    // 3: Hiders sneaking through the kelp
+                [["jellybot", 5, 0.6], ["subbot", 2, 2]],                               // 4
+                [["boss", 1, 0, 2600], ["hider", 6, 0.8]],                              // 5
+                [[["torpedo", "walker", "hider"], 15, 0.6]],                            // 6
+                [["repair", 3, 2], ["subbot", 5, 1.3]],                                 // 7
+                [["jellybot", 10, 0.35]],                                               // 8: a swarm of Jelly Drones
+                [[["hider", "hider", "tesla"], 12, 0.9]],                               // 9
+                [["yetimech", 1, 0], ["torpedo", 10, 0.5]],                             // 10
+                [[["subbot", "mummy"], 10, 1.1]],                                       // 11
+                [["drone", 6, 0.6], ["jellybot", 6, 0.5], ["hider", 6, 0.7]],           // 12
+                [[["gustrunner", "torpedo"], 16, 0.45]],                                // 13
+                [["staticbot", 4, 1.8], [["hider", "subbot"], 10, 0.9]],                // 14
+                [["pharaohmachine", 1, 0], ["jellybot", 8, 0.4]],                       // 15
+                [[["obsidian", "hider"], 12, 1.0]],                                     // 16
+                [["torpedo", 24, 0.3]],                                                 // 17
+                [[["balloonbot", "jellybot"], 12, 0.6], ["tank", 5, 1.3]],              // 18
+                [[["subbot", "repair", "hider"], 18, 0.8]],                             // 19
+                [["boss", 2, 4, 6000], ["glaciergolem", 1, 0]],                         // 20
+                [[["hider", "scout", "torpedo", "gustrunner"], 28, 0.35]],              // 21
+                [[["snowplow", "subbot", "tesla"], 15, 1.0]],                           // 22
+                [["skyblimp", 1, 0], ["hider", 12, 0.6]],                               // 23
+                [[["jellybot", "thunderbird", "balloonbot"], 20, 0.4]],                 // 24
+                [["sludgeleviathan", 1, 0], ["yetimech", 1, 0], [["subbot", "hider"], 14, 0.7]],   // 25
+                [[["mummy", "obsidian", "repair"], 18, 0.9]],                           // 26
+                [["cyclonegolem", 2, 7], [["torpedo", "jellybot"], 16, 0.45]],          // 27
+                [[["hider", "subbot", "staticbot", "tank"], 24, 0.6]],                  // 28
+                [["pharaohmachine", 1, 0], ["boss", 2, 4, 8000], ["jellybot", 12, 0.35]],   // 29
+                [["glaciergolem", 2, 8], ["pharaohmachine", 1, 0], [["hider", "subbot", "torpedo", "jellybot", "repair"], 28, 0.45]],   // 30: the big finish
               ] },
     sunkencity: { name: "The Sunken City", world: 2, acornDropChance: 0.1, theme: "sunken",
-              about: "The ruins of an ancient city at the bottom of the sea. The road zigzags past fallen pillars and treasure, and the Mecha Megalodon is waiting! The Kraken hits 50% harder here. Scores are worth 6x.",
+              about: "The ruins of an ancient city at the bottom of the sea. The road loops back and crosses over itself at an old plaza, and the Mecha Megalodon is waiting! The Kraken hits 50% harder here. Scores are worth 6x.",
               robotHealth: 1.7, scoreTimes: 6, lateToughness: { fromWave: 8, perWave: 0.065 },
               towerBoosts: { kraken: { damageTimes: 1.5 } },
-              path: [[0, 1], [17, 1], [17, 4], [2, 4], [2, 7], [17, 7], [17, 10], [9, 10]],
-              // In the Sunken City, trees are broken pillars, mushrooms are treasure chests, and tall grass is sea grass.
-              trees:     [[0, 3], [5, 3], [11, 3], [19, 3], [0, 6], [8, 6], [14, 6], [19, 8], [4, 9], [13, 11]],
-              mushrooms: [[19, 0], [10, 2], [3, 9], [15, 9], [19, 11]],
-              tallGrass: [[7, 0], [13, 0], [6, 5], [12, 5], [1, 10], [5, 11], [18, 5]],
+              path: [[0,  2],  [12,  2],  [12,  9],  [6,  9],  [6,  5],  [17,  5],  [17,  10],  [19,  10]],
+              // The old city road crosses over itself at a ruined plaza. Trees are broken pillars, mushrooms are treasure chests, tall grass is sea grass.
+              trees:     [[3,  4],  [7,  4],  [16,  8],  [2,  0],  [11,  4],  [6,  0],  [15,  4],  [2,  9],  [10,  0]],
+              mushrooms: [[19,  4],  [14,  0],  [1,  5],  [18,  0],  [5,  5]],
+              tallGrass: [[14,  9],  [4,  1],  [0,  10],  [8,  1],  [4,  10],  [12,  1],  [8,  10]],
               waves: [
                 [[["subbot", "walker"], 12, 0.9]],                                      // 1
                 [["torpedo", 12, 0.5]],                                                 // 2
