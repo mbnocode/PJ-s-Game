@@ -5573,7 +5573,7 @@ $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 // Gift codes add Golden Acorns (or unlock a tower) in the save slot you're in (once per slot).
-const GIFT_CODES = { "PJ1050": 1050, "2KA": 2000, "ACORNS1000": 1000, "PHOENIXRISE": { tower: "phoenix" }, "ALLTROPHIES": { achievements: true }, "RALLY": { scene: "rally" } };   // RALLY: watch General Antler's rally scene (any time, as often as you like)   // ALLTROPHIES: unlocks every achievement in this save slot
+const GIFT_CODES = { "PJ1050": 1050, "2KA": 2000, "ACORNS1000": 1000, "PHOENIXRISE": { tower: "phoenix" }, "ALLTROPHIES": { achievements: true }, "WIN": { achievements: true, beatAll: "normal" }, "RALLY": { scene: "rally" } };   // RALLY: watch General Antler's rally scene (any time, as often as you like)   // ALLTROPHIES: unlocks every achievement in this save slot
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
@@ -5584,14 +5584,18 @@ $("b-gift").onclick = () => {
   const gift = GIFT_CODES[code];
   if (gift.achievements) {
     s.achievements = s.achievements || {}; let n = 0; for (const a of ACHIEVEMENTS) if (!s.achievements[a.id]) { s.achievements[a.id] = Date.now(); n++; }
-    if (!n) { msg.textContent = "This save slot already has every achievement!"; return; }
+    if (gift.beatAll) {   // WIN: also beat all 15 levels (not Infinity) on Normal, with 3 stars (keeping any better scores)
+      s.best = s.best || {}; for (const L of LEVEL_ORDER) { if (L === "infinity") continue; s.best[L] = s.best[L] || {}; const prev = s.best[L][gift.beatAll];
+        if (!prev || prev.stars < 3) { s.best[L][gift.beatAll] = { stars: 3, score: prev ? prev.score : 0 }; n++; } }
+    }
+    if (!n) { msg.textContent = gift.beatAll ? "This save slot already has everything that code gives!" : "This save slot already has every achievement!"; return; }
   } else if (gift.tower) {
     if (towerUnlocked(gift.tower)) { msg.textContent = `You already have the ${SETTINGS.towers[gift.tower].name}!`; return; }
     s.codeTowers = s.codeTowers || {}; s.codeTowers[gift.tower] = true;
   } else s.acorns = (s.acorns || 0) + gift;
   s.gifts.push(code); saveSlots(slots);
   Sound.play("upgrade"); $("gift-code").value = "";
-  msg.textContent = gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
+  msg.textContent = gift.beatAll ? `🏆 Every achievement, and all 15 levels beaten on Normal!` : gift.achievements ? `🏆 You unlocked every achievement (${ACHIEVEMENTS.length} of them)!` : gift.tower ? `You unlocked the ${SETTINGS.towers[gift.tower].name}!` : `+${gift} Golden Acorns!`; renderPerks();
 };
 $("gift-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("b-gift").click(); });
 $("b-perks").onclick = () => { Sound.init(); $("gift-msg").hidden = true; renderPerks(); show("s-perks"); };
