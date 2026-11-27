@@ -1587,7 +1587,8 @@ SPR.wolf = (() => {
     for (const [i, j] of [[15,17],[20,16],[25,16],[31,11],[35,6],[12,21],[6,24],[22,18]]) P(i, j, pal.frost);   // silver frost-tipped fur
   });
 })();
-for (const [k, rects] of Object.entries(TOWER_EYES)) if (SPR[k]) SPR[k].eyeRects = rects;   // (after every tower's picture is made)
+SPR.wolf.keepColors = [[255, 42, 74], [255, 224, 230]]; SPR.wolf.glowKeep = [255, 40, 60];   // the Wolf's red eyes stay red (and glow) in every skin
+for (const [k, rects] of Object.entries(TOWER_EYES)) if (SPR[k] && k !== "wolf") SPR[k].eyeRects = rects;   // (after every tower's picture is made)
 const SMOOTH_SPRITES = new Set([]);   // add a tower name here to draw it smoothly instead of pixelated
 const FROG_FACE = { k: "#16191d", w: "#ffffff", R: "#ff8fa8" };
 SPR.water = makeSprite(ART.water, false, { ...FROG_FACE, b: "#3d8fe0", B: "#1f5fa8", c: "#bfe6ff", h: "#7cc0ff", S: "#2a6fbf" });          // 32 x 32 frog
@@ -1777,6 +1778,15 @@ function skinOf(img, style, frame = 0) {
       if (lit && l > 0.3) col = mix(col, [255, 255, 255], 0.5);   // glossy
     } else col = [p[k * 4], p[k * 4 + 1], p[k * 4 + 2]];
     put(i, j, col);
+  }
+  if (keep && img.glowKeep) {   // a red glow around kept eyes (the Wolf's glowing eyes)
+    const isKeep = (k) => p[k * 4 + 3] && keep.some((c) => Math.abs(p[k * 4] - c[0]) < 8 && Math.abs(p[k * 4 + 1] - c[1]) < 8 && Math.abs(p[k * 4 + 2] - c[2]) < 8);
+    const g = img.glowKeep, R = Math.max(2, Math.round(sc));
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const k = j * W + i; if (!isKeep(k)) continue;
+      for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const i2 = i + dx, j2 = j + dy; if (i2 < 0 || j2 < 0 || i2 >= W || j2 >= H) continue; const k2 = j2 * W + i2; if (isKeep(k2)) continue;
+        const f = Math.max(0, 1 - Math.hypot(dx, dy) / (R + 1)) * 0.6, o = k2 * 4; if (f <= 0) continue;
+        if (!out[o + 3]) { out[o] = g[0]; out[o + 1] = g[1]; out[o + 2] = g[2]; out[o + 3] = Math.max(out[o + 3], 200 * f); }
+        else { out[o] = out[o] + (g[0] - out[o]) * f; out[o + 1] = out[o + 1] + (g[1] - out[o + 1]) * f; out[o + 2] = out[o + 2] + (g[2] - out[o + 2]) * f; } } }
   }
   d.data.set(out); x.putImageData(d, 0, 0); m.set(key, c); return c;
 }
