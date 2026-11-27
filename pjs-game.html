@@ -6178,7 +6178,7 @@ $("b-enemies").onclick = () => { Sound.init(); renderEnemies(); show("s-enemies"
 $("b-enemies-back").onclick = () => { renderLevels(); show("s-levels"); };
 
 // Gift codes add Golden Acorns (or unlock a tower) in the save slot you're in (once per slot).
-const GIFT_CODES = { "GALAXY": { galaxySkin: true }, "ADMIN": { manySkins: { tower: "plant", skin: "galaxy", extra: 50 } } };   /* ADMIN: the Mythic (Galaxy) Tree Giant skin to wear, plus 50 extras to sell */   /* GALAXY: a random tower you have gets the Mythic Galaxy skin. Add new ones like: "NAME": 1000 (acorns), "NAME": { tower: "wolf" }, "NAME": { achievements: true } */
+const GIFT_CODES = { "GALAXY": { galaxySkin: true }, "ADMIN": { manySkins: { tower: "plant", skin: "galaxy", extra: 50 } }, "GRIND": { manySkins: { tower: "plant", skin: "galaxy", extra: 50 } } };   /* GRIND: the same as ADMIN */   /* ADMIN: the Mythic (Galaxy) Tree Giant skin to wear, plus 50 extras to sell */   /* GALAXY: a random tower you have gets the Mythic Galaxy skin. Add new ones like: "NAME": 1000 (acorns), "NAME": { tower: "wolf" }, "NAME": { achievements: true } */
 $("b-gift").onclick = () => {
   const s = slot(), code = $("gift-code").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("gift-msg");
   msg.hidden = false;
