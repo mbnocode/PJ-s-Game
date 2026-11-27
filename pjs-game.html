@@ -560,6 +560,12 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .skin-odds .odd { background: #1c2a20; border: 2px solid #4f7a52; border-radius: 8px; padding: 3px 9px; }
 .skin-odds .odd small { display: block; font-size: 10px; opacity: 0.8; text-align: center; }
 .skin-odds .r-uncommon { border-color: #4ab89a; } .skin-odds .r-rare { border-color: #4a8ad8; } .skin-odds .r-gold { border-color: #ffd34d; } .skin-odds .r-legendary { border-color: #ff9a2a; box-shadow: 0 0 8px rgba(255,154,42,0.6); } .skin-odds .r-epic { border-color: #b05ae0; } .skin-odds .r-common { border-color: #6a8a6a; }
+.look .rar { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
+.rar-banner { display: inline-block; font-weight: 800; font-size: 18px; letter-spacing: 1.5px; border: 2px solid; border-radius: 999px; padding: 3px 14px; margin-bottom: 6px; background: rgba(0,0,0,0.35); }
+.rar-banner.r-legendary { animation: rarPulse 0.8s ease-in-out infinite alternate; box-shadow: 0 0 18px rgba(255,166,58,0.6); }
+.rar-banner.r-epic { box-shadow: 0 0 14px rgba(199,125,255,0.5); }
+@keyframes rarPulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .rar-banner.r-legendary { animation: none; } }
 .ga { display: inline-block; width: 1em; height: 1.12em; vertical-align: -0.2em; background: var(--acorn) center / contain no-repeat; filter: drop-shadow(0 0 3px rgba(255, 210, 80, 0.45)); }   /* the Golden Acorn picture, inline in text */
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
 .acorns::before, .perk .cost::before { content: ""; width: 1.05em; height: 1.18em; background: var(--acorn) center / contain no-repeat; display: inline-block; filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.45)); }
@@ -5074,7 +5080,9 @@ function playBoxOpening(prize, done) {
     const c = document.createElement("canvas"); c.width = c.height = 96; const cx = c.getContext("2d"); cx.imageSmoothingEnabled = false;
     cx.drawImage(prize.gold ? skinOf(SPR[prize.pic], "gold", 12) : prize.skin ? skinOf(SPR[prize.pic], prize.skin) : SPR[prize.pic], 0, 0, 96, 96); pz.appendChild(c); pz.className = "fly";
     if (prize.mimic) { setTimeout(() => mimicFight(prize, c), 650); return; }
-    setTimeout(() => { tx.innerHTML = `<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus(); }, 650);
+    const rar = prize.gold ? "Epic" : prize.skin ? lookRarity(prize.skin) : "";   // skins show how rare they are
+    setTimeout(() => { tx.innerHTML = `${rar ? `<div class="rar-banner r-${rar.toLowerCase()}" style="color:${RARITY_COLORS[rar]};border-color:${RARITY_COLORS[rar]}">${rar === "Legendary" ? "🌟 LEGENDARY! 🌟" : rar === "Epic" ? "✨ EPIC! ✨" : rar.toUpperCase()}</div>` : ""}<div class="t">${prize.title}</div><div class="d">${prize.text}</div>`; ok.hidden = false; ok.focus();
+      if (rar === "Legendary" || rar === "Epic") Sound.play("upgrade"); }, 650);
   }, 1500);
   ok.onclick = () => { ov.hidden = true; ov.className = "boxopen"; done && done(); };
 }
@@ -5523,6 +5531,8 @@ function renderAchievements() {
 $("b-achievements").onclick = () => { renderAchievements(); show("s-achievements"); };
 /* ---------- the Skins page: pick the look each tower wears ---------- */
 const LOOKS = [["normal", "Normal"], ["gold", "Golden"], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name])];
+const RARITY_COLORS = { Common: "#a8b8a8", Uncommon: "#4ad8b0", Rare: "#5aa8ff", Epic: "#c77dff", Legendary: "#ffa63a" };
+const lookRarity = (st) => st === "gold" ? "Epic" : st === "normal" ? "" : ((TOWER_SKINS[st] || {}).rarity || "");
 let skinAnim = null;
 const SKIN_SELL = 50;   // Golden Acorns you get for selling a duplicate Tower Skin
 function sellSkin(k, st) {
@@ -5555,7 +5565,9 @@ function renderSkins() {
       x.drawImage(st === "normal" ? SPR[k] : skinOf(SPR[k], st, st === "gold" ? 12 : 0), 4, 4, 48, 48);   // (frame 12: the shine isn't sweeping across)
       if (!has) { x.globalCompositeOperation = "source-atop"; x.fillStyle = "#2a2e36"; x.fillRect(0, 0, 56, 56); x.globalCompositeOperation = "source-over"; }   // a dark silhouette until you find it
       const extra = (s.box.skinExtra || {})[k + ":" + st] || 0;
-      b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>${extra ? `<span class="dup">×${extra + 1}</span>` : ""}`);
+      const rar = lookRarity(st);
+      b.appendChild(c); b.insertAdjacentHTML("beforeend", `<span>${has ? name : "?"}</span>${rar ? `<small class="rar" style="color:${RARITY_COLORS[rar]}">${rar}</small>` : ""}${extra ? `<span class="dup">×${extra + 1}</span>` : ""}`);
+      if (has && (rar === "Legendary" || rar === "Epic")) b.style.boxShadow = `0 0 10px ${RARITY_COLORS[rar]}88`;
       b.onclick = () => { if (!has) return; s.box.look = s.box.look || {}; s.box.look[k] = st; saveSlots(slots); Sound.play("place"); renderSkins(); };
       const cell = document.createElement("div"); cell.className = "look-cell"; cell.appendChild(b);
       if (extra) { const sb = document.createElement("button"); sb.className = "sell-dup"; sb.id = `sell-${k}-${st}`; sb.innerHTML = `Sell 1 for ${SKIN_SELL} <span class="ga" aria-label="Golden Acorns"></span>`; sb.title = `You have ${extra} extra. Sell one for ${SKIN_SELL} Golden Acorns.`; sb.onclick = () => sellSkin(k, st); cell.appendChild(sb); }
