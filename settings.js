@@ -417,15 +417,16 @@ const SETTINGS = {
   sunkenKingdomStars: 90,   // stars you need in World 1 (all levels and difficulties added up) to travel to the Sunken Kingdom (and beat the Eye of the Storm on Normal or harder)
   // Skin buffs: the skin a tower is wearing makes it stronger. (Rarer skins get bigger buffs.)
   skinBuffs: {
-    candy:   { name: "Sugar Rush", about: "Attacks 10% faster.", speedTimes: 1.1 },
-    lava:    { name: "Burn", about: "Hits set robots on fire, burning for 30% more damage over 3 seconds.", burnSeconds: 3, burnPart: 0.3 },
-    metal:   { name: "Steel Coat", about: "Can't be zapped, stunned, frozen, slimed or trapped by robots.", steel: true },
-    gold:    { name: "Lucky", about: "Robots it destroys drop 2 extra Maple Leaves, and Golden Acorns drop 25% more often.", bonusLeaves: 2, acornTimes: 1.25 },
-    toxic:   { name: "Poison", about: "Hits poison robots for 40% more damage over 4 seconds, and slow them 15%.", poisonSeconds: 4, poisonPart: 0.4, slowBy: 0.15, slowSeconds: 2 },
-    crystal: { name: "Crystal Lens", about: "Reaches 1 square farther and can see Hiders.", rangePlus: 1, vision: true },
-    shadow:  { name: "Shadow Strike", about: "Sees Hiders and slows robots 30%.", vision: true, slowBy: 0.3, slowSeconds: 2 },
-    galaxy:  { name: "Cosmic Power", about: "Does 50% more damage and sees Hiders.", damageTimes: 1.5, vision: true },
+    candy:   { name: "Sugar Rush", about: "Attacks 15% faster.", speedTimes: 1.15 },
+    lava:    { name: "Burn", about: "Hits set robots on fire, burning for 40% more damage over 3 seconds.", burnSeconds: 3, burnPart: 0.4 },
+    metal:   { name: "Steel Coat", about: "Can't be zapped, stunned, frozen, slimed, inked, barnacled or trapped by robots, and hits 10% harder.", steel: true, damageTimes: 1.1 },
+    gold:    { name: "Lucky", about: "Robots it destroys drop 3 extra Maple Leaves, and Golden Acorns drop 35% more often.", bonusLeaves: 3, acornTimes: 1.35 },
+    toxic:   { name: "Poison", about: "Hits poison robots for 50% more damage over 4 seconds, and slow them 20%.", poisonSeconds: 4, poisonPart: 0.5, slowBy: 0.2, slowSeconds: 2 },
+    crystal: { name: "Crystal Lens", about: "Reaches 1.25 squares farther, can see Hiders, and hits 10% harder.", rangePlus: 1.25, vision: true, damageTimes: 1.1 },
+    shadow:  { name: "Shadow Strike", about: "Sees Hiders and slows robots 35%.", vision: true, slowBy: 0.35, slowSeconds: 2 },
+    galaxy:  { name: "Cosmic Power", about: "Does 60% more damage and sees Hiders.", damageTimes: 1.6, vision: true },
   },
+
   // Team skin upgrades: when EVERY tower on the board wears this skin (and there are at least minTowers towers), the whole team gets this.
   teamSkinCount: 10,   // a team power also turns on when this many towers on the board wear that skin (even if other towers don't)
   skinSets: {
