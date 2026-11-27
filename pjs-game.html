@@ -4866,24 +4866,25 @@ function drawGust(x, sh) {
   x.restore();
 }
 // The Night Owl's feather: a dark violet feather leaving a trail of glowing moon-sparkles
-function drawNightFeather(x, sh) {
-  const tr = sh.trail || (sh.trail = []); if (!tr.length || tr[tr.length - 1][0] !== sh.x || tr[tr.length - 1][1] !== sh.y) tr.push([sh.x, sh.y]); if (tr.length > 12) tr.shift();
+function drawNightFeather(x, sh) {   // the Night Owl's attack: a big glowing moonlit feather with a sparkly trail (easy to see on any level)
+  const tr = sh.trail || (sh.trail = []); if (!tr.length || tr[tr.length - 1][0] !== sh.x || tr[tr.length - 1][1] !== sh.y) tr.push([sh.x, sh.y]); if (tr.length > 16) tr.shift();
   const a = Math.atan2(sh.target ? rpos(sh.target).y - sh.y : 0, sh.target ? rpos(sh.target).x - sh.x : 1);
   x.save();
-  for (let i = 0; i < tr.length - 1; i++) {   // the sparkly trail
+  for (let i = 0; i < tr.length - 1; i++) {   // a wide glowing trail of moonlight and sparkles
     const k = (i + 1) / tr.length, [px, py] = tr[i];
-    x.fillStyle = `rgba(150,110,255,${0.5 * k})`; x.beginPath(); x.arc(px, py, 1.5 + 5 * k, 0, Math.PI * 2); x.fill();
-    if (i % 2 === 0) { x.fillStyle = `rgba(255,240,180,${0.8 * k})`; x.fillRect(px + Math.sin(i * 7.1 + G.time * 9) * 4 - 1, py + Math.cos(i * 5.3) * 4 - 1, 2, 2); }
+    x.fillStyle = `rgba(170,130,255,${0.55 * k})`; x.beginPath(); x.arc(px, py, 2 + 8 * k, 0, Math.PI * 2); x.fill();
+    x.fillStyle = `rgba(255,255,255,${0.5 * k})`; x.beginPath(); x.arc(px, py, 1 + 2.5 * k, 0, Math.PI * 2); x.fill();
+    if (i % 2 === 0) { const sx = px + Math.sin(i * 7.1 + G.time * 9) * 7, sy = py + Math.cos(i * 5.3 + G.time * 7) * 7; x.fillStyle = `rgba(255,240,170,${k})`; x.fillRect(sx - 3, sy - 0.75, 6, 1.5); x.fillRect(sx - 0.75, sy - 3, 1.5, 6); }   // twinkling stars
   }
-  const g = x.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 11); g.addColorStop(0, "rgba(190,160,255,0.55)"); g.addColorStop(1, "rgba(120,80,255,0)");
-  x.fillStyle = g; x.beginPath(); x.arc(sh.x, sh.y, 11, 0, Math.PI * 2); x.fill();
-  x.translate(sh.x, sh.y); x.rotate(a);
-  x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(0, 0, 8.5, 3.6, 0, 0, Math.PI * 2); x.fill();   // the feather, outlined
-  x.fillStyle = "#3a2458"; x.beginPath(); x.ellipse(0, 0, 7.5, 2.7, 0, 0, Math.PI * 2); x.fill();
-  x.fillStyle = "#6a4aa8"; x.beginPath(); x.ellipse(1, -0.8, 5.5, 1.1, 0, 0, Math.PI * 2); x.fill();
-  x.strokeStyle = "#e8dcff"; x.lineWidth = 0.9; x.beginPath(); x.moveTo(-8, 0); x.lineTo(7, 0); x.stroke();   // the shining quill
-  for (const o of [-4, -1, 2]) { x.strokeStyle = "rgba(232,220,255,0.6)"; x.beginPath(); x.moveTo(o, 0); x.lineTo(o - 2, -2.4); x.moveTo(o, 0); x.lineTo(o - 2, 2.4); x.stroke(); }   // barbs
-  x.fillStyle = "#fff4b0"; x.fillRect(6, -0.6, 2, 1.2);   // a glowing golden tip
+  const g = x.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 22); g.addColorStop(0, "rgba(230,215,255,0.9)"); g.addColorStop(0.45, "rgba(170,120,255,0.5)"); g.addColorStop(1, "rgba(120,80,255,0)");
+  x.fillStyle = g; x.beginPath(); x.arc(sh.x, sh.y, 22, 0, Math.PI * 2); x.fill();   // a bright moonlit glow
+  x.translate(sh.x, sh.y); x.rotate(a); x.scale(1.7, 1.7);
+  x.fillStyle = "#ffffff"; x.beginPath(); x.ellipse(0, 0, 9.5, 4.4, 0, 0, Math.PI * 2); x.fill();   // a bright white outline so it shows up on dark levels too
+  x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(0, 0, 8.5, 3.6, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#5a3a98"; x.beginPath(); x.ellipse(0, 0, 7.5, 2.7, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#a98af0"; x.beginPath(); x.ellipse(1, -0.8, 5.5, 1.1, 0, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = "#fff6c0"; x.lineWidth = 1; x.beginPath(); x.moveTo(-8, 0); x.lineTo(7, 0); x.stroke();   // the shining golden quill
+  for (const o of [-4, -1, 2]) { x.strokeStyle = "rgba(255,246,200,0.75)"; x.beginPath(); x.moveTo(o, 0); x.lineTo(o - 2, -2.4); x.moveTo(o, 0); x.lineTo(o - 2, 2.4); x.stroke(); }   // barbs
   x.restore();
 }
 // Towers you didn't start with (from the secret shops, the Mystery Box, a code, or the Super Tower) can't be struck by lightning (except the Wolf)
@@ -7234,6 +7235,7 @@ function landShot(sh) {
   }
   if (sh.mult > 1) { const q = rpos(r); floatText(q.x, q.y - 20, "Swoop!", "#c8b8ff", 0.8); burst(q.x, q.y, "#c8b8ff", 8); }
   hurt(r, s.damage * (sh.mult || 1) * plowMul(r, sh.ox, sh.oy), s.vision, false, sh.ice ? "ice" : sh.kind);
+  if (sh.kind === "nightowl") { const q = rpos(r); burst(q.x, q.y, "#c8a8ff", 10); burst(q.x, q.y, "#fff6c0", 6); G.fx.push({ kind: "splash", x: q.x, y: q.y, r: 22, t: 0.25, col: "200,170,255" }); }   // a moonlit flash where the feather hits
   if (r.dead) return;
   if ((sh.kind === "fire" || sh.kind === "phoenix") && !sh.ice && !(SETTINGS.robots[r.type] || {}).waterTimes) { r.burnT = s.burnSeconds; r.burnDps = s.burnDamagePerSecond; }
   if (sh.ice) { r.slowT = s.slowSeconds; r.slowBy = s.slowBy; }   // the Ice Dragon's blast chills robots
