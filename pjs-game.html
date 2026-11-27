@@ -1432,7 +1432,6 @@ SPR.superclanker = SPR.clanker; SPRF.superclanker = SPRF.clanker;   // the Super
       if (j === 17 && (i === 11 || i === 20)) return "k";
       if (j === 17 && (i === 14 || i === 16 || i === 18)) return "k";
       if (j === 15 && (i === 7 || i === 8 || i === 23 || i === 24)) return "n";   // red, steaming-mad cheeks
-      if ((i === 22 && (j === 5 || j === 7)) || (i === 24 && (j === 5 || j === 7)) || (j === 6 && (i === 23)) || (i === 21 && j === 4) || (i === 25 && j === 4) || (i === 21 && j === 8) || (i === 25 && j === 8)) return "r";   // a cartoon anger mark
 
       if ([[7, 9], [11, 6], [16, 5], [5, 13], [27, 13], [26, 10]].some(([a, c]) => a === i && c === j)) return "t";   // glowing spots
       if (dx < -0.2 && dy < -0.2 && (i + j) % 6 === 0) return "Z";
@@ -9651,26 +9650,42 @@ function offerUnlockAll(next) {
 }
 let IX_TIME = 0;   // a clock for effects that run when no game is going
 // ---- Max-upgrade animations (a fully upgraded tower gets its own special look) ----
-const MAX_FX_KINDS = new Set(["wizard", "healer", "squirrel", "water", "plant", "crab", "pegasus", "hacked", "kraken"]);
+const MAX_FX_KINDS = new Set(["wizard", "healer", "squirrel", "water", "plant", "crab", "pegasus", "hacked", "kraken", "nightowl"]);
 function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
   const tm = G.time + t.x * 1.37 + t.y * 0.71, k = t.kind, top = by - s2 - rc, mid = by - s2 / 2 - rc; let lift = 0;
   const sp = (n, f) => { for (let i = 0; i < n; i++) f(i, ((i * 0.618034) % 1), ((i * 0.381966 + 0.13) % 1)); };   // n spots spread out nicely
   if (!front) {
-    if (k === "wizard") {   // a ring of glowing magic runes slowly turning on the ground
-      x.save(); x.translate(cx, by - 2); x.scale(1, 0.38); x.strokeStyle = `rgba(150,120,255,${0.55 + 0.2 * Math.sin(tm * 2)})`; x.lineWidth = 2; x.beginPath(); x.arc(0, 0, s2 * 0.62, 0, Math.PI * 2); x.stroke();
-      x.strokeStyle = "rgba(120,220,255,0.5)"; x.lineWidth = 1; x.beginPath(); x.arc(0, 0, s2 * 0.48, 0, Math.PI * 2); x.stroke();
-      for (let i = 0; i < 8; i++) { const a = tm * 0.6 + i / 8 * Math.PI * 2; x.save(); x.translate(Math.cos(a) * s2 * 0.55, Math.sin(a) * s2 * 0.55); x.fillStyle = i % 2 ? "#c8a0ff" : "#8fe8ff"; x.fillRect(-2, -5, 4, 2); x.fillRect(-1, -5, 2, 9); x.fillRect(-3, 1, 6, 2); x.restore(); }
+    if (k === "wizard") {   // a big magic circle: two rings of runes turning opposite ways, and a pillar of light rising out of it
+      const p = 0.5 + 0.5 * Math.sin(tm * 2.5);
+      const pg = x.createLinearGradient(0, by, 0, by - s2 * 2.2); pg.addColorStop(0, `rgba(170,140,255,${0.45 + 0.2 * p})`); pg.addColorStop(1, "rgba(120,200,255,0)");
+      x.fillStyle = pg; x.fillRect(cx - s2 * 0.42, by - s2 * 2.2, s2 * 0.84, s2 * 2.2);
+      x.save(); x.translate(cx, by - 2); x.scale(1, 0.38); x.globalCompositeOperation = "lighter";
+      const gg = x.createRadialGradient(0, 0, 2, 0, 0, s2 * 0.9); gg.addColorStop(0, `rgba(180,150,255,${0.5 + 0.3 * p})`); gg.addColorStop(1, "rgba(120,80,255,0)"); x.fillStyle = gg; x.beginPath(); x.arc(0, 0, s2 * 0.9, 0, Math.PI * 2); x.fill();
+      for (const [rr, w, col] of [[0.78, 2.5, "200,170,255"], [0.6, 1.5, "140,230,255"], [0.42, 1.5, "255,220,140"]]) { x.strokeStyle = `rgba(${col},${0.7 + 0.25 * p})`; x.lineWidth = w; x.beginPath(); x.arc(0, 0, s2 * rr, 0, Math.PI * 2); x.stroke(); }
+      for (let i = 0; i < 6; i++) { const a = -tm * 0.9 + i / 6 * Math.PI * 2; x.strokeStyle = "rgba(200,170,255,0.6)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(Math.cos(a) * s2 * 0.78, Math.sin(a) * s2 * 0.78); x.lineTo(Math.cos(a + Math.PI * 0.66) * s2 * 0.78, Math.sin(a + Math.PI * 0.66) * s2 * 0.78); x.stroke(); }   // a star drawn inside
+      for (let i = 0; i < 10; i++) { const a = tm * 0.8 + i / 10 * Math.PI * 2; x.save(); x.translate(Math.cos(a) * s2 * 0.69, Math.sin(a) * s2 * 0.69); x.fillStyle = i % 2 ? "#e8d8ff" : "#8fe8ff"; x.fillRect(-2, -5, 4, 2); x.fillRect(-1, -5, 2, 9); x.fillRect(-3, 1, 6, 2); x.restore(); }
       x.restore();
+      if (!G.paused && Math.random() < 0.25) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 0.8, y: by - 4, vx: 0, vy: -50 - Math.random() * 40, t: 0, life: 0.8, col: ["#c8a0ff", "#8fe8ff", "#fff2a8"][Math.floor(Math.random() * 3)] });   // magic rising up the pillar
+      for (let i = 0; i < 3; i++) { const a = tm * 2.2 + i / 3 * Math.PI * 2; if (Math.sin(a) < 0) { const ox = cx + Math.cos(a) * s2 * 0.6, oy = mid + Math.sin(a) * s2 * 0.18; x.fillStyle = ["#ff7a5a", "#6ac8ff", "#7cff8a"][i]; x.beginPath(); x.arc(ox, oy, 3, 0, Math.PI * 2); x.fill(); } }   // element orbs (behind)
     }
-    if (k === "healer") {   // a ring of flowers blooming around its feet
-      for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, fx = cx + Math.cos(a) * s2 * 0.55, fy = by - 1 + Math.sin(a) * s2 * 0.2, bob = Math.sin(tm * 2 + i) * 0.8, col = ["#ff9ad8", "#ffffff", "#ffd34d"][i % 3];
-        x.fillStyle = "#3a8a3a"; x.fillRect(fx - 0.5, fy - 3 + bob, 1, 4); x.fillStyle = col; for (const [px, py] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) x.fillRect(fx + px - 1, fy - 4 + bob + py - 1, 2, 2); x.fillStyle = "#ffb12e"; x.fillRect(fx - 0.5, fy - 4.5 + bob, 1.5, 1.5); }
+    if (k === "healer") {   // a radiant golden sun-halo behind it, a big ring of flowers, and healing light rising
+      const p = 0.5 + 0.5 * Math.sin(tm * 2), hx = cx + face * s2 * 0.2, hy = by - s2 * 0.85 - rc;
+      x.save(); x.globalCompositeOperation = "lighter"; x.translate(hx, hy); x.rotate(tm * 0.4);
+      for (let i = 0; i < 12; i++) { x.rotate(Math.PI / 6); x.fillStyle = `rgba(255,220,120,${0.22 + 0.12 * p})`; x.beginPath(); x.moveTo(-2, s2 * 0.2); x.lineTo(0, s2 * (0.75 + 0.1 * p)); x.lineTo(2, s2 * 0.2); x.fill(); }
+      x.restore(); x.save(); x.globalCompositeOperation = "lighter";
+      x.strokeStyle = `rgba(255,236,160,${0.6 + 0.3 * p})`; x.lineWidth = 2.5; x.beginPath(); x.arc(hx, hy, s2 * 0.38, 0, Math.PI * 2); x.stroke(); x.restore();
+      for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, fx = cx + Math.cos(a) * s2 * 0.7, fy = by - 1 + Math.sin(a) * s2 * 0.24, bob = Math.sin(tm * 2 + i) * 0.8, bloom = 0.7 + 0.3 * Math.sin(tm * 1.5 + i), col = ["#ff9ad8", "#ffffff", "#ffd34d", "#b48cff"][i % 4];
+        x.fillStyle = "#3a8a3a"; x.fillRect(fx - 0.5, fy - 3 + bob, 1, 4); x.fillStyle = col; const pr = 2 * bloom; for (const [px, py] of [[-pr, 0], [pr, 0], [0, -pr], [0, pr]]) x.fillRect(fx + px - 1, fy - 4 + bob + py - 1, 2.2, 2.2); x.fillStyle = "#ffb12e"; x.fillRect(fx - 0.7, fy - 4.7 + bob, 1.6, 1.6); }
+      if (!G.paused && Math.random() < 0.2) { const px = cx + (Math.random() - 0.5) * s2 * 1.2; G.particles.push({ kind: "spark", x: px, y: by - 2, vx: 0, vy: -30 - Math.random() * 20, t: 0, life: 1, col: Math.random() < 0.5 ? "#9aff9a" : "#fff2a8" }); }   // healing light floating up
+      if (Math.sin(tm * 1.7) > 0.6) { const px = cx + Math.sin(tm * 3) * s2 * 0.5, py = by - s2 * 0.5 - ((tm * 20) % (s2 * 0.6)); x.fillStyle = "#9aff9a"; x.fillRect(px - 3, py - 1, 6, 2); x.fillRect(px - 1, py - 3, 2, 6); }   // a little green healing cross
     }
-    if (k === "squirrel") {   // sitting on a big pile of golden nuts
-      sp(11, (i, a, b) => { const nx = cx + (a - 0.5) * s2 * 0.9, ny = by - 3 - b * 6 + Math.abs(a - 0.5) * 6; x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(nx, ny, 4, 4.5, 0, 0, Math.PI * 2); x.fill();
-        x.fillStyle = i % 3 ? "#f2b23a" : "#ffd34d"; x.beginPath(); x.ellipse(nx, ny + 0.5, 3, 3.3, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#7a4a24"; x.fillRect(nx - 3, ny - 3, 6, 2); });
-      if (Math.sin(tm * 3) > 0.92) { x.fillStyle = "#fff6c0"; x.fillRect(cx + Math.sin(tm) * 8 - 1, by - 9, 2, 2); }
-      lift = 7;
+    if (k === "squirrel") {   // sitting on a huge sparkling pile of golden nuts, with a golden glow
+      const p = 0.5 + 0.5 * Math.sin(tm * 3);
+      const ga = x.createRadialGradient(cx, by - 6, 2, cx, by - 6, s2 * 0.9); ga.addColorStop(0, `rgba(255,214,90,${0.35 + 0.2 * p})`); ga.addColorStop(1, "rgba(255,200,60,0)"); x.fillStyle = ga; x.beginPath(); x.arc(cx, by - 6, s2 * 0.9, 0, Math.PI * 2); x.fill();
+      sp(18, (i, a, b) => { const nx = cx + (a - 0.5) * s2 * 1.15, ny = by - 2 - b * 9 + Math.abs(a - 0.5) * 10; x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(nx, ny, 4.2, 4.7, 0, 0, Math.PI * 2); x.fill();
+        x.fillStyle = i % 3 ? "#f2b23a" : "#ffe27a"; x.beginPath(); x.ellipse(nx, ny + 0.5, 3.2, 3.5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#7a4a24"; x.fillRect(nx - 3.2, ny - 3.2, 6.4, 2); x.fillStyle = "#fff6c0"; x.fillRect(nx - 1.5, ny - 0.5, 1, 1); });
+      sp(4, (i, a) => { const tw = Math.sin(tm * 4 + i * 2.3); if (tw > 0.7) { const px = cx + (a - 0.5) * s2, py = by - 6 - ((i * 7) % 8), L = 4 * tw; x.fillStyle = "#ffffff"; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); } });   // twinkles on the pile
+      lift = 10;
     }
     if (k === "water") {   // a little pond with ripples and a lily pad under the frog
       x.save(); x.translate(cx, by - 2); x.scale(1, 0.36); x.fillStyle = "rgba(60,150,230,0.55)"; x.beginPath(); x.arc(0, 0, s2 * 0.7, 0, Math.PI * 2); x.fill();
@@ -9678,11 +9693,17 @@ function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
       x.fillStyle = "#3aa04a"; x.beginPath(); x.arc(0, 0, s2 * 0.32, 0.35, Math.PI * 2 - 0.1); x.lineTo(0, 0); x.fill(); x.restore();
       lift = 2;
     }
-    if (k === "plant") {   // roots spreading out across the ground
-      x.strokeStyle = "#6a4422"; x.lineCap = "round";
-      for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.3, L = s2 * (0.5 + 0.12 * Math.sin(tm * 0.8 + i)); x.lineWidth = 2.2; x.beginPath(); x.moveTo(cx, by - 3);
-        x.quadraticCurveTo(cx + Math.cos(a + 0.4) * L * 0.6, by - 2 + Math.sin(a + 0.4) * L * 0.2, cx + Math.cos(a) * L, by - 2 + Math.sin(a) * L * 0.28); x.stroke(); }
+    if (k === "plant") {   // a green life-aura, glowing roots pulsing across the ground, and leaves whirling around it
+      const p = 0.5 + 0.5 * Math.sin(tm * 2);
+      const ga = x.createRadialGradient(cx, mid, 4, cx, mid, s2 * 1.1); ga.addColorStop(0, `rgba(140,255,120,${0.28 + 0.15 * p})`); ga.addColorStop(1, "rgba(80,220,80,0)"); x.fillStyle = ga; x.beginPath(); x.arc(cx, mid, s2 * 1.1, 0, Math.PI * 2); x.fill();
+      x.lineCap = "round";
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2 + 0.3, L = s2 * (0.75 + 0.1 * Math.sin(tm * 0.8 + i)), ex = cx + Math.cos(a) * L, ey = by - 2 + Math.sin(a) * L * 0.3, mx = cx + Math.cos(a + 0.45) * L * 0.6, my = by - 2 + Math.sin(a + 0.45) * L * 0.2;
+        x.strokeStyle = "#4e2d14"; x.lineWidth = 3.5; x.beginPath(); x.moveTo(cx, by - 3); x.quadraticCurveTo(mx, my, ex, ey); x.stroke();
+        x.strokeStyle = "#8a5a2a"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx, by - 3); x.quadraticCurveTo(mx, my, ex, ey); x.stroke();
+        const ph = (tm * 0.7 + i * 0.13) % 1, qx = (1 - ph) * (1 - ph) * cx + 2 * (1 - ph) * ph * mx + ph * ph * ex, qy = (1 - ph) * (1 - ph) * (by - 3) + 2 * (1 - ph) * ph * my + ph * ph * ey;   // green life pulsing out along each root
+        x.fillStyle = `rgba(160,255,120,${1 - ph})`; x.beginPath(); x.arc(qx, qy, 2.2, 0, Math.PI * 2); x.fill(); }
       x.lineCap = "butt";
+      for (let i = 0; i < 8; i++) { const a = tm * 1.6 + i / 8 * Math.PI * 2; if (Math.sin(a) < 0) { const lx = cx + Math.cos(a) * s2 * 0.75, ly = mid - 4 + Math.sin(a) * s2 * 0.25 + Math.sin(tm * 3 + i) * 4; x.fillStyle = i % 2 ? "#5fd45f" : "#ffb0d8"; x.save(); x.translate(lx, ly); x.rotate(a * 2); x.fillRect(-2.5, -1.2, 5, 2.4); x.restore(); } }   // leaves whirling (behind)
     }
     if (k === "pegasus") {   // floating on a little cloud, with rainbow light around its wings
       const ga = x.createRadialGradient(cx, mid - 6, 2, cx, mid - 6, s2 * 0.8), hue = (tm * 60) % 360;
@@ -9692,11 +9713,20 @@ function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
       for (const [ox, rr] of [[-9, 5], [-3, 6.5], [4, 6], [10, 4.5]]) { x.fillStyle = "#c8d8e8"; x.beginPath(); x.arc(cx + ox, by - 3, rr + 1, 0, Math.PI * 2); x.fill(); }
       for (const [ox, rr] of [[-9, 5], [-3, 6.5], [4, 6], [10, 4.5]]) { x.fillStyle = "#ffffff"; x.beginPath(); x.arc(cx + ox, by - 4, rr, 0, Math.PI * 2); x.fill(); }
     }
-    if (k === "hacked") {   // green computer code raining down behind it
-      x.save(); x.font = "bold 7px monospace"; x.textAlign = "center";
-      for (let c = 0; c < 6; c++) { const colX = cx - s2 * 0.6 + c * s2 * 0.24, sp2 = 30 + (c * 13) % 20;
-        for (let j = 0; j < 4; j++) { const yy = ((tm * sp2 + c * 37 + j * 9) % (s2 * 1.4)), a = 1 - j * 0.25; x.fillStyle = j ? `rgba(60,255,120,${0.55 * a})` : "rgba(200,255,210,0.9)"; x.fillText(((c * 7 + j * 3 + Math.floor(tm * 6)) % 2) ? "1" : "0", colX, top - s2 * 0.2 + yy - j * 7); } }
+    if (k === "hacked") {   // a wall of bright green code pouring down, and a spinning hologram shield
+      x.save(); x.font = "bold 8px monospace"; x.textAlign = "center";
+      const gb = x.createRadialGradient(cx, mid, 4, cx, mid, s2 * 1.1); gb.addColorStop(0, "rgba(40,255,120,0.3)"); gb.addColorStop(1, "rgba(20,120,60,0)"); x.fillStyle = gb; x.fillRect(cx - s2 * 1.1, mid - s2 * 1.1, s2 * 2.2, s2 * 2.2);
+      for (let c = 0; c < 10; c++) { const colX = cx - s2 * 0.9 + c * s2 * 0.2, sp2 = 40 + (c * 17) % 30;
+        for (let j = 0; j < 6; j++) { const yy = ((tm * sp2 + c * 37 + j * 9) % (s2 * 1.8)), a = 1 - j * 0.16; x.fillStyle = j ? `rgba(60,255,120,${0.75 * a})` : "#eaffee"; x.fillText(((c * 7 + j * 3 + Math.floor(tm * 8)) % 2) ? "1" : "0", colX, top - s2 * 0.4 + yy - j * 8); } }
       x.restore();
+    }
+    if (k === "nightowl") {   // its own patch of night sky: a dark starry circle, a big glowing moon, twinkling stars, and a shooting star now and then
+      const R = s2 * 0.95, sx = cx, sy = mid - 2;
+      const sg = x.createRadialGradient(sx, sy, R * 0.2, sx, sy, R); sg.addColorStop(0, "rgba(16,20,60,0.85)"); sg.addColorStop(0.75, "rgba(20,24,70,0.6)"); sg.addColorStop(1, "rgba(20,24,70,0)"); x.fillStyle = sg; x.beginPath(); x.arc(sx, sy, R, 0, Math.PI * 2); x.fill();
+      const mx = sx + R * 0.45, my = sy - R * 0.45, mg = x.createRadialGradient(mx, my, 2, mx, my, 16); mg.addColorStop(0, "rgba(255,250,220,0.95)"); mg.addColorStop(0.5, "rgba(255,240,180,0.4)"); mg.addColorStop(1, "rgba(255,240,180,0)");
+      x.fillStyle = mg; x.beginPath(); x.arc(mx, my, 16, 0, Math.PI * 2); x.fill(); x.fillStyle = "#fff8d8"; x.beginPath(); x.arc(mx, my, 6, 0, Math.PI * 2); x.fill(); x.fillStyle = "rgba(20,24,70,0.9)"; x.beginPath(); x.arc(mx + 3, my - 2, 5, 0, Math.PI * 2); x.fill();   // a crescent moon
+      sp(14, (i, a, b) => { const ang = a * Math.PI * 2, rr = R * (0.25 + b * 0.7), px = sx + Math.cos(ang) * rr, py = sy + Math.sin(ang) * rr * 0.9, tw = 0.4 + 0.6 * Math.abs(Math.sin(tm * 2.5 + i * 1.3)); x.fillStyle = `rgba(255,255,240,${tw})`; x.fillRect(px - 1, py - 1, 2, 2); if (tw > 0.9) { x.fillRect(px - 0.5, py - 3, 1, 6); x.fillRect(px - 3, py - 0.5, 6, 1); } });
+      const ph = (tm * 0.35) % 1; if (ph < 0.25) { const k2 = ph / 0.25, x0 = sx - R * 0.8 + k2 * R * 1.2, y0 = sy - R * 0.7 + k2 * R * 0.6; x.strokeStyle = `rgba(255,255,255,${1 - k2})`; x.lineWidth = 1.5; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x0 - 12, y0 - 6); x.stroke(); }   // a shooting star
     }
     if (k === "kraken") {   // a swirling whirlpool, with tentacles waving out of the water
       x.save(); x.translate(cx, by - 2); x.scale(1, 0.36); x.fillStyle = "rgba(30,90,150,0.6)"; x.beginPath(); x.arc(0, 0, s2 * 0.8, 0, Math.PI * 2); x.fill();
@@ -9709,25 +9739,44 @@ function drawMaxFx(x, t, cx, by, s2, rc, face, front) {
     return lift;
   }
   // ---- in front of the tower ----
-  if (k === "wizard") sp(6, (i, a, b) => { const tw = Math.max(0, Math.sin(tm * 3 + i * 1.7)); if (tw < 0.3) return; const px = cx + (a - 0.5) * s2 * 0.7, py = top + s2 * (0.15 + b * 0.75), L = 3 * tw;   // stars twinkling on its robe and hat
-    x.fillStyle = `rgba(255,250,200,${tw})`; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); });
-  if (k === "healer") { const ax = cx + face * s2 * 0.25, ay = by - s2 * 0.95 - rc, p = 0.5 + 0.5 * Math.sin(tm * 2);   // giant glowing golden antlers
-    x.strokeStyle = `rgba(255,220,110,${0.75 + 0.2 * p})`; x.lineWidth = 2; x.lineCap = "round";
-    for (const sx of [-1, 1]) { x.beginPath(); x.moveTo(ax + sx * 2, ay + 4); x.lineTo(ax + sx * 8, ay - 6); x.lineTo(ax + sx * 13, ay - 9); x.moveTo(ax + sx * 6, ay - 3); x.lineTo(ax + sx * 5, ay - 11); x.moveTo(ax + sx * 10, ay - 7); x.lineTo(ax + sx * 11, ay - 14); x.stroke(); }
-    x.lineCap = "butt"; if (!G.paused && Math.random() < 0.05) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * 24, y: ay - 8, vx: (Math.random() - 0.5) * 8, vy: 14, t: 0, life: 0.9, col: Math.random() < 0.5 ? "#ff9ad8" : "#fff2a8" }); }
-  if (k === "squirrel") { const hx = cx + face * s2 * 0.12, hy = top + s2 * 0.12;   // a tiny acorn helmet
-    x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(hx, hy + 1, 7, 4.5, 0, Math.PI, 0); x.fill(); x.fillStyle = "#8a5a2a"; x.beginPath(); x.ellipse(hx, hy + 1, 6, 3.6, 0, Math.PI, 0); x.fill();
-    x.fillStyle = "#6a4020"; for (let i = -4; i <= 4; i += 2) x.fillRect(hx + i, hy - 1, 1, 1); x.fillStyle = "#16191d"; x.fillRect(hx - 1, hy - 6, 2, 3); x.fillStyle = "#4a2a14"; x.fillRect(hx - 0.5, hy - 5.5, 1, 2); }
+  if (k === "wizard") { sp(9, (i, a, b) => { const tw = Math.max(0, Math.sin(tm * 3 + i * 1.7)); if (tw < 0.25) return; const px = cx + (a - 0.5) * s2 * 0.75, py = top + s2 * (0.12 + b * 0.8), L = 4 * tw;   // stars twinkling all over its robe and hat
+      x.fillStyle = `rgba(255,250,200,${tw})`; x.fillRect(px - 0.5, py - L, 1, L * 2); x.fillRect(px - L, py - 0.5, L * 2, 1); });
+    for (let i = 0; i < 3; i++) { const a = tm * 2.2 + i / 3 * Math.PI * 2; if (Math.sin(a) >= 0) { const ox = cx + Math.cos(a) * s2 * 0.6, oy = mid + Math.sin(a) * s2 * 0.18, col = ["#ff7a5a", "#6ac8ff", "#7cff8a"][i];   // element orbs circling it (in front)
+      const og = x.createRadialGradient(ox, oy, 0, ox, oy, 8); og.addColorStop(0, "rgba(255,255,255,0.9)"); og.addColorStop(0.4, col); og.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = og; x.beginPath(); x.arc(ox, oy, 8, 0, Math.PI * 2); x.fill(); } } }
+  if (k === "healer") { const ax = cx + face * s2 * 0.25, ay = by - s2 * 0.95 - rc, p = 0.5 + 0.5 * Math.sin(tm * 2);   // giant blazing golden antlers
+    x.save(); x.globalCompositeOperation = "lighter"; x.lineCap = "round";
+    for (const [w, a] of [[6, 0.25], [2.5, 0.95]]) { x.strokeStyle = `rgba(255,${w > 3 ? 200 : 236},${w > 3 ? 90 : 150},${a * (0.75 + 0.25 * p)})`; x.lineWidth = w;
+      for (const sx of [-1, 1]) { x.beginPath(); x.moveTo(ax + sx * 2, ay + 4); x.lineTo(ax + sx * 9, ay - 7); x.lineTo(ax + sx * 15, ay - 11); x.moveTo(ax + sx * 6, ay - 3); x.lineTo(ax + sx * 5, ay - 13); x.moveTo(ax + sx * 11, ay - 8); x.lineTo(ax + sx * 13, ay - 17); x.moveTo(ax + sx * 13, ay - 10); x.lineTo(ax + sx * 18, ay - 9); x.stroke(); } }
+    x.restore(); x.lineCap = "butt";
+    if (!G.paused && Math.random() < 0.12) G.particles.push({ kind: "spark", x: ax + (Math.random() - 0.5) * 30, y: ay - 10, vx: (Math.random() - 0.5) * 10, vy: 14, t: 0, life: 1, col: ["#ff9ad8", "#fff2a8", "#ffffff"][Math.floor(Math.random() * 3)] }); }
+  if (k === "squirrel") { const hx = cx + face * s2 * 0.12, hy = top + s2 * 0.12;   // a shiny golden acorn helmet, and golden acorns orbiting it
+    x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(hx, hy + 1, 8.5, 5.5, 0, Math.PI, 0); x.fill(); x.fillStyle = "#c98e12"; x.beginPath(); x.ellipse(hx, hy + 1, 7.5, 4.5, 0, Math.PI, 0); x.fill();
+    x.fillStyle = "#ffe27a"; x.beginPath(); x.ellipse(hx - 2, hy - 1, 3, 1.5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#8a5a12"; for (let i = -6; i <= 6; i += 2) x.fillRect(hx + i, hy - 1 + Math.abs(i) * 0.25, 1, 1);
+    x.fillStyle = "#16191d"; x.fillRect(hx - 1.5, hy - 8, 3, 4); x.fillStyle = "#6a4020"; x.fillRect(hx - 0.5, hy - 7.5, 1, 3);
+    for (let i = 0; i < 3; i++) { const a = tm * 2.6 + i / 3 * Math.PI * 2, ox = cx + Math.cos(a) * s2 * 0.62, oy = mid + Math.sin(a) * s2 * 0.22;
+      if (Math.sin(a) < -0.2) continue; x.fillStyle = "#16191d"; x.beginPath(); x.ellipse(ox, oy, 3.6, 4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#ffd34d"; x.beginPath(); x.ellipse(ox, oy + 0.5, 2.7, 2.9, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = "#7a4a24"; x.fillRect(ox - 2.7, oy - 2.8, 5.4, 1.6); }
+    if (!G.paused && Math.random() < 0.08) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2, y: mid, vx: 0, vy: -20, t: 0, life: 0.6, col: "#ffe27a" }); }
   if (k === "water") { const hx = cx + face * s2 * 0.05, hy = top + s2 * 0.05;   // a crown of water drops
     for (let i = 0; i < 5; i++) { const a = Math.PI + (i + 0.5) / 5 * Math.PI, dx = hx + Math.cos(a) * 9, dy = hy + Math.sin(a) * 5 - 2 + Math.sin(tm * 3 + i) * 0.8;
       x.fillStyle = "#16191d"; x.beginPath(); x.arc(dx, dy, 2.6, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6ac8ff"; x.beginPath(); x.arc(dx, dy, 1.8, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(dx - 1.5, dy - 0.5); x.lineTo(dx, dy - 4.5); x.lineTo(dx + 1.5, dy - 0.5); x.fill(); x.fillStyle = "#e8fbff"; x.fillRect(dx - 1, dy - 1, 1, 1); } }
-  if (k === "plant") { sp(10, (i, a, b) => { const px = cx + (a - 0.5) * s2 * 0.75, py = top + s2 * (0.05 + b * 0.4); x.fillStyle = i % 3 ? "#ffb0d8" : "#ffffff"; x.fillRect(px - 1.5, py - 1.5, 3, 3); x.fillStyle = "#ff7ab8"; x.fillRect(px - 0.5, py - 0.5, 1, 1); });   // pink blossoms
-    if (!G.paused && Math.random() < 0.06) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 0.7, y: top + s2 * 0.2, vx: 10 + Math.random() * 10, vy: 12, t: 0, life: 1.1, col: "#ffb0d8" }); }   // petals drifting away
+  if (k === "plant") { sp(16, (i, a, b) => { const px = cx + (a - 0.5) * s2 * 0.8, py = top + s2 * (0.03 + b * 0.45), bl = 1 + 0.3 * Math.sin(tm * 2 + i); x.fillStyle = i % 3 ? "#ffb0d8" : "#ffffff"; x.fillRect(px - 1.7 * bl, py - 1.7 * bl, 3.4 * bl, 3.4 * bl); x.fillStyle = "#ff5aa8"; x.fillRect(px - 0.6, py - 0.6, 1.2, 1.2); });   // lots of pink blossoms
+    for (let i = 0; i < 8; i++) { const a = tm * 1.6 + i / 8 * Math.PI * 2; if (Math.sin(a) >= 0) { const lx = cx + Math.cos(a) * s2 * 0.75, ly = mid - 4 + Math.sin(a) * s2 * 0.25 + Math.sin(tm * 3 + i) * 4; x.fillStyle = i % 2 ? "#5fd45f" : "#ffb0d8"; x.save(); x.translate(lx, ly); x.rotate(a * 2); x.fillRect(-2.5, -1.2, 5, 2.4); x.restore(); } }   // leaves whirling (in front)
+    sp(4, (i, a, b) => { const fl = 0.5 + 0.5 * Math.sin(tm * 4 + i * 2); x.fillStyle = `rgba(230,255,140,${fl})`; x.fillRect(cx + (a - 0.5) * s2 * 1.3 + Math.sin(tm + i) * 5, top + s2 * (0.2 + b * 0.8) + Math.cos(tm * 1.3 + i) * 4, 2, 2); });   // fireflies
+    if (!G.paused && Math.random() < 0.15) G.particles.push({ kind: "spark", x: cx + (Math.random() - 0.5) * s2 * 0.8, y: top + s2 * 0.2, vx: 10 + Math.random() * 14, vy: 14, t: 0, life: 1.2, col: "#ffb0d8" }); }
   if (k === "crab") sp(5, (i, a) => { const ph = (tm * 0.4 + a) % 1, bx = cx + (a - 0.5) * s2 * 0.8 + Math.sin(tm * 3 + i) * 2, byy = mid + s2 * 0.2 - ph * s2 * 0.9;   // bubbles floating up
     x.strokeStyle = `rgba(220,245,255,${0.9 * Math.sin(ph * Math.PI)})`; x.lineWidth = 1; x.beginPath(); x.arc(bx, byy, 1.5 + ph * 1.5, 0, Math.PI * 2); x.stroke(); });
-  if (k === "hacked") { if (Math.sin(tm * 7) > 0.3) { x.strokeStyle = "#b8ffd0"; x.lineWidth = 1.2; x.beginPath(); let px = cx - s2 * 0.3 + Math.sin(tm * 11) * 4, py = top + s2 * 0.3; x.moveTo(px, py);   // electric sparks crackling across it
-      for (let i = 0; i < 4; i++) { px += 4 + Math.random() * 3; py += (Math.random() - 0.5) * 8; x.lineTo(px, py); } x.stroke(); }
-    x.fillStyle = "rgba(60,255,120,0.12)"; x.fillRect(cx - s2 / 2, top, s2, s2); }
+  if (k === "hacked") {   // a spinning hexagon hologram shield, glitchy scanlines and electric sparks
+    x.save(); x.translate(cx, mid); x.rotate(tm * 0.8); x.strokeStyle = `rgba(80,255,150,${0.55 + 0.25 * Math.sin(tm * 5)})`; x.lineWidth = 1.5; x.beginPath();
+    for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI * 2, R = s2 * 0.72; i ? x.lineTo(Math.cos(a) * R, Math.sin(a) * R) : x.moveTo(Math.cos(a) * R, Math.sin(a) * R); } x.stroke();
+    x.rotate(-tm * 1.6); x.strokeStyle = "rgba(160,255,200,0.35)"; x.beginPath(); for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI * 2, R = s2 * 0.6; i ? x.lineTo(Math.cos(a) * R, Math.sin(a) * R) : x.moveTo(Math.cos(a) * R, Math.sin(a) * R); } x.stroke(); x.restore();
+    x.fillStyle = "rgba(60,255,120,0.1)"; for (let j = 0; j < s2; j += 3) x.fillRect(cx - s2 / 2, top + j, s2, 1);   // scanlines
+    if (Math.sin(tm * 9) > 0.85) { x.fillStyle = "rgba(120,255,170,0.5)"; x.fillRect(cx - s2 / 2 + Math.sin(tm * 50) * 3, top + ((tm * 97) % s2), s2, 3); }   // a glitch
+    for (let n = 0; n < 2; n++) if (Math.sin(tm * 7 + n * 2) > 0.2) { x.strokeStyle = n ? "#b8ffd0" : "#ffffff"; x.lineWidth = 1.3; x.beginPath(); let px = cx - s2 * 0.45 + Math.sin(tm * 11 + n) * 4, py = top + s2 * (0.25 + n * 0.35); x.moveTo(px, py);
+      for (let i = 0; i < 6; i++) { px += 3 + Math.random() * 3; py += (Math.random() - 0.5) * 9; x.lineTo(px, py); } x.stroke(); }
+  }
+  if (k === "nightowl") {   // (in front) its eyes blaze with moonlight
+    const ey = top + s2 * 0.3; for (const ex of [cx - s2 * 0.15, cx + s2 * 0.15]) { const eg = x.createRadialGradient(ex, ey, 0, ex, ey, 7); eg.addColorStop(0, "rgba(255,255,220,0.9)"); eg.addColorStop(1, "rgba(200,220,255,0)"); x.fillStyle = eg; x.beginPath(); x.arc(ex, ey, 7, 0, Math.PI * 2); x.fill(); }
+  }
 }
 function levelNameOf(L) { return (SETTINGS.levels[L] || {}).name || L; }
 function drawKrakenEyes(x, x0, y0, size, flip, t) {   // it's MAD: puffs of steam blow out of both sides of its head
