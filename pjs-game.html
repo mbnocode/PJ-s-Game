@@ -7143,17 +7143,24 @@ function moonPicture() {   // the Moon: a pale glowing crescent with craters (ma
 }
 function moonCatSprites() {   // the Moon Cat: a fluffy grey cat with big golden eyes (awake) and a sleepy curled-up one
   if (SPR.mooncat) return;
-  const draw = (awake) => pixSprite(32, 32, ({ P, rect, disc }) => {
-    const K = "#1a1620", G1 = "#8a8aa0", G2 = "#a8a8bc", G3 = "#c8c8d8", W = "#f4f2f8", PK = "#f4a0b8", Y = "#ffd34d";
-    disc(16, 21, 9.5, K); disc(16, 21, 8.5, G1); disc(15, 20, 6.5, G2); disc(16, 25, 4.5, W);   // body
-    disc(16, 12, 7.5, K); disc(16, 12, 6.5, G2); disc(16, 13, 4, G3);   // head
-    for (const sx of [-1, 1]) { for (let j = 0; j < 5; j++) for (let i = 0; i <= 4 - j; i++) { P(16 + sx * (3 + i), 3 + j, K); if (i > 0 && i < 4 - j) P(16 + sx * (3 + i), 4 + j, i === 2 && j < 2 ? PK : G2); } }   // ears
-    if (awake) { for (const ex of [12, 19]) { rect(ex, 10, ex + 1, 12, Y); P(ex + (ex < 16 ? 1 : 0), 11, K); P(ex + (ex < 16 ? 1 : 0), 10, K); P(ex, 10, "#fff6c0"); } }   // golden eyes with slit pupils
-    else { rect(11, 12, 13, 12, K); rect(18, 12, 20, 12, K); P(10, 11, K); P(21, 11, K); }   // sleepy closed eyes
-    P(15, 14, PK); P(16, 14, PK); P(15, 15, K); P(16, 15, K);   // nose
-    for (const sx of [-1, 1]) { rect(sx < 0 ? 5 : 21, 14, sx < 0 ? 9 : 26, 14, G3); }   // whiskers
-    rect(10, 29, 13, 30, G1); rect(18, 29, 21, 30, G1); rect(10, 30, 13, 30, K); rect(18, 30, 21, 30, K);   // paws
-    for (let j = 0; j < 9; j++) { P(25 + Math.round(Math.sin(j * 0.6) * 2), 28 - j, K); P(26 + Math.round(Math.sin(j * 0.6) * 2), 28 - j, j > 5 ? W : G1); }   // a curly tail
+  const draw = (awake) => pixSprite(32, 32, ({ P, rect, disc }) => {   // a slender cosmic cat: midnight-blue fur with stars, tall ears, glowing cyan eyes, a gold crescent collar
+    const N1 = "#1c1a3c", N2 = "#2c2a5c", N3 = "#45428a", N4 = "#6a66b8", CY = "#5af0ff", CW = "#e8fdff", GD = "#ffd34d", GL = "#fff1a0";
+    disc(15.5, 22, 5.2, (dx, dy) => dy > 0.95 ? null : dx < -0.35 ? N1 : dx > 0.45 ? N1 : N2);   // a slim body
+    for (let j = 15; j < 22; j++) { const w = 2 + (j - 15) * 0.35; rect(Math.round(15.5 - w), j, Math.round(15.5 + w), j, N2); }   // a long neck/chest
+    for (let j = 18; j < 25; j++) P(15, j, N3), P(16, j, j < 22 ? N4 : N3);   // a sleek highlight down the chest
+    rect(12, 24, 13, 30, N2); rect(18, 24, 19, 30, N2); P(12, 24, N1); P(19, 24, N1);   // long thin front legs
+    rect(11, 30, 13, 30, N3); rect(18, 30, 20, 30, N3);   // little paws
+    disc(15.5, 9.5, 4.6, (dx, dy) => dy < -0.6 ? N3 : N2);   // the head
+    rect(13, 12, 18, 13, N2); P(15, 13, "#f4a0c8"); P(16, 13, "#f4a0c8");   // muzzle and a pink nose
+    for (let y = 1; y <= 6; y++) for (let k = 0; k <= Math.floor((y - 1) * 0.7); k++) {   // tall pointed ears (pink inside)
+      const col = y >= 4 && k >= 1 && k < Math.floor((y - 1) * 0.7) ? "#d070b0" : y <= 2 ? N3 : N2; P(11 + k, y, col); P(20 - k, y, col); }
+    if (awake) for (const ex of [12, 17]) { rect(ex, 9, ex + 2, 10, CY); P(ex + 1, 9, "#0a0a18"); P(ex + 1, 10, "#0a0a18"); P(ex < 15 ? ex : ex + 2, 9, CW); P(ex < 15 ? ex + 2 : ex, 8, N1); P(ex < 15 ? ex + 1 : ex + 1, 8, N1); }   // glowing cyan eyes with slit pupils, under a cool frown
+    else { rect(12, 10, 14, 10, "#0a0a18"); rect(17, 10, 19, 10, "#0a0a18"); P(11, 9, "#0a0a18"); P(20, 9, "#0a0a18"); }   // closed sleepy eyes
+    rect(12, 14, 19, 14, GD); P(15, 15, GL); P(16, 15, GD); P(15, 16, GD);   // a gold collar with a little crescent-moon tag
+    for (const [x2, y2, c] of [[13, 20, CW], [18, 23, CY], [14, 26, CW], [17, 18, CW], [16, 7, CY]]) P(x2, y2, c);   // tiny stars in its fur
+    const tail = [[21, 29], [22, 29], [23, 28], [24, 27], [25, 26], [26, 24], [26, 22], [26, 20], [25, 18], [24, 17], [23, 17], [22, 18]];   // a long tail curling up
+    tail.forEach(([x2, y2], n) => { P(x2, y2, n > 9 ? N4 : N2); P(x2, y2 - 1, n > 2 && n < 9 ? N2 : null); });
+    P(22, 18, CY);   // a glowing tip
   });
   SPR.mooncat = draw(true); SPR.mooncat_sleep = draw(false);
   SPR.moonwish = pixSprite(16, 16, ({ P, rect }) => { const s = [[7, 1], [8, 1], [7, 2], [8, 2], [6, 3], [9, 3]]; for (let j = 3; j < 12; j++) { const w = j < 6 ? (j - 2) * 2 : j < 8 ? 7 - (j - 6) : 4 - Math.floor((j - 8) / 2); rect(8 - w, j, 7 + w, j, j < 7 ? "#fff4b0" : "#ffd34d"); } rect(7, 7, 8, 8, "#ffffff"); for (let i = 0; i < 5; i++) { P(1 + i, 13 - i, i % 2 ? "#ff7ae0" : "#4ac8ff"); P(2 + i, 14 - i, "#c77dff"); } });   // a wishing star with a rainbow tail
