@@ -412,7 +412,11 @@ const SETTINGS = {
     toxic:   { name: "Poison", about: "Hits poison robots for 40% more damage over 4 seconds, and slow them 15%.", poisonSeconds: 4, poisonPart: 0.4, slowBy: 0.15, slowSeconds: 2 },
     crystal: { name: "Crystal Lens", about: "Reaches 1 square farther and can see Hiders.", rangePlus: 1, vision: true },
     shadow:  { name: "Shadow Strike", about: "Sees Hiders and slows robots 30%.", vision: true, slowBy: 0.3, slowSeconds: 2 },
-    galaxy:  { name: "Cosmic Power", about: "Does 50% more damage and sees Hiders. Every 8 seconds a shooting star hits the strongest robot for 5% of its max health (up to 1,000 damage).", damageTimes: 1.5, vision: true, starEvery: 8, starPart: 0.05, starMax: 1000 },
+    galaxy:  { name: "Cosmic Power", about: "Does 50% more damage and sees Hiders.", damageTimes: 1.5, vision: true },
+  },
+  // Team skin upgrades: when EVERY tower on the board wears this skin (and there are at least minTowers towers), the whole team gets this.
+  skinSets: {
+    galaxy: { name: "Shooting Stars", about: "Every 8 seconds during a wave, a shooting star falls on the strongest robot for 5% of its max health (up to 1,000 damage).", minTowers: 4, starEvery: 8, starPart: 0.05, starMax: 1000 },
   },
   serpentShopSlots: 3,   // how many shelves the shop shows (empty ones say "Coming soon")
 
