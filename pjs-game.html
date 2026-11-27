@@ -6820,6 +6820,20 @@ function drawCrystalShards(x, cx, by, s2, t, front) {
     x.fillStyle = "#e8faff"; x.beginPath(); x.moveTo(px, py - h); x.lineTo(px + w * 0.4, py - h * 0.2); x.lineTo(px - w * 0.4, py - h * 0.2); x.fill();   // its bright top facet
   }
 }
+// A tower in the Shadow skin: three dark orbs spin around it, each with a purple glow and a wispy trail (front = the ones passing in front)
+function drawShadowOrbs(x, cx, by, s2, t, front) {
+  for (let i = 0; i < 3; i++) {
+    const a = -t * 1.8 + i * Math.PI * 2 / 3, depth = Math.sin(a); if ((depth > 0) !== front) continue;
+    const at = (aa) => [cx + Math.cos(aa) * s2 * 0.6, by - s2 * 0.5 + Math.sin(aa) * s2 * 0.18 + Math.sin(t * 3 + i) * 1.5];
+    const k = 0.8 + 0.2 * (depth + 1) / 2, [px, py] = at(a);
+    for (let n = 4; n >= 1; n--) { const [tx, ty] = at(a + n * 0.13); x.fillStyle = `rgba(120,60,200,${0.16 * (5 - n) / 4})`; x.beginPath(); x.arc(tx, ty, 3.2 * k * (1 - n * 0.15), 0, Math.PI * 2); x.fill(); }   // a wispy trail
+    const g = x.createRadialGradient(px, py, 0, px, py, 9 * k); g.addColorStop(0, "rgba(170,100,255,0.55)"); g.addColorStop(1, "rgba(110,40,200,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(px, py, 9 * k, 0, Math.PI * 2); x.fill();   // its purple glow
+    x.fillStyle = "#0c0418"; x.beginPath(); x.arc(px, py, 3.6 * k, 0, Math.PI * 2); x.fill();   // the dark orb
+    x.strokeStyle = "rgba(190,130,255,0.9)"; x.lineWidth = 1; x.beginPath(); x.arc(px, py, 3.6 * k, 0, Math.PI * 2); x.stroke();
+    x.fillStyle = "rgba(230,200,255,0.9)"; x.fillRect(Math.round(px - 1.5 * k), Math.round(py - 1.8 * k), 1, 1);   // a tiny glint
+  }
+}
 // A star of light that glints off a shiny tower now and then
 function drawShineStar(x, cx, cy, s2, t) {
   const ph = (t * 0.6) % 1; if (ph > 0.25) return;
@@ -7750,6 +7764,7 @@ function draw() {
     }
     const lookNow = PREFS.simple ? null : towerSkin(t.kind), lavaLook = lookNow === "lava";
     if (lookNow === "crystal") drawCrystalShards(x, cx, by, s2, G.time + t.x * 1.3 + t.y, false);   // crystal shards circling behind it
+    if (lookNow === "shadow") drawShadowOrbs(x, cx, by, s2, G.time + t.x * 1.1 + t.y * 0.7, false);   // shadow orbs circling behind it
     if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, false);   // a lava tower: heat glow underneath
     if (t.kind === "phoenix") { rc += 4 + Math.sin(G.time * 3 + t.x) * 2; drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), false); }   // the Phoenix hovers in its own fire
     // the Hydra at max level: toxic venom mist swirls around it; when it first gets maxed it rears up, shakes and ROARS
@@ -7781,6 +7796,7 @@ function draw() {
     if (t.kind === "hydra" && t.level >= 3 && !PREFS.simple) drawHydraVenom(x, cx, by, s2, G.time + t.x * 3, true);
     if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, true);   // and embers and smoke rising off it
     if (lookNow === "crystal") drawCrystalShards(x, cx, by, s2, G.time + t.x * 1.3 + t.y, true);   // ...and in front of it
+    if (lookNow === "shadow") drawShadowOrbs(x, cx, by, s2, G.time + t.x * 1.1 + t.y * 0.7, true);
     if (lookNow === "metal") drawShineStar(x, cx, by - s2 * 0.5, s2, G.time + t.x * 2.1 + t.y);   // a star of light glinting off the metal
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower
