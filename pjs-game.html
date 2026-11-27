@@ -94,6 +94,11 @@ button.go:hover { background: #f58b42; }
 .focus-btn { margin-left: auto; font-size: 13px; padding: 4px 10px; font-family: inherit; }
 .focus-btn.on { background: #1c3a4a; border-color: #5af0ff; color: #bff8ff; }
 .skin-focus-note { margin: 6px 0; color: #bff8ff; font-weight: 700; }
+.wear-all { max-width: 900px; margin: 0 auto 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+.wear-all .wl { font-weight: 700; color: #ffd34d; margin-right: 4px; }
+.wear-all button { font-size: 14px; padding: 6px 10px; display: inline-flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.wear-all button small { font-size: 11px; opacity: .85; font-weight: 400; }
+.wear-all button.on { outline: 3px solid #ffd34d; }
 .skin-buffs { max-width: 900px; margin: 4px auto 10px; text-align: left; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 8px 14px; }
 .skin-buffs summary { cursor: pointer; font-weight: 700; color: #ffd34d; }
 .skin-buffs .sb-row { font-size: 14px; padding: 3px 0; } .skin-buffs .sb-n { color: #ffd34d; font-weight: 700; margin-right: 4px; }
@@ -897,6 +902,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="skin-focus-note" id="skin-focus-note" hidden></div>
     <details class="skin-buffs" id="skin-buffs" open><summary>✨ Skin buffs: what each skin does</summary><div id="skin-buffs-list"></div></details>
     <details class="skin-buffs" id="team-skins" open><summary>🤝 Team skin upgrades: when 10 of your towers match (or all of them)</summary><div id="team-skins-list"></div></details>
+    <div class="wear-all" id="wear-all"></div>
     <div class="sell-all-row"><button class="go" id="b-sell-all" hidden></button><span id="sell-all-msg" role="status"></span></div>
     <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra: Common 50, Uncommon 100, Rare 150, Epic 250, Legendary 350, Mythic 500 Golden Acorns.</p>
     <div class="skin-grid" id="skin-grid"></div>
@@ -6406,6 +6412,14 @@ function renderSkins() {
     $("skin-focus-note").textContent = f ? `🧭 Star Compass: Mystery Box skins go to your ${f.name} ${Math.round((SETTINGS.moonCat.focusChance ?? 0.75) * 100)}% of the time.` : "🧭 Star Compass: tap “Focus” on a tower to aim your Mystery Box skins at it."; }
   $("skin-buffs-list").innerHTML = LOOKS.filter(([st]) => (SETTINGS.skinBuffs || {})[st]).map(([st, nm]) => { const bf = SETTINGS.skinBuffs[st], rar = lookRarity(st);
     return `<div class="sb-row"><b style="color:${RARITY_COLORS[rar]}">${nm}</b> <span class="sb-n">${bf.name}</span> ${bf.about}</div>`; }).join("");
+  { // "Put it on all of them": one tap puts a skin on every tower that has it
+    const box = $("wear-all"), have = (st) => towers.filter((k) => st === "normal" || ownedLooks(s, k)[st]).length;
+    box.innerHTML = `<span class="wl">👕 Put on every tower:</span>` + LOOKS.filter(([st]) => have(st) > 0).map(([st, nm]) => { const n = have(st), wearing = towers.filter((k) => (towerSkin(k) || "normal") === st).length, rar = lookRarity(st);
+      return `<button id="wear-${st}" type="button" class="${wearing === n ? "on" : ""}" style="${rar ? `border-color:${RARITY_COLORS[rar]}` : ""}">${nm}<small>${st === "normal" ? "no skins" : `${n} tower${n === 1 ? "" : "s"}`}</small></button>`; }).join("");
+    LOOKS.forEach(([st, nm]) => { const b = $("wear-" + st); if (!b) return; b.onclick = () => {
+      s.box.look = s.box.look || {}; let n = 0; for (const k of towers) if (st === "normal" || ownedLooks(s, k)[st]) { s.box.look[k] = st; n++; }
+      saveSlots(slots); Sound.play("upgrade"); renderSkins(); $("sell-all-msg").textContent = st === "normal" ? "All towers are back to their normal look." : `${nm} is on ${n} tower${n === 1 ? "" : "s"}!`; }; });
+  }
   $("team-skins-list").innerHTML = Object.entries(SETTINGS.skinSets || {}).map(([st, set]) => `<div class="sb-row"><b style="color:${RARITY_COLORS[lookRarity(st)]}">Team ${lookName(st)}</b> <span class="sb-n">${set.name}</span> ${set.about} <span class="muted">(10 or more towers on the board wear ${lookName(st)}, or every tower does with at least ${set.minTowers || 4}.)</span></div>`).join("");
   $("skin-odds").innerHTML = `<b>Chance in each Mystery Box:</b> ` + skinOdds().map((o) => `<span class="odd r-${o.rar.toLowerCase()}">${o.n} ${o.p}<small>${o.rar}</small></span>`).join("");
   $("skins-count").innerHTML = `✨ ${got} / ${all} looks found · <span class="ga" aria-label="Golden Acorns"></span> ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
