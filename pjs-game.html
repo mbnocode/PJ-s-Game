@@ -2727,7 +2727,7 @@ function loadSlots() {
   try { const v = JSON.parse(localStorage.getItem(SAVE_KEY)); if (Array.isArray(v) && v.length === 3) return v; } catch (e) {}
   return [null, null, null];
 }
-function saveSlots(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) {} if (typeof acctAutoSave === "function") acctAutoSave(); }
+function saveSlots(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); localStorage.setItem("pjs-game-saved-at", String(Date.now())); } catch (e) {} if (typeof acctAutoSave === "function") acctAutoSave(); }
 let slots = loadSlots();
 let slotIndex = 0;
 const slot = () => slots[slotIndex];
@@ -2917,8 +2917,11 @@ function renderAccount() {
     $("acct-login").onclick = go(async (u, p) => {
       const res = await rpc("account_load", { p_username: u, p_password: p }); if (res && res.error) throw new Error("wrong name or password");
       const sv = (res && res.save) || {};
+      const prevUser = (() => { try { return localStorage.getItem("pjs-game-acct-user") || ""; } catch (e) { return ""; } })();
       ACCT.user = u; ACCT.pass = p; try { localStorage.setItem("pjs-game-acct-user", u); } catch (e) {}
-      if (hasAny(sv.slots)) acctUseSlots(sv.slots);                                   // your account's game comes to this computer
+      const localAt = (() => { try { return +localStorage.getItem("pjs-game-saved-at") || 0; } catch (e) { return 0; } })();
+      if (hasAny(slots) && prevUser === u && localAt > (sv.savedAt || 0) + 2000) await acctUpload();   // this computer has a NEWER game than the account (it didn't finish sending last time): keep it and send it now
+      else if (hasAny(sv.slots)) acctUseSlots(sv.slots);                              // your account's game comes to this computer
       else if (sv.slot && !hasAny(slots)) acctUseSlots([sv.slot, null, null]);       // (an older account that saved just one slot)
       else await acctUpload();                                                          // nothing in the account yet: it takes this computer's game
       acctSignedIn(`Hi ${u}! 👋`); });
@@ -6748,8 +6751,11 @@ function saveAndExit() {
   const s = slot(); if (!s || !G) return;
   const snap = G.waveActive && G.waveSnap ? G.waveSnap : snapshotGame();
   s.saved = s.saved || {}; s.saved[G.level] = snap; saveSlots(slots);
+  const w = snap.wave + 1;
   G = null; $("overlay").hidden = true; renderLevels(); show("s-levels");
-  popToast("tree", "Game saved!", "Tap the level, then Resume game");
+  popToast("tree", "Game saved!", `Resume from wave ${w}: tap the level, then Resume game`);
+  if (ACCT.pass) { clearTimeout(ACCT.timer); ACCT.timer = null;   // send it to the account right now (don't wait), so it's safe even if the game is closed
+    acctUpload().then(() => popToast("tree", "☁️ Saved to your account", `${ACCT.user} · wave ${w}`)).catch(() => popToast("tree", "⚠️ Couldn't reach your account", "It's saved on this computer. Open ☁️ Account and tap Save now")); }
 }
 function resumeSaved(L) {
   const sv = savedGame(L); if (!sv) return;
