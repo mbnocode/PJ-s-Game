@@ -5543,9 +5543,12 @@ function renderAchievements() {
 }
 $("b-achievements").onclick = () => { renderAchievements(); show("s-achievements"); };
 /* ---------- the Skins page: pick the look each tower wears ---------- */
-const LOOKS = [["normal", "Normal"], ["gold", "Golden"], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name])];
 const RARITY_COLORS = { Common: "#a8b8a8", Uncommon: "#4ad8b0", Rare: "#5aa8ff", Epic: "#c77dff", Legendary: "#ffa63a" };
 const lookRarity = (st) => st === "gold" ? "Epic" : st === "normal" ? "" : ((TOWER_SKINS[st] || {}).rarity || "");
+const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
+// the looks in order on the Skins page: Normal first, then from Common to Legendary (most common first within each rarity)
+const LOOKS = [["normal", "Normal"], ...[["gold", "Golden", SETTINGS.mysteryBox.goldSkinWeight ?? 10], ...Object.entries(TOWER_SKINS).map(([k, v]) => [k, v.name, v.weight || 1])]
+  .sort((a, b) => RARITY_ORDER.indexOf(lookRarity(a[0])) - RARITY_ORDER.indexOf(lookRarity(b[0])) || b[2] - a[2]).map(([k, n]) => [k, n])];
 let skinAnim = null;
 const SKIN_SELL = 50;   // Golden Acorns for selling a duplicate Common skin (rarer skins sell for more: SKIN_SELL_BY)
 const SKIN_SELL_BY = { Common: 50, Uncommon: 100, Rare: 150, Epic: 250, Legendary: 500 };
