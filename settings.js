@@ -393,10 +393,10 @@ const SETTINGS = {
   },
   // The Hermit Crab: on these levels, between waves, a bump sometimes moves in the sand. Tap it!
   // The Moon Cat: a sleepy cat hiding behind the Moon in the sky of the world map. Tap the Moon 3 times to wake it up and open its shop.
-  moonCat: { taps: 3, shelves: 3, keyBundle: 5, luckyCharmTimes: 1.25 },
+  moonCat: { taps: 3, shelves: 3, focusChance: 0.75, luckyCharmTimes: 1.25 },   // focusChance: how often the Star Compass sends a skin to your focused tower
   moonCatShop: {
     galaxywish: { name: "Galaxy Wish", cost: 3000, shelf: 1, picture: "moonwish", about: "Make a wish on a shooting star: one of your towers (that doesn't have it yet) gets the Mythic Galaxy skin! Buy it again for another tower." },
-    keybundle: { name: "Moonlit Keys", cost: 1000, shelf: 2, picture: "mysterykey", about: "5 Mystery Keys for the price of 4 (you can carry up to 30)." },
+    starcompass: { name: "Star Compass", cost: 2000, unlock: true, shelf: 2, picture: "starcompass", about: "Pick one tower on the Skins page: skins from the Mystery Box go to that tower 3 times out of 4, forever. (Change towers any time.)" },
     luckycharm: { name: "Lucky Cat Charm", cost: 1500, unlock: true, shelf: 3, picture: "catcharm", about: "A waving lucky cat: Golden Acorns drop 25% more often on every level, forever." },
   },
   hermitCrab: { levels: ["beach"], chance: 0.5, shelves: 4 },   // chance = how often the bump shows up in each break between waves

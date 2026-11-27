@@ -88,7 +88,11 @@ button.go:hover { background: #f58b42; }
 #s-levels #b-skins:hover { filter: brightness(1.12); }
 .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 14px; width: min(1100px, 100%); }
 .skin-card { background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 12px; text-align: left; }
-.skin-card .k { font-family: var(--display); font-size: 18px; margin-bottom: 8px; }
+.skin-card .k { font-family: var(--display); font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.skin-card.focused { border-color: #5af0ff; box-shadow: 0 0 12px #5af0ff66; }
+.focus-btn { margin-left: auto; font-size: 13px; padding: 4px 10px; font-family: inherit; }
+.focus-btn.on { background: #1c3a4a; border-color: #5af0ff; color: #bff8ff; }
+.skin-focus-note { margin: 6px 0; color: #bff8ff; font-weight: 700; }
 .skin-card .looks { display: flex; flex-wrap: wrap; gap: 8px; }
 .skin-card .look { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 3px; min-width: 0; width: 64px; font-size: 12px; background: #1a2620; border: 2px solid #2e3a34; border-radius: 8px; box-shadow: none; }
 .skin-card .look canvas { width: 52px; height: 52px; image-rendering: pixelated; }
@@ -890,6 +894,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Skins</h2>
     <div class="ach-count" id="skins-count"></div>
     <div class="skin-odds" id="skin-odds"></div>
+    <div class="skin-focus-note" id="skin-focus-note" hidden></div>
     <div class="sell-all-row"><button class="go" id="b-sell-all" hidden></button><span id="sell-all-msg" role="status"></span></div>
     <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra: Common 50, Uncommon 100, Rare 150, Epic 250, Legendary 500 Golden Acorns.</p>
     <div class="skin-grid" id="skin-grid"></div>
@@ -5069,11 +5074,11 @@ function rollBoxPrize(s, noMimic) {
     const kinds = [...Object.keys(TOWER_SKINS), "gold"], tot = kinds.reduce((a, c) => a + wOf(c), 0);
     let roll = Math.random() * tot, st = kinds[0]; for (const c of kinds) { roll -= wOf(c); if (roll < 0) { st = c; break; } }
     if (st === "gold") {
-      if (gold.length) { const k = gold[Math.random() * gold.length | 0]; s.box.golden[k] = true; s.box.look = s.box.look || {}; s.box.look[k] = "gold"; s.box.found.golden = (s.box.found.golden || 0) + 1;
+      if (gold.length) { const k = skinFocusPick(s, gold); s.box.golden[k] = true; s.box.look = s.box.look || {}; s.box.look[k] = "gold"; s.box.found.golden = (s.box.found.golden || 0) + 1;
         return { kind: "golden", pic: k, gold: true, title: "Golden Tower!", text: `Your ${SETTINGS.towers[k].name} is now shiny gold` }; }
       st = Object.keys(TOWER_SKINS)[Math.random() * Object.keys(TOWER_SKINS).length | 0];   // every tower is gold already: a regular skin instead
     }
-    const towersHere = TOWER_ORDER.filter((tk) => towerUnlocked(tk)), k = towersHere[Math.random() * towersHere.length | 0];
+    const towersHere = TOWER_ORDER.filter((tk) => towerUnlocked(tk)), k = skinFocusPick(s, towersHere);
     if (ownedLooks(s, k)[st]) {   // a duplicate: keep it as a spare to sell
       s.box.skinExtra = s.box.skinExtra || {}; s.box.skinExtra[k + ":" + st] = (s.box.skinExtra[k + ":" + st] || 0) + 1;
       return { kind, pic: k, skin: st, title: "Duplicate Skin!", text: `Another ${TOWER_SKINS[st].name} look for your ${SETTINGS.towers[k].name}. Sell the extra on the Skins page for ${skinPrice(st)} Golden Acorns` };
@@ -5615,13 +5620,23 @@ function skinOdds() {
   const skins = Object.values(TOWER_SKINS).map((v) => [v.name, v.rarity || "", skinBox * (v.weight || 1) / wTot]).sort((a, b) => b[2] - a[2]);   // most common first
   return [...skins, ["Golden", lookRarity("gold"), skinBox * gw / wTot]].sort((a, b) => b[2] - a[2]).map(([n, rar, v]) => ({ n, rar, p: pct(v) }));
 }
+// The Star Compass (from the Moon Cat): skins from the Mystery Box mostly go to the tower you focus on
+const compassOn = (s) => !!(s && s.materials && s.materials.starcompass);
+function skinFocusPick(s, list) {
+  const f = compassOn(s) && s.box && s.box.focus;
+  if (f && list.includes(f) && Math.random() < (SETTINGS.moonCat.focusChance ?? 0.75)) return f;
+  return list[Math.random() * list.length | 0];
+}
 function renderSkins() {
   const s = slot(), grid = $("skin-grid"); grid.innerHTML = ""; s.box = s.box || {};
   const towers = TOWER_ORDER.filter((k) => towerUnlocked(k));
   let got = 0, all = 0;
   for (const k of towers) {
     const own = ownedLooks(s, k), cur = towerSkin(k) || "normal", card = document.createElement("div"); card.className = "skin-card";
-    card.innerHTML = `<div class="k">${SETTINGS.towers[k].name}</div><div class="looks"></div>`;
+    const focused = compassOn(s) && s.box.focus === k;
+    card.innerHTML = `<div class="k">${SETTINGS.towers[k].name}${compassOn(s) ? `<button class="focus-btn${focused ? " on" : ""}" id="focus-${k}" type="button" aria-pressed="${focused}">${focused ? "🧭 Focused" : "🧭 Focus"}</button>` : ""}</div><div class="looks"></div>`;
+    if (focused) card.classList.add("focused");
+    if (compassOn(s)) card.querySelector(".focus-btn").onclick = () => { s.box.focus = focused ? null : k; saveSlots(slots); Sound.play("place"); renderSkins(); };
     for (const [st, name] of LOOKS) {
       const has = st === "normal" || own[st]; if (st !== "normal") { all++; if (has) got++; }
       const b = document.createElement("button"); b.className = "look" + (has ? "" : " locked") + (cur === st ? " on" : ""); b.id = `skin-${k}-${st}`;
@@ -5645,6 +5660,8 @@ function renderSkins() {
   const dups = Object.values(s.box.skinExtra || {}).reduce((a, n) => a + n, 0);
   { const ex = (s.box && s.box.skinExtra) || {}; let n = 0, got = 0; for (const [key, c] of Object.entries(ex)) { n += c; got += c * skinPrice(key.split(":")[1]); }
     const b = $("b-sell-all"); b.hidden = !n; b.innerHTML = `Sell all ${n} extra skin${n === 1 ? "" : "s"} for ${got.toLocaleString()} <span class="ga" aria-label="Golden Acorns"></span>`; b.onclick = sellAllSkins; }
+  { const f = compassOn(s) && s.box.focus && SETTINGS.towers[s.box.focus]; $("skin-focus-note").hidden = !compassOn(s);
+    $("skin-focus-note").textContent = f ? `🧭 Star Compass: Mystery Box skins go to your ${f.name} ${Math.round((SETTINGS.moonCat.focusChance ?? 0.75) * 100)}% of the time.` : "🧭 Star Compass: tap “Focus” on a tower to aim your Mystery Box skins at it."; }
   $("skin-odds").innerHTML = `<b>Chance in each Mystery Box:</b> ` + skinOdds().map((o) => `<span class="odd r-${o.rar.toLowerCase()}">${o.n} ${o.p}<small>${o.rar}</small></span>`).join("");
   $("skins-count").innerHTML = `✨ ${got} / ${all} looks found · <span class="ga" aria-label="Golden Acorns"></span> ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
 }
@@ -7171,6 +7188,11 @@ function moonCatSprites() {   // the Moon Cat: a fluffy grey cat with big golden
   });
   SPR.mooncat = draw(true); SPR.mooncat_sleep = draw(false);
   SPR.moonwish = pixSprite(16, 16, ({ P, rect }) => { const s = [[7, 1], [8, 1], [7, 2], [8, 2], [6, 3], [9, 3]]; for (let j = 3; j < 12; j++) { const w = j < 6 ? (j - 2) * 2 : j < 8 ? 7 - (j - 6) : 4 - Math.floor((j - 8) / 2); rect(8 - w, j, 7 + w, j, j < 7 ? "#fff4b0" : "#ffd34d"); } rect(7, 7, 8, 8, "#ffffff"); for (let i = 0; i < 5; i++) { P(1 + i, 13 - i, i % 2 ? "#ff7ae0" : "#4ac8ff"); P(2 + i, 14 - i, "#c77dff"); } });   // a wishing star with a rainbow tail
+  SPR.starcompass = pixSprite(16, 16, ({ P, rect, disc }) => {   // the Star Compass: a gold compass whose needle is a star
+    disc(8, 8, 6.5, "#b8862a"); disc(8, 8, 5.5, "#ffd34d"); disc(8, 8, 4.5, "#1c1a3c");
+    for (let j = 4; j <= 7; j++) P(8, j, "#5af0ff"); for (let j = 9; j <= 12; j++) P(8, j, "#e8e8f0");
+    P(7, 5, "#5af0ff"); P(9, 5, "#5af0ff"); P(8, 3, "#e8fdff"); P(8, 8, "#fff1a0"); P(4, 8, "#fff1a0"); P(12, 8, "#fff1a0"); P(8, 1, "#fff1a0");
+  });
   SPR.catcharm = pixSprite(16, 16, ({ P, rect, disc }) => { disc(8, 10, 5.5, "#1a1620"); disc(8, 10, 4.5, "#f4f2f8"); disc(8, 5, 4.5, "#1a1620"); disc(8, 5, 3.5, "#f4f2f8"); P(5, 1, "#1a1620"); P(11, 1, "#1a1620"); P(6, 5, "#1a1620"); P(10, 5, "#1a1620"); P(8, 6, "#f46080");
     rect(4, 9, 12, 9, "#d8402a"); P(8, 10, "#ffd34d"); rect(12, 3, 13, 7, "#1a1620"); rect(12, 3, 12, 6, "#f4f2f8"); });   // a waving lucky cat
 }
@@ -7236,11 +7258,7 @@ const MOON_EFFECTS = {
     const k = ks[Math.random() * ks.length | 0]; s.box = s.box || {}; s.box.skinsOwned = s.box.skinsOwned || {}; s.box.skinsOwned[k] = s.box.skinsOwned[k] || {}; s.box.skinsOwned[k].galaxy = true; s.box.look = s.box.look || {}; s.box.look[k] = "galaxy";
     return `🌌 Wish granted! Your ${SETTINGS.towers[k].name} got the Mythic Galaxy skin!`;
   },
-  keybundle(s) {
-    const n = SETTINGS.moonCat.keyBundle || 5, have = (s.materials.mysterykey || 0); s.materials.keybundle = 0; delete s.materials.keybundle;
-    if (have + n > (SETTINGS.serpentShop.mysterykey.maxHeld || 30)) return false;
-    s.materials.mysterykey = have + n; return `🔑 +${n} Mystery Keys! (You have ${have + n} now.)`;
-  },
+  starcompass() { return "🧭 You got the Star Compass! On the Skins page, tap “🧭 Focus” on a tower, and Mystery Box skins will mostly go to that tower."; },
   luckycharm() { return "🐾 The Lucky Cat Charm waves at you. More Golden Acorns from now on!"; },
 };
 function renderMoonShop() {
