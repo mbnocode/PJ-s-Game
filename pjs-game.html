@@ -559,7 +559,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .skin-odds { display: flex; flex-wrap: wrap; gap: 6px 8px; justify-content: center; align-items: center; margin: 6px auto 4px; max-width: 760px; font-size: 14px; }
 .skin-odds .odd { background: #1c2a20; border: 2px solid #4f7a52; border-radius: 8px; padding: 3px 9px; }
 .skin-odds .odd small { display: block; font-size: 10px; opacity: 0.8; text-align: center; }
-.skin-odds .r-rare { border-color: #4a8ad8; } .skin-odds .r-gold { border-color: #ffd34d; } .skin-odds .r-legendary { border-color: #ff9a2a; box-shadow: 0 0 8px rgba(255,154,42,0.6); } .skin-odds .r-epic { border-color: #b05ae0; } .skin-odds .r-common { border-color: #6a8a6a; }
+.skin-odds .r-uncommon { border-color: #4ab89a; } .skin-odds .r-rare { border-color: #4a8ad8; } .skin-odds .r-gold { border-color: #ffd34d; } .skin-odds .r-legendary { border-color: #ff9a2a; box-shadow: 0 0 8px rgba(255,154,42,0.6); } .skin-odds .r-epic { border-color: #b05ae0; } .skin-odds .r-common { border-color: #6a8a6a; }
 .ga { display: inline-block; width: 1em; height: 1.12em; vertical-align: -0.2em; background: var(--acorn) center / contain no-repeat; filter: drop-shadow(0 0 3px rgba(255, 210, 80, 0.45)); }   /* the Golden Acorn picture, inline in text */
 .acorns { font-family: var(--body); font-weight: 700; font-size: 26px; color: var(--gold); display: flex; align-items: center; gap: 10px; }
 .acorns::before, .perk .cost::before { content: ""; width: 1.05em; height: 1.18em; background: var(--acorn) center / contain no-repeat; display: inline-block; filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.45)); }
@@ -1577,10 +1577,11 @@ function towerFace(t) { if (t.face === undefined) t.face = pathFacing(t.x, t.y);
 function towerSprite(kind) { const img = kind === "water" && G && G.map.theme === "swamp" ? SPR.water_swamp : SPR[kind]; return towerLook(kind, img); }
 // Tower Skins (a Mystery Box prize): a tower's picture recolored in a new style. (A skin shows instead of the gold look.)
 const TOWER_SKINS = {
-  crystal: { name: "Crystal", weight: 30, rarity: "Common", ramp: [[20, 40, 70], [40, 90, 150], [80, 160, 220], [140, 210, 250], [200, 240, 255], [245, 252, 255]] },
+  crystal: { name: "Crystal", weight: 24, rarity: "Common", ramp: [[20, 40, 70], [40, 90, 150], [80, 160, 220], [140, 210, 250], [200, 240, 255], [245, 252, 255]] },
   shadow:  { name: "Shadow", weight: 5, rarity: "Legendary",  ramp: [[20, 10, 30], [45, 25, 70], [80, 45, 120], [120, 80, 170], [170, 130, 220], [220, 200, 250]] },
   candy:   { name: "Candy", weight: 30, rarity: "Common",   ramp: [[80, 20, 50], [160, 50, 110], [230, 100, 170], [250, 150, 200], [255, 200, 225], [255, 240, 248]] },
   lava:    { name: "Lava", weight: 20, rarity: "Rare",    ramp: [[40, 6, 2], [110, 20, 6], [190, 50, 10], [240, 110, 20], [255, 180, 60], [255, 235, 160]] },
+  metal:   { name: "Metal", weight: 21, rarity: "Uncommon", ramp: [[30, 34, 42], [70, 78, 92], [120, 130, 146], [170, 180, 194], [215, 222, 232], [248, 250, 255]] },
   toxic:   { name: "Toxic", weight: 12, rarity: "Rare",   ramp: [[10, 30, 8], [30, 80, 20], [60, 150, 30], [120, 210, 60], [190, 245, 120], [240, 255, 210]] },
 };
 // The looks you own for each tower: "gold" (a Golden look) and any Tower Skins. (An old save kept one skin per tower in box.skins.)
@@ -1604,8 +1605,9 @@ function towerSkin(kind) {
 //  shadow: almost black, with a purple glow around its edges, glowing violet eyes and a dark mist around it
 //  toxic: radioactive neon green with bubbling spots, a green glow and slime dripping off the bottom
 //  candy: bubblegum pink with candy-cane stripes, sprinkles and a glossy shine
-const SKIN_FRAMES = { gold: 16, lava: 6, toxic: 4 };
-function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" ? 9 : 5)) % n; }
+//  metal: brushed steel panels with seams and rivets, a polished rim and a glint sweeping across it
+const SKIN_FRAMES = { gold: 16, lava: 8, toxic: 4, metal: 16 };
+function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" || style === "metal" ? 9 : style === "lava" ? 7 : 5)) % n; }
 function towerLook(kind, img) { const sk = towerSkin(kind); return sk ? skinOf(img, sk, skinFrame(sk)) : img; }
 const SKIN_CACHE = new Map();
 function skinOf(img, style, frame = 0) {
@@ -1643,6 +1645,11 @@ function skinOf(img, style, frame = 0) {
         const base = j + dn + 1, len = 1 + Math.floor(hash(i, 11) * 3 * sc + 0.5);
         if (base < H && A(i, base) && L[base * W + i] >= 0.12 && hash(i, 12) > 0.7 && dn < len) { put(i, j, dn === len - 1 ? [255, 255, 255] : [140, 220, 255], 255); continue; }
       }
+      if (style === "lava") {   // glowing lava dripping off the bottom (the drips stretch and fall)
+        let up = 0; while (up < 6 && !A(i, j - up - 1) && j - up - 1 >= 0) up++;
+        const top = j - up - 1, dl = 1 + Math.floor(((hash(i, 8) * 3 + frame * 0.5) % 4) * sc + 0.5);
+        if (top >= 0 && A(i, top) && L[top * W + i] >= 0.12 && hash(i, 9) > 0.6 && up < dl) { put(i, j, up === dl - 1 ? [255, 240, 170] : up === 0 ? [200, 50, 10] : [255, 130, 20], 255); continue; }
+      }
       if (style === "lava" && !near && hash(i, j, 21 + frame) > 0.985) { put(i, j, [255, 200, 80], 230); continue; }   // embers floating off it
       if (GLOW && near) put(i, j, GLOW, style === "toxic" ? 120 : style === "gold" ? 170 : 105);   // a soft glow all around it
       else if (GLOW && near2 && sc >= 1) put(i, j, GLOW, style === "gold" ? 80 : 45);
@@ -1667,7 +1674,7 @@ function skinOf(img, style, frame = 0) {
         if (l > 0.88) t = 0.97; col = ramp([[20, 46, 120], [40, 100, 200], [80, 170, 245], [170, 230, 255], [250, 254, 255]], t); }
       if (v.id > 0.82 && v.d1 < 0.9 * sc + 0.3) col = [255, 255, 255];   // a sparkle in some crystals
     } else if (style === "lava") {   // cracked magma: dark cooled crust broken into plates, with glowing molten rock in the cracks
-      const g = 6 * sc + 2, v = vor(i, j, g), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / SKIN_FRAMES.lava * Math.PI * 2);
+      const g = 6 * sc + 2, v = vor(i, j, g), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / SKIN_FRAMES.lava * Math.PI * 2 - (j / sc) * 0.45 + (i / sc) * 0.12);   // waves of heat flowing down through the cracks
       if (l > 0.86) col = mix([255, 210, 80], [255, 250, 200], pulse);   // the eyes glow like hot magma
       else if (seam < 0.7) col = mix([255, 220, 110], [255, 250, 210], pulse);   // white-hot middle of each crack
       else if (seam < 1.4) col = mix([255, 120, 20], [255, 170, 40], pulse);   // orange
@@ -1675,6 +1682,17 @@ function skinOf(img, style, frame = 0) {
       else { const plate = 0.25 + l * 0.45 + v.id * 0.2 + (lit ? 0.15 : 0) - (shade ? 0.1 : 0) - (v.d1 / g) * 0.15;
         col = ramp([[20, 10, 10], [44, 24, 22], [72, 44, 38], [104, 70, 60]], plate);
         if (v.id > 0.86) col = mix(col, [255, 110, 20], 0.55 + 0.25 * pulse); }   // a few plates still half-molten
+    } else if (style === "metal") {   // brushed steel: fine horizontal brush lines, bolted panels with rivets, and a glint sweeping across
+      const yy = j / H, panel = Math.round(8 * sc + 2), seamX = i % panel === 0, seamY = j % panel === 0;
+      let t = l * 0.75 + 0.22 * Math.sin(yy * 10 + 0.6) + (lit ? 0.28 : 0) - (shade ? 0.25 : 0) + (hash(1, j, 13) - 0.5) * 0.12;   // chrome: bands of reflection, and brush lines along each row
+      col = ramp([[18, 22, 34], [52, 62, 82], [104, 120, 146], [160, 178, 204], [214, 228, 246], [255, 255, 255]], t);
+      if ((seamX || seamY) && l > 0.25 && !edgeOut(i, j)) col = mix(col, [40, 44, 56], 0.55);   // panel seams
+      const ri = i % panel, rj = j % panel;
+      const rd = Math.hypot(ri - 2.5 * sc, rj - 2.5 * sc);
+      if (l > 0.25 && !edgeOut(i, j) && rd < 1.1 * sc + 0.4) col = rd < 0.6 * sc ? [255, 255, 255] : [44, 50, 66];   // round rivets with a shine
+      const gx = ((frame / SKIN_FRAMES.metal) * 2.2 - 0.6) * W, along = i + j * 0.6 - gx;   // a glint of light sweeping across
+      if (Math.abs(along) < 1.6 * sc + 0.5 && l > 0.2) col = mix(col, [255, 255, 255], 0.7);
+      if (edgeOut(i, j) && lit) col = mix(col, [255, 255, 255], 0.35);   // a polished rim
     } else if (style === "shadow") {
       if (l > 0.95) col = [235, 200, 255];   // glowing violet eyes
       else { col = ramp([[8, 4, 16], [22, 12, 38], [40, 24, 66], [62, 38, 98]], l * 0.85);
@@ -4950,7 +4968,7 @@ const PETS = { bunny: "Bunny", chick: "Chick", firefly: "Firefly" }, PET_NAMES_N
 // The chance of each Mystery Box prize right now (a jackpot you already found can't come again, so the others go up a little)
 function boxDropRates(s) {
   const P = SETTINGS.mysteryBox.prizes, f = (s.box && s.box.found) || {};
-  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin (Crystal, Candy, Toxic, Lava, Golden or Shadow)", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
+  const NAMES = { acorns: "Acorn Pouch (200 to 600 Golden Acorns)", golden: "Golden Tower look", skin: "Tower Skin (Candy, Crystal, Metal, Lava, Toxic, Golden or Shadow)", pet: "Pet", mimic: "Box Mimic (beat it for 2 prizes!)", phoenix: "Jackpot: the Phoenix", kraken: "Jackpot: the Kraken" };
   const live = Object.entries(P).filter(([k, p]) => NAMES[k] && p.chance > 0 && !((k === "phoenix" || k === "kraken") && f[k])), tot = live.reduce((a, [, p]) => a + p.chance, 0);
   return `<table>${Object.entries(P).filter(([k, p]) => NAMES[k] && p.chance > 0).map(([k, p]) => { const got = (k === "phoenix" || k === "kraken") && f[k];
     return `<tr><td>${NAMES[k]}</td><td>${got ? "found ✓" : (100 * p.chance / tot).toFixed(1).replace(/\.0$/, "") + "%"}</td></tr>`; }).join("")}</table>
@@ -6761,6 +6779,23 @@ function hydraAwaken(t) {
   for (const r of G.robots) { if (r.dead) continue; const q = rpos(r); if (Math.hypot(q.x - cx, q.y - cy) > R) continue;
     G.fx.push({ kind: "bite", tower: t, robot: r, head: Math.random() * 3 | 0, t: 0.45, dur: 0.45, hit: true, big: true }, { kind: "splash", x: q.x, y: q.y - 6, r: 22, t: 0.35, col: "90,255,160" }); hurt(r, s.damage * 3, true, false, "hydra"); burst(q.x, q.y - 4, "#5af08a", 6); }
 }
+// A tower in the Lava skin: an orange heat glow on the ground (behind), and embers and smoke rising off it (front)
+function drawLavaHeat(x, cx, by, s2, t, front) {
+  if (!front) {
+    const pu = 0.6 + 0.4 * Math.sin(t * 2.2), g = x.createRadialGradient(cx, by - 4, 1, cx, by - 4, s2 * 0.75);
+    g.addColorStop(0, `rgba(255,140,30,${0.42 * pu})`); g.addColorStop(0.6, `rgba(220,60,10,${0.18 * pu})`); g.addColorStop(1, "rgba(200,40,0,0)");
+    x.fillStyle = g; x.beginPath(); x.ellipse(cx, by - 4, s2 * 0.75, s2 * 0.32, 0, 0, Math.PI * 2); x.fill();
+    return;
+  }
+  for (let i = 0; i < 6; i++) {   // embers drifting up and fading
+    const ph = (t * 0.8 + i / 6) % 1, px = cx + Math.sin(i * 2.7 + t * 1.5) * s2 * 0.35, py = by - s2 * 0.5 - ph * s2 * 0.8;
+    x.fillStyle = i % 2 ? `rgba(255,200,80,${1 - ph})` : `rgba(255,110,30,${1 - ph})`; x.fillRect(Math.round(px), Math.round(py), ph < 0.4 ? 2 : 1, ph < 0.4 ? 2 : 1);
+  }
+  for (let i = 0; i < 2; i++) {   // little wisps of smoke
+    const ph = (t * 0.35 + i * 0.5) % 1, px = cx + (i ? 1 : -1) * s2 * 0.15 + Math.sin(t + i) * 2, py = by - s2 * 0.95 - ph * s2 * 0.5;
+    x.fillStyle = `rgba(70,60,60,${0.35 * (1 - ph)})`; x.beginPath(); x.arc(px, py, 2 + ph * 4, 0, Math.PI * 2); x.fill();
+  }
+}
 // Venom mist around a max-level Hydra (behind it), and venom bubbles rising off it (front)
 function drawHydraVenom(x, cx, by, s2, t, front) {
   if (!front) {
@@ -7664,6 +7699,8 @@ function draw() {
       x.strokeStyle = `rgba(255,180,60,${1 - k})`; x.lineWidth = 3; x.beginPath(); x.ellipse(cx, by - 2, s2 * (0.3 + k * 1.4), s2 * (0.1 + k * 0.45), 0, 0, Math.PI * 2); x.stroke();   // a ring of fire spreading out
       if (Math.random() < 0.6) burst(cx + (Math.random() - 0.5) * w, py - Math.random() * hgt * 0.6, Math.random() < 0.5 ? "#ffd36b" : "#ff8c1a", 1);
     }
+    const lavaLook = !PREFS.simple && towerSkin(t.kind) === "lava";
+    if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, false);   // a lava tower: heat glow underneath
     if (t.kind === "phoenix") { rc += 4 + Math.sin(G.time * 3 + t.x) * 2; drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), false); }   // the Phoenix hovers in its own fire
     // the Hydra at max level: toxic venom mist swirls around it; when it first gets maxed it rears up, shakes and ROARS
     const aw = t.kind === "hydra" && t.maxAwakeAt !== undefined ? (G.time - t.maxAwakeAt) / 1.8 : 2;
@@ -7692,6 +7729,7 @@ function draw() {
         x.lineWidth = 4; x.strokeStyle = "#0e2a1a"; x.textAlign = "left"; x.strokeText("ROOOAR!", cx + s2 * 0.75 + Math.sin(G.time * 40) * 1.5, by - s2 * 0.75); x.fillStyle = "#b6ff6a"; x.fillText("ROOOAR!", cx + s2 * 0.75 + Math.sin(G.time * 40) * 1.5, by - s2 * 0.75); x.restore(); }
     }
     if (t.kind === "hydra" && t.level >= 3 && !PREFS.simple) drawHydraVenom(x, cx, by, s2, G.time + t.x * 3, true);
+    if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, true);   // and embers and smoke rising off it
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower
       const k = Math.min(1, t.iceT), bw = sz * 0.9, bh = sz * 0.95, bx = cx - bw / 2, byy = by - bh;
