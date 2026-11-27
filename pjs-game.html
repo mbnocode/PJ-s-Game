@@ -1600,14 +1600,14 @@ function towerSkin(kind) {
 }
 // Each look is painted pixel by pixel over the tower's picture (keeping its dark outline and its shape):
 //  gold: shiny gold with bevelled edges, sparkles and a glint that sweeps across it every couple of seconds
-//  crystal: blue crystal facets fitted together, with dark seams and bright sparkles
+//  crystal: blue crystal facets fitted together that shimmer, a few split into rainbow light, glowing seams and twinkling star sparkles
 //  lava: dark cracked rock with glowing magma in the cracks (it throbs)
 //  shadow: almost black, with a purple glow around its edges, glowing violet eyes and a dark mist around it
 //  toxic: radioactive neon green with bubbling spots, a green glow and slime dripping off the bottom
 //  candy: bubblegum pink with candy-cane stripes, sprinkles and a glossy shine
-//  metal: brushed steel panels with seams and rivets, a polished rim and a glint sweeping across it
-const SKIN_FRAMES = { gold: 16, lava: 8, toxic: 4, metal: 16 };
-function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" || style === "metal" ? 9 : style === "lava" ? 7 : 5)) % n; }
+//  metal: shiny chrome panels with seams and rivets, a polished rim, a silver glow, twinkling stars and a bright glint sweeping across it
+const SKIN_FRAMES = { gold: 16, lava: 8, toxic: 4, metal: 16, crystal: 12 };
+function skinFrame(style) { const n = SKIN_FRAMES[style] || 1; if (n === 1 || PREFS.simple) return 0; const t = G && !G.over ? G.time : performance.now() / 1000; return Math.floor(t * (style === "gold" || style === "metal" ? 9 : style === "lava" || style === "crystal" ? 7 : 5)) % n; }
 function towerLook(kind, img) { const sk = towerSkin(kind); return sk ? skinOf(img, sk, skinFrame(sk)) : img; }
 const SKIN_CACHE = new Map();
 function skinOf(img, style, frame = 0) {
@@ -1633,7 +1633,7 @@ function skinOf(img, style, frame = 0) {
     if (!A(i, j)) {   // empty pixels next to the picture: glows, mist, drips, crystal shards and embers
       const near = A(i - 1, j) || A(i + 1, j) || A(i, j - 1) || A(i, j + 1);
       const near2 = !near && (A(i - 2, j) || A(i + 2, j) || A(i, j - 2) || A(i, j + 2) || A(i - 1, j - 1) || A(i + 1, j - 1) || A(i - 1, j + 1) || A(i + 1, j + 1));
-      const GLOW = { gold: [255, 214, 90], crystal: [120, 230, 255], lava: [255, 120, 30], toxic: [170, 255, 40] }[style];
+      const GLOW = { gold: [255, 214, 90], crystal: [120, 230, 255], lava: [255, 120, 30], toxic: [170, 255, 40], metal: [225, 235, 255] }[style];
       if (style === "shadow" && near) put(i, j, [120, 60, 200], 110);
       if (style === "toxic") {   // slime dripping off the bottom
         let up = 0; while (up < 5 && !A(i, j - up - 1) && j - up - 1 >= 0) up++;
@@ -1651,7 +1651,8 @@ function skinOf(img, style, frame = 0) {
         if (top >= 0 && A(i, top) && L[top * W + i] >= 0.12 && hash(i, 9) > 0.6 && up < dl) { put(i, j, up === dl - 1 ? [255, 240, 170] : up === 0 ? [200, 50, 10] : [255, 130, 20], 255); continue; }
       }
       if (style === "lava" && !near && hash(i, j, 21 + frame) > 0.985) { put(i, j, [255, 200, 80], 230); continue; }   // embers floating off it
-      if (GLOW && near) put(i, j, GLOW, style === "toxic" ? 120 : style === "gold" ? 170 : 105);   // a soft glow all around it
+      if (style === "metal" && !near && hash(i, j, 40 + (frame >> 2)) > 0.992) { put(i, j, [255, 255, 255], 240); continue; }   // glints of light around shiny metal
+      if (GLOW && near) put(i, j, GLOW, style === "toxic" ? 120 : style === "gold" || style === "metal" ? 170 : 105);   // a soft glow all around it
       else if (GLOW && near2 && sc >= 1) put(i, j, GLOW, style === "gold" ? 80 : 45);
       continue;
     }
@@ -1670,9 +1671,13 @@ function skinOf(img, style, frame = 0) {
       const dir = ((i + 0.5 - v.ox) * -0.7 + (j + 0.5 - v.oy) * -0.7) / g;   // which way this part of the facet faces the light
       if (seam < 0.8) col = [150, 230, 255];   // bright glowing seams where the crystals meet
       else if (seam < 1.5) col = [40, 96, 180];   // the dark inner edge of each crystal
-      else { let t = 0.3 + 0.35 * v.id + dir * 0.55 + (l - 0.5) * 0.35 + (lit ? 0.15 : 0) - (shade ? 0.15 : 0);
-        if (l > 0.88) t = 0.97; col = ramp([[20, 46, 120], [40, 100, 200], [80, 170, 245], [170, 230, 255], [250, 254, 255]], t); }
-      if (v.id > 0.82 && v.d1 < 0.9 * sc + 0.3) col = [255, 255, 255];   // a sparkle in some crystals
+      else { const shim = 0.2 * Math.sin((frame / SKIN_FRAMES.crystal) * Math.PI * 2 + v.id * 12);   // each facet catches the light in turn: it shimmers
+        let t = 0.3 + 0.35 * v.id + dir * 0.55 + (l - 0.5) * 0.35 + (lit ? 0.15 : 0) - (shade ? 0.15 : 0) + shim;
+        if (l > 0.88) t = 0.97; col = ramp([[20, 46, 120], [40, 100, 200], [80, 170, 245], [170, 230, 255], [250, 254, 255]], t);
+        if (v.id > 0.52 && v.id < 0.68) { const hue = (v.id * 8 + frame / SKIN_FRAMES.crystal) % 1, rb = [[255, 140, 220], [180, 150, 255], [120, 230, 255], [150, 255, 210], [255, 240, 150]][Math.floor(hue * 5)];   // rainbow light split by the crystal
+          col = mix(col, rb, 0.45 + 0.2 * Math.max(0, dir)); } }
+      if (v.id > 0.8 && v.d1 < 0.9 * sc + 0.3 && ((frame + Math.floor(v.id * 97)) % 12) < 5) col = [255, 255, 255];   // twinkling sparkles in some crystals
+      if (v.id > 0.8 && ((frame + Math.floor(v.id * 97)) % 12) < 3 && ((Math.abs(i + 0.5 - v.ox) < 0.6 && v.d1 < 2.4 * sc) || (Math.abs(j + 0.5 - v.oy) < 0.6 && v.d1 < 2.4 * sc))) col = mix(col, [255, 255, 255], 0.8);   // ...that flash into little stars
     } else if (style === "lava") {   // cracked magma: dark cooled crust broken into plates, with glowing molten rock in the cracks
       const g = 6 * sc + 2, v = vor(i, j, g), seam = v.d2 - v.d1, pulse = 0.5 + 0.5 * Math.sin(frame / SKIN_FRAMES.lava * Math.PI * 2 - (j / sc) * 0.45 + (i / sc) * 0.12);   // waves of heat flowing down through the cracks
       if (l > 0.86) col = mix([255, 210, 80], [255, 250, 200], pulse);   // the eyes glow like hot magma
@@ -1684,14 +1689,17 @@ function skinOf(img, style, frame = 0) {
         if (v.id > 0.86) col = mix(col, [255, 110, 20], 0.55 + 0.25 * pulse); }   // a few plates still half-molten
     } else if (style === "metal") {   // brushed steel: fine horizontal brush lines, bolted panels with rivets, and a glint sweeping across
       const yy = j / H, panel = Math.round(8 * sc + 2), seamX = i % panel === 0, seamY = j % panel === 0;
-      let t = l * 0.75 + 0.22 * Math.sin(yy * 10 + 0.6) + (lit ? 0.28 : 0) - (shade ? 0.25 : 0) + (hash(1, j, 13) - 0.5) * 0.12;   // chrome: bands of reflection, and brush lines along each row
+      let t = 0.12 + l * 0.78 + 0.22 * Math.sin(yy * 10 + 0.6) + (lit ? 0.28 : 0) - (shade ? 0.25 : 0) + (hash(1, j, 13) - 0.5) * 0.12;   // chrome: bands of reflection, and brush lines along each row
       col = ramp([[18, 22, 34], [52, 62, 82], [104, 120, 146], [160, 178, 204], [214, 228, 246], [255, 255, 255]], t);
       if ((seamX || seamY) && l > 0.25 && !edgeOut(i, j)) col = mix(col, [40, 44, 56], 0.55);   // panel seams
       const ri = i % panel, rj = j % panel;
       const rd = Math.hypot(ri - 2.5 * sc, rj - 2.5 * sc);
       if (l > 0.25 && !edgeOut(i, j) && rd < 1.1 * sc + 0.4) col = rd < 0.6 * sc ? [255, 255, 255] : [44, 50, 66];   // round rivets with a shine
-      const gx = ((frame / SKIN_FRAMES.metal) * 2.2 - 0.6) * W, along = i + j * 0.6 - gx;   // a glint of light sweeping across
-      if (Math.abs(along) < 1.6 * sc + 0.5 && l > 0.2) col = mix(col, [255, 255, 255], 0.7);
+      const gx = ((frame / SKIN_FRAMES.metal) * 2.2 - 0.6) * W, along = i + j * 0.6 - gx;   // a bright glint of light sweeping across
+      if (Math.abs(along) < 2.6 * sc + 0.5 && l > 0.2) col = mix(col, [255, 255, 255], Math.abs(along) < 1.2 * sc + 0.3 ? 0.95 : 0.6);
+      const star = (sx, sy) => (i === sx && Math.abs(j - sy) <= 1 + (sc > 1 ? 1 : 0)) || (j === sy && Math.abs(i - sx) <= 1 + (sc > 1 ? 1 : 0));
+      for (let n = 0; n < 4; n++) { if ((frame + n * 4) % 16 > 7) continue;   // star sparkles that twinkle on and off
+        const sx = Math.floor(hash(n, 51) * W), sy = Math.floor(hash(n, 52) * H * 0.85); if (star(sx, sy) && A(sx, sy) && L[sy * W + sx] > 0.25) col = (i === sx && j === sy) ? [255, 255, 255] : mix(col, [235, 245, 255], 0.85); }
       if (edgeOut(i, j) && lit) col = mix(col, [255, 255, 255], 0.35);   // a polished rim
     } else if (style === "shadow") {
       if (l > 0.95) col = [235, 200, 255];   // glowing violet eyes
@@ -6779,6 +6787,24 @@ function hydraAwaken(t) {
   for (const r of G.robots) { if (r.dead) continue; const q = rpos(r); if (Math.hypot(q.x - cx, q.y - cy) > R) continue;
     G.fx.push({ kind: "bite", tower: t, robot: r, head: Math.random() * 3 | 0, t: 0.45, dur: 0.45, hit: true, big: true }, { kind: "splash", x: q.x, y: q.y - 6, r: 22, t: 0.35, col: "90,255,160" }); hurt(r, s.damage * 3, true, false, "hydra"); burst(q.x, q.y - 4, "#5af08a", 6); }
 }
+// A tower in the Crystal skin: little glowing crystal shards float in a circle around it (front = the ones passing in front)
+function drawCrystalShards(x, cx, by, s2, t, front) {
+  for (let i = 0; i < 4; i++) {
+    const a = t * 1.1 + i * Math.PI / 2, depth = Math.sin(a); if ((depth > 0) !== front) continue;
+    const px = cx + Math.cos(a) * s2 * 0.62, py = by - s2 * 0.45 + depth * s2 * 0.16 + Math.sin(t * 2 + i) * 2, k = 0.75 + 0.25 * (depth + 1) / 2, h = 5 * k, w = 2.6 * k;
+    const g = x.createRadialGradient(px, py, 0, px, py, 7); g.addColorStop(0, "rgba(150,230,255,0.5)"); g.addColorStop(1, "rgba(150,230,255,0)"); x.fillStyle = g; x.beginPath(); x.arc(px, py, 7, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#58b8f0"; x.beginPath(); x.moveTo(px, py - h); x.lineTo(px + w, py); x.lineTo(px, py + h); x.lineTo(px - w, py); x.fill();   // a little diamond
+    x.fillStyle = "#e8faff"; x.beginPath(); x.moveTo(px, py - h); x.lineTo(px + w * 0.4, py - h * 0.2); x.lineTo(px - w * 0.4, py - h * 0.2); x.fill();   // its bright top facet
+  }
+}
+// A star of light that glints off a shiny tower now and then
+function drawShineStar(x, cx, cy, s2, t) {
+  const ph = (t * 0.6) % 1; if (ph > 0.25) return;
+  const k = Math.sin(ph / 0.25 * Math.PI), px = cx + Math.sin(Math.floor(t * 0.6) * 2.3) * s2 * 0.25, py = cy + Math.cos(Math.floor(t * 0.6) * 1.7) * s2 * 0.2, L = 3 + 6 * k;
+  x.save(); x.globalAlpha = k; x.fillStyle = "#ffffff";
+  x.beginPath(); x.moveTo(px, py - L); x.lineTo(px + 1.2, py - 1.2); x.lineTo(px + L, py); x.lineTo(px + 1.2, py + 1.2); x.lineTo(px, py + L); x.lineTo(px - 1.2, py + 1.2); x.lineTo(px - L, py); x.lineTo(px - 1.2, py - 1.2); x.fill();
+  x.restore();
+}
 // A tower in the Lava skin: an orange heat glow on the ground (behind), and embers and smoke rising off it (front)
 function drawLavaHeat(x, cx, by, s2, t, front) {
   if (!front) {
@@ -7699,7 +7725,8 @@ function draw() {
       x.strokeStyle = `rgba(255,180,60,${1 - k})`; x.lineWidth = 3; x.beginPath(); x.ellipse(cx, by - 2, s2 * (0.3 + k * 1.4), s2 * (0.1 + k * 0.45), 0, 0, Math.PI * 2); x.stroke();   // a ring of fire spreading out
       if (Math.random() < 0.6) burst(cx + (Math.random() - 0.5) * w, py - Math.random() * hgt * 0.6, Math.random() < 0.5 ? "#ffd36b" : "#ff8c1a", 1);
     }
-    const lavaLook = !PREFS.simple && towerSkin(t.kind) === "lava";
+    const lookNow = PREFS.simple ? null : towerSkin(t.kind), lavaLook = lookNow === "lava";
+    if (lookNow === "crystal") drawCrystalShards(x, cx, by, s2, G.time + t.x * 1.3 + t.y, false);   // crystal shards circling behind it
     if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, false);   // a lava tower: heat glow underneath
     if (t.kind === "phoenix") { rc += 4 + Math.sin(G.time * 3 + t.x) * 2; drawPhoenixFlames(x, cx, by - s2 / 2 - rc, s2, G.time, t.x * 7 + t.y * 3, Math.min(1, (t.level || 0) / 3), false); }   // the Phoenix hovers in its own fire
     // the Hydra at max level: toxic venom mist swirls around it; when it first gets maxed it rears up, shakes and ROARS
@@ -7730,6 +7757,8 @@ function draw() {
     }
     if (t.kind === "hydra" && t.level >= 3 && !PREFS.simple) drawHydraVenom(x, cx, by, s2, G.time + t.x * 3, true);
     if (lavaLook) drawLavaHeat(x, cx, by, s2, G.time + t.x * 1.7 + t.y, true);   // and embers and smoke rising off it
+    if (lookNow === "crystal") drawCrystalShards(x, cx, by, s2, G.time + t.x * 1.3 + t.y, true);   // ...and in front of it
+    if (lookNow === "metal") drawShineStar(x, cx, by - s2 * 0.5, s2, G.time + t.x * 2.1 + t.y);   // a star of light glinting off the metal
     x.filter = "none";
     if (t.iceT > 0) {   // a block of ice around a frozen tower
       const k = Math.min(1, t.iceT), bw = sz * 0.9, bh = sz * 0.95, bx = cx - bw / 2, byy = by - bh;
