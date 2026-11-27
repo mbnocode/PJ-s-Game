@@ -350,6 +350,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .world-tabs[hidden] { display: none; }
 .world-tabs button.on { background: #ffd34d; color: #2a2000; border-color: #8a6a10; }
 #wt-2.on { background: #4fc3e8; color: #062040; border-color: #1f6f98; }
+#wt-2.locked2 { opacity: 0.75; }
 .world-tabs .link { font-size: 13px; }
 .seatravel { position: fixed; inset: 0; z-index: 90; background: #000; display: flex; align-items: center; justify-content: center; }
 .seatravel canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
@@ -2482,21 +2483,27 @@ function drawUnderwater(x) {
 // World 2 bookkeeping
 const W2_MAP = { coralreef: [190, 340, "#ff8fb0"], kelpforest: [500, 268, "#5fc08a"], sunkencity: [790, 330, "#8fd8f0"] };
 const W2_SOON = [{ look: "abyss", name: "The Abyss", pos: [930, 120, "#4a5aa0"] }];
-function world2Open(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
+// The Sunken Kingdom opens after you beat the Eye of the Storm (Normal or harder) AND collect enough stars in World 1.
+function stormBeaten(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
+function worldOneStars(s = slot()) { let n = 0; for (const L of LEVEL_ORDER) for (const d in ((s && s.best && s.best[L]) || {})) n += s.best[L][d].stars || 0; return n; }
+const SEA_STARS = () => SETTINGS.sunkenKingdomStars ?? 90;
+function world2Open(s = slot()) { return stormBeaten(s) && worldOneStars(s) >= SEA_STARS(); }
 function curWorld() { const s = slot(); return s && s.world === 2 && world2Open(s) ? 2 : 1; }
 function levelOrderOf(L) { return W2_ORDER.includes(L) ? W2_ORDER : LEVEL_ORDER; }
 function unlockText(L) {
-  if (L === W2_ORDER[0]) return "Beat the Eye of the Storm on Normal or harder to unlock this level.";
+  if (L === W2_ORDER[0]) return `Beat the Eye of the Storm on Normal or harder, and collect ${SEA_STARS()} ★ stars in World 1 (you have ${worldOneStars()}).`;
   const lv = SETTINGS.levels[L], O = levelOrderOf(L); return "Beat " + SETTINGS.levels[lv.unlockAfter || O[O.indexOf(L) - 1]].name + " to unlock this level.";
 }
 function setWorld(w) { const s = slot(); if (!s) return; s.world = w; saveSlots(slots); renderLevels(); }
 function renderWorldTabs() {
-  const open = world2Open(), w = curWorld(); $("world-tabs").hidden = !open;
+  const open = world2Open(), w = curWorld(), seen = stormBeaten(); $("world-tabs").hidden = !seen;   // (the tabs show up once you've beaten the Eye of the Storm)
+  $("wt-2").textContent = open ? "🌊 Sunken Kingdom" : `🔒 Sunken Kingdom · ★ ${worldOneStars()} / ${SEA_STARS()}`; $("wt-2").classList.toggle("locked2", !open); $("wt-replay").hidden = !open;
   $("wt-1").classList.toggle("on", w === 1); $("wt-2").classList.toggle("on", w === 2);
   $("wt-1").setAttribute("aria-pressed", String(w === 1)); $("wt-2").setAttribute("aria-pressed", String(w === 2));
 }
 $("wt-1").onclick = () => { Sound.init(); Sound.play("place"); setWorld(1); };
-$("wt-2").onclick = () => { Sound.init(); const s = slot(); if (s && !s.seaSeen) seaTravel(() => setWorld(2)); else { Sound.play("place"); setWorld(2); } };
+$("wt-2").onclick = () => { Sound.init(); const s = slot();
+  if (!world2Open(s)) { Sound.play("nope"); popToast("kraken", `🔒 Collect ${SEA_STARS()} ★ stars to travel there`, `You have ${worldOneStars(s)}. Win levels on harder difficulties for more stars!`); return; } if (s && !s.seaSeen) seaTravel(() => setWorld(2)); else { Sound.play("place"); setWorld(2); } };
 $("wt-replay").onclick = () => { Sound.init(); seaTravel(() => setWorld(2)); };
 // The World 2 map: deep under the sea. The coral reef on the left, the kelp forest in the middle, and the ruins of the
 // sunken city on the right, with light pouring down from the surface and the dark Abyss beyond.
@@ -9077,6 +9084,7 @@ function finish(won) {
          <p class="muted scoremath">${scoreMath()}</p>
          ${G.acornsFound ? `<div class="acorns" style="font-size:20px">+${G.acornsFound} Golden Acorn${G.acornsFound > 1 ? "s" : ""} found</div>` : ""}
          <p class="muted">${SETTINGS.difficulties[G.diffKey].name} · Base Health ${Math.round(G.health)} left · Time ${fmtTime(G.realTime || 0)}</p>
+         ${G.level === "storm" && stormBeaten() && !world2Open() ? `<p class="acorns" style="font-size:16px">🌊 A new world awaits… collect ${SEA_STARS()} ★ stars to travel to the Sunken Kingdom (you have ${worldOneStars()}).</p>` : ""}
          <div class="row"><button id="o-menu">← Back to levels</button>${nextL && !(on && on.code) ? `<button class="go" id="o-next">${toSea ? "🌊 " : ""}Next: ${SETTINGS.levels[nextL].name}</button>` : ""}<button id="o-again">Play again</button>${on ? `<button id="o-boards">Leaderboards</button>` : ""}</div>
          ${boardBits(on, true)}`
       : `<h2>The Factory took over</h2>

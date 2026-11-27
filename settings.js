@@ -390,6 +390,7 @@ const SETTINGS = {
                   kraken:    { chance: 15 },                        // JACKPOT #2: the Kraken tower (only once)
                 },
                 goldSkinWeight: 20 },   // how likely a Tower Skin is to be Golden (Rare) (the other skins: Candy 30, Lava 24, Metal 21, Crystal 10 (Epic), Toxic 12, Shadow 5, Galaxy 1.5 (Mythic))
+  sunkenKingdomStars: 90,   // stars you need in World 1 (all levels and difficulties added up) to travel to the Sunken Kingdom (and beat the Eye of the Storm on Normal or harder)
   // Skin buffs: the skin a tower is wearing makes it stronger. (Rarer skins get bigger buffs.)
   skinBuffs: {
     candy:   { name: "Sugar Rush", about: "Attacks 10% faster.", speedTimes: 1.1 },
