@@ -8763,10 +8763,12 @@ function ixCanvasPos(e, cv) { const r = cv.getBoundingClientRect(); return { x: 
 function ixScore(B, board, won, base, campLeft, campMax) {
   const speed = won ? Math.max(0.5, Math.min(2, IRON_PAR[board] / Math.max(1, B.t))) : 1;
   const health = 0.5 + 1.5 * Math.max(0, campLeft) / campMax, diff = B.D.scoreTimes || 1;
-  const score = Math.min(2900000, Math.round(base * speed * health * diff));
+  // survival: the fewer of your soldiers that died, the bigger it gets (none lost: x2, half or more lost: x1)
+  const sent = B.sent || 0, lost = Math.min(sent, B.lost || 0), surv = sent ? Math.max(1, Math.min(2, 2 - 2 * lost / sent)) : 1;
+  const score = Math.min(2900000, Math.round(base * speed * health * surv * diff));
   const s = slot(); if (s) { s.ironBest = s.ironBest || {}; const key = board + ":" + B.diffKey; if (score > (s.ironBest[key] || 0)) s.ironBest[key] = score; saveSlots(slots); }
   const f = (n) => n.toFixed(2).replace(/\.?0+$/, "");
-  return { score, html: `<div class="ix-score"><div class="big">${score.toLocaleString()}</div><div class="muted">${base.toLocaleString()} points × ${f(speed)} speed${won ? ` (${fmtTime(B.t)})` : ""} × ${f(health)} camp health × ${f(diff)} ${B.D.name}</div></div><div class="board-ask" id="o-ask"></div>` };
+  return { score, html: `<div class="ix-score"><div class="big">${score.toLocaleString()}</div><div class="muted">${base.toLocaleString()} points × ${f(speed)} speed${won ? ` (${fmtTime(B.t)})` : ""} × ${f(health)} camp health × ${f(surv)} survival (${lost} of ${sent} soldiers lost) × ${f(diff)} ${B.D.name}</div></div><div class="board-ask" id="o-ask"></div>` };
 }
 function ixBoard(B, board, won, score, stars, campLeft, wave) {
   askForBoard({ level: board, diffKey: B.diffKey, wave: Math.max(1, wave), health: Math.max(0, Math.round(campLeft)), realTime: B.t / Math.max(1, B.speedAvg || 1) + 2 }, won, score, stars);
@@ -8961,6 +8963,7 @@ function marchSend(k) {
   M.leaves -= a.cost; Sound.play("place");
   if (laneWrecked(M.lane)) { const open = marchLanesOpen().filter((j) => !laneWrecked(j)); if (open.length) M.lane = open[0]; }
   const u = { side: 0, kind: k, x: 70, y: MARCH.lanes[M.lane] + (Math.random() * 10 - 5), lane: M.lane, hp: a.hp, max: a.hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6 };
+  u.mine = true; M.sent = (M.sent || 0) + 1;   // (counted for the survival score multiplier)
   M.units.push(u); M.lastSent = { u, at: performance.now() };   // (tap a road right after to send it there instead)
 }
 function marchCharge() {
@@ -9054,7 +9057,7 @@ function marchUpdate(dt) {
     }
   }
   armyRebirth(M);
-  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) M.killPts += Math.round(u.max); if (u.side && !u.fell) M.leaves += 8; if (!u.fell) for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  for (const u of M.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (!u.side && u.mine && !u.blown) M.lost = (M.lost || 0) + 1; if (u.side) M.killPts += Math.round(u.max); if (u.side && !u.fell) M.leaves += 8; if (!u.fell) for (let i = 0; i < 6; i++) M.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   M.units = M.units.filter((u) => !u.gone);
   for (const f of M.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
   M.fx = M.fx.filter((f) => f.t > 0);
@@ -9506,11 +9509,11 @@ function escButtons() {
   ch.onclick = escCharge; box.appendChild(ch);
   ixButtons(box, E, "esc-ix-");
 }
-function escAddAnimal(k, x, free) { E.units.push({ side: 0, kind: k, x, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: escStats({ side: 0, kind: k }).hp, max: escStats({ side: 0, kind: k }).hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6, free }); }
+function escAddAnimal(k, x, free) { E.units.push({ side: 0, kind: k, x, y: ESCAPE.roadY + (Math.random() * 44 - 22), hp: escStats({ side: 0, kind: k }).hp, max: escStats({ side: 0, kind: k }).hp, cool: 0, slowT: 0, hitT: 0, wob: Math.random() * 6, free, mine: !free }); }
 function escSend(k) {
   if (!E || E.over) return; const a = MARCH.animals[k]; if (!a) return;
   if (E.leaves < a.cost) { Sound.play("nope"); return; }
-  E.leaves -= a.cost; Sound.play("place"); escAddAnimal(k, 40);
+  E.leaves -= a.cost; Sound.play("place"); escAddAnimal(k, 40); E.sent = (E.sent || 0) + 1;
 }
 function escCharge() {
   if (!E || E.over || E.chargeCool > 0) { Sound.play("nope"); return; }
@@ -9570,7 +9573,7 @@ function escUpdate(dt) {
     else { if (u.rootT > 0) u.rootT -= dt; u.x += dir * S.speed * (u.rootT > 0 ? 0 : 1) * (u.speedMult || 1) * (u.side ? E.D.robotSpeed : 1) * (u.slowT > 0 ? 0.5 : 1) * (charge ? 1.5 : 1) * dt; }
   }
   armyRebirth(E);
-  for (const u of E.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (u.side) { E.leaves += 8; E.killPts += Math.round(u.max); } for (let i = 0; i < 6; i++) E.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
+  for (const u of E.units) if (u.hp <= 0 && !u.gone) { u.gone = true; if (!u.side && u.mine && !u.blown) E.lost = (E.lost || 0) + 1; if (u.side) { E.leaves += 8; E.killPts += Math.round(u.max); } for (let i = 0; i < 6; i++) E.fx.push({ spark: true, x: u.x + Math.random() * 16 - 8, y: u.y + Math.random() * 16 - 8, t: 0.4, c: u.side ? "#a0a8b8" : "#9be28a" }); }
   E.units = E.units.filter((u) => !u.gone);
   for (const f of E.fx) { f.t -= dt; if (f.text) f.y -= 14 * dt; }
   E.fx = E.fx.filter((f) => f.t > 0);
