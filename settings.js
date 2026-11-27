@@ -1251,7 +1251,7 @@ const SETTINGS = {
               ] },
     sunkencity: { name: "The Sunken City", world: 2, acornDropChance: 0.1, theme: "sunken",
               about: "The ruins of an ancient city at the bottom of the sea. The road loops back and crosses over itself at an old plaza, and the Mecha Megalodon is waiting! The Kraken hits 50% harder here. Scores are worth 6x.",
-              robotHealth: 1.7, scoreTimes: 6, lateToughness: { fromWave: 8, perWave: 0.065 },
+              robotHealth: 4.25, scoreTimes: 6, lateToughness: { fromWave: 8, perWave: 0.065 },   // robots here have 2.5 times the health (was 1.7)
               towerBoosts: { kraken: { damageTimes: 1.5 } },
               path: [[0,  2],  [12,  2],  [12,  9],  [6,  9],  [6,  5],  [17,  5],  [17,  10],  [19,  10]],
               // The old city road crosses over itself at a ruined plaza. Trees are broken pillars, mushrooms are treasure chests, tall grass is sea grass.
