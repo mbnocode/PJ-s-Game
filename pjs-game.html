@@ -5003,13 +5003,14 @@ function buildMap(L) {
     for (const [sx, sy] of lv.mirror ? [...(list || []), ...mirror(list)] : list || []) if (cells[sy] && cells[sy][sx] === "grass") scenery[sx + "," + sy] = kind;
   // A big landmark (like the pyramid) covers several squares: nothing can be built there.
   if (lv.landmark) for (let j = 0; j < lv.landmark.h; j++) for (let i = 0; i < lv.landmark.w; i++) { const cx = lv.landmark.x + i, cy = lv.landmark.y + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }
+  if (lv.goldPiles) for (const [gx, gy] of lv.goldPiles) for (let j = 0; j < 2; j++) for (let i = 0; i < 3; i++) { const cx = gx + i, cy = gy + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }   // (under Pirate Cove's big piles of gold)
   if (lv.tunnel) for (let j = 0; j < lv.tunnel.h; j++) for (let i = 0; i < lv.tunnel.w; i++) { const cx = lv.tunnel.x + i, cy = lv.tunnel.y + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }   // (under the giant skull rock)
   if (lv.moon) for (let j = 0; j < lv.moon.h; j++) for (let i = 0; i < lv.moon.w; i++) { const cx = lv.moon.x + i, cy = lv.moon.y + j; if (cells[cy] && cells[cy][cx] === "grass") scenery[cx + "," + cy] = "landmark"; }   // the Moon (Infinity)
   const quick = new Set((lv.quicksand || []).map(([qx, qy]) => qx + "," + qy));   // quicksand squares on the road
   const lava = new Set((lv.lava || []).map(([qx, qy]) => qx + "," + qy));   // glowing lava squares on the road
   const ice = new Set((lv.ice || []).map(([qx, qy]) => qx + "," + qy));   // icy road squares on the frozen lake
   const look = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => (x * 31 + y * 17 + x * y) % 97));
-  return { tunnel: lv.tunnel, islands: lv.islands, waterfalls: lv.waterfalls, landmark: lv.landmark, moon: lv.moon, quick, lava, ice, lake: lv.lake, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
+  return { goldPiles: lv.goldPiles, tunnel: lv.tunnel, islands: lv.islands, waterfalls: lv.waterfalls, landmark: lv.landmark, moon: lv.moon, quick, lava, ice, lake: lv.lake, cells, segs: paths[0].segs, total: paths[0].total, paths, flights, factoryOrder, gate: gates[0], gates, base: { x: bLeft, y: bTop, img: tree, gray: grayCopy(tree) }, grassOrder: grass, look, scenery, theme };
 }
 // Where a robot is right now (robots on a two-factory level each follow their own path).
 function rpos(r) { const q = posAt(r.path || G.map, r.d); if (r.flying) q.y -= 14; return q; }   // flying robots are up in the air
@@ -5107,15 +5108,27 @@ function drawShipDeck(x, map) {
   let ropes = 0; for (let cy = 1; cy < ROWS - 1 && ropes < 3; cy++) for (let cx = COLS - 3; cx > 1 && ropes < 3; cx -= 6) if (free(cx, cy) && (cx + cy * 3) % 4 === 2) {   // coils of rope
     ropes++; const rx = cx * T + 16, ry = cy * T + 18; for (let k = 3; k >= 0; k--) { x.strokeStyle = k % 2 ? "#a88a5a" : "#7a6038"; x.lineWidth = 2.5; x.beginPath(); x.ellipse(rx, ry, 4 + k * 3, 2.5 + k * 1.8, 0, 0, Math.PI * 2); x.stroke(); } }
 }
-// Pirate Cove: tall stacks of gold coins piled up along the sides of the board
+// Pirate Cove: big arching heaps of gold coins on the sides of the board (pixel art)
+let GOLD_PILE = null;
 function drawGoldStacks(x, map) {
-  for (let cy = 0; cy < ROWS; cy++) for (let cx = 0; cx < COLS; cx++) {
-    if (!(cx === 0 || cx === COLS - 1 || cy === 0 || cy === ROWS - 1)) continue;
-    if (map.cells[cy][cx] !== "grass" || map.scenery[cx + "," + cy]) continue;
-    for (let s2 = 0; s2 < 3; s2++) { const bx = cx * T + 7 + s2 * 9, h = 3 + ((cx * 7 + cy * 3 + s2 * 5) % 6), by = cy * T + 28 - (s2 % 2) * 3;   // a stack of coins
-      for (let k = 0; k < h; k++) { const yy = by - k * 3; x.fillStyle = "#6a4a0a"; x.fillRect(bx - 4, yy - 1, 9, 4); x.fillStyle = k % 2 ? "#ffd34d" : "#f2b23a"; x.fillRect(bx - 3, yy, 7, 2); }
-      x.fillStyle = "#fff2a0"; x.fillRect(bx - 2, by - h * 3 + 3, 3, 1); }
-  }
+  if (!GOLD_PILE) { const W = 48, H = 34, c = document.createElement("canvas"); c.width = W; c.height = H; const k = c.getContext("2d");
+    const hash = (i, j) => ((i * 73856093) ^ (j * 19349663)) >>> 0, cx = W / 2;
+    const inP = (i, j) => j >= 4 && ((i - cx) / 23) ** 2 + ((j - 33) / 28) ** 2 <= 1;   // a big rounded mound
+    const G2 = ["#6a420a", "#a8700e", "#d9a21e", "#f5c93a", "#ffe98a"];
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { if (!inP(i, j)) continue;
+      const edge = !inP(i - 1, j) || !inP(i + 1, j) || !inP(i, j - 1);
+      const ry = j % 3, row = Math.floor(j / 3), ci = Math.floor((i + (row % 2) * 2) / 4);   // rows of overlapping coins
+      let l = 0.75 - (i - cx) / W * 0.6 - j / H * 0.45 + (hash(ci, row) % 100) / 400; if (ry === 2) l -= 0.3; if (ry === 0 && (i + row * 2) % 4 === 1) l += 0.35;
+      let col = G2[Math.max(0, Math.min(4, Math.floor(l * 5)))]; if (edge) col = "#4a2c04";
+      k.fillStyle = col; k.fillRect(i, j, 1, 1); }
+    for (const [i, j] of [[cx - 4, 7], [cx + 7, 12], [cx - 12, 16]]) { k.fillStyle = "#fff"; k.fillRect(i, j - 1, 1, 3); k.fillRect(i - 1, j, 3, 1); }   // sparkles
+    k.fillStyle = "#c0203a"; k.fillRect(cx + 2, 14, 3, 3); k.fillStyle = "#ff7a8a"; k.fillRect(cx + 2, 14, 1, 1);   // a ruby
+    k.fillStyle = "#1e7ad8"; k.fillRect(cx - 9, 22, 3, 3); k.fillStyle = "#9ad4ff"; k.fillRect(cx - 9, 22, 1, 1);   // a sapphire
+    for (const [i, j] of [[2, 31], [W - 4, 30], [5, 33]]) { k.fillStyle = "#4a2c04"; k.fillRect(i - 1, j - 1, 4, 3); k.fillStyle = "#f5c93a"; k.fillRect(i, j, 2, 1); }   // loose coins
+    GOLD_PILE = c; }
+  x.save(); x.imageSmoothingEnabled = false;
+  for (const [gx, gy] of map.goldPiles || []) { x.fillStyle = "rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(gx * T + 48, gy * T + 62, 46, 6, 0, 0, Math.PI * 2); x.fill(); x.drawImage(GOLD_PILE, gx * T, gy * T - 4, 96, 68); }
+  x.restore();
 }
 // Inside the Volcano: a web of glowing lava cracks across the floor, plus a soft blurry glow layer for the heat shimmer
 function makeVolcanoVeins(map) {
@@ -7801,7 +7814,7 @@ function collectBonusLeaf(vacuum, byPet) {   // vacuum: the Leaf Vacuum collecte
   const b = G.bonus, amt = Math.max(1, Math.round((b.amt || SETTINGS.bonusLeaf.leaves) * (vacuum || 1))); G.bonus = null;
   G.leaves += amt; updateHud(); if (!vacuum && !byPet) { addStat("grassTaps", 1); if ((G.leafTaps = (G.leafTaps || 0) + 1) >= 50) earnAch("luckyleaf"); }
   const px = b.x * T + 16, py = b.y * T + 14;
-  floatText(px, py - 6, (vacuum ? "Vroom! +" : "+") + amt + " 🍁", "#ffd34d", 1.6 * (G.speed || 1), true);   // the leaves you got: big, and it stays up long enough to read even at 2x or 3x speed
+  floatText(px, py - 6, (vacuum ? "Vroom! +" : "+") + amt + " 🍁", "#ffd34d", 1.6 * (G.speed || 1), "show");   // the leaves you got: big, and it stays up long enough to read even at 2x or 3x speed
   if (vacuum) { for (let i = 0; i < 10; i++) { const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 10; G.particles.push({ kind: "spark", x: px + Math.cos(a) * d, y: py + Math.sin(a) * d, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, t: 0, life: 0.3, col: "#e6f4ff" }); } Sound.play("place"); return; }
   for (let i = 0; i < 4; i++) G.particles.push({ kind: "leaf", x: px + (Math.random() - 0.5) * 14, y: py, t: 0, life: 0.55 + Math.random() * 0.2, sx: px, sy: py });
   burst(px, py, "#ffb347", 12);
@@ -9428,6 +9441,7 @@ function draw() {
   // robots
   const sorted = [...G.robots].sort((a, b) => rpos(a).y - rpos(b).y);
   for (const r of sorted) {
+    if (G.map.tunnel && inTunnel(r)) continue;   // inside the skull rock: completely out of sight
     const p = rpos(r), big = isHeavy(r);
     const sz = r.type === "megalodon" ? 104 : r.type === "clamtitan" ? 100 : r.type === "mantabot" ? 38 : r.type === "eelbot" ? 32 : r.type === "starfish" ? 30 : r.type === "starlet" ? 18 : r.type === "hermitkid" ? 20 : r.type === "octobot" || r.type === "anglerbot" || r.type === "crabclaw" || r.type === "clambot" || r.type === "hermitbot" || r.type === "barnaclebot" ? 30 : r.type === "seaturtle" ? 80 : r.type === "pufferbot" ? (r.puffT > 0 ? 74 : 56) : r.type === "subbot" || r.type === "divebot" ? 32 : r.type === "torpedo" ? 26 : r.type === "jellybot" ? 26 : r.type === "universetitan" || r.type === "thundertitan" || r.type === "superclanker" ? 100 : r.type === "sludgeleviathan" || r.type === "pharaohmachine" ? 80 : r.type === "skyblimp" ? 96 : r.type === "balloonbot" ? 32 : r.type === "paratrooper" || r.type === "balloonpilot" ? 22 : r.type === "planklayer" ? 28 : r.type === "cyclonegolem" ? 60 : r.type === "thunderbird" || r.type === "gustrunner" ? 24 : r.type === "staticbot" ? 30 : r.type === "superglaciergolem" ? 84 : r.type === "sandboss" || r.type === "pillartitan" || r.type === "volcanoheart" || r.type === "yetimech" || r.type === "glaciergolem" || r.type === "universegolem" ? 60 :
       r.type === "snowball" ? Math.min(44, 22 + (r.grown || 0) * 0.9) : r.type === "snowplow" ? 32 : r.type === "penguin" ? 24 : r.type === "icechunk" || r.type === "starchunk" ? 20 : big ? 56 : r.type === "magmacube" ? 36 : r.type === "magmasmall" ? 22 : r.type === "emberbat" ? 24 : r.type === "tank" ? 34 : r.type === "scout" ? 24 : r.type === "mini" ? 18 : r.type === "splitter" ? 32 : 28;
@@ -9748,7 +9762,7 @@ function draw() {
   for (const f of G.fx) {
     if (f.kind !== "text") continue;
     const a = Math.min(1, f.t / 0.4), rise = (f.life - f.t) * 18;
-    x.globalAlpha = a; x.font = f.big ? "700 22px 'Atkinson Hyperlegible', sans-serif" : "700 16px 'Atkinson Hyperlegible', sans-serif"; x.textAlign = "center";
+    x.globalAlpha = a; x.font = f.big === true ? "700 22px 'Atkinson Hyperlegible', sans-serif" : "700 16px 'Atkinson Hyperlegible', sans-serif"; x.textAlign = "center";
     x.lineWidth = 4; x.strokeStyle = "#16191d"; x.strokeText(f.text, f.x, f.y - rise); x.fillStyle = f.col; x.fillText(f.text, f.x, f.y - rise);
   }
   x.globalAlpha = 1;
@@ -9858,22 +9872,51 @@ let IX_TIME = 0;   // a clock for effects that run when no game is going
 // ---- Skull Island Lagoon: a huge skull-shaped rock the road tunnels through (drawn over the robots, so they disappear inside) ----
 let SKULL_ROCK = null;
 function drawSkullRock(x, t) {
-  if (!SKULL_ROCK) { const c = document.createElement("canvas"), W = t.w * T + 40, H = t.h * T + 30; c.width = W; c.height = H; const k = c.getContext("2d");
-    const cx = W / 2, top = -2, roadY = H - 8 - (t.h * T) / 2;   // the road runs through the middle row
-    k.fillStyle = "rgba(0,0,0,0.3)"; k.beginPath(); k.ellipse(cx + 6, H - 14, W / 2 - 14, 14, 0, 0, Math.PI * 2); k.fill();   // shadow
-    const g = k.createLinearGradient(0, top, 0, H); g.addColorStop(0, "#c4c8c2"); g.addColorStop(0.55, "#8e948e"); g.addColorStop(1, "#5e645e");
-    k.fillStyle = "#16191d"; k.beginPath(); k.roundRect(10, H * 0.45, W - 20, H * 0.55 - 4, 16); k.fill(); k.fillStyle = "#5e645e"; k.beginPath(); k.roundRect(13, H * 0.45 + 3, W - 26, H * 0.55 - 10, 14); k.fill();   // a solid rocky base, so robots in the tunnel are completely hidden
-    k.fillStyle = "#16191d"; k.beginPath(); k.ellipse(cx, top + 62, W / 2 - 6, 62, 0, Math.PI, 0); k.lineTo(W - 14, H - 26); k.quadraticCurveTo(cx, H - 6, 14, H - 26); k.closePath(); k.fill();
-    k.fillStyle = g; k.beginPath(); k.ellipse(cx, top + 64, W / 2 - 9, 60, 0, Math.PI, 0); k.lineTo(W - 17, H - 28); k.quadraticCurveTo(cx, H - 9, 17, H - 28); k.closePath(); k.fill();   // the skull dome and jaw
-    k.fillStyle = "rgba(255,255,255,0.25)"; k.beginPath(); k.ellipse(cx - 30, top + 30, 40, 16, -0.3, 0, Math.PI * 2); k.fill();   // shine
-    for (const ex of [cx - 36, cx + 36]) { k.fillStyle = "#0e1012"; k.beginPath(); k.ellipse(ex, top + 66, 20, 18, 0, 0, Math.PI * 2); k.fill(); k.fillStyle = "rgba(120,255,200,0.75)"; k.beginPath(); k.arc(ex, top + 70, 3, 0, Math.PI * 2); k.fill(); }   // dark eye sockets (with something glowing deep inside...)
-    k.fillStyle = "#16191d"; k.beginPath(); k.moveTo(cx, top + 84); k.lineTo(cx - 9, top + 100); k.lineTo(cx + 9, top + 100); k.closePath(); k.fill();   // nose
-    for (let i = -3; i <= 3; i++) { k.fillStyle = "#16191d"; k.fillRect(cx + i * 15 - 7, H - 46, 14, 18); k.fillStyle = "#ecece4"; k.fillRect(cx + i * 15 - 6, H - 45, 12, 16); }   // teeth
-    for (const side of [0, 1]) { const ax = side ? W - 20 : 20; k.fillStyle = "#16191d"; k.beginPath(); k.ellipse(ax, roadY, 18, 24, 0, 0, Math.PI * 2); k.fill(); k.fillStyle = "#050607"; k.beginPath(); k.ellipse(ax, roadY + 2, 14, 20, 0, 0, Math.PI * 2); k.fill(); }   // the tunnel openings where the road goes in and out
-    k.strokeStyle = "rgba(40,44,40,0.6)"; k.lineWidth = 2; k.beginPath(); k.moveTo(cx + 20, top + 14); k.lineTo(cx + 32, top + 34); k.lineTo(cx + 26, top + 44); k.moveTo(cx - 60, top + 40); k.lineTo(cx - 48, top + 52); k.stroke();   // cracks
-    for (const [mx, my] of [[cx - 50, top + 22], [cx + 52, top + 30], [cx - 10, top + 8], [cx + 70, top + 60]]) { k.fillStyle = "#4a8a4a"; k.fillRect(mx, my, 8, 4); k.fillStyle = "#6aaa5a"; k.fillRect(mx + 2, my - 2, 4, 2); }   // moss
+  if (!SKULL_ROCK) {   // pixel art: drawn on a tiny canvas (1 dot = 4 screen pixels), then blown up so it looks chunky like the robots
+    const P = 4, W = (t.w * T + 16) / P, H = (t.h * T + 8) / P, c = document.createElement("canvas"); c.width = W; c.height = H; const k = c.getContext("2d");
+    const roadY = ((t.y + t.h / 2 + 0.5 - 0.5) * T - 4 - t.y * T + T / 2) / P, cx = W / 2;   // the road row, in dots
+    const ell = (x0, y0, rx, ry, i, j) => ((i - x0) / rx) ** 2 + ((j - y0) / ry) ** 2 <= 1;
+    const hash = (i, j) => ((i * 73856093) ^ (j * 19349663)) >>> 0;
+    const BONE = ["#3a352c", "#6e6656", "#9c937e", "#c4bba3", "#e6dfc8"], ROCK = ["#1e2320", "#353d38", "#4c5650", "#66716a", "#808c84"];
+    const skull = (i, j) => ell(cx, 15, 15.5, 14.5, i, j) || (j >= 14 && j <= 30 && Math.abs(i - cx) <= 12 - Math.max(0, j - 24) * 0.6) || (j >= 27 && j <= 37 && Math.abs(i - cx) <= 9.5 - Math.max(0, j - 34) * 1.2);
+    const base = (i, j) => j >= roadY - 9 && ell(cx, H + 4, W / 2 + 1, H - roadY + 14, i, j);
+    const arch = (i, j) => (ell(1, roadY + 2, 6, 8.5, i, j) || ell(W - 2, roadY + 2, 6, 8.5, i, j)) && j <= roadY + 9;
+    const eye = (i, j) => ell(cx - 6.5, 18, 4.6, 4.2, i, j) || ell(cx + 6.5, 18, 4.6, 4.2, i, j);
+    const nose = (i, j) => j >= 23 && j <= 27 && Math.abs(i - cx + 0.5) <= (j - 22) * 0.55;
+    const mouth = (i, j) => (j === 29 || j === 34) && Math.abs(i - cx) <= 8;
+    const tooth = (i, j) => j >= 30 && j <= 33 && Math.abs(i - cx) <= 8;
+    const crack = new Set(["24,3", "25,4", "25,5", "26,6", "27,6", "27,7", "28,8", "13,7", "14,8", "14,9", "15,10", "33,22", "34,23"]);
+    const inside = (i, j) => (skull(i, j) || base(i, j)) && !arch(i, j);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const sk = skull(i, j), bs = base(i, j) && !sk, ar = arch(i, j);
+      if (ar && (base(i, j) || sk)) {   // the dark tunnel mouths, with a rim of rock
+        const rim = !arch(i - 1, j) || !arch(i + 1, j) || !arch(i, j - 1); k.fillStyle = rim ? "#121513" : (j > roadY + 5 ? "#0b0d0c" : "#020303"); k.fillRect(i, j, 1, 1); continue; }
+      if (!sk && !bs) continue;
+      const edge = !inside(i - 1, j) || !inside(i + 1, j) || !inside(i, j - 1) || !inside(i, j + 1);
+      const nx = (i - cx) / (W / 2), ny = (j - 12) / H, d = ((i + j) & 1) ? 0.07 : -0.07, n = (hash(i, j) % 100) / 100 - 0.5;
+      let l = 0.62 - nx * 0.45 - ny * 0.55 + d + n * 0.18;
+      const pal = sk ? BONE : ROCK; let col = pal[Math.max(0, Math.min(4, Math.floor(l * 5)))];
+      if (sk) {
+        if (eye(i, j)) { const deep = ell(cx - 6.5, 18.5, 3.2, 2.8, i, j) || ell(cx + 6.5, 18.5, 3.2, 2.8, i, j); col = deep ? "#050605" : "#17150f";
+          if ((i === Math.round(cx - 6.5) || i === Math.round(cx + 6.5)) && j === 19) col = "#7dffc8"; if ((i === Math.round(cx - 6.5) || i === Math.round(cx + 6.5)) && (j === 18 || j === 20)) col = "#2a8a64"; }   // glowing eyes deep inside
+        else if (nose(i, j)) col = "#100e0a";
+        else if (mouth(i, j)) col = "#100e0a";
+        else if (tooth(i, j)) col = (Math.round(i - cx) % 3 === 0) ? "#2a261e" : (j === 30 ? "#fffbe8" : j === 33 ? "#b6ad94" : "#efe8d2");
+        else if (crack.has(i + "," + j)) col = "#2a261e";
+        else if (ell(cx - 7, 8, 4, 2, i, j) && n > -0.2) col = "#f6f0dc";   // shine on the forehead
+        else if (j < 10 && hash(i, j) % 23 === 0) col = "#4f8a4a";   // moss
+        if (ell(cx - 6.5, 18, 5.6, 5.2, i, j) && !eye(i, j)) col = BONE[1];   // brow shadow ring
+      } else {
+        if (hash(i, j) % 17 === 0) col = ROCK[4]; if (j <= roadY - 6 && hash(i, j) % 7 === 0) col = "#3f7a3c"; if (hash(i, j) % 41 === 0) col = "#2f5d6a";   // pebbles, moss, little shells
+      }
+      if (edge) col = sk ? "#26221a" : "#101311";
+      k.fillStyle = col; k.fillRect(i, j, 1, 1);
+    }
+    for (const [i, j] of [[4, roadY - 10], [W - 6, roadY - 11], [W - 4, roadY - 10]]) { k.fillStyle = "#3f8a54"; k.fillRect(i, j - 4, 1, 5); k.fillRect(i + 1, j - 6, 1, 4); k.fillStyle = "#5fb070"; k.fillRect(i + 1, j - 6, 1, 1); }   // seaweed tufts
     SKULL_ROCK = c; }
-  x.imageSmoothingEnabled = false; x.drawImage(SKULL_ROCK, t.x * T - 20, (t.y + t.h) * T - SKULL_ROCK.height + 12);
+  x.save(); x.imageSmoothingEnabled = false;
+  x.fillStyle = "rgba(0,0,0,0.3)"; x.beginPath(); x.ellipse((t.x + t.w / 2) * T + 4, (t.y + t.h) * T + 2, t.w * T / 2 + 6, 10, 0, 0, Math.PI * 2); x.fill();
+  x.drawImage(SKULL_ROCK, t.x * T - 8, t.y * T - 4, SKULL_ROCK.width * 4, SKULL_ROCK.height * 4); x.restore();
 }
 // ---- Max-upgrade animations (a fully upgraded tower gets its own special look) ----
 const MAX_FX_KINDS = new Set(["wizard", "healer", "squirrel", "water", "plant", "crab", "pegasus", "hacked", "kraken", "nightowl", "wolf"]);
