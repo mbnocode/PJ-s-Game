@@ -8907,13 +8907,19 @@ function tickPrism(dt, ts) {
   if (G.beams) { G.beams.t += dt; if (G.beams.t > 0.8) G.beams = null; }
   if (!ts || ts.st !== "crystal" || !G.waveActive) return;
   const set = ts.set; G.prismT = (G.prismT ?? set.every) - dt; if (G.prismT > 0) return; G.prismT = set.every;
-  const links = prismLinks(); G.beams = { links, t: 0 }; Sound.play("laser");
-  const W = (set.width || 0.6) * T, hit = new Set();
+  const links = prismLinks(), W = (set.width || 0.6) * T, hit = new Set();
+  for (const t of G.towers) {   // every tower also fires a rainbow ray at the closest robot near it (so it works wherever your towers are)
+    const tx = t.x * T + 16, ty = t.y * T + 12, reach = (towerStats(t).range || 3) * T; let best = null, bd = 1e9;
+    for (const o of G.robots) { if (o.dead || o.under || o.spinning) continue; const q = rpos(o), d = Math.hypot(q.x - tx, q.y - ty); if (d <= reach && d < bd) { bd = d; best = o; } }
+    if (best) { const q = rpos(best); links.push([{ x: tx, y: ty }, { x: q.x, y: q.y - 6 }]); hit.add(best); }
+  }
+  G.beams = { links, t: 0 }; Sound.play("laser");
   for (const [a, b] of links) for (const o of G.robots) {
     if (o.dead || hit.has(o)) continue; const q = rpos(o), dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((q.x - a.x) * dx + (q.y - a.y) * dy) / L2));
     if (Math.hypot(q.x - (a.x + dx * k), q.y - (a.y + dy * k)) <= W) hit.add(o);
   }
-  for (const o of hit) { const q = rpos(o); burst(q.x, q.y, ["#ff6b6b", "#ffd34d", "#6bff9a", "#6bc4ff", "#c86bff"][Math.floor(Math.random() * 5)], 6); hurt(o, Math.min(set.max || 800, (set.damage || 100) + (o.maxHp || o.hp) * (set.part || 0)), true, false, "crystal"); }
+  for (const o of hit) { const q = rpos(o); burst(q.x, q.y, ["#ff6b6b", "#ffd34d", "#6bff9a", "#6bc4ff", "#c86bff"][Math.floor(Math.random() * 5)], 6); hurt(o, Math.min(set.max || 800, (set.damage || 100) + (o.maxHp || o.hp) * (set.part || 0)), true, false, "crystal");
+    if (!o.dead && set.slowBy) { o.slowT = Math.max(o.slowT || 0, set.slowSeconds || 2); o.slowBy = Math.max(o.slowBy || 0, isHeavy(o) ? set.slowBy / 2 : set.slowBy); } }   // dazzled by the rainbow light: slowed for a moment
   if (hit.size) floatText(320, 70, `🌈 Prism Beam! ${hit.size} robot${hit.size > 1 ? "s" : ""} zapped`, "#bfefff", 1);
 }
 // ---- Team Lava: Eruption ----
