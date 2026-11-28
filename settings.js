@@ -1253,6 +1253,33 @@ const SETTINGS = {
                 [["boss", 3, 4, 9000], ["seaturtle", 1, 0], [["clambot", "crabclaw", "starfish"], 20, 0.5]],   // 29
                 [["clamtitan", 1, 0], [["clambot", "crabclaw", "hermitbot", "starfish"], 24, 0.6]],   // 30: the TITAN CLAM
               ] },
+    // ---- Coming soon (World 2): Pirate Waters and Volcanic Vents. Their maps are designed; their waves aren't yet. ----
+    piratecove: { name: "Pirate Cove", world: 2, comingSoon: true, theme: "cove",   // (coming soon: the map is ready, the waves come later)
+              about: "A pirates' hideout on a sea floor covered in gold coins and treasure chests. The road is a wooden boardwalk that winds back and forth through the loot.",
+              path: [[0, 3], [5, 3], [5, 9], [9, 9], [9, 2], [14, 2], [14, 8], [17, 8]],
+              trees: [[15,  1],  [2,  6],  [11,  10],  [19,  1],  [6,  6],  [15,  10],  [10,  6],  [19,  10],  [5,  2]], mushrooms: [[1,  11],  [18,  6],  [5,  11],  [0,  7],  [9,  11]], tallGrass: [[17,  2],  [4,  7],  [13,  11],  [8,  7],  [17,  11],  [12,  7],  [7,  3]] },
+    skullisland: { name: "Skull Island Lagoon", world: 2, comingSoon: true, theme: "lagoon",   // (coming soon: the map is ready, the waves come later)
+              about: "A spooky, dark lagoon under Skull Island, full of skull-shaped rocks and old bones. Robots come from TWO factories on the left and meet in the middle.",
+              path: [[0, 2], [7, 2], [7, 6], [13, 6], [13, 10], [16, 10]],
+              extraPaths: [[[0,  10],  [4,  10],  [4,  6],  [7,  6]]],
+              trees: [[15,  6],  [2,  11],  [10,  2],  [19,  6],  [6,  11],  [14,  2],  [1,  7],  [10,  11],  [18,  2]], mushrooms: [[5,  7],  [14,  11],  [0,  3],  [9,  7],  [18,  11]], tallGrass: [[4,  3],  [8,  3],  [17,  7],  [12,  3],  [16,  3],  [3,  8],  [7,  8]] },
+    ghostship: { name: "The Ghost Ship", world: 2, comingSoon: true, theme: "ghost",   // (coming soon: the map is ready, the waves come later)
+              about: "The rotting deck of a ghost ship that sank long ago. Ghost lanterns glow green, cannons point every way, and the robots follow a trail of glowing ghost slime from the right.",
+              path: [[19, 10], [13, 10], [13, 6], [2, 6], [2, 1], [9, 1], [9, 4], [17, 4], [17, 1]],
+              trees: [[3,  2],  [7,  2],  [16,  6],  [3,  11],  [11,  2],  [7,  11],  [15,  2],  [2,  7],  [11,  11]], mushrooms: [[19,  2],  [6,  7],  [15,  11],  [1,  3],  [10,  7]], tallGrass: [[19,  11],  [5,  3],  [14,  7],  [18,  7],  [13,  3],  [0,  8],  [4,  8]] },
+    steamfields: { name: "Steam Fields", world: 2, comingSoon: true, theme: "steam",   // (coming soon: the map is ready, the waves come later)
+              about: "A sea floor of little vents puffing hot steam, crusted with yellow sulfur and giant tube worms. The road crosses over itself in the middle!",
+              path: [[0, 6], [14, 6], [14, 1], [6, 1], [6, 10], [17, 10], [17, 3]],
+              trees: [[8,  2],  [4,  11],  [12,  2],  [8,  11],  [3,  7],  [12,  11],  [7,  7],  [16,  11],  [2,  3]], mushrooms: [[11,  7],  [15,  7],  [10,  3],  [19,  7],  [1,  8]], tallGrass: [[18,  3],  [5,  8],  [0,  4],  [9,  8],  [4,  4],  [13,  8],  [3,  0]] },
+    blacksmoker: { name: "Black Smoker Canyon", world: 2, comingSoon: true, theme: "smoker",   // (coming soon: the map is ready, the waves come later)
+              about: "A deep canyon of black rock with glowing orange cracks and tall chimneys pouring black smoke. The road snakes up and down the canyon from the right.",
+              path: [[19, 5], [16, 5], [16, 1], [11, 1], [11, 10], [7, 10], [7, 2], [3, 2], [3, 8]],
+              trees: [[13,  2],  [0,  7],  [9,  11],  [17,  2],  [4,  7],  [13,  11],  [8,  7],  [17,  11],  [12,  7]], mushrooms: [[16,  7],  [15,  3],  [19,  3],  [6,  8],  [1,  4]], tallGrass: [[10,  8],  [5,  4],  [14,  8],  [0,  0],  [9,  4],  [18,  8],  [4,  0]] },
+    seavolcano: { name: "The Undersea Volcano", world: 2, comingSoon: true, theme: "seavolcano",   // (coming soon: the map is ready, the waves come later)
+              about: "The heart of the Volcanic Vents: black rock with red-hot magma glowing through the cracks. Robots come from BOTH sides and meet at your treehouse at the bottom.",
+              path: [[0, 5], [4, 5], [4, 9], [10, 9], [10, 7]],
+              extraPaths: [[[19,  5],  [15,  5],  [15,  9],  [10,  9]]],
+              trees: [[18,  2],  [5,  7],  [14,  11],  [0,  3],  [18,  11],  [4,  3],  [13,  7],  [8,  3],  [17,  7]], mushrooms: [[12,  3],  [16,  3],  [3,  8],  [7,  8],  [2,  4]], tallGrass: [[11,  8],  [6,  4],  [1,  0],  [10,  4],  [19,  8],  [5,  0],  [14,  4]] },
   },
 };
 /* ===================== end of PJ's settings ===================== */
