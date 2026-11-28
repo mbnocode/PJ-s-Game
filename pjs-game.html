@@ -5091,6 +5091,7 @@ function paintGround(x, map, factoryCount) {
   if (map.theme === "cove") drawGoldStacks(x, map);
   drawFactory(x, map);
   drawBase(x, map, false);
+  if (map.tunnel) drawSkullRock(x, map.tunnel);   // (also drawn again over the robots during a battle)
 }
 // The Ghost Ship: make the board look like the top deck of a ship (railings, a pointed bow, cargo hatches, a ship's wheel, ropes)
 function drawShipDeck(x, map) {
