@@ -2712,7 +2712,7 @@ const W2_SOON_AREAS = [
   { name: "The Abyss", col: "#4a5aa0", levels: [["twilightdrop", "Twilight Drop", "🔦"], ["midnighttrench", "The Midnight Trench", "🌑"], ["abyss", "The Abyss", "👁️"]] },
 ];
 // Pirate Waters, Volcanic Vents and Lost Atlantis zig-zag right-to-left across the middle of the water; then the trail climbs to The Abyss in the top-left corner
-const W2_SOON_SPOTS = [[935, 330], [840, 268], [745, 330], [645, 268], [550, 330], [455, 268], [355, 330], [258, 268], [160, 330], [190, 112], [310, 66], [430, 112]];
+const W2_SOON_SPOTS = [[935, 345], [840, 250], [745, 345], [645, 250], [550, 345], [455, 250], [355, 345], [258, 250], [160, 345], [215, 118], [345, 78], [475, 118]];   // (spread out so no circle or name sits on another)
 const W2_SOON = W2_SOON_AREAS.flatMap((ar, ai) => ar.levels.map(([look, nm], li) => { const i = ai * 3 + li; return { look, name: nm, area: ar.name, pos: [...W2_SOON_SPOTS[i], ar.col] }; }));
 // The Sunken Kingdom opens after you beat the Eye of the Storm (Normal or harder) AND collect enough stars in World 1.
 function stormBeaten(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
@@ -2856,7 +2856,7 @@ function drawWorldMap2() {
   { const [a, b] = areaMid(3);   // The Abyss: a pit of darkness up in the corner, with something glowing inside
     x.fillStyle = rad(a, b, 4, 150, [[0, "rgba(0,0,10,0.85)"], [0.6, "rgba(0,0,20,0.5)"], [1, "rgba(0,0,20,0)"]]); x.beginPath(); x.ellipse(a, b, 160, 68, 0, 0, Math.PI * 2); x.fill();
     for (const [c2, d] of [[a - 14, b + 40], [a + 14, b + 44]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(c2, d, 2.6, 0, Math.PI * 2); x.fill(); } }   // something glowing in the dark…
-  W2_SOON_AREAS.forEach((ar, ai) => { const [a, b] = areaMid(ai), ly = ai === 3 ? 22 : ai === 2 ? 168 : 222;   // each area's name
+  W2_SOON_AREAS.forEach((ar, ai) => { const [a, b] = areaMid(ai), ly = ai === 3 ? 20 : 178;   // each area's name
     x.font = "bold 15px 'Atkinson Hyperlegible', sans-serif"; x.textAlign = "center"; x.lineWidth = 4; x.strokeStyle = "rgba(4,14,40,0.75)"; x.strokeText(ar.name, a, ly); x.fillStyle = ar.col; x.fillText(ar.name, a, ly);
     x.font = "11px 'Atkinson Hyperlegible', sans-serif"; x.lineWidth = 3; x.strokeText("coming soon", a, ly + 14); x.fillStyle = "#dfe8f0"; x.fillText("coming soon", a, ly + 14); });
   // the trail between the levels
