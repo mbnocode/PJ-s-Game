@@ -431,8 +431,8 @@ const SETTINGS = {
     galaxy:  { name: "Cosmic Power", about: "Does double damage, attacks 15% faster, reaches half a square farther, and sees Hiders.", damageTimes: 2, speedTimes: 1.15, rangePlus: 0.5, vision: true },
   },
 
-  // Team skin upgrades: when EVERY tower on the board wears this skin (and there are at least minTowers towers), the whole team gets this.
-  teamSkinCount: 10,   // a team power also turns on when this many towers on the board wear that skin (even if other towers don't)
+  // Team skin upgrades: when this skin is EQUIPPED on teamSkinCount (10) different towers, you get this for the whole level. (minTowers is no longer used.)
+  teamSkinCount: 10,   // a team power is on (for the whole level) when this many DIFFERENT towers have that skin equipped
   skinSets: {
     candy:   { name: "Sugar Storm", icon: "🍬", color: "#ff9ad8", about: "Every wave starts with a candy shower that gives you 25 bonus Maple Leaves.", minTowers: 4, leaves: 25 },
     gold:    { name: "Treasure Rain", icon: "💰", color: "#ffd34d", about: "Robots drop double Golden Acorns.", minTowers: 4, acornTimes: 2 },

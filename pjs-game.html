@@ -909,7 +909,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <div class="skin-odds" id="skin-odds"></div>
     <div class="skin-focus-note" id="skin-focus-note" hidden></div>
     <details class="skin-buffs" id="skin-buffs" open><summary>✨ Skin buffs: what each skin does</summary><div id="skin-buffs-list"></div></details>
-    <details class="skin-buffs" id="team-skins" open><summary>🤝 Team skin upgrades: when 10 of your towers match (or all of them)</summary><div id="team-skins-list"></div></details>
+    <details class="skin-buffs" id="team-skins" open><summary>🤝 Team skin upgrades: equip the same skin on 10 different towers</summary><div id="team-skins-list"></div></details>
     <div class="wear-all" id="wear-all"></div>
     <div class="sell-all-row"><button class="go" id="b-sell-all" hidden></button><span id="sell-all-msg" role="status"></span></div>
     <p class="muted">Tap a look to put it on that tower. You find Golden looks and Tower Skins in the Mystery Box (on the Upgrades page). Got a duplicate skin? Sell the extra: Common 50, Uncommon 100, Rare 150, Epic 250, Legendary 350, Mythic 500 Golden Acorns.</p>
@@ -6523,7 +6523,7 @@ function renderSkins() {
       s.box.look = s.box.look || {}; let n = 0; for (const k of towers) if (st === "normal" || ownedLooks(s, k)[st]) { s.box.look[k] = st; n++; }
       saveSlots(slots); Sound.play("upgrade"); renderSkins(); $("sell-all-msg").textContent = st === "normal" ? "All towers are back to their normal look." : `${nm} is on ${n} tower${n === 1 ? "" : "s"}!`; }; });
   }
-  $("team-skins-list").innerHTML = Object.entries(SETTINGS.skinSets || {}).map(([st, set]) => `<div class="sb-row"><b style="color:${RARITY_COLORS[lookRarity(st)]}">Team ${lookName(st)}</b> <span class="sb-n">${set.name}</span> ${set.about} <span class="muted">(10 or more towers on the board wear ${lookName(st)}, or every tower does with at least ${set.minTowers || 4}.)</span></div>`).join("");
+  $("team-skins-list").innerHTML = Object.entries(SETTINGS.skinSets || {}).map(([st, set]) => `<div class="sb-row"><b style="color:${RARITY_COLORS[lookRarity(st)]}">Team ${lookName(st)}</b> <span class="sb-n">${set.name}</span> ${set.about} <span class="muted">(Equip ${lookName(st)} on ${SETTINGS.teamSkinCount ?? 10} different towers. You have ${teamSkinEquipped(st)}.)</span></div>`).join("");
   $("skin-odds").innerHTML = `<b>Chance in each Mystery Box:</b> ` + skinOdds().map((o) => `<span class="odd r-${o.rar.toLowerCase()}">${o.n} ${o.p}<small>${o.rar}</small></span>`).join("");
   $("skins-count").innerHTML = `✨ ${got} / ${all} looks found · <span class="ga" aria-label="Golden Acorns"></span> ${s.acorns || 0} Golden Acorns` + (dups ? ` · ${dups} duplicate${dups > 1 ? "s" : ""} to sell` : "");
 }
@@ -8841,12 +8841,12 @@ function update(dt) {
 }
 // Team skin upgrades (SETTINGS.skinSets): when every tower on the board wears the same skin (and there are enough towers), the team gets a bonus.
 function lookName(st) { const l = LOOKS.find(([k]) => k === st); return l ? l[1] : st; }
-// A skin's team power turns on when 10 or more towers on the board wear it (teamSkinCount), OR when every tower on the board wears it (with at least minTowers).
-// More than one team power can be on at the same time (like 10 Galaxy towers and 10 Lava towers).
+// A skin's team power is on for the whole level when you have that skin EQUIPPED on enough DIFFERENT towers (teamSkinCount, 10).
+// It doesn't matter how many towers you place. More than one team power can be on at once (like 10 Galaxy towers and 10 Lava towers equipped).
+function teamSkinEquipped(st) { let n = 0; for (const k of TOWER_ORDER) if (towerSkin(k) === st) n++; return n; }
 function teamSkin(st) {
-  const set = (SETTINGS.skinSets || {})[st]; if (!G || !set || !G.towers.length) return null;
-  let n = 0; for (const t of G.towers) if (towerSkin(t.kind) === st) n++;
-  return n >= (SETTINGS.teamSkinCount ?? 10) || (n === G.towers.length && n >= (set.minTowers || 4)) ? { st, set } : null;
+  const set = (SETTINGS.skinSets || {})[st]; if (!G || !set) return null;
+  return teamSkinEquipped(st) >= (SETTINGS.teamSkinCount ?? 10) ? { st, set } : null;
 }
 function teamHas(st) { return !!(G && G.teams && G.teams.has(st)); }
 function tickTeamSkin(dt) {
