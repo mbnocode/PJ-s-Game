@@ -1259,7 +1259,8 @@ const SETTINGS = {
               path: [[0, 3], [5, 3], [5, 9], [9, 9], [9, 2], [14, 2], [14, 8], [17, 8]],
               trees: [[15,  1],  [2,  6],  [11,  10],  [19,  1],  [6,  6],  [15,  10],  [10,  6],  [19,  10],  [5,  2]], mushrooms: [[1,  11],  [18,  6],  [5,  11],  [0,  7],  [9,  11]], tallGrass: [[17,  2],  [4,  7],  [13,  11],  [8,  7],  [17,  11],  [12,  7],  [7,  3]] },
     skullisland: { name: "Skull Island Lagoon", world: 2, comingSoon: true, theme: "lagoon",   // (coming soon: the map is ready, the waves come later)
-              about: "A spooky, dark lagoon under Skull Island, full of skull-shaped rocks and old bones. Robots come from TWO factories on the left and meet in the middle.",
+              tunnel: { x: 8, y: 5, w: 5, h: 3 },   // the giant skull rock in the middle: robots inside its tunnel can't be hit
+              about: "A spooky, dark lagoon under Skull Island, full of skull-shaped rocks and old bones. Robots come from TWO factories on the left, meet in the middle and walk THROUGH a giant skull rock, where your towers can't hit them!",
               path: [[0, 2], [7, 2], [7, 6], [13, 6], [13, 10], [16, 10]],
               extraPaths: [[[0,  10],  [4,  10],  [4,  6],  [7,  6]]],
               trees: [[15,  6],  [2,  11],  [10,  2],  [19,  6],  [6,  11],  [14,  2],  [1,  7],  [10,  11],  [18,  2]], mushrooms: [[5,  7],  [14,  11],  [0,  3],  [9,  7],  [18,  11]], tallGrass: [[4,  3],  [8,  3],  [17,  7],  [12,  3],  [16,  3],  [3,  8],  [7,  8]] },
