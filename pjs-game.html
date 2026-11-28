@@ -360,7 +360,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .mappv-box .btns { display: flex; gap: 10px; flex-wrap: wrap; }
 .mappv-box .x { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 22px; line-height: 1; z-index: 1; }
 .worldmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: auto; }
-.worldmap.w2 { aspect-ratio: 1000 / 680; width: min(100%, calc((100vh - 210px) * 1000 / 680), 2000px); width: min(100%, calc((100dvh - 210px) * 1000 / 680), 2000px); }   /* the Sunken Kingdom map is taller, to fit all its levels */
+.worldmap.w2 .wm-node .nm { white-space: normal; max-width: 8.5em; text-align: center; line-height: 1.05; }   /* (the Sunken Kingdom has long names: let them wrap so they don't bump into each other) */
 .worldmap canvas[hidden] { display: none; }
 .world-tabs { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; margin: -6px 0 8px; }
 .world-tabs[hidden] { display: none; }
@@ -405,7 +405,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
 .wm-node.soon { cursor: default; opacity: .8; } .wm-node.soon .dot { --c: #8a8ea0 !important; border-style: dashed; }
 .wm-node.here .dot { animation: wm-pulse 1.2s ease-in-out infinite; }
 @keyframes wm-pulse { 50% { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.22), 0 0 0 2px #fff, 0 0 0 4px #16191d, 0 5px 0 #16191d, 0 0 0 10px rgba(255,211,77,.55); } }
-@media (max-width: 560px) { .wm-node .nm { display: none; } }
+@media (max-width: 560px) { .wm-node .nm { display: none; } .worldmap.w2 .wm-node .dot { width: 19px; height: 19px; font-size: 10px; border-width: 2px; } .worldmap.w2 .wm-node .dot .ic { display: none; } }   /* (phones: smaller circles on the Sunken Kingdom map, so they don't touch) */
 .choices { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .choices button[aria-pressed="true"] { background: var(--moss-dark); border-color: var(--moss); }
 .choices button.lvtab { background: linear-gradient(to bottom, color-mix(in srgb, var(--tab) 80%, #fff), var(--tab) 55%); border: 2px solid var(--tab2); color: var(--tab-ink); box-shadow: 0 3px 0 var(--tab2); text-shadow: none; opacity: 0.88; }   /* leaderboard level buttons: the color of the level's terrain */
@@ -800,7 +800,7 @@ button.link { background: none; border: none; box-shadow: none; color: var(--mut
     <h2>Pick a level</h2>
     <p class="muted" id="slot-time" style="margin-top:-14px"></p>
     <div class="world-tabs" id="world-tabs" hidden><button id="wt-1" type="button">🌳 Home World</button><button id="wt-2" type="button">🌊 Sunken Kingdom</button><button class="link" id="wt-replay" type="button" title="Watch the journey to the Sunken Kingdom again">▶ Replay the journey</button></div>
-    <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas><canvas id="worldmap-art2" width="2000" height="1360" aria-hidden="true" hidden></canvas>
+    <div class="worldmap" id="worldmap"><canvas id="worldmap-art" width="2000" height="900" aria-hidden="true"></canvas><canvas id="worldmap-art2" width="2000" height="900" aria-hidden="true" hidden></canvas>
       <button class="wm-moon" id="wm-moon" type="button" aria-label="The Moon"><canvas id="wm-moon-art" width="96" height="96"></canvas><span class="wm-moon-say" id="wm-moon-say"></span></button></div>
     <div class="row" id="levels-buttons"><button class="go" id="b-perks">Upgrades</button><button class="go" id="b-towers">Towers</button><button class="go" id="b-enemies">Enemies</button><button class="go" id="b-achievements">Achievements</button><button class="go" id="b-skins">Skins</button><button id="b-join">Join a friend's challenge</button><button id="b-boards">Leaderboards</button><button id="b-settings-levels">Settings</button></div>
     <div class="mappv" id="mappv" role="dialog" aria-modal="true" aria-labelledby="mappv-name" hidden>
@@ -2702,8 +2702,10 @@ function drawUnderwater(x) {
   x.globalAlpha = 1;
 }
 // World 2 bookkeeping
-const W2_TOP = 230, W2_H = 680;   // the Sunken Kingdom map is taller than the Home World's: the sea floor (with the open levels) is at the bottom, the coming-soon areas fill the water above
-const W2_MAP = { coralreef: [150, 340 + W2_TOP, "#ff8fb0"], kelpforest: [340, 262 + W2_TOP, "#5fc08a"], clambay: [490, 372 + W2_TOP, "#f0c8e8"] };
+// The Sunken Kingdom map, like the Home World's: the levels go left to right, and the trail slowly sinks deeper into the sea as it goes
+const W2_H = 450;
+const W2_PATH = Array.from({ length: 15 }, (_, i) => [Math.round(50 + i * 64.3), Math.round(105 + i * 18 + (i % 2 ? 40 : -40))]);
+const W2_MAP = { coralreef: [...W2_PATH[0], "#ff8fb0"], kelpforest: [...W2_PATH[1], "#5fc08a"], clambay: [...W2_PATH[2], "#f0c8e8"] };
 // Coming soon, in order: four areas of three levels each. The trail runs from the Giant Clam Bay up into the water and zig-zags right-to-left.
 const W2_SOON_AREAS = [
   { name: "Pirate Waters", col: "#c9a23a", levels: [["piratecove", "Pirate Cove", "💰"], ["skullisland", "Skull Island Lagoon", "💀"], ["ghostship", "The Ghost Ship", "👻"]] },
@@ -2711,8 +2713,7 @@ const W2_SOON_AREAS = [
   { name: "Lost Atlantis", col: "#5ae0d0", levels: [["atlantisgates", "Atlantis Gates", "🔱"], ["crystalpalace", "The Crystal Palace", "💎"], ["atlantisthrone", "The Throne of Atlantis", "👑"]] },
   { name: "The Abyss", col: "#4a5aa0", levels: [["twilightdrop", "Twilight Drop", "🔦"], ["midnighttrench", "The Midnight Trench", "🌑"], ["abyss", "The Abyss", "👁️"]] },
 ];
-// Pirate Waters, Volcanic Vents and Lost Atlantis zig-zag right-to-left across the middle of the water; then the trail climbs to The Abyss in the top-left corner
-const W2_SOON_SPOTS = [[935, 345], [840, 250], [745, 345], [645, 250], [550, 345], [455, 250], [355, 345], [258, 250], [160, 345], [215, 118], [345, 78], [475, 118]];   // (spread out so no circle or name sits on another)
+const W2_SOON_SPOTS = W2_PATH.slice(3);   // (after the 3 open levels)
 const W2_SOON = W2_SOON_AREAS.flatMap((ar, ai) => ar.levels.map(([look, nm], li) => { const i = ai * 3 + li; return { look, name: nm, area: ar.name, pos: [...W2_SOON_SPOTS[i], ar.col] }; }));
 // The Sunken Kingdom opens after you beat the Eye of the Storm (Normal or harder) AND collect enough stars in World 1.
 function stormBeaten(s = slot()) { const b = (s && s.best && s.best.storm) || {}; return !!(b.normal || b.hard || b.nightmare); }
@@ -2740,110 +2741,76 @@ $("wt-replay").onclick = () => { Sound.init(); seaTravel(() => setWorld(2)); };
 // sunken city on the right, with light pouring down from the surface and the dark Abyss beyond.
 function drawWorldMap2() {
   const c = $("worldmap-art2"); if (!c || c.dataset.drawn) return; c.dataset.drawn = "1";
-  const x = c.getContext("2d"), W = 1000, H = W2_H; x.scale(2, 2);
+  const x = c.getContext("2d"), W = 1000, H = 450; x.scale(2, 2);
   let sd = 11; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const lin = (x0, y0, x1, y1, st) => { const g = x.createLinearGradient(x0, y0, x1, y1); st.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
   const rad = (cx, cy, r0, r1, st) => { const g = x.createRadialGradient(cx, cy, r0, cx, cy, r1); st.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
-  // the water: bright near the surface, deep blue below, and darker toward the Abyss on the right
-  x.fillStyle = lin(0, 0, 0, H, [[0, "#5fd0f0"], [0.25, "#2a9ad0"], [0.6, "#14609a"], [1, "#0a2f5a"]]); x.fillRect(0, 0, W, H);
-  x.fillStyle = lin(0, 0, W, 0, [[0, "rgba(0,0,0,0)"], [0.7, "rgba(0,0,0,0)"], [1, "rgba(4,10,40,0.55)"]]); x.fillRect(0, 0, W, H);
-  // the surface far above: a shimmering ceiling of light
-  for (let k = 0; k < 40; k++) { const a = R() * W, b = 4 + R() * 26, w = 20 + R() * 50; x.strokeStyle = `rgba(230,250,255,${0.25 + R() * 0.3})`; x.lineWidth = 2; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w / 2, b - 4, a + w, b); x.stroke(); }
-  // sunbeams slanting down through the water
+  // the water: bright and sunny on the left (the shallows), getting deeper and darker to the right (the Abyss)
+  x.fillStyle = lin(0, 0, W, 0, [[0, "#64d4f2"], [0.25, "#2a9ad0"], [0.5, "#16649e"], [0.75, "#0a2f5a"], [1, "#030b1e"]]); x.fillRect(0, 0, W, H);
+  x.fillStyle = lin(0, 0, 0, H, [[0, "rgba(255,255,255,0.12)"], [1, "rgba(0,0,30,0.3)"]]); x.fillRect(0, 0, W, H);
+  for (let k = 0; k < 34; k++) { const a = R() * 620, b = 4 + R() * 22, w = 20 + R() * 50; x.strokeStyle = `rgba(230,250,255,${(0.25 + R() * 0.3) * (1 - a / 700)})`; x.lineWidth = 2; x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + w / 2, b - 4, a + w, b); x.stroke(); }   // the surface shimmering above the shallows
   x.save(); x.globalCompositeOperation = "lighter";
-  for (let k = 0; k < 9; k++) { const bx = 30 + k * 105 + R() * 30; x.fillStyle = lin(0, 0, 0, H, [[0, "rgba(200,240,255,0.22)"], [0.8, "rgba(200,240,255,0)"]]);
+  for (let k = 0; k < 7; k++) { const bx = 10 + k * 95 + R() * 30, f = Math.max(0, 1 - bx / 650); x.fillStyle = lin(0, 0, 0, H, [[0, `rgba(200,240,255,${0.24 * f})`], [0.8, "rgba(200,240,255,0)"]]);   // sunbeams (fading out as the sea gets deeper)
     x.beginPath(); x.moveTo(bx, 0); x.lineTo(bx + 26, 0); x.lineTo(bx + 120, H); x.lineTo(bx + 70, H); x.closePath(); x.fill(); }
   x.restore();
-  // ---- the sea floor and everything on it: drawn as before, just lower down (inside the old 450-tall map) ----
-  x.save(); x.translate(0, W2_TOP);
-  { const H = 450;
-  // far-away rock spires and a whale swimming in the distance
-  x.fillStyle = "rgba(20,70,120,0.55)";
-  for (const [a, w, h] of [[60, 70, 130], [300, 90, 110], [610, 70, 150], [700, 120, 100], [880, 90, 170]]) { x.beginPath(); x.moveTo(a, H); x.lineTo(a + w * 0.3, H - h); x.lineTo(a + w * 0.5, H - h + 20); x.lineTo(a + w * 0.7, H - h - 10); x.lineTo(a + w, H); x.fill(); }
-  x.fillStyle = "rgba(15,50,95,0.6)"; x.beginPath(); x.ellipse(640, 225, 70, 16, -0.05, 0, Math.PI * 2); x.fill();
-  x.beginPath(); x.moveTo(575, 227); x.lineTo(548, 209); x.lineTo(552, 227); x.lineTo(548, 245); x.fill(); x.beginPath(); x.ellipse(650, 239, 16, 5, 0.5, 0, Math.PI * 2); x.fill();
-  // Two regions: the SUNNY SHALLOWS on the left (the Coral Reef, the Kelp Forest and the Giant Clam Bay all on one sandy, sunlit sea floor),
-  // and THE DEEP on the right (dark gray stone, in darker water, on the way to the coming-soon areas)
-  { const g = x.createLinearGradient(0, -120, 0, 60); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,1)"); x.save(); x.fillStyle = lin(560, 0, 760, 0, [[0, "rgba(4,14,40,0)"], [1, "rgba(4,14,40,0.38)"]]); x.fillRect(560, 60, 440, H - 60);
-    for (let k = 0; k < 18; k++) { x.globalAlpha = (k + 1) / 19; x.fillRect(560, -120 + k * 10, 440, 10); } x.restore(); }   // (fades in from above, so there's no line)   // the water gets deeper and darker on the right
-  x.save(); x.globalCompositeOperation = "lighter"; x.fillStyle = rad(280, 120, 20, 380, [[0, "rgba(255,240,180,0.22)"], [1, "rgba(255,240,180,0)"]]); x.fillRect(0, -W2_TOP, 640, H + W2_TOP); x.restore();   // warm sunlight over the shallows
-  const floor = (x0, x1, top, fill, amp) => { x.fillStyle = fill; x.beginPath(); x.moveTo(x0, H); for (let px = x0; px <= x1; px += 6) x.lineTo(px, top + Math.sin(px / 41) * amp + Math.sin(px / 17) * amp * 0.4); x.lineTo(x1, H); x.closePath(); x.fill(); };
-  floor(0, 590, 300, lin(0, 300, 0, H, [[0, "#eedc9e"], [1, "#b8a068"]]), 12);   // one big sandy floor for all three shallow levels
-  floor(570, 1000, 300, lin(0, 300, 0, H, [[0, "#6e7e8a"], [1, "#323e4a"]]), 12);
-  for (let k = 0; k < 40; k++) { x.fillStyle = R() < 0.5 ? "#f8ecc0" : "#d8c48a"; x.fillRect(R() * 570, 330 + R() * 110, 3, 2); }   // sand sparkles
-  for (let k = 0; k < 14; k++) { const a = 20 + R() * 540, b = 345 + R() * 90; x.strokeStyle = R() < 0.5 ? "#3fae6a" : "#5fd08a"; x.lineWidth = 2; for (let j = -1; j <= 1; j++) { x.beginPath(); x.moveTo(a + j * 3, b); x.quadraticCurveTo(a + j * 5, b - 8, a + j * 6 + 2, b - 14); x.stroke(); } }   // sea grass tufts all across the shallows
-  for (const [a, b] of [[440, 345], [555, 356], [250, 420]]) { x.fillStyle = "#ff8fb0"; x.beginPath(); x.arc(a, b, 6, Math.PI, 0); x.fill(); x.fillStyle = "#ffd0dc"; x.fillRect(a - 1, b - 5, 2, 2); }   // little corals near the clams too
-  for (const bx of [580]) { x.fillStyle = lin(bx - 16, 0, bx + 16, 0, [[0, "rgba(255,255,255,0)"], [0.5, "rgba(255,255,255,0.12)"], [1, "rgba(255,255,255,0)"]]); x.fillRect(bx - 16, 290, 32, H - 290); }
-  // ---- the coral reef ----
+  // a whale far away
+  x.fillStyle = "rgba(15,50,95,0.55)"; x.beginPath(); x.ellipse(560, 70, 66, 15, -0.05, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(498, 72); x.lineTo(472, 55); x.lineTo(476, 72); x.lineTo(472, 89); x.fill();
+  // the sea floor slopes down to the right, through five areas, and drops into a trench at the Abyss
+  const fy = (px) => px < 800 ? 236 + px * 0.2 + Math.sin(px / 41) * 7 + Math.sin(px / 17) * 3 : 396 + (px - 800) * 0.75 + Math.sin(px / 23) * 4;
+  const floorPart = (x0, x1, top, bot) => { x.fillStyle = lin(0, fy(x0) - 20, 0, H, [[0, top], [1, bot]]); x.beginPath(); x.moveTo(x0, H); for (let px = x0; px <= x1; px += 4) x.lineTo(px, fy(px)); x.lineTo(x1, H); x.closePath(); x.fill(); };
+  const AREA = [[0, 212], [212, 405], [405, 597], [597, 790], [790, 1000]];
+  floorPart(0, 214, "#eedc9e", "#b8a068");         // the Sunny Shallows: warm sand
+  floorPart(212, 407, "#c8a86a", "#6a5430");       // Pirate Waters: darker sand
+  floorPart(405, 599, "#3a3036", "#140e12");       // Volcanic Vents: black volcanic rock
+  floorPart(597, 792, "#c8d8dc", "#6a7c84");       // Lost Atlantis: pale marble
+  floorPart(790, 1000, "#141826", "#03050c");      // The Abyss: the edge of a black trench
+  // ---- the Sunny Shallows: corals, kelp and a giant clam ----
   const branchy = (a, b, s, col, tip) => { x.strokeStyle = col; x.lineCap = "round";
     const grow = (px, py, ang, len, w, d) => { const ex = px + Math.cos(ang) * len, ey = py + Math.sin(ang) * len; x.lineWidth = w; x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke();
       if (d > 0) { grow(ex, ey, ang - 0.45 - R() * 0.2, len * 0.72, w * 0.7, d - 1); grow(ex, ey, ang + 0.45 + R() * 0.2, len * 0.72, w * 0.7, d - 1); } else { x.fillStyle = tip; x.beginPath(); x.arc(ex, ey, w * 0.9, 0, Math.PI * 2); x.fill(); } };
-    grow(a, b, -Math.PI / 2, 14 * s, 4 * s, 3); };
-  for (const [a, b, s, col, tip] of [[40, 330, 1.2, "#ff6f91", "#ffd0dc"], [110, 360, 1, "#ff9a3c", "#ffe0a0"], [230, 335, 1.3, "#c86ad0", "#f0c8ff"], [300, 380, 0.9, "#ff6f91", "#ffd0dc"], [160, 410, 1.1, "#ffd34d", "#fff6c0"], [60, 425, 0.9, "#4fd1b8", "#c8fff4"]]) branchy(a, b, s, col, tip);
-  for (const [a, b, r, col] of [[85, 340, 14, "#e88a5a"], [270, 360, 16, "#d8a05a"], [200, 395, 12, "#e86a8a"], [330, 420, 13, "#c87ac8"]]) {   // brain corals
-    x.fillStyle = col; x.beginPath(); x.ellipse(a, b, r, r * 0.7, 0, Math.PI, 0); x.fill(); x.strokeStyle = "rgba(0,0,0,0.25)"; x.lineWidth = 1.5;
-    for (let k = 0; k < 4; k++) { x.beginPath(); x.arc(a, b, r * (0.3 + k * 0.17), Math.PI * 1.1, Math.PI * 1.9); x.stroke(); } }
-  for (const [a, b] of [[130, 300], [190, 318]]) { x.strokeStyle = "#a84ad0"; x.lineWidth = 1.2; for (let k = 0; k < 9; k++) { x.beginPath(); x.moveTo(a, b + 20); x.lineTo(a - 18 + k * 4.5, b - 6 + Math.abs(k - 4) * 3); x.stroke(); } }   // sea fans
-  // ---- the kelp forest: tall swaying kelp ----
-  for (let k = 0; k < 14; k++) { const a = 258 + k * 13 + R() * 8, h = 130 + R() * 130, b = 330 + R() * 50, ph = R() * 6;
-    x.strokeStyle = k % 3 ? "#3f7a2e" : "#5a9a3e"; x.lineWidth = 3; x.beginPath(); x.moveTo(a, b);
-    for (let j = 0; j <= h; j += 10) x.lineTo(a + Math.sin(j / 30 + ph) * 8, b - j); x.stroke();
-    x.fillStyle = "#6aaa3e"; for (let j = 20; j < h; j += 22) { const px = a + Math.sin(j / 30 + ph) * 8, py = b - j; x.beginPath(); x.ellipse(px + 6, py, 7, 2.5, 0.5, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(px - 6, py - 10, 7, 2.5, -0.5, 0, Math.PI * 2); x.fill(); }
-    x.fillStyle = "#c8a83a"; x.beginPath(); x.arc(a + Math.sin(h / 30 + ph) * 8, b - h, 3, 0, Math.PI * 2); x.fill(); }
-  // ---- the deep: dark rocks and a few lost treasures on the stone floor (the way to the coming-soon areas) ----
-  for (const [a, w, h] of [[640, 60, 40], [760, 90, 55], [900, 70, 45], [960, 50, 30]]) { x.fillStyle = "#2a343e"; x.beginPath(); x.moveTo(a, 330); x.lineTo(a + w * 0.3, 330 - h); x.lineTo(a + w * 0.7, 330 - h + 8); x.lineTo(a + w, 330); x.fill(); x.fillStyle = "#3a4652"; x.beginPath(); x.moveTo(a, 330); x.lineTo(a + w * 0.3, 330 - h); x.lineTo(a + w * 0.4, 330); x.fill(); }
-  for (const [a, b] of [[700, 360], [880, 400], [960, 370]]) { x.fillStyle = "#8a5a2a"; x.fillRect(a, b, 18, 11); x.fillStyle = "#ffd34d"; x.fillRect(a + 2, b - 3, 14, 4); x.fillRect(a + 7, b + 3, 4, 4); }   // treasure!
-  for (let k = 0; k < 24; k++) { x.fillStyle = R() < 0.5 ? "#4f8a6a" : "#3f7a5a"; x.fillRect(640 + R() * 360, 300 + R() * 140, 3, 2); }   // moss
-  // ---- The Giant Clam Bay: a huge open clam with a glowing pearl ----
-  { const a = 490, b = 405; x.fillStyle = "rgba(255,255,255,0.15)"; x.beginPath(); x.ellipse(a, b + 10, 70, 14, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = "#c8a0c8"; x.beginPath(); x.ellipse(a, b, 50, 20, 0, 0, Math.PI); x.fill();   // the bottom shell
-    x.save(); x.translate(a, b); x.rotate(-0.35); x.fillStyle = "#e8c4e4"; x.beginPath(); x.ellipse(0, 0, 50, 32, 0, Math.PI, Math.PI * 2); x.fill();
-    x.strokeStyle = "#b890b8"; x.lineWidth = 2.5; for (let k = -4; k <= 4; k++) { x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.sin(k * 0.33) * 48, -Math.cos(k * 0.33) * 30); x.stroke(); } x.restore();   // the lid, lifted, with ridges
-    x.fillStyle = rad(a, b - 6, 2, 30, [[0, "rgba(255,255,255,0.95)"], [0.4, "rgba(255,230,250,0.6)"], [1, "rgba(255,200,240,0)"]]); x.beginPath(); x.arc(a, b - 6, 30, 0, Math.PI * 2); x.fill();
-    x.fillStyle = "#ffffff"; x.beginPath(); x.arc(a, b - 6, 9, 0, Math.PI * 2); x.fill(); }
-  for (const [a, b] of [[420, 420], [560, 428], [530, 392]]) { x.fillStyle = "#f0c8dc"; x.beginPath(); x.arc(a, b, 5, Math.PI, 0); x.fill(); }   // little shells
-  // fish: schools of little fish, a turtle and a jellyfish
-  const fish = (a, b, s, col, dir) => { x.fillStyle = col; x.beginPath(); x.ellipse(a, b, 6 * s, 3 * s, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(a - dir * 5 * s, b); x.lineTo(a - dir * 10 * s, b - 4 * s); x.lineTo(a - dir * 10 * s, b + 4 * s); x.fill(); x.fillStyle = "#16191d"; x.fillRect(a + dir * 3 * s, b - 1, 1.5, 1.5); };
-  for (let k = 0; k < 9; k++) fish(90 + k * 13 + R() * 6, 200 + Math.sin(k) * 10 + R() * 8, 0.7, "#ffb12e", 1);
-  for (let k = 0; k < 7; k++) fish(420 + k * 12 + R() * 6, 150 + Math.cos(k) * 8 + R() * 6, 0.6, "#8fd3ff", -1);
-  fish(260, 250, 1.2, "#ff6f91", 1); fish(600, 330, 1.1, "#ffd34d", -1); fish(720, 150, 1, "#c86ad0", 1);
-  x.fillStyle = "#3f8a5a"; x.beginPath(); x.ellipse(330, 180, 18, 11, -0.1, 0, Math.PI * 2); x.fill(); x.fillStyle = "#6aba7a"; for (const [a, b] of [[324, 176], [334, 182], [338, 174]]) { x.beginPath(); x.arc(a, b, 3.5, 0, Math.PI * 2); x.fill(); }   // a sea turtle
-  x.fillStyle = "#4f9a6a"; x.beginPath(); x.ellipse(351, 176, 6, 4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(322, 192, 7, 3, 0.6, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(340, 166, 7, 3, -0.6, 0, Math.PI * 2); x.fill();
-  x.fillStyle = "rgba(255,170,230,0.7)"; x.beginPath(); x.arc(560, 120, 10, Math.PI, 0); x.fill(); x.strokeStyle = "rgba(255,190,240,0.7)"; x.lineWidth = 1.5; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(552 + k * 5, 120); x.quadraticCurveTo(549 + k * 5, 132, 553 + k * 5, 142); x.stroke(); }
-  // bubbles
-  for (let n = 0; n < 60; n++) { const a = R() * W, b = 40 + R() * 380, r = 1 + R() * 3; x.strokeStyle = "rgba(230,250,255,0.6)"; x.lineWidth = 1; x.beginPath(); x.arc(a, b, r, 0, Math.PI * 2); x.stroke(); }
-  }
-  x.restore();
-  // ---- coming soon (in the water above the sea floor): a landmark and a name for each area ----
-  const areaMid = (ai) => { const ps = W2_SOON.filter((c) => c.area === W2_SOON_AREAS[ai].name).map((c) => c.pos); return [ps.reduce((t, p) => t + p[0], 0) / ps.length, ps.reduce((t, p) => t + p[1], 0) / ps.length]; };
-  { const [a] = areaMid(0); x.save(); x.translate(0, 42);   // Pirate Waters: a pirate ship sailing on the surface, dropping cannonballs and gold
-    x.fillStyle = "#3a2410"; x.beginPath(); x.moveTo(a - 50, 24); x.quadraticCurveTo(a, 54, a + 50, 24); x.closePath(); x.fill(); x.fillStyle = "#5a3a1c"; x.fillRect(a - 46, 20, 92, 6);
-    for (const [ox, h] of [[-18, 40], [16, 52]]) { x.strokeStyle = "#3a2410"; x.lineWidth = 3; x.beginPath(); x.moveTo(a + ox, 22); x.lineTo(a + ox, 22 - h); x.stroke(); x.fillStyle = "#e8dcc0"; x.fillRect(a + ox - 13, 26 - h, 26, h - 12); }
-    x.fillStyle = "#16191d"; x.fillRect(a + 17, -32, 18, 11); x.fillStyle = "#e8e8e8"; x.fillRect(a + 24, -29, 4, 4);
-    for (const [c2, d] of [[a - 70, 90], [a + 60, 130], [a - 20, 170]]) { x.fillStyle = "#16191d"; x.beginPath(); x.arc(c2, d, 5, 0, Math.PI * 2); x.fill(); }   // cannonballs sinking
-    for (let k = 0; k < 12; k++) { x.fillStyle = k % 2 ? "#ffd34d" : "#f2b23a"; x.beginPath(); x.arc(a - 90 + k * 16, 75 + ((k * 37) % 120), 3, 0, Math.PI * 2); x.fill(); } x.restore(); }   // and gold coins
-  { const [a, b] = areaMid(1);   // Volcanic Vents: a hot orange glow with plumes of black smoke rising
-    x.fillStyle = rad(a, b, 4, 120, [[0, "rgba(255,120,40,0.45)"], [1, "rgba(255,80,20,0)"]]); x.beginPath(); x.arc(a, b, 120, 0, Math.PI * 2); x.fill();
-    for (let k = 0; k < 8; k++) { x.fillStyle = `rgba(30,24,30,${0.45 - k * 0.05})`; x.beginPath(); x.arc(a - 50 + Math.sin(k) * 6, b - 50 - k * 16, 8 + k * 2.5, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(a + 55 + Math.cos(k) * 6, b - 40 - k * 15, 7 + k * 2.5, 0, Math.PI * 2); x.fill(); } }
-  { const [a, b] = areaMid(2);   // Lost Atlantis: a glowing golden temple with crystal spires and a giant trident
-    x.fillStyle = rad(a, b - 60, 4, 140, [[0, "rgba(120,255,230,0.4)"], [1, "rgba(90,224,208,0)"]]); x.beginPath(); x.arc(a, b - 60, 140, 0, Math.PI * 2); x.fill();
-    const ty = b - 58; x.fillStyle = "rgba(200,240,240,0.55)"; x.fillRect(a - 70, ty, 140, 40); x.fillStyle = "rgba(240,210,110,0.85)"; x.fillRect(a - 76, ty - 6, 152, 7);   // the temple, with a golden roof line
-    x.fillStyle = "rgba(220,250,250,0.7)"; x.beginPath(); x.arc(a, ty - 6, 40, Math.PI, 0); x.fill(); x.fillStyle = "rgba(240,210,110,0.9)"; x.fillRect(a - 2, ty - 70, 4, 26);   // a dome and a golden spire
-    for (let k = 0; k < 7; k++) { x.fillStyle = "rgba(240,255,255,0.75)"; x.fillRect(a - 64 + k * 20, ty + 4, 7, 34); }   // columns
-    for (const [ox, h] of [[-110, 60], [-95, 40], [100, 70], [115, 45]]) { x.fillStyle = "rgba(120,255,240,0.8)"; x.beginPath(); x.moveTo(a + ox - 7, ty + 40); x.lineTo(a + ox, ty + 40 - h); x.lineTo(a + ox + 7, ty + 40); x.fill(); x.fillStyle = "rgba(255,255,255,0.8)"; x.fillRect(a + ox - 1, ty + 40 - h * 0.7, 2, h * 0.4); }   // crystal spires
-    x.strokeStyle = "rgba(240,210,110,0.9)"; x.lineWidth = 3; x.beginPath(); x.moveTo(a + 60, ty - 70); x.lineTo(a + 60, ty - 20); x.moveTo(a + 50, ty - 62); x.lineTo(a + 50, ty - 72); x.moveTo(a + 70, ty - 62); x.lineTo(a + 70, ty - 72); x.moveTo(a + 50, ty - 62); x.lineTo(a + 70, ty - 62); x.stroke(); }   // a trident
-  { const [a, b] = areaMid(3);   // The Abyss: a pit of darkness up in the corner, with something glowing inside
-    x.fillStyle = rad(a, b, 4, 150, [[0, "rgba(0,0,10,0.85)"], [0.6, "rgba(0,0,20,0.5)"], [1, "rgba(0,0,20,0)"]]); x.beginPath(); x.ellipse(a, b, 160, 68, 0, 0, Math.PI * 2); x.fill();
-    for (const [c2, d] of [[a - 14, b + 40], [a + 14, b + 44]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(c2, d, 2.6, 0, Math.PI * 2); x.fill(); } }   // something glowing in the dark…
-  W2_SOON_AREAS.forEach((ar, ai) => { const [a, b] = areaMid(ai), ly = ai === 3 ? 20 : 178;   // each area's name
-    x.font = "bold 15px 'Atkinson Hyperlegible', sans-serif"; x.textAlign = "center"; x.lineWidth = 4; x.strokeStyle = "rgba(4,14,40,0.75)"; x.strokeText(ar.name, a, ly); x.fillStyle = ar.col; x.fillText(ar.name, a, ly);
-    x.font = "11px 'Atkinson Hyperlegible', sans-serif"; x.lineWidth = 3; x.strokeText("coming soon", a, ly + 14); x.fillStyle = "#dfe8f0"; x.fillText("coming soon", a, ly + 14); });
+    grow(a, b, -Math.PI / 2, 12 * s, 3.5 * s, 3); x.lineCap = "butt"; };
+  for (const [a, s2, col, tip] of [[18, 1.1, "#ff6f91", "#ffd0dc"], [70, 0.9, "#ff9a3c", "#ffe0a0"], [150, 1, "#c86ad0", "#f0c8ff"], [205, 0.8, "#ffd34d", "#fff6c0"]]) branchy(a, fy(a) + 4, s2, col, tip);
+  for (let k = 0; k < 7; k++) { const a = 92 + k * 9 + R() * 4, b = fy(a) + 2, h = 70 + R() * 70, ph = R() * 6;   // kelp
+    x.strokeStyle = k % 3 ? "#3f7a2e" : "#5a9a3e"; x.lineWidth = 3; x.beginPath(); x.moveTo(a, b); for (let j = 0; j <= h; j += 10) x.lineTo(a + Math.sin(j / 30 + ph) * 6, b - j); x.stroke();
+    x.fillStyle = "#6aaa3e"; for (let j = 18; j < h; j += 20) { const px = a + Math.sin(j / 30 + ph) * 6; x.beginPath(); x.ellipse(px + 5, b - j, 6, 2.2, 0.5, 0, Math.PI * 2); x.fill(); } }
+  { const a = 178, b = fy(178) + 6; x.fillStyle = "#c8a0c8"; x.beginPath(); x.ellipse(a, b, 22, 9, 0, 0, Math.PI); x.fill(); x.save(); x.translate(a, b); x.rotate(-0.35); x.fillStyle = "#e8c4e4"; x.beginPath(); x.ellipse(0, 0, 22, 14, 0, Math.PI, Math.PI * 2); x.fill(); x.restore();
+    x.fillStyle = rad(a, b - 3, 1, 12, [[0, "rgba(255,255,255,1)"], [1, "rgba(255,220,250,0)"]]); x.beginPath(); x.arc(a, b - 3, 12, 0, Math.PI * 2); x.fill(); }   // the giant clam
+  for (let k = 0; k < 10; k++) { const a = 5 + R() * 205, b = fy(a) + 6 + R() * 30; x.strokeStyle = R() < 0.5 ? "#3fae6a" : "#5fd08a"; x.lineWidth = 2; for (let j = -1; j <= 1; j++) { x.beginPath(); x.moveTo(a + j * 3, b); x.quadraticCurveTo(a + j * 5, b - 7, a + j * 6 + 2, b - 12); x.stroke(); } }   // sea grass
+  // ---- Pirate Waters: a sunken pirate ship, gold, and another pirate ship sailing on the surface ----
+  { const a = 300, b = fy(300) + 10; x.save(); x.translate(a, b); x.rotate(-0.12); x.fillStyle = "#4a2a14"; x.beginPath(); x.moveTo(-50, -18); x.quadraticCurveTo(0, 14, 50, -24); x.lineTo(46, 0); x.lineTo(-46, 4); x.fill();
+    x.fillStyle = "#6a4020"; x.fillRect(-48, -22, 96, 5); x.strokeStyle = "#3a2410"; x.lineWidth = 3; x.beginPath(); x.moveTo(-6, -20); x.lineTo(4, -72); x.stroke();
+    x.fillStyle = "rgba(220,210,180,0.75)"; x.beginPath(); x.moveTo(4, -70); x.lineTo(30, -58); x.lineTo(4, -40); x.fill(); x.fillStyle = "#16191d"; x.fillRect(4, -84, 14, 9); x.fillStyle = "#e8e8e8"; x.fillRect(9, -82, 4, 4); x.restore(); }
+  for (const [a, n] of [[240, 6], [360, 8]]) for (let k = 0; k < n; k++) { x.fillStyle = k % 2 ? "#ffd34d" : "#f2b23a"; x.beginPath(); x.arc(a + (k % 4) * 6, fy(a) + 8 - Math.floor(k / 4) * 5, 3.2, 0, Math.PI * 2); x.fill(); }   // piles of gold
+  // ---- Volcanic Vents: black smoker chimneys with orange-hot tops and smoke rising ----
+  x.fillStyle = rad(500, fy(500) - 20, 6, 140, [[0, "rgba(255,120,40,0.4)"], [1, "rgba(255,80,20,0)"]]); x.beginPath(); x.arc(500, fy(500) - 20, 140, 0, Math.PI * 2); x.fill();
+  for (const [a, h] of [[440, 34], [505, 52], [565, 28]]) { const b = fy(a) + 6; x.fillStyle = "#1a1418"; x.beginPath(); x.moveTo(a - 12, b); x.lineTo(a - 5, b - h); x.lineTo(a + 5, b - h); x.lineTo(a + 12, b); x.fill(); x.fillStyle = "#ff7a2a"; x.fillRect(a - 5, b - h - 2, 10, 3); x.fillStyle = "#ffd04a"; x.fillRect(a - 2, b - h - 3, 4, 2);
+    for (let k = 0; k < 7; k++) { x.fillStyle = `rgba(30,24,30,${0.42 - k * 0.05})`; x.beginPath(); x.arc(a + Math.sin(k * 1.3) * 5, b - h - 10 - k * 13, 5 + k * 2, 0, Math.PI * 2); x.fill(); } }
+  // ---- Lost Atlantis: a glowing temple with a dome, golden trim, crystal spires and a trident ----
+  { const a = 694, b = fy(694) + 4; x.fillStyle = rad(a, b - 40, 6, 120, [[0, "rgba(120,255,230,0.35)"], [1, "rgba(90,224,208,0)"]]); x.beginPath(); x.arc(a, b - 40, 120, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#b8ccd2"; x.fillRect(a - 52, b - 40, 104, 40); x.fillStyle = "#e0c060"; x.fillRect(a - 56, b - 46, 112, 6);
+    for (let k = 0; k < 6; k++) { x.fillStyle = "#e8f4f6"; x.fillRect(a - 46 + k * 18, b - 38, 7, 38); }
+    x.fillStyle = "#d8ecf0"; x.beginPath(); x.arc(a, b - 46, 28, Math.PI, 0); x.fill(); x.fillStyle = "#e0c060"; x.fillRect(a - 2, b - 92, 4, 20);
+    for (const [ox, h] of [[-78, 44], [-66, 28], [70, 50], [82, 30]]) { x.fillStyle = "rgba(120,255,240,0.85)"; x.beginPath(); x.moveTo(a + ox - 6, b); x.lineTo(a + ox, b - h); x.lineTo(a + ox + 6, b); x.fill(); }
+    x.strokeStyle = "#e0c060"; x.lineWidth = 2.5; x.beginPath(); x.moveTo(a + 40, b - 50); x.lineTo(a + 40, b - 90); x.moveTo(a + 32, b - 82); x.lineTo(a + 48, b - 82); x.moveTo(a + 32, b - 82); x.lineTo(a + 32, b - 90); x.moveTo(a + 48, b - 82); x.lineTo(a + 48, b - 90); x.stroke(); }
+  // ---- The Abyss: pitch dark, with glowing eyes and an anglerfish light in the deep ----
+  x.fillStyle = lin(790, 0, 1000, 0, [[0, "rgba(0,0,8,0)"], [1, "rgba(0,0,8,0.6)"]]); x.fillRect(790, 0, 210, H);
+  for (const [a, b] of [[900, 420], [930, 425], [968, 380], [985, 384]]) { x.fillStyle = "rgba(120,255,220,0.9)"; x.beginPath(); x.arc(a, b, 2.4, 0, Math.PI * 2); x.fill(); }
+  x.fillStyle = rad(850, 200, 1, 16, [[0, "rgba(255,250,180,0.95)"], [1, "rgba(255,250,180,0)"]]); x.beginPath(); x.arc(850, 200, 16, 0, Math.PI * 2); x.fill(); x.strokeStyle = "rgba(120,130,150,0.5)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(850, 200); x.quadraticCurveTo(858, 186, 870, 196); x.stroke();
+  // fish, a jellyfish and bubbles
+  const fish = (a, b, s2, col, dir) => { x.fillStyle = col; x.beginPath(); x.ellipse(a, b, 6 * s2, 3 * s2, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.moveTo(a - dir * 5 * s2, b); x.lineTo(a - dir * 10 * s2, b - 4 * s2); x.lineTo(a - dir * 10 * s2, b + 4 * s2); x.fill(); };
+  for (let k = 0; k < 8; k++) fish(150 + k * 12 + R() * 6, 50 + Math.sin(k) * 8 + R() * 6, 0.7, "#ffb12e", 1);
+  for (let k = 0; k < 6; k++) fish(380 + k * 11 + R() * 6, 120 + Math.cos(k) * 7 + R() * 6, 0.6, "#8fd3ff", -1);
+  fish(250, 160, 1.1, "#ff6f91", 1); fish(620, 210, 1, "#c86ad0", -1);
+  x.fillStyle = "rgba(255,170,230,0.7)"; x.beginPath(); x.arc(640, 120, 9, Math.PI, 0); x.fill(); x.strokeStyle = "rgba(255,190,240,0.7)"; x.lineWidth = 1.5; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(633 + k * 5, 120); x.quadraticCurveTo(630 + k * 5, 132, 634 + k * 5, 142); x.stroke(); }
+  for (let n = 0; n < 55; n++) { const a = R() * W, b = 30 + R() * 390, r = 1 + R() * 3; x.strokeStyle = `rgba(230,250,255,${0.6 * (1 - a / 1400)})`; x.lineWidth = 1; x.beginPath(); x.arc(a, b, r, 0, Math.PI * 2); x.stroke(); }
+  // each area's name along the top
+  [["The Sunny Shallows", "#ffe9a8", false], ...W2_SOON_AREAS.map((ar) => [ar.name, ar.col, true])].forEach(([nm, col, soon], i) => { const a = (AREA[i][0] + AREA[i][1]) / 2;
+    x.font = "bold 15px 'Atkinson Hyperlegible', sans-serif"; x.textAlign = "center"; x.lineWidth = 4; x.strokeStyle = "rgba(4,14,40,0.75)"; x.strokeText(nm, a, 26); x.fillStyle = col; x.fillText(nm, a, 26);
+    if (soon) { x.font = "11px 'Atkinson Hyperlegible', sans-serif"; x.lineWidth = 3; x.strokeText("coming soon", a, 40); x.fillStyle = "#dfe8f0"; x.fillText("coming soon", a, 40); } });
   // the trail between the levels
-  const pts = W2_ORDER.map((L) => W2_MAP[L]).concat(W2_SOON.map((c) => c.pos));
-  const trail = () => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); };
+  const trail = () => { x.beginPath(); W2_PATH.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); };
   x.lineWidth = 12; x.strokeStyle = "rgba(10,30,60,0.3)"; trail(); x.stroke();
   x.setLineDash([2, 9]); x.lineWidth = 6; x.lineCap = "round"; x.strokeStyle = "rgba(230,250,255,0.95)"; trail(); x.stroke(); x.setLineDash([]);
-  x.fillStyle = rad(W / 2, H / 2, H * 0.55, W * 0.62, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,10,30,0.4)"]]); x.fillRect(0, 0, W, H);
 }
 // ---------- The journey to the Sunken Kingdom ----------
 // The eye of the storm opens, the animals fly up through it on the Pegasus, dive into the ocean with a SPLASH,
